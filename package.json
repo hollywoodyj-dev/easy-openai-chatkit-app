@@ -6,7 +6,8 @@
     "dev": "unset OPENAI_API_KEY && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "vercel --yes"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",
