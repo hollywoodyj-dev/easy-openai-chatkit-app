@@ -19,11 +19,15 @@ export type FactAction = {
   factText: string;
 };
 
+const MOBILE_SESSION_ENDPOINT = "/api/mobile/create-session";
+
 type ChatKitPanelProps = {
   theme: ColorScheme;
   onWidgetAction: (action: FactAction) => Promise<void>;
   onResponseEnd: () => void;
   onThemeRequest: (scheme: ColorScheme) => void;
+  /** When set, session is created via /api/mobile/create-session with Bearer token (for app WebView). */
+  authToken?: string | null;
 };
 
 type ErrorState = {
@@ -48,6 +52,7 @@ export function ChatKitPanel({
   onWidgetAction,
   onResponseEnd,
   onThemeRequest,
+  authToken,
 }: ChatKitPanelProps) {
   const processedFacts = useRef(new Set<string>());
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
@@ -185,21 +190,27 @@ export function ChatKitPanel({
       }
 
       try {
-        const response = await fetch(CREATE_SESSION_ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            workflow: { id: WORKFLOW_ID },
-            chatkit_configuration: {
-              // enable attachments
-              file_upload: {
-                enabled: true,
+        const isMobile = Boolean(authToken?.trim());
+        const response = isMobile
+          ? await fetch(MOBILE_SESSION_ENDPOINT, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken!.trim()}`,
               },
-            },
-          }),
-        });
+            })
+          : await fetch(CREATE_SESSION_ENDPOINT, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                workflow: { id: WORKFLOW_ID },
+                chatkit_configuration: {
+                  file_upload: { enabled: true },
+                },
+              }),
+            });
 
         const raw = await response.text();
 
@@ -258,7 +269,7 @@ export function ChatKitPanel({
         }
       }
     },
-    [isWorkflowConfigured, setErrorState]
+    [isWorkflowConfigured, setErrorState, authToken]
   );
 
   const chatkit = useChatKit({

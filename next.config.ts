@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/embed-mobile",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *",
+          },
+        ],
+      },
     ];
   },
   webpack: (config) => {
