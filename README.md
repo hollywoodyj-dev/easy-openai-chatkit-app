@@ -76,6 +76,16 @@ Visit `http://localhost:3000` and start chatting. Use the prompts on the start s
 
 For a quick deploy without Git, you can also run **`npx vercel`** in the project directory and follow the prompts, then add the env vars in the Vercel dashboard.
 
+### 6. Embed on Wix (or any website)
+
+To show the chat on a Wix page (or any site), use an **iframe** pointing at your app’s embed URL:
+
+- **Embed URL:** `https://your-app.vercel.app/embed`
+- Add your **Wix (or site) domain** to the [OpenAI Domain allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist).
+- In Wix: **Add** → **Embed** → paste an iframe with `src="https://your-app.vercel.app/embed"`.
+
+See **[docs/embed-wix.md](docs/embed-wix.md)** for step-by-step Wix instructions and iframe code.
+
 ## Customization Tips
 
 - Adjust starter prompts, greeting text, [chatkit theme](https://chatkit.studio/playground), and placeholder copy in [`lib/config.ts`](lib/config.ts).
