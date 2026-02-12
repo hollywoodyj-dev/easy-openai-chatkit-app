@@ -37,3 +37,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Expo / React Native
+.expo
+mobile/node_modules
