@@ -7,26 +7,33 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "vercel --yes"
+    "deploy": "vercel --yes",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",
+    "@prisma/client": "^6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
     "next": "15.5.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "1.30.1",
-    "@tailwindcss/oxide-linux-x64-gnu": "4.1.11"
+    "@tailwindcss/oxide-linux-x64-gnu": "4.1.11",
+    "lightningcss-linux-x64-gnu": "1.30.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.4",
+    "eslint-config-next": "15.5.7",
+    "prisma": "^6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
