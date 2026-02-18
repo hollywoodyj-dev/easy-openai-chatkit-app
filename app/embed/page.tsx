@@ -9,9 +9,15 @@ import type { ColorScheme } from "@/hooks/useColorScheme";
  * Use this URL in your iframe src for a clean chat widget.
  */
 export default function EmbedPage() {
-  const handleWidgetAction = useCallback(async (_action: FactAction) => {}, []);
+  const handleWidgetAction = useCallback(
+    async (action: FactAction) => { void action; },
+    []
+  );
   const handleResponseEnd = useCallback(() => {}, []);
-  const handleThemeRequest = useCallback((_scheme: ColorScheme) => {}, []);
+  const handleThemeRequest = useCallback(
+    (scheme: ColorScheme) => { void scheme; },
+    []
+  );
 
   return (
     <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">

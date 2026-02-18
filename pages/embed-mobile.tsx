@@ -19,9 +19,15 @@ const EmbedMobilePage: NextPage = () => {
     return (value ?? "").trim() || null;
   }, [router.query.token]);
 
-  const handleWidgetAction = useCallback(async (_action: FactAction) => {}, []);
+  const handleWidgetAction = useCallback(
+    async (action: FactAction) => { void action; },
+    []
+  );
   const handleResponseEnd = useCallback(() => {}, []);
-  const handleThemeRequest = useCallback((_scheme: ColorScheme) => {}, []);
+  const handleThemeRequest = useCallback(
+    (scheme: ColorScheme) => { void scheme; },
+    []
+  );
 
   if (!token) {
     return (

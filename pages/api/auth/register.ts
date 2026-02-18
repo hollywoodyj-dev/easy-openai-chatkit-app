@@ -72,7 +72,6 @@ export default async function handler(
       subscription: user.subscriptions[0] ?? null,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error("[pages/api/auth/register] unexpected error", error);
     return res.status(500).json({ error: "Unexpected error" });
   }
