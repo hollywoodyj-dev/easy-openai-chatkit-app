@@ -1,18 +1,12 @@
 import { useCallback, useMemo } from "react";
 import type { NextPage } from "next";
-import Script from "next/script";
 import { useRouter } from "next/router";
 import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
 import type { ColorScheme } from "@/hooks/useColorScheme";
 
-const CHATKIT_SCRIPT_URL =
-  "https://cdn.platform.openai.com/deployments/chatkit/chatkit.js";
-
 /**
  * Embed page for the mobile app WebView (Pages Router).
- * Pages Router does not use app/layout.tsx, so we load the ChatKit script here.
- * This mirrors `app/embed-mobile/page.tsx` but ensures the route is available
- * even if the App Router segment is not picked up in certain deployments.
+ * ChatKit script is injected in pages/_document.tsx for this path so it loads before hydration.
  *
  * Expected usage: /embed-mobile?token=<JWT>
  */
@@ -40,11 +34,9 @@ const EmbedMobilePage: NextPage = () => {
   }
 
   return (
-    <>
-      <Script src={CHATKIT_SCRIPT_URL} strategy="beforeInteractive" />
-      <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">
-        <div className="flex h-full w-full flex-col p-2 sm:p-4">
-          <ChatKitPanel
+    <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">
+      <div className="flex h-full w-full flex-col p-2 sm:p-4">
+        <ChatKitPanel
             theme="light"
             onWidgetAction={handleWidgetAction}
             onResponseEnd={handleResponseEnd}
@@ -52,8 +44,7 @@ const EmbedMobilePage: NextPage = () => {
             authToken={token}
           />
         </div>
-      </main>
-    </>
+    </main>
   );
 };
 
