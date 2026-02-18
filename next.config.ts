@@ -15,16 +15,10 @@ const nextConfig: NextConfig = {
       {
         source: "/embed-mobile",
         headers: [
+          // Only frame-ancestors so ChatKit script can run (no script-src = no eval block).
           {
             key: "Content-Security-Policy",
-            value: [
-              "default-src 'self' https://cdn.platform.openai.com",
-              "frame-ancestors *",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.platform.openai.com",
-              "connect-src 'self' https://api.openai.com https://cdn.platform.openai.com",
-              "frame-src 'self' https://cdn.platform.openai.com",
-              "style-src 'self' 'unsafe-inline'",
-            ].join("; "),
+            value: "frame-ancestors *",
           },
         ],
       },
