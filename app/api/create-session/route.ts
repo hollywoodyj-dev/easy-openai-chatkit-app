@@ -1,6 +1,7 @@
 import { WORKFLOW_ID } from "@/lib/config";
+import { verifyUserToken } from "@/lib/auth";
 
-export const runtime = "edge";
+// Note: Using Node.js runtime (not Edge) because verifyUserToken uses jsonwebtoken which requires Node.js crypto
 
 interface CreateSessionRequestBody {
   workflow?: { id?: string | null } | null;
@@ -150,6 +151,22 @@ async function resolveUserId(request: Request): Promise<{
   userId: string;
   sessionCookie: string | null;
 }> {
+  // Check for Authorization header (Bearer token) - if present, use authenticated user ID
+  const authHeader = request.headers.get("authorization") ?? "";
+  const token = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+
+  if (token) {
+    const userId = verifyUserToken(token);
+    if (userId) {
+      // Use authenticated user ID - no cookie needed, ChatKit will use this for chat history
+      return { userId, sessionCookie: null };
+    }
+    // Token invalid/expired - fall through to cookie/random
+  }
+
+  // Fallback: use cookie or generate random UUID (anonymous session)
   const existing = getCookieValue(
     request.headers.get("cookie"),
     SESSION_COOKIE_NAME
