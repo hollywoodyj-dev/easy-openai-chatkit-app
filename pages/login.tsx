@@ -9,8 +9,8 @@ const API_BASE =
 
 /**
  * Web login page for testing authToken flow in the browser.
- * On success, redirects to /embed-mobile?token=<JWT> so you can test
- * ChatKit with a real token.
+ * On success, redirects to /embed?token=<JWT> so you can test
+ * ChatKit with a real token and per-user chat history.
  */
 const LoginPage: NextPage = () => {
   const router = useRouter();
@@ -44,7 +44,7 @@ const LoginPage: NextPage = () => {
         setError("No token received.");
         return;
       }
-      await router.replace(`/embed-mobile?token=${encodeURIComponent(token)}`);
+      await router.replace(`/embed?token=${encodeURIComponent(token)}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {
