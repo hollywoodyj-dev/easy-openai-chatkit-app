@@ -30,11 +30,14 @@ The UI for social login (Google, Facebook, X) has been implemented, but you'll n
 
 #### Facebook OAuth
 1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Create a new app
-3. Add Facebook Login product
-4. Set OAuth Redirect URIs:
-   - `https://yourdomain.com/api/auth/oauth/facebook/callback`
-5. Save App ID and App Secret
+2. Create a new app (choose "Consumer" app type)
+3. Add "Facebook Login" product to your app
+4. Go to Facebook Login → Settings
+5. Add Valid OAuth Redirect URIs:
+   - `https://wisewave-chatkit-app-v2.vercel.app/api/auth/oauth/facebook/callback`
+6. In App Settings → Basic, note your App ID and App Secret
+7. Make sure your app is in "Live" mode or add test users for development
+8. Save App ID and App Secret
 
 #### X (Twitter) OAuth
 1. Go to [Twitter Developer Portal](https://developer.twitter.com/)
@@ -60,8 +63,8 @@ FACEBOOK_APP_SECRET=your_facebook_app_secret
 X_CLIENT_ID=your_x_client_id
 X_CLIENT_SECRET=your_x_client_secret
 
-# OAuth callback base URL
-OAUTH_CALLBACK_BASE_URL=https://yourdomain.com
+# OAuth callback base URL (optional, defaults to Vercel URL)
+OAUTH_CALLBACK_BASE_URL=https://wisewave-chatkit-app-v2.vercel.app
 ```
 
 ### 3. Install OAuth Libraries (Recommended)

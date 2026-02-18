@@ -70,7 +70,7 @@ export default function LoginScreen() {
 
       if (result.type === "success" && result.url) {
         // Extract token from deep link callback URL
-        // Format: wisewave://oauth/google?token=...
+        // Format: wisewave://oauth/{provider}?token=...
         const url = new URL(result.url.replace("wisewave://", "https://"));
         const token = url.searchParams.get("token");
         if (token) {
