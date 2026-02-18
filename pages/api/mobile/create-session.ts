@@ -105,7 +105,6 @@ export default async function handler(
       .catch(() => ({}))) as Record<string, unknown> | undefined;
 
     if (!upstreamResponse.ok) {
-      // eslint-disable-next-line no-console
       console.error("[pages/api/mobile/create-session] OpenAI error", {
         status: upstreamResponse.status,
         statusText: upstreamResponse.statusText,
@@ -127,7 +126,6 @@ export default async function handler(
       expires_after: expiresAfter,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error(
       "[pages/api/mobile/create-session] unexpected error",
       error

@@ -6,12 +6,12 @@ const CHATKIT_SCRIPT_URL =
 
 type DocumentProps = DocumentInitialProps & { pathname?: string };
 
-export default function Document({ pathname, ...rest }: DocumentProps) {
+export default function Document({ pathname }: DocumentProps) {
   return (
     <Html lang="en">
       <Head>
         {pathname === "/embed-mobile" && (
-          <script src={CHATKIT_SCRIPT_URL} />
+          <script src={CHATKIT_SCRIPT_URL} defer />
         )}
       </Head>
       <body>
