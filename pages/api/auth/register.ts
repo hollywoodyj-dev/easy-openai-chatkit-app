@@ -19,10 +19,15 @@ export default async function handler(
     const plainPassword =
       typeof password === "string" ? password : "";
 
-    if (!trimmedEmail || !plainPassword || plainPassword.length < 8) {
+    if (!trimmedEmail || !plainPassword) {
       return res.status(400).json({
-        error:
-          "Invalid input. Email is required and password must be at least 8 characters.",
+        error: "Email and password are required.",
+      });
+    }
+
+    if (plainPassword.length < 8) {
+      return res.status(400).json({
+        error: "Password must be at least 8 characters.",
       });
     }
 

@@ -41,6 +41,13 @@ export default async function handler(
         .json({ error: "Invalid email or password." });
     }
 
+    // Check if user has password (not OAuth-only)
+    if (!user.passwordHash) {
+      return res
+        .status(401)
+        .json({ error: "This account uses social login. Please sign in with your provider." });
+    }
+
     const ok = await verifyPassword(
       plainPassword,
       user.passwordHash

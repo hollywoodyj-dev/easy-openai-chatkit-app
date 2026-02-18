@@ -8,9 +8,8 @@ const API_BASE =
     : "";
 
 /**
- * Web login page for testing authToken flow in the browser.
- * On success, redirects to /embed?token=<JWT> so you can test
- * ChatKit with a real token and per-user chat history.
+ * Web login page with calming design matching SeeSoul Psychotherapy aesthetic.
+ * Supports email/password and social OAuth login.
  */
 const LoginPage: NextPage = () => {
   const router = useRouter();
@@ -18,6 +17,7 @@ const LoginPage: NextPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,109 +52,224 @@ const LoginPage: NextPage = () => {
     }
   };
 
+  const handleOAuth = (provider: "google" | "facebook" | "x") => {
+    setOauthLoading(provider);
+    window.location.href = `${API_BASE}/api/auth/oauth/${provider}?state=web`;
+  };
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-        fontFamily: "system-ui, sans-serif",
-        background: "#f8fafc",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 360,
-          background: "white",
-          padding: 32,
-          borderRadius: 12,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h1 style={{ margin: "0 0 24px", fontSize: 22, color: "#0f172a" }}>
-          Sign in (web)
-        </h1>
-        <p style={{ margin: "0 0 20px", color: "#64748b", fontSize: 14 }}>
-          Use this page to get a token and open chat with authToken in the
-          browser. Same credentials as the mobile app.
-        </p>
+    <main style={styles.container}>
+      <div style={styles.card}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Welcome back</h1>
+          <p style={styles.subtitle}>
+            A space to pause, breathe, and return to yourself
+          </p>
+        </div>
+
+        <div style={styles.socialContainer}>
+          <button
+            type="button"
+            onClick={() => handleOAuth("google")}
+            disabled={!!loading || !!oauthLoading}
+            style={{
+              ...styles.socialButton,
+              ...styles.googleButton,
+              ...(oauthLoading === "google" || loading ? styles.buttonDisabled : {}),
+            }}
+          >
+            {oauthLoading === "google" ? "Signing in..." : "Continue with Google"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleOAuth("facebook")}
+            disabled={!!loading || !!oauthLoading}
+            style={{
+              ...styles.socialButton,
+              ...styles.facebookButton,
+              ...(oauthLoading === "facebook" || loading ? styles.buttonDisabled : {}),
+            }}
+          >
+            {oauthLoading === "facebook" ? "Signing in..." : "Continue with Facebook"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleOAuth("x")}
+            disabled={!!loading || !!oauthLoading}
+            style={{
+              ...styles.socialButton,
+              ...styles.xButton,
+              ...(oauthLoading === "x" || loading ? styles.buttonDisabled : {}),
+            }}
+          >
+            {oauthLoading === "x" ? "Signing in..." : "Continue with X"}
+          </button>
+        </div>
+
+        <div style={styles.divider}>
+          <div style={styles.dividerLine} />
+          <span style={styles.dividerText}>or</span>
+          <div style={styles.dividerLine} />
+        </div>
+
         <form onSubmit={handleSubmit}>
-          <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
-            Email
-          </label>
+          <label style={styles.label}>Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              marginBottom: 16,
-              border: "1px solid #e2e8f0",
-              borderRadius: 8,
-              fontSize: 16,
-              boxSizing: "border-box",
-            }}
+            disabled={loading || !!oauthLoading}
+            style={styles.input}
           />
-          <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
-            Password
-          </label>
+          <label style={styles.label}>Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             autoComplete="current-password"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              marginBottom: 20,
-              border: "1px solid #e2e8f0",
-              borderRadius: 8,
-              fontSize: 16,
-              boxSizing: "border-box",
-            }}
+            disabled={loading || !!oauthLoading}
+            style={styles.input}
           />
-          {error && (
-            <p
-              style={{
-                margin: "0 0 16px",
-                color: "#dc2626",
-                fontSize: 14,
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {error && <p style={styles.error}>{error}</p>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !!oauthLoading}
             style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: loading ? "#94a3b8" : "#0f172a",
-              color: "white",
-              border: "none",
-              borderRadius: 8,
-              fontSize: 16,
-              fontWeight: 500,
-              cursor: loading ? "not-allowed" : "pointer",
+              ...styles.button,
+              ...(loading || oauthLoading ? styles.buttonDisabled : {}),
             }}
           >
-            {loading ? "Signing in…" : "Sign in → Open chat"}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
       </div>
     </main>
   );
+};
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    fontFamily: "system-ui, -apple-system, sans-serif",
+    background: "#FAF9F6", // Soft beige/cream
+  },
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    background: "#FFFFFF",
+    padding: 40,
+    borderRadius: 16,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  },
+  header: {
+    marginBottom: 32,
+    textAlign: "center" as const,
+  },
+  title: {
+    margin: "0 0 8px",
+    fontSize: 28,
+    fontWeight: 300,
+    color: "#2D3748",
+    letterSpacing: "0.5px",
+  },
+  subtitle: {
+    margin: 0,
+    color: "#718096",
+    fontSize: 15,
+    lineHeight: "22px",
+    fontStyle: "italic" as const,
+  },
+  socialContainer: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 12,
+    marginBottom: 24,
+  },
+  socialButton: {
+    width: "100%",
+    padding: "14px 16px",
+    borderRadius: 12,
+    border: "none",
+    fontSize: 16,
+    fontWeight: 500,
+    cursor: "pointer",
+    color: "#fff",
+    transition: "opacity 0.2s",
+  },
+  googleButton: {
+    background: "#4285F4",
+  },
+  facebookButton: {
+    background: "#1877F2",
+  },
+  xButton: {
+    background: "#000000",
+  },
+  divider: {
+    display: "flex",
+    flexDirection: "row" as const,
+    alignItems: "center",
+    margin: "24px 0",
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    background: "#E2E8F0",
+  },
+  dividerText: {
+    margin: "0 16px",
+    color: "#9CA3AF",
+    fontSize: 14,
+  },
+  label: {
+    display: "block",
+    marginBottom: 8,
+    fontWeight: 500,
+    color: "#4A5568",
+    fontSize: 14,
+  },
+  input: {
+    width: "100%",
+    padding: "14px 16px",
+    marginBottom: 16,
+    border: "1px solid #E2E8F0",
+    borderRadius: 12,
+    fontSize: 16,
+    boxSizing: "border-box" as const,
+    color: "#2D3748",
+    background: "#FFFFFF",
+  },
+  error: {
+    margin: "0 0 16px",
+    color: "#DC2626",
+    fontSize: 14,
+  },
+  button: {
+    width: "100%",
+    padding: "14px 16px",
+    background: "#4A5568",
+    color: "white",
+    border: "none",
+    borderRadius: 12,
+    fontSize: 16,
+    fontWeight: 500,
+    cursor: "pointer",
+    letterSpacing: "0.3px",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+    cursor: "not-allowed",
+  },
 };
 
 export default LoginPage;
