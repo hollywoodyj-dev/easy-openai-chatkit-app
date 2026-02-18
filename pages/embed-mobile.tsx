@@ -21,6 +21,7 @@ const EmbedMobilePage: NextPage = () => {
   const router = useRouter();
   const [scriptReady, setScriptReady] = useState(false);
   const [scriptTimedOut, setScriptTimedOut] = useState(false);
+  const [useAnonymousSession, setUseAnonymousSession] = useState(false);
 
   const token = useMemo(() => {
     const raw = router.query.token;
@@ -66,7 +67,7 @@ const EmbedMobilePage: NextPage = () => {
     );
   }
 
-  if (!token) {
+  if (!token && !useAnonymousSession) {
     return (
       <main
         className="flex min-h-[100vh] w-full flex-col items-center justify-center bg-slate-50 p-6"
@@ -74,6 +75,17 @@ const EmbedMobilePage: NextPage = () => {
       >
         <p className="text-center text-slate-600">
           Missing token. Open this page from the app with ?token=...
+        </p>
+        <p className="mt-4 text-center text-sm text-slate-500">
+          Or{" "}
+          <button
+            type="button"
+            onClick={() => setUseAnonymousSession(true)}
+            className="font-medium text-slate-700 underline"
+          >
+            try without sign-in
+          </button>{" "}
+          (same as main page chat).
         </p>
       </main>
     );
@@ -108,13 +120,39 @@ const EmbedMobilePage: NextPage = () => {
               </button>
             </div>
           ) : scriptReady ? (
-            <ChatKitPanel
-              theme="light"
-              onWidgetAction={handleWidgetAction}
-              onResponseEnd={handleResponseEnd}
-              onThemeRequest={handleThemeRequest}
-              authToken={token}
-            />
+            <>
+              {useAnonymousSession ? (
+                <p className="mb-2 text-center text-sm text-slate-500">
+                  Using anonymous chat (no sign-in).{" "}
+                  <button
+                    type="button"
+                    onClick={() => setUseAnonymousSession(false)}
+                    className="underline"
+                  >
+                    Back
+                  </button>
+                </p>
+              ) : (
+                <p className="mb-2 text-center text-sm text-slate-500">
+                  Chat blank?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setUseAnonymousSession(true)}
+                    className="underline"
+                  >
+                    Try without sign-in
+                  </button>{" "}
+                  (uses same session as main page).
+                </p>
+              )}
+              <ChatKitPanel
+                theme="light"
+                onWidgetAction={handleWidgetAction}
+                onResponseEnd={handleResponseEnd}
+                onThemeRequest={handleThemeRequest}
+                authToken={useAnonymousSession ? undefined : token ?? undefined}
+              />
+            </>
           ) : (
             <div
               className="flex min-h-[60vh] w-full flex-1 items-center justify-center bg-slate-50"

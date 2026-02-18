@@ -260,7 +260,10 @@ export function ChatKitPanel({
             ? error.message
             : "Unable to start ChatKit session.";
         if (isMountedRef.current) {
-          setErrorState({ session: detail, retryable: false });
+          setErrorState({
+            session: detail?.trim() || "Unable to start chat session.",
+            retryable: true,
+          });
         }
         throw error instanceof Error ? error : new Error(detail);
       } finally {
@@ -355,26 +358,42 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
-      <ChatKit
-        key={widgetInstanceKey}
-        control={chatkit.control}
-        className={
-          blockingError || isInitializingSession
-            ? "pointer-events-none opacity-0"
-            : "block h-full w-full"
-        }
-      />
-      <ErrorOverlay
-        error={blockingError}
-        fallbackMessage={
-          blockingError || !isInitializingSession
-            ? null
-            : "Loading assistant session..."
-        }
-        onRetry={blockingError && errors.retryable ? handleResetChat : null}
-        retryLabel="Restart chat"
-      />
+    <div className="relative flex min-h-[70vh] w-full flex-col rounded-2xl overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
+      <div className="relative flex min-h-[60vh] flex-1 flex-col" style={{ minHeight: "400px" }}>
+        <ChatKit
+          key={widgetInstanceKey}
+          control={chatkit.control}
+          className={
+            blockingError || isInitializingSession
+              ? "pointer-events-none opacity-0 min-h-[400px] w-full"
+              : "block min-h-[400px] h-full w-full"
+          }
+        />
+        <ErrorOverlay
+          error={blockingError}
+          fallbackMessage={
+            blockingError || !isInitializingSession
+              ? null
+              : "Loading assistant session..."
+          }
+          onRetry={blockingError && errors.retryable ? handleResetChat : null}
+          retryLabel="Restart chat"
+        />
+      </div>
+      {!blockingError && !isInitializingSession && (
+        <p className="mt-2 px-2 text-center text-xs text-slate-400">
+          If the chat is empty, add this site to the{" "}
+          <a
+            href="https://platform.openai.com/settings/organization/security/domain-allowlist"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            OpenAI domain allowlist
+          </a>
+          .
+        </p>
+      )}
     </div>
   );
 }
