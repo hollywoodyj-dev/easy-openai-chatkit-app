@@ -347,13 +347,15 @@ export function ChatKitPanel({
   const activeError = errors.session ?? errors.integration;
   const blockingError = errors.script ?? activeError;
 
-  if (isDev) {
-    console.debug("[ChatKitPanel] render state", {
+  if (isDev || typeof window !== "undefined") {
+    console.log("[ChatKitPanel] render state", {
       isInitializingSession,
       hasControl: Boolean(chatkit.control),
       scriptStatus,
       hasError: Boolean(blockingError),
+      blockingError,
       workflowId: WORKFLOW_ID,
+      authTokenPresent: Boolean(authToken),
     });
   }
 
