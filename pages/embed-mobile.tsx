@@ -122,36 +122,46 @@ const EmbedMobilePage: NextPage = () => {
           ) : scriptReady ? (
             <>
               {useAnonymousSession ? (
-                <p className="mb-2 text-center text-sm text-slate-500">
-                  Using anonymous chat (no sign-in).{" "}
-                  <button
-                    type="button"
-                    onClick={() => setUseAnonymousSession(false)}
-                    className="underline"
-                  >
-                    Back
-                  </button>
-                </p>
+                <>
+                  <p className="mb-2 text-center text-sm text-slate-500">
+                    Using anonymous chat (no sign-in) via iframe.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setUseAnonymousSession(false)}
+                      className="underline"
+                    >
+                      Back
+                    </button>
+                  </p>
+                  <iframe
+                    src="/embed"
+                    className="flex-1 w-full border-0 rounded-lg"
+                    style={{ minHeight: "600px" }}
+                    title="Chat"
+                  />
+                </>
               ) : (
-                <p className="mb-2 text-center text-sm text-slate-500">
-                  Chat blank?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setUseAnonymousSession(true)}
-                    className="underline"
-                  >
-                    Try without sign-in
-                  </button>{" "}
-                  (uses same session as main page).
-                </p>
+                <>
+                  <p className="mb-2 text-center text-sm text-slate-500">
+                    Chat blank?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setUseAnonymousSession(true)}
+                      className="underline"
+                    >
+                      Try without sign-in
+                    </button>{" "}
+                    (loads working chat page in iframe).
+                  </p>
+                  <ChatKitPanel
+                    theme="light"
+                    onWidgetAction={handleWidgetAction}
+                    onResponseEnd={handleResponseEnd}
+                    onThemeRequest={handleThemeRequest}
+                    authToken={token ?? undefined}
+                  />
+                </>
               )}
-              <ChatKitPanel
-                theme="light"
-                onWidgetAction={handleWidgetAction}
-                onResponseEnd={handleResponseEnd}
-                onThemeRequest={handleThemeRequest}
-                authToken={useAnonymousSession ? undefined : token ?? undefined}
-              />
             </>
           ) : (
             <div
