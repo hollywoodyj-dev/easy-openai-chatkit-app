@@ -190,27 +190,35 @@ export function ChatKitPanel({
       }
 
       try {
-        const isMobile = Boolean(authToken?.trim());
-        const response = isMobile
-          ? await fetch(MOBILE_SESSION_ENDPOINT, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${authToken!.trim()}`,
-              },
-            })
-          : await fetch(CREATE_SESSION_ENDPOINT, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
+        const hasAuthToken = Boolean(authToken?.trim());
+        // Use mobile endpoint if authToken is provided (for subscription checks)
+        // Otherwise use regular endpoint (which now also accepts tokens for user history)
+        const endpoint = hasAuthToken
+          ? MOBILE_SESSION_ENDPOINT
+          : CREATE_SESSION_ENDPOINT;
+        
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+        
+        // Pass token to both endpoints - mobile endpoint uses it for auth/subscription,
+        // regular endpoint uses it for user identification in ChatKit
+        if (hasAuthToken) {
+          headers.Authorization = `Bearer ${authToken!.trim()}`;
+        }
+        
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers,
+          body: hasAuthToken
+            ? undefined // Mobile endpoint doesn't need body
+            : JSON.stringify({
                 workflow: { id: WORKFLOW_ID },
                 chatkit_configuration: {
                   file_upload: { enabled: true },
                 },
               }),
-            });
+        });
 
         const raw = await response.text();
 
