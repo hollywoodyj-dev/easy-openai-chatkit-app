@@ -12,16 +12,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: "/embed-mobile",
-        headers: [
-          // Only frame-ancestors so ChatKit script can run (no script-src = no eval block).
-          {
-            key: "Content-Security-Policy",
-            value: "frame-ancestors *",
-          },
-        ],
-      },
+      // /embed-mobile CSP is set only in middleware so we can strip any other CSP and set one permissive policy (no merge conflict).
     ];
   },
   webpack: (config) => {

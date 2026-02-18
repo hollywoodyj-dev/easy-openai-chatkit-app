@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * For /embed-mobile, set only frame-ancestors so no script-src blocks ChatKit eval.
- * This runs before the response is sent so our CSP is present; next.config headers
- * are also applied (same value), so the effective CSP should have no script-src.
+ * For /embed-mobile only: strip any existing CSP (from next.config, Vercel, etc.)
+ * and set a single permissive policy so ChatKit's script (which uses eval/new Function)
+ * can run. Multiple CSP headers are merged by the browser (strictest wins), so we
+ * must avoid adding script-src elsewhere and explicitly allow unsafe-eval here.
  */
+const EMBED_MOBILE_PERMISSIVE_CSP =
+  "default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; frame-src *; frame-ancestors *; style-src * 'unsafe-inline';";
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   if (pathname !== "/embed-mobile") {
@@ -13,10 +17,9 @@ export function middleware(request: NextRequest) {
   }
 
   const response = NextResponse.next();
-  response.headers.set(
-    "Content-Security-Policy",
-    "frame-ancestors *"
-  );
+  response.headers.delete("Content-Security-Policy");
+  response.headers.delete("Content-Security-Policy-Report-Only");
+  response.headers.set("Content-Security-Policy", EMBED_MOBILE_PERMISSIVE_CSP);
   return response;
 }
 
