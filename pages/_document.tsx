@@ -11,7 +11,7 @@ export default function Document({ pathname }: DocumentProps) {
     <Html lang="en">
       <Head>
         {pathname === "/embed-mobile" && (
-          <script src={CHATKIT_SCRIPT_URL} defer />
+          <script src={CHATKIT_SCRIPT_URL} async />
         )}
       </Head>
       <body>

@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { NextPage } from "next";
-import Script from "next/script";
 import { useRouter } from "next/router";
 import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
 import type { ColorScheme } from "@/hooks/useColorScheme";
-
-const CHATKIT_SCRIPT_URL =
-  "https://cdn.platform.openai.com/deployments/chatkit/chatkit.js";
 
 /**
  * Embed page for the mobile app WebView (Pages Router).
@@ -41,13 +37,34 @@ const EmbedMobilePage: NextPage = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.customElements?.get("openai-chatkit")) {
-      setScriptReady(true);
-      return;
-    }
-    const onDefined = (): void => setScriptReady(true);
-    customElements.whenDefined("openai-chatkit").then(onDefined);
-    return () => {};
+    
+    const checkAndWait = (): void => {
+      if (window.customElements?.get("openai-chatkit")) {
+        console.log("[embed-mobile] ChatKit custom element already defined");
+        setScriptReady(true);
+        return;
+      }
+      console.log("[embed-mobile] Waiting for ChatKit custom element...");
+      customElements.whenDefined("openai-chatkit")
+        .then(() => {
+          console.log("[embed-mobile] ChatKit custom element defined");
+          setScriptReady(true);
+        })
+        .catch((err) => {
+          console.error("[embed-mobile] Error waiting for custom element", err);
+        });
+    };
+    
+    checkAndWait();
+    
+    window.addEventListener("chatkit-script-loaded", () => {
+      console.log("[embed-mobile] chatkit-script-loaded event fired");
+      checkAndWait();
+    });
+    
+    return () => {
+      window.removeEventListener("chatkit-script-loaded", checkAndWait);
+    };
   }, []);
 
   useEffect(() => {
@@ -93,13 +110,6 @@ const EmbedMobilePage: NextPage = () => {
 
   return (
     <>
-      <Script
-        src={CHATKIT_SCRIPT_URL}
-        strategy="afterInteractive"
-        onLoad={() => {
-          customElements.whenDefined("openai-chatkit").then(() => setScriptReady(true));
-        }}
-      />
       <main
         className="flex min-h-[100vh] w-full flex-col bg-white dark:bg-slate-900"
         style={{ minHeight: "100vh" }}
