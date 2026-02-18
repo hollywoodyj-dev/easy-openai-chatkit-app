@@ -121,7 +121,7 @@ export function ChatKitPanel({
             })
           );
         }
-      }, 5000);
+      }, 15000);
     }
 
     return () => {
