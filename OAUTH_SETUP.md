@@ -40,11 +40,13 @@ The UI for social login (Google, Facebook, X) has been implemented, but you'll n
 8. Save App ID and App Secret
 
 #### X (Twitter) OAuth
-1. Go to [Twitter Developer Portal](https://developer.twitter.com/)
-2. Create a new app
-3. Set callback URL:
-   - `https://yourdomain.com/api/auth/oauth/x/callback`
-4. Save API Key and API Secret
+1. Go to [X Developer Portal](https://developer.x.com/) (or [developer.twitter.com](https://developer.twitter.com/))
+2. Create a new project and app (or use an existing app)
+3. In your app settings, go to **User authentication settings** and set up OAuth 2.0
+4. Add **Callback URI / Redirect URL**:
+   - `https://wisewave-chatkit-app-v2.vercel.app/api/auth/oauth/x/callback`
+5. Note your **Client ID** and **Client Secret** (OAuth 2.0)
+6. Save the credentials
 
 ### 2. Add Environment Variables
 
