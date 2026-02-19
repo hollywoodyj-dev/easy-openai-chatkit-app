@@ -5,6 +5,8 @@ import { WebView } from "react-native-webview";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { Redirect, useRouter, useNavigation } from "expo-router";
 
+const SUBSCRIPTION_MESSAGE_TYPE = "open_subscription";
+
 export default function ChatScreen() {
   const { token, signOut } = useAuth();
   const router = useRouter();
@@ -32,6 +34,17 @@ export default function ChatScreen() {
 
   const uri = getEmbedMobileUrl(token);
 
+  const handleWebViewMessage = (event: { nativeEvent: { data: string } }) => {
+    try {
+      const payload = JSON.parse(event.nativeEvent.data) as { type?: string };
+      if (payload?.type === SUBSCRIPTION_MESSAGE_TYPE) {
+        router.push("/subscription");
+      }
+    } catch {
+      // ignore non-JSON or unknown messages
+    }
+  };
+
   return (
     <View style={styles.container}>
       <WebView
@@ -41,6 +54,7 @@ export default function ChatScreen() {
         domStorageEnabled
         sharedCookiesEnabled={false}
         originWhitelist={["https://*"]}
+        onMessage={handleWebViewMessage}
       />
     </View>
   );

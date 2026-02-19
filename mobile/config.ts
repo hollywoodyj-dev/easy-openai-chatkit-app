@@ -6,4 +6,4 @@ export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "https://wisewave-chatkit-app-v2.vercel.app";
 
 export const getEmbedMobileUrl = (token: string): string =>
-  `${API_BASE_URL}/embed?token=${encodeURIComponent(token)}`;
+  `${API_BASE_URL}/embed?token=${encodeURIComponent(token)}&embed=mobile`;

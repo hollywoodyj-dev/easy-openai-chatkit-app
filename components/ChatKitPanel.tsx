@@ -28,6 +28,8 @@ type ChatKitPanelProps = {
   onThemeRequest: (scheme: ColorScheme) => void;
   /** When set, session is created via /api/mobile/create-session with Bearer token (for app WebView). */
   authToken?: string | null;
+  /** Called when backend returns "Subscription required" (402). Use for "Subscribe" button (e.g. open /subscribe or Google Play). */
+  onSubscriptionRequired?: () => void;
 };
 
 type ErrorState = {
@@ -35,6 +37,7 @@ type ErrorState = {
   session: string | null;
   integration: string | null;
   retryable: boolean;
+  subscriptionRequired?: boolean;
 };
 
 const isBrowser = typeof window !== "undefined";
@@ -53,6 +56,7 @@ export function ChatKitPanel({
   onResponseEnd,
   onThemeRequest,
   authToken,
+  onSubscriptionRequired,
 }: ChatKitPanelProps) {
   const processedFacts = useRef(new Set<string>());
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
@@ -244,10 +248,20 @@ export function ChatKitPanel({
 
         if (!response.ok) {
           const detail = extractErrorDetail(data, response.statusText);
+          const isSubscriptionRequired =
+            response.status === 402 ||
+            (data?.code as string) === "subscription_required";
           console.error("Create session request failed", {
             status: response.status,
             body: data,
           });
+          if (isMountedRef.current) {
+            setErrorState({
+              session: isSubscriptionRequired ? "Subscription required" : detail,
+              retryable: !isSubscriptionRequired,
+              subscriptionRequired: isSubscriptionRequired,
+            });
+          }
           throw new Error(detail);
         }
 
@@ -386,8 +400,18 @@ export function ChatKitPanel({
               ? null
               : "Loading assistant session..."
           }
-          onRetry={blockingError && errors.retryable ? handleResetChat : null}
+          onRetry={
+            blockingError && errors.retryable && !errors.subscriptionRequired
+              ? handleResetChat
+              : null
+          }
           retryLabel="Restart chat"
+          onSubscription={
+            blockingError && errors.subscriptionRequired && onSubscriptionRequired
+              ? onSubscriptionRequired
+              : null
+          }
+          subscriptionLabel="Subscribe"
         />
       </div>
       {!blockingError && !isInitializingSession && (

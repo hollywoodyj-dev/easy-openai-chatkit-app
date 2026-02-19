@@ -7,6 +7,9 @@ type ErrorOverlayProps = {
   fallbackMessage?: ReactNode;
   onRetry?: (() => void) | null;
   retryLabel?: string;
+  /** When set, shows a "Subscribe" button (e.g. for subscription required). Takes precedence over retry when both could apply. */
+  onSubscription?: (() => void) | null;
+  subscriptionLabel?: string;
 };
 
 export function ErrorOverlay({
@@ -14,6 +17,8 @@ export function ErrorOverlay({
   fallbackMessage,
   onRetry,
   retryLabel,
+  onSubscription,
+  subscriptionLabel = "Subscribe",
 }: ErrorOverlayProps) {
   if (!error && !fallbackMessage) {
     return null;
@@ -25,11 +30,22 @@ export function ErrorOverlay({
     return null;
   }
 
+  const showSubscribe = error && onSubscription;
+  const showRetry = error && onRetry && !showSubscribe;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex h-full w-full flex-col justify-center rounded-[inherit] bg-white/85 p-6 text-center backdrop-blur dark:bg-slate-900/90">
       <div className="pointer-events-auto mx-auto w-full max-w-md rounded-xl bg-white px-6 py-4 text-lg font-medium text-slate-700 dark:bg-transparent dark:text-slate-100">
         <div>{content}</div>
-        {error && onRetry ? (
+        {showSubscribe ? (
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-none transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            onClick={onSubscription}
+          >
+            {subscriptionLabel}
+          </button>
+        ) : showRetry ? (
           <button
             type="button"
             className="mt-4 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-none transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
