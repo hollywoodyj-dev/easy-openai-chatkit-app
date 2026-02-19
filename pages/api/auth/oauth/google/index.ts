@@ -9,7 +9,6 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const { state } = req.query;
-  const isMobile = state === "mobile";
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = `${process.env.OAUTH_CALLBACK_BASE_URL || "https://wisewave-chatkit-app-v2.vercel.app"}/api/auth/oauth/google/callback`;
