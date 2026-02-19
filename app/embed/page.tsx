@@ -37,9 +37,10 @@ function EmbedContent() {
         JSON.stringify({ type: "open_subscription" })
       );
     } else {
-      window.location.href = "/subscribe";
+      const q = token ? `?token=${encodeURIComponent(token)}` : "";
+      window.location.href = `/subscribe${q}`;
     }
-  }, [isEmbedMobile]);
+  }, [isEmbedMobile, token]);
 
   return (
     <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">

@@ -1,21 +1,29 @@
-import { View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+  Alert,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 
-/**
- * Subscription screen: shown when user taps "Subscribe" from the chat (subscription required).
- * Opens Google Play subscription or app page. Replace PLAY_STORE_SUBSCRIPTION_URL with your in-app product deep link when using Google Play Billing.
- */
+const MONTHLY_PRICE = 29;
+const YEARLY_PRICE = 299;
+
 const PLAY_STORE_APP_URL = "https://play.google.com/store/apps/details?id=com.wisewave.chat";
-const PLAY_STORE_SUBSCRIPTION_URL = PLAY_STORE_APP_URL; // Replace with your subscription product URL when configured
+const APP_STORE_APP_URL = "https://apps.apple.com/app/wisewave-chat/id"; // Replace with your App Store ID
 
 export default function SubscriptionScreen() {
   const router = useRouter();
   const { token } = useAuth();
 
-  const handleSubscribe = () => {
-    Linking.openURL(PLAY_STORE_SUBSCRIPTION_URL).catch(() => {
-      Alert.alert("Error", "Could not open Google Play.");
+  const openStore = (plan: "monthly" | "yearly") => {
+    const url = Platform.OS === "ios" ? APP_STORE_APP_URL : PLAY_STORE_APP_URL;
+    Linking.openURL(url).catch(() => {
+      Alert.alert("Error", "Could not open the store.");
     });
   };
 
@@ -23,11 +31,44 @@ export default function SubscriptionScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Subscribe to continue</Text>
       <Text style={styles.subtitle}>
-        Your trial has ended. Subscribe via Google Play to keep using chat and your history.
+        Your trial has ended. Choose a plan to keep using chat and your history.
       </Text>
-      <TouchableOpacity style={styles.button} onPress={handleSubscribe}>
-        <Text style={styles.buttonText}>Subscribe with Google Play</Text>
-      </TouchableOpacity>
+
+      <View style={styles.card}>
+        <Text style={styles.planName}>Monthly</Text>
+        <Text style={styles.price}>${MONTHLY_PRICE}</Text>
+        <Text style={styles.interval}>per month</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => openStore("monthly")}
+        >
+          <Text style={styles.buttonText}>
+            {Platform.OS === "android"
+              ? "Subscribe with Google Play"
+              : "Subscribe with Apple"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.card, styles.cardHighlight]}>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>Save 14%</Text>
+        </View>
+        <Text style={styles.planName}>Yearly</Text>
+        <Text style={styles.price}>${YEARLY_PRICE}</Text>
+        <Text style={styles.interval}>per year</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => openStore("yearly")}
+        >
+          <Text style={styles.buttonText}>
+            {Platform.OS === "android"
+              ? "Subscribe with Google Play"
+              : "Subscribe with Apple"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity
         style={styles.secondaryButton}
         onPress={() => router.back()}
@@ -51,7 +92,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FAF9F6",
     padding: 24,
-    justifyContent: "center",
   },
   title: {
     fontSize: 24,
@@ -64,15 +104,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#718096",
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: 24,
     lineHeight: 24,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  cardHighlight: {
+    borderColor: "#059669",
+    position: "relative",
+  },
+  badge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "#D1FAE5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#047857",
+  },
+  planName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2D3748",
+    marginBottom: 4,
+  },
+  price: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#0f172a",
+    marginBottom: 2,
+  },
+  interval: {
+    fontSize: 14,
+    color: "#64748b",
+    marginBottom: 16,
   },
   button: {
     backgroundColor: "#059669",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom: 12,
   },
   buttonText: {
     color: "#fff",
@@ -82,6 +164,7 @@ const styles = StyleSheet.create({
   secondaryButton: {
     padding: 16,
     alignItems: "center",
+    marginTop: 8,
   },
   secondaryButtonText: {
     color: "#4A5568",
