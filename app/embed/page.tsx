@@ -18,6 +18,7 @@ function EmbedContent() {
     () => searchParams?.get("token")?.trim() || null,
     [searchParams]
   );
+  const isEmbedMobile = searchParams?.get("embed") === "mobile";
 
   const handleWidgetAction = useCallback(
     async (action: FactAction) => { void action; },
@@ -29,6 +30,17 @@ function EmbedContent() {
     []
   );
 
+  const handleSubscriptionRequired = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (isEmbedMobile && (window as unknown as { ReactNativeWebView?: { postMessage: (msg: string) => void } }).ReactNativeWebView) {
+      (window as unknown as { ReactNativeWebView: { postMessage: (msg: string) => void } }).ReactNativeWebView.postMessage(
+        JSON.stringify({ type: "open_subscription" })
+      );
+    } else {
+      window.location.href = "/subscribe";
+    }
+  }, [isEmbedMobile]);
+
   return (
     <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">
       <div className="flex h-full w-full flex-col p-2 sm:p-4">
@@ -38,6 +50,7 @@ function EmbedContent() {
           onResponseEnd={handleResponseEnd}
           onThemeRequest={handleThemeRequest}
           authToken={token ?? undefined}
+          onSubscriptionRequired={handleSubscriptionRequired}
         />
       </div>
     </main>

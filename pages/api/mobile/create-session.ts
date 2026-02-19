@@ -46,8 +46,25 @@ export default async function handler(
       return res.status(401).json({ error: "User not found" });
     }
 
-    const sub = user.subscriptions[0];
     const now = new Date();
+    let sub = user.subscriptions[0];
+
+    // If user has no subscription (e.g. first account or created before trials), grant a 7-day trial
+    const TRIAL_DAYS = 7;
+    if (!sub) {
+      const trialEndsAt = new Date(
+        now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000
+      );
+      const newSub = await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          status: "trialing",
+          platform: "stripe_web",
+          trialEndsAt,
+        },
+      });
+      sub = newSub;
+    }
 
     const isTrialing =
       sub &&
