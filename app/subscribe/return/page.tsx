@@ -42,7 +42,10 @@ function ReturnContent() {
         }
         setStatus("success");
         setMessage("Subscription activated!");
-        window.location.href = `/embed?token=${encodeURIComponent(state)}`;
+        const base = (typeof process !== "undefined" && process.env.NEXT_PUBLIC_APP_URL)
+          ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
+          : "";
+        window.location.href = `${base}/embed?token=${encodeURIComponent(state)}`;
       } catch {
         if (!cancelled) {
           setStatus("error");
