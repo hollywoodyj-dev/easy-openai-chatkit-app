@@ -19,12 +19,37 @@ interface AdminUser {
   } | null;
 }
 
+interface AdminStats {
+  totals: {
+    totalUsers: number;
+    newUsers30d: number;
+    totalSubscriptions: number;
+    newSubscriptions30d: number;
+  };
+  byStatus: {
+    active: number;
+    trialing: number;
+    canceled: number;
+    expired: number;
+  };
+  byPlan: {
+    activeMonthly: number;
+    activeYearly: number;
+  };
+  revenueEstimate: {
+    mrrUsd: number;
+    arrUsd: number;
+  };
+  generatedAt: string;
+}
+
 const AdminPage: NextPage = () => {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
 
   const token =
     typeof router.query.token === "string" ? router.query.token : "";
@@ -35,19 +60,38 @@ const AdminPage: NextPage = () => {
     setError(null);
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/admin/users`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError((data.error as string) || "Failed to load users");
+        const [usersRes, statsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/admin/users`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch(`${API_BASE}/api/admin/stats`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        const usersData = await usersRes.json().catch(() => ({}));
+        if (!usersRes.ok) {
+          setError(
+            (usersData.error as string) || "Failed to load users"
+          );
           return;
         }
-        setUsers((data.users as AdminUser[]) ?? []);
+        setUsers((usersData.users as AdminUser[]) ?? []);
+
+        const statsData = await statsRes.json().catch(() => ({}));
+        if (!statsRes.ok) {
+          setError(
+            (statsData.error as string) || "Failed to load stats"
+          );
+          return;
+        }
+        setStats(statsData as AdminStats);
       } catch {
-        setError("Network error while loading users");
+        setError("Network error while loading admin data");
       } finally {
         setLoading(false);
       }
@@ -134,10 +178,42 @@ const AdminPage: NextPage = () => {
   return (
     <main style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Admin: Users &amp; Subscriptions</h1>
+        <h1 style={styles.title}>Admin: Users, Subscriptions &amp; Reports</h1>
+        {stats && (
+          <div style={styles.statsRow}>
+            <div style={styles.statCard}>
+              <div style={styles.statLabel}>Total users</div>
+              <div style={styles.statValue}>
+                {stats.totals.totalUsers}
+              </div>
+              <div style={styles.statSub}>
+                +{stats.totals.newUsers30d} last 30 days
+              </div>
+            </div>
+            <div style={styles.statCard}>
+              <div style={styles.statLabel}>Active subscriptions</div>
+              <div style={styles.statValue}>
+                {stats.byStatus.active}
+              </div>
+              <div style={styles.statSub}>
+                {stats.byPlan.activeMonthly} monthly ·{" "}
+                {stats.byPlan.activeYearly} yearly
+              </div>
+            </div>
+            <div style={styles.statCard}>
+              <div style={styles.statLabel}>Est. MRR (USD)</div>
+              <div style={styles.statValue}>
+                {stats.revenueEstimate.mrrUsd.toFixed(0)}
+              </div>
+              <div style={styles.statSub}>
+                ARR ≈ ${stats.revenueEstimate.arrUsd.toFixed(0)}
+              </div>
+            </div>
+          </div>
+        )}
         <p style={styles.text}>
-          You can view users, see their latest subscription, and update status
-          or active-until date.
+          Below is the full user list with their latest subscription. You can
+          update status and active-until date.
         </p>
         {error && <p style={styles.error}>{error}</p>}
         {loading ? (
@@ -324,6 +400,37 @@ const styles = {
     background: "#F7FAFC",
     fontFamily: "monospace",
     fontSize: 12,
+  },
+  statsRow: {
+    display: "flex",
+    flexWrap: "wrap" as const,
+    gap: 12,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: "1 1 180px",
+    minWidth: 0,
+    padding: 12,
+    borderRadius: 12,
+    background: "#F7FAFC",
+    border: "1px solid #E2E8F0",
+  },
+  statLabel: {
+    fontSize: 11,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.06em",
+    color: "#718096",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 600,
+    color: "#2D3748",
+  },
+  statSub: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#4A5568",
   },
 };
 
