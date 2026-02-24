@@ -70,6 +70,7 @@ export default async function handler(
       activeMonthly,
       activeYearly,
       newSubscriptions30d,
+      usersByCountry,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({
@@ -90,6 +91,10 @@ export default async function handler(
       }),
       prisma.subscription.count({
         where: { createdAt: { gte: thirtyDaysAgo } },
+      }),
+      prisma.user.groupBy({
+        by: ["country"],
+        _count: { _all: true },
       }),
     ]);
 
@@ -121,6 +126,12 @@ export default async function handler(
         mrrUsd,
         arrUsd,
       },
+      byCountry: usersByCountry
+        .map((row) => ({
+          country: row.country,
+          users: row._count._all,
+        }))
+        .sort((a, b) => b.users - a.users),
       generatedAt: now.toISOString(),
     });
   } catch (error) {
