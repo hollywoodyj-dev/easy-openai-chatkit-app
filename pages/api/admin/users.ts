@@ -2,24 +2,28 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { verifyUserToken } from "@/lib/auth";
 
-async function requireAdmin(req: NextApiRequest) {
+type AdminCheckResult =
+  | { ok: true; adminUserId: string }
+  | { ok: false; status: number; message: string };
+
+async function requireAdmin(req: NextApiRequest): Promise<AdminCheckResult> {
   const authHeader = req.headers.authorization ?? "";
   const token = authHeader.toLowerCase().startsWith("bearer ")
     ? authHeader.slice(7).trim()
     : null;
 
   if (!token) {
-    return { error: { status: 401, message: "Missing Authorization header" as const } } as const;
+    return { ok: false, status: 401, message: "Missing Authorization header" };
   }
 
   const userId = verifyUserToken(token);
   if (!userId) {
-    return { error: { status: 401, message: "Invalid or expired token" as const } } as const;
+    return { ok: false, status: 401, message: "Invalid or expired token" };
   }
 
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) {
-    return { error: { status: 500, message: "ADMIN_EMAIL is not configured" as const } } as const;
+    return { ok: false, status: 500, message: "ADMIN_EMAIL is not configured" };
   }
 
   const user = await prisma.user.findUnique({
@@ -28,10 +32,10 @@ async function requireAdmin(req: NextApiRequest) {
   });
 
   if (!user || user.email !== adminEmail) {
-    return { error: { status: 403, message: "Forbidden" as const } } as const;
+    return { ok: false, status: 403, message: "Forbidden" };
   }
 
-  return { adminUserId: user.id } as const;
+  return { ok: true, adminUserId: user.id };
 }
 
 export default async function handler(
@@ -45,9 +49,8 @@ export default async function handler(
 
   try {
     const auth = await requireAdmin(req);
-    if ("error" in auth) {
-      const { status, message } = auth.error;
-      return res.status(status).json({ error: message });
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.message });
     }
 
     const users = await prisma.user.findMany({
