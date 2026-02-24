@@ -44,7 +44,11 @@ const LoginPage: NextPage = () => {
         setError("No token received.");
         return;
       }
-      await router.replace(`/embed?token=${encodeURIComponent(token)}`);
+      const isAdmin = Boolean(data?.isAdmin);
+      const target = isAdmin ? "/admin" : "/embed";
+      await router.replace(
+        `${target}?token=${encodeURIComponent(token)}`
+      );
     } catch {
       setError("Network error. Please try again.");
     } finally {

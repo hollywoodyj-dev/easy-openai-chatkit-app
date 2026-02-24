@@ -59,11 +59,14 @@ export default async function handler(
     }
 
     const token = signUserToken(user.id);
+    const isAdmin =
+      !!process.env.ADMIN_EMAIL && user.email === process.env.ADMIN_EMAIL;
 
     return res.status(200).json({
       token,
       user: { id: user.id, email: user.email },
       subscription: user.subscriptions[0] ?? null,
+      isAdmin,
     });
   } catch (error) {
     console.error("[pages/api/auth/login] unexpected error", error);
