@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, signUserToken } from "@/lib/auth";
+import { updateUserCountryFromRequest } from "@/lib/geoip";
 
 export default async function handler(
   req: NextApiRequest,
@@ -70,6 +71,9 @@ export default async function handler(
     });
 
     const token = signUserToken(user.id);
+
+    // Best-effort: set user.country based on signup IP.
+    await updateUserCountryFromRequest(user.id, req);
 
     return res.status(201).json({
       token,
