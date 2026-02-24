@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signUserToken } from "@/lib/auth";
+import { updateUserCountryFromRequest } from "@/lib/geoip";
 
 export default async function handler(
   req: NextApiRequest,
@@ -61,6 +62,9 @@ export default async function handler(
     const token = signUserToken(user.id);
     const isAdmin =
       !!process.env.ADMIN_EMAIL && user.email === process.env.ADMIN_EMAIL;
+
+    // Best-effort: update user.country based on IP geolocation.
+    await updateUserCountryFromRequest(user.id, req);
 
     return res.status(200).json({
       token,

@@ -42,8 +42,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
@@ -53,38 +53,26 @@ export default async function handler(
       return res.status(auth.status).json({ error: auth.message });
     }
 
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        subscriptions: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-      },
+    const { userId, country } = req.body ?? {};
+
+    if (!userId || typeof userId !== "string") {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    const trimmedCountry =
+      typeof country === "string" && country.trim()
+        ? country.trim()
+        : null;
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { country: trimmedCountry },
+      select: { id: true, country: true },
     });
 
-    const result = users.map((u) => {
-      const sub = u.subscriptions[0] ?? null;
-      return {
-        id: u.id,
-        email: u.email,
-        country: u.country,
-        createdAt: u.createdAt,
-        subscription: sub
-          ? {
-              id: sub.id,
-              status: sub.status,
-              plan: sub.plan,
-              platform: sub.platform,
-              currentPeriodEnd: sub.currentPeriodEnd,
-            }
-          : null,
-      };
-    });
-
-    return res.status(200).json({ users: result });
+    return res.status(200).json({ user: updated });
   } catch (error) {
-    console.error("[api/admin/users] unexpected error", error);
+    console.error("[api/admin/set-user-location] unexpected error", error);
     return res.status(500).json({ error: "Unexpected error" });
   }
 }

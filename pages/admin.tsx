@@ -10,6 +10,7 @@ interface AdminUser {
   id: string;
   email: string;
   createdAt: string;
+  country?: string | null;
   subscription: {
     id: string;
     status: SubscriptionStatus;
@@ -36,6 +37,10 @@ interface AdminStats {
     activeMonthly: number;
     activeYearly: number;
   };
+  byCountry?: {
+    country: string | null;
+    users: number;
+  }[];
   revenueEstimate: {
     mrrUsd: number;
     arrUsd: number;
@@ -129,6 +134,29 @@ const AdminPage: NextPage = () => {
         setError((data.error as string) || "Failed to update subscription");
         return;
       }
+
+      const locRes = await fetch(
+        `${API_BASE}/api/admin/set-user-location`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            country: user.country ?? null,
+          }),
+        }
+      );
+      const locData = await locRes.json().catch(() => ({}));
+      if (!locRes.ok) {
+        setError(
+          (locData.error as string) ||
+            "Subscription updated, but failed to update location"
+        );
+        return;
+      }
       const updated = data.subscription as {
         status: SubscriptionStatus;
         currentPeriodEnd: string | null;
@@ -138,6 +166,7 @@ const AdminPage: NextPage = () => {
           u.id === user.id
             ? {
                 ...u,
+                country: user.country ?? null,
                 subscription: {
                   ...(u.subscription ?? {
                     id: "",
@@ -211,6 +240,15 @@ const AdminPage: NextPage = () => {
             </div>
           </div>
         )}
+        {stats?.byCountry && stats.byCountry.length > 0 && (
+          <p style={styles.text}>
+            Top countries:&nbsp;
+            {stats.byCountry
+              .slice(0, 5)
+              .map((c) => `${c.country ?? "Unknown"} (${c.users})`)
+              .join(", ")}
+          </p>
+        )}
         <p style={styles.text}>
           Below is the full user list with their latest subscription. You can
           update status and active-until date.
@@ -225,6 +263,7 @@ const AdminPage: NextPage = () => {
                 <tr>
                   <th style={styles.th}>Email</th>
                   <th style={styles.th}>Created</th>
+                  <th style={styles.th}>Country</th>
                   <th style={styles.th}>Status</th>
                   <th style={styles.th}>Active until</th>
                   <th style={styles.th}>Actions</th>
@@ -245,6 +284,17 @@ const AdminPage: NextPage = () => {
                       <td style={styles.td}>{user.email}</td>
                       <td style={styles.td}>
                         {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={styles.td}>
+                        <input
+                          type="text"
+                          placeholder="US, GB, HK…"
+                          defaultValue={user.country ?? ""}
+                          onChange={(e) => {
+                            user.country = e.target.value || null;
+                          }}
+                          style={styles.input}
+                        />
                       </td>
                       <td style={styles.td}>
                         <select
