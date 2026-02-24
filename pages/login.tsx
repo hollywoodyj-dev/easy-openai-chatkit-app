@@ -18,6 +18,7 @@ const LoginPage: NextPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+   const [mode, setMode] = useState<"login" | "signup">("login");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,14 +30,21 @@ const LoginPage: NextPage = () => {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const endpoint =
+        mode === "signup" ? "/api/auth/register" : "/api/auth/login";
+      const res = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError((data?.error as string) ?? "Invalid email or password.");
+        setError(
+          (data?.error as string) ??
+            (mode === "signup"
+              ? "Could not create account."
+              : "Invalid email or password.")
+        );
         return;
       }
       const token = data?.token as string | undefined;
@@ -65,9 +73,13 @@ const LoginPage: NextPage = () => {
     <main style={styles.container}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <h1 style={styles.title}>Welcome back</h1>
+          <h1 style={styles.title}>
+            {mode === "login" ? "Welcome back" : "Create your account"}
+          </h1>
           <p style={styles.subtitle}>
-            A space to pause, breathe, and return to yourself
+            {mode === "login"
+              ? "A space to pause, breathe, and return to yourself"
+              : "Start your journey with a calm, focused chat space."}
           </p>
         </div>
 
@@ -148,8 +160,28 @@ const LoginPage: NextPage = () => {
               ...(loading || oauthLoading ? styles.buttonDisabled : {}),
             }}
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading
+              ? mode === "login"
+                ? "Signing in…"
+                : "Creating account…"
+              : mode === "login"
+                ? "Sign in"
+                : "Sign up"}
           </button>
+          <p style={styles.switchText}>
+            {mode === "login" ? "No account yet?" : "Already have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setError("");
+                setMode(mode === "login" ? "signup" : "login");
+              }}
+              style={styles.switchLink}
+              disabled={loading || !!oauthLoading}
+            >
+              {mode === "login" ? "Sign up" : "Sign in"}
+            </button>
+          </p>
         </form>
       </div>
     </main>
@@ -257,6 +289,22 @@ const styles = {
     margin: "0 0 16px",
     color: "#DC2626",
     fontSize: 14,
+  },
+  switchText: {
+    marginTop: 12,
+    fontSize: 13,
+    color: "#4A5568",
+    textAlign: "center" as const,
+  },
+  switchLink: {
+    border: "none",
+    padding: 0,
+    margin: 0,
+    background: "none",
+    color: "#2B6CB0",
+    cursor: "pointer",
+    fontSize: 13,
+    textDecoration: "underline",
   },
   button: {
     width: "100%",
