@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-100 dark:bg-slate-950">
-      <div className="mx-auto w-full max-w-5xl px-4 py-6">
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 min-h-[60vh]">
         <ChatKitPanel
           theme={scheme}
           onWidgetAction={handleWidgetAction}
