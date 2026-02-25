@@ -414,20 +414,6 @@ export function ChatKitPanel({
           subscriptionLabel="Subscribe"
         />
       </div>
-      {!blockingError && !isInitializingSession && (
-        <p className="mt-2 px-2 text-center text-xs text-slate-400">
-          If the chat is empty, add this site to the{" "}
-          <a
-            href="https://platform.openai.com/settings/organization/security/domain-allowlist"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            OpenAI domain allowlist
-          </a>
-          .
-        </p>
-      )}
     </div>
   );
 }

@@ -43,7 +43,10 @@ function EmbedContent() {
   }, [isEmbedMobile, token]);
 
   return (
-    <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">
+    <main
+      className="flex h-[100dvh] w-full flex-col bg-white dark:bg-slate-900"
+      style={{ paddingTop: "env(safe-area-inset-top)", minHeight: "100dvh" }}
+    >
       <div className="flex h-full w-full flex-col p-2 sm:p-4">
         <ChatKitPanel
           theme="light"
@@ -61,7 +64,10 @@ function EmbedContent() {
 export default function EmbedPage() {
   return (
     <Suspense fallback={
-      <main className="flex h-[100vh] w-full flex-col bg-white dark:bg-slate-900">
+      <main
+        className="flex h-[100dvh] w-full flex-col bg-white dark:bg-slate-900"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <div className="flex h-full w-full items-center justify-center">
           <p className="text-slate-500">Loading...</p>
         </div>
