@@ -30,6 +30,8 @@ type ChatKitPanelProps = {
   authToken?: string | null;
   /** Called when backend returns "Subscription required" (402). Use for "Subscribe" button (e.g. open /subscribe or Google Play). */
   onSubscriptionRequired?: () => void;
+  /** When true, panel fills the full viewport (no max-height). Use on home page. */
+  fullPage?: boolean;
 };
 
 type ErrorState = {
@@ -57,6 +59,7 @@ export function ChatKitPanel({
   onThemeRequest,
   authToken,
   onSubscriptionRequired,
+  fullPage = false,
 }: ChatKitPanelProps) {
   const processedFacts = useRef(new Set<string>());
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
@@ -382,7 +385,10 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative flex h-full min-h-0 w-full max-w-full flex-col overflow-hidden bg-white dark:bg-slate-900" style={{ maxHeight: "90dvh" }}>
+    <div
+      className="relative flex h-full min-h-0 w-full max-w-full flex-col overflow-hidden bg-white dark:bg-slate-900"
+      style={fullPage ? undefined : { maxHeight: "90dvh" }}
+    >
       <div className="relative flex min-h-0 flex-1 flex-col" style={{ minHeight: 0 }}>
         <ChatKit
           key={widgetInstanceKey}
