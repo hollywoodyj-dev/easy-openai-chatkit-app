@@ -32,3 +32,11 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* Keep chat content at top; avoid large blank area from ChatKit's default centering */
+openai-chatkit {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+}

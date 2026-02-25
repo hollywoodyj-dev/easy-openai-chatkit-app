@@ -382,7 +382,7 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white dark:bg-slate-900">
+    <div className="relative flex h-full min-h-0 w-full max-w-full flex-col overflow-hidden bg-white dark:bg-slate-900" style={{ maxHeight: "90dvh" }}>
       <div className="relative flex min-h-0 flex-1 flex-col" style={{ minHeight: 0 }}>
         <ChatKit
           key={widgetInstanceKey}
