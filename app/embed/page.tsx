@@ -44,10 +44,10 @@ function EmbedContent() {
 
   return (
     <main
-      className="flex min-h-[100dvh] w-full flex-col items-start justify-start bg-white dark:bg-slate-900"
+      className="flex h-screen w-full flex-col bg-white dark:bg-slate-900"
       style={{ paddingTop: "env(safe-area-inset-top)", minHeight: "100dvh" }}
     >
-      <div className="flex w-full flex-1 flex-col items-stretch p-2 sm:p-4" style={{ minHeight: 0, maxHeight: "90dvh" }}>
+      <div className="flex h-full w-full min-h-0 flex-col p-2 sm:p-4">
         <ChatKitPanel
           theme="light"
           onWidgetAction={handleWidgetAction}
@@ -55,6 +55,7 @@ function EmbedContent() {
           onThemeRequest={handleThemeRequest}
           authToken={token ?? undefined}
           onSubscriptionRequired={handleSubscriptionRequired}
+          fullPage
         />
       </div>
     </main>
