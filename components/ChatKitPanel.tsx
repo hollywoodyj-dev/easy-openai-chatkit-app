@@ -382,15 +382,15 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative flex min-h-[70vh] w-full flex-col rounded-2xl overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
-      <div className="relative flex min-h-[60vh] flex-1 flex-col" style={{ minHeight: "400px" }}>
+    <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-white dark:bg-slate-900">
+      <div className="relative flex min-h-0 flex-1 flex-col" style={{ minHeight: 0 }}>
         <ChatKit
           key={widgetInstanceKey}
           control={chatkit.control}
           className={
             blockingError || isInitializingSession
-              ? "pointer-events-none opacity-0 min-h-[400px] w-full"
-              : "block min-h-[400px] h-full w-full"
+              ? "pointer-events-none opacity-0 min-h-[200px] w-full"
+              : "block h-full min-h-[200px] w-full"
           }
         />
         <ErrorOverlay
