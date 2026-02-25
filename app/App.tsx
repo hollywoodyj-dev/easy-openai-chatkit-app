@@ -20,13 +20,14 @@ export default function App() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-100 dark:bg-slate-950">
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 min-h-[60vh]">
+    <main className="flex h-screen w-full flex-col bg-slate-100 dark:bg-slate-950">
+      <div className="flex h-full w-full flex-col min-h-0">
         <ChatKitPanel
           theme={scheme}
           onWidgetAction={handleWidgetAction}
           onResponseEnd={handleResponseEnd}
           onThemeRequest={setScheme}
+          fullPage
         />
       </div>
     </main>
