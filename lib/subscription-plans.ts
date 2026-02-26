@@ -5,10 +5,10 @@ export const SUBSCRIPTION_PLANS = {
   monthly: {
     id: "monthly",
     name: "Monthly",
-    price: 0.1,
+    price: 3,
     interval: "month",
-    description: "$0.10/month (test)",
-    priceLabel: "$0.10",
+    description: "$3/month (test)",
+    priceLabel: "$3",
     intervalLabel: "per month",
     badge: undefined as string | undefined,
   },
