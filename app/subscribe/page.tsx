@@ -168,7 +168,7 @@ function SubscribeContent() {
       className="flex min-h-screen flex-col items-center justify-center p-6"
       style={{ background: "#FAF9F6", fontFamily: "system-ui, sans-serif" }}
     >
-      <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-sm">
+      <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-sm">
         <h1 className="mb-2 text-2xl font-light text-slate-800">
           Subscribe to continue
         </h1>
@@ -194,7 +194,7 @@ function SubscribeContent() {
             return (
               <div
                 key={planId}
-                className="relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 p-6 transition hover:border-slate-300"
+                className="relative flex min-w-0 flex-col rounded-xl border border-slate-200 p-6 transition hover:border-slate-300"
               >
                 {plan.badge && (
                   <span className="absolute right-3 top-3 rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
@@ -216,7 +216,7 @@ function SubscribeContent() {
                 token ? (
                   <div
                     id="paypal-button-container-monthly"
-                    className="mt-auto min-h-[45px] w-full max-w-full overflow-hidden"
+                    className="mt-auto min-h-[45px] w-full max-w-full"
                   />
                 ) : (
                   <button
