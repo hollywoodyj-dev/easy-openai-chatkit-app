@@ -104,7 +104,7 @@ function SubscribeContent() {
                     process.env.NEXT_PUBLIC_APP_URL)
                     ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
                     : "";
-                window.location.href = `${base}/embed?token=${encodeURIComponent(token)}`;
+                window.location.href = `${base}/embed?token=${encodeURIComponent(token ?? "")}`;
               } else {
                 setError(json.error ?? "Activation failed");
               }
