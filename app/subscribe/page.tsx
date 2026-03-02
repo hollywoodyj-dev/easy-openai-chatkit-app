@@ -9,8 +9,12 @@ const API_BASE = typeof window !== "undefined" ? window.location.origin : "";
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
 const PAYPAL_MONTHLY_PLAN_ID =
   process.env.NEXT_PUBLIC_PAYPAL_MONTHLY_PLAN_ID ?? "";
-const USE_PAYPAL_SUBSCRIPTION_BUTTON =
+const PAYPAL_YEARLY_PLAN_ID =
+  process.env.NEXT_PUBLIC_PAYPAL_YEARLY_PLAN_ID ?? "";
+const USE_PAYPAL_SUBSCRIPTION_MONTHLY =
   !!PAYPAL_CLIENT_ID && !!PAYPAL_MONTHLY_PLAN_ID;
+const USE_PAYPAL_SUBSCRIPTION_YEARLY =
+  !!PAYPAL_CLIENT_ID && !!PAYPAL_YEARLY_PLAN_ID;
 
 function SubscribeContent() {
   const searchParams = useSearchParams();
@@ -18,7 +22,8 @@ function SubscribeContent() {
   const canceled = searchParams?.get("canceled") === "1";
   const [loading, setLoading] = useState<PlanId | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const paypalButtonRendered = useRef(false);
+  const paypalMonthlyRendered = useRef(false);
+  const paypalYearlyRendered = useRef(false);
 
   const isEmbedMobile = Boolean(
     typeof window !== "undefined" &&
@@ -27,20 +32,20 @@ function SubscribeContent() {
   );
 
   useEffect(() => {
-    if (
-      !USE_PAYPAL_SUBSCRIPTION_BUTTON ||
-      !token ||
-      isEmbedMobile ||
-      typeof window === "undefined"
-    ) {
+    const useSubscription =
+      USE_PAYPAL_SUBSCRIPTION_MONTHLY || USE_PAYPAL_SUBSCRIPTION_YEARLY;
+    if (!useSubscription || !token || isEmbedMobile || typeof window === "undefined") {
       return;
     }
-    const container = document.getElementById("paypal-button-container-monthly");
-    if (!container || paypalButtonRendered.current) return;
 
     const existing = document.getElementById("paypal-sdk-subscription");
+    const doRender = () => {
+      renderPayPalMonthly();
+      renderPayPalYearly();
+    };
+
     if (existing) {
-      renderPayPalButton();
+      doRender();
       return;
     }
 
@@ -48,16 +53,21 @@ function SubscribeContent() {
     script.id = "paypal-sdk-subscription";
     script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription`;
     script.async = true;
-    script.onload = () => renderPayPalButton();
+    script.onload = doRender;
     document.body.appendChild(script);
 
-    function renderPayPalButton() {
+    function renderPayPalMonthly() {
+      if (
+        !USE_PAYPAL_SUBSCRIPTION_MONTHLY ||
+        paypalMonthlyRendered.current
+      )
+        return;
       const paypal = (window as unknown as { paypal?: { Buttons: (opts: unknown) => { render: (sel: string) => Promise<void> } } }).paypal;
-      if (!paypal || paypalButtonRendered.current) return;
+      if (!paypal) return;
       const el = document.getElementById("paypal-button-container-monthly");
       if (!el || el.hasChildNodes()) return;
 
-      paypalButtonRendered.current = true;
+      paypalMonthlyRendered.current = true;
       paypal
         .Buttons({
           style: {
@@ -75,47 +85,85 @@ function SubscribeContent() {
             });
           },
           onApprove: async function (data: { subscriptionID?: string }) {
-            const subId = data.subscriptionID;
-            if (!subId) {
-              setError("No subscription ID received");
-              return;
-            }
-            setLoading("monthly");
-            setError(null);
-            try {
-              const res = await fetch(
-                `${API_BASE}/api/subscription/activate-paypal-subscription`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({
-                    subscriptionId: subId,
-                    plan: "monthly",
-                  }),
-                }
-              );
-              const json = (await res.json().catch(() => ({}))) as { error?: string };
-              if (res.ok) {
-                const base =
-                  (typeof process !== "undefined" &&
-                    process.env.NEXT_PUBLIC_APP_URL)
-                    ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
-                    : "";
-                window.location.href = `${base}/embed?token=${encodeURIComponent(token ?? "")}`;
-              } else {
-                setError(json.error ?? "Activation failed");
-              }
-            } catch {
-              setError("Something went wrong");
-            } finally {
-              setLoading(null);
-            }
+            await handlePayPalApprove(data.subscriptionID, "monthly");
           },
         })
         .render("#paypal-button-container-monthly");
+    }
+
+    function renderPayPalYearly() {
+      if (
+        !USE_PAYPAL_SUBSCRIPTION_YEARLY ||
+        paypalYearlyRendered.current
+      )
+        return;
+      const paypal = (window as unknown as { paypal?: { Buttons: (opts: unknown) => { render: (sel: string) => Promise<void> } } }).paypal;
+      if (!paypal) return;
+      const el = document.getElementById("paypal-button-container-yearly");
+      if (!el || el.hasChildNodes()) return;
+
+      paypalYearlyRendered.current = true;
+      paypal
+        .Buttons({
+          style: {
+            shape: "pill",
+            color: "gold",
+            layout: "vertical",
+            label: "subscribe",
+          },
+          createSubscription: function (
+            _data: unknown,
+            actions: { subscription: { create: (opts: { plan_id: string }) => Promise<unknown> } }
+          ) {
+            return actions.subscription.create({
+              plan_id: PAYPAL_YEARLY_PLAN_ID,
+            });
+          },
+          onApprove: async function (data: { subscriptionID?: string }) {
+            await handlePayPalApprove(data.subscriptionID, "yearly");
+          },
+        })
+        .render("#paypal-button-container-yearly");
+    }
+
+    async function handlePayPalApprove(
+      subId: string | undefined,
+      plan: "monthly" | "yearly"
+    ) {
+      if (!subId) {
+        setError("No subscription ID received");
+        return;
+      }
+      setLoading(plan);
+      setError(null);
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/subscription/activate-paypal-subscription`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ subscriptionId: subId, plan }),
+          }
+        );
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        if (res.ok) {
+          const base =
+            (typeof process !== "undefined" &&
+              process.env.NEXT_PUBLIC_APP_URL)
+              ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
+              : "";
+          window.location.href = `${base}/embed?token=${encodeURIComponent(token ?? "")}`;
+        } else {
+          setError(json.error ?? "Activation failed");
+        }
+      } catch {
+        setError("Something went wrong");
+      } finally {
+        setLoading(null);
+      }
     }
   }, [token, isEmbedMobile]);
 
@@ -211,11 +259,19 @@ function SubscribeContent() {
                   {plan.intervalLabel}
                 </div>
                 {planId === "monthly" &&
-                USE_PAYPAL_SUBSCRIPTION_BUTTON &&
+                USE_PAYPAL_SUBSCRIPTION_MONTHLY &&
                 !isEmbedMobile &&
                 token ? (
                   <div
                     id="paypal-button-container-monthly"
+                    className="mt-auto min-h-[45px] w-full max-w-full"
+                  />
+                ) : planId === "yearly" &&
+                  USE_PAYPAL_SUBSCRIPTION_YEARLY &&
+                  !isEmbedMobile &&
+                  token ? (
+                  <div
+                    id="paypal-button-container-yearly"
                     className="mt-auto min-h-[45px] w-full max-w-full"
                   />
                 ) : (
