@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +10,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
+import * as RNIap from "react-native-iap";
+import type { Purchase } from "react-native-iap";
+import { API_BASE_URL } from "../config";
 
 const MONTHLY_PRICE = 29;
 const YEARLY_PRICE = 299;
@@ -16,12 +20,220 @@ const YEARLY_PRICE = 299;
 const PLAY_STORE_APP_URL = "https://play.google.com/store/apps/details?id=com.wisewave.chat";
 const APP_STORE_APP_URL = "https://apps.apple.com/app/wisewave-chat/id"; // Replace with your App Store ID
 
+const IAP_UNAVAILABLE_MSG =
+  "Google Play Billing couldn't be loaded. Please ensure:\n\n" +
+  "• You installed this app from the Google Play Store (internal test link)\n" +
+  "• You're signed in with a tester account\n" +
+  "• You have the latest app version\n\n" +
+  "Try reinstalling from the internal test page if the problem persists.";
+
 export default function SubscriptionScreen() {
   const router = useRouter();
   const { token } = useAuth();
+  const [iapReady, setIapReady] = useState(false);
+  const [iapChecking, setIapChecking] = useState(Platform.OS === "android");
 
-  const openStore = (plan: "monthly" | "yearly") => {
-    const url = Platform.OS === "ios" ? APP_STORE_APP_URL : PLAY_STORE_APP_URL;
+  useEffect(() => {
+    if (Platform.OS !== "android") {
+      setIapChecking(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        await RNIap.initConnection();
+        // Clear any failed purchases from cache on Android
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (RNIap as any).flushFailedPurchasesCachedAsPendingAndroid?.();
+        const hasFetchProducts = typeof RNIap.fetchProducts === "function";
+        const hasRequestPurchase = typeof RNIap.requestPurchase === "function";
+        setIapReady(hasFetchProducts && hasRequestPurchase);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("IAP init error", e);
+      } finally {
+        setIapChecking(false);
+      }
+    })();
+
+    return () => {
+      if (Platform.OS === "android") {
+        RNIap.endConnection();
+      }
+    };
+  }, []);
+
+  const startGooglePlaySubscription = async (plan: "monthly" | "yearly") => {
+    if (!token) {
+      Alert.alert("Sign in required", "Please sign in first.");
+      router.replace("/login");
+      return;
+    }
+
+    if (Platform.OS !== "android") {
+      Alert.alert(
+        "Not available",
+        "Google Play subscriptions are only available on Android devices."
+      );
+      return;
+    }
+
+    if (!iapReady) {
+      Alert.alert("Not available", IAP_UNAVAILABLE_MSG);
+      return;
+    }
+
+    // Google Play product IDs (must match Play Console)
+    const productId = plan === "monthly" ? "wisewave_monthly" : "wisewave_yearly";
+
+    try {
+      // react-native-iap v14: use fetchProducts + requestPurchase (no getSubscriptions/requestSubscription)
+      let purchase: any;
+      if (Platform.OS === "android") {
+        let subs: any[];
+        try {
+          const raw = await RNIap.fetchProducts({
+            skus: [productId],
+            type: "subs",
+          });
+          subs = Array.isArray(raw) ? raw : [];
+        } catch (fetchErr) {
+          const errMsg =
+            fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+          // eslint-disable-next-line no-console
+          console.warn("fetchProducts error", errMsg, fetchErr);
+          Alert.alert(
+            "Error",
+            "Could not load subscription products. Please try again."
+          );
+          return;
+        }
+
+        const product = subs.find(
+          (p: any) => (p.productId ?? p.id ?? p.sku) === productId
+        ) ?? subs[0];
+        const offers =
+          product?.subscriptionOfferDetailsAndroid ??
+          product?.subscriptionOfferDetails ??
+          [];
+        const firstOffer = Array.isArray(offers) ? offers[0] : offers;
+        const offerToken = firstOffer?.offerToken ?? firstOffer?.offerId;
+
+        if (!offerToken) {
+          Alert.alert(
+            "Error",
+            "Could not load subscription details. Install from Play Store (internal test) on a real device—emulator does not support purchases."
+          );
+          return;
+        }
+
+        // v14: requestPurchase is event-based; wait for purchase via listener
+        purchase = await new Promise<any>((resolve, reject) => {
+          const cleanup = () => {
+            subUpdated.remove();
+            subError.remove();
+          };
+          const subUpdated = RNIap.purchaseUpdatedListener((p) => {
+            if ((p.productId ?? p.id) === productId) {
+              cleanup();
+              resolve(p);
+            }
+          });
+          const subError = RNIap.purchaseErrorListener((err) => {
+            cleanup();
+            reject(new Error(err.message ?? "Purchase failed"));
+          });
+          RNIap.requestPurchase({
+            request: {
+              google: {
+                skus: [productId],
+                subscriptionOffers: [{ sku: productId, offerToken }],
+              },
+            },
+            type: "subs",
+          }).catch((err) => {
+            cleanup();
+            reject(err);
+          });
+        });
+      } else {
+        purchase = await new Promise<any>((resolve, reject) => {
+          const cleanup = () => {
+            subUpdated.remove();
+            subError.remove();
+          };
+          const subUpdated = RNIap.purchaseUpdatedListener((p) => {
+            if ((p.productId ?? p.id) === productId) {
+              cleanup();
+              resolve(p);
+            }
+          });
+          const subError = RNIap.purchaseErrorListener((err) => {
+            cleanup();
+            reject(new Error(err.message ?? "Purchase failed"));
+          });
+          RNIap.requestPurchase({
+            request: { apple: { sku: productId } },
+            type: "subs",
+          }).catch((err) => {
+            cleanup();
+            reject(err);
+          });
+        });
+      }
+
+      const purchaseToken: string | undefined =
+        purchase?.purchaseToken ?? purchase?.transactionReceipt;
+
+      if (!purchaseToken) {
+        Alert.alert("Error", "No purchase token returned from Google Play.");
+        return;
+      }
+
+      const res = await fetch(
+        `${API_BASE_URL}/api/subscription/activate-google-play`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            purchaseToken,
+            productId,
+            plan,
+          }),
+        }
+      );
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        Alert.alert("Success", "Subscription activated.");
+        router.replace("/chat");
+      } else {
+        Alert.alert(
+          "Error",
+          (json as { error?: string }).error ??
+            "Could not activate subscription. Please contact support."
+        );
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Google Play subscription error", e);
+      Alert.alert(
+        "Error",
+        "Could not start Google Play subscription. Please try again."
+      );
+    }
+  };
+
+  const openStore = async (plan: "monthly" | "yearly") => {
+    if (Platform.OS === "android") {
+      await startGooglePlaySubscription(plan);
+      return;
+    }
+
+    const url = APP_STORE_APP_URL;
     Linking.openURL(url).catch(() => {
       Alert.alert("Error", "Could not open the store.");
     });

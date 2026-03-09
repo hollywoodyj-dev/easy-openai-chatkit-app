@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 const API_BASE =
   typeof window !== "undefined" ? window.location.origin : "";
@@ -50,18 +49,20 @@ function describeExpiry(sub: AccountResponse["subscription"]): string {
   return `Expired on ${formatDate(sub.currentPeriodEnd)}`;
 }
 
-export default function AccountPage() {
-  const searchParams = useSearchParams();
-  const token = useMemo(
-    () => searchParams?.get("token")?.trim() || "",
-    [searchParams]
-  );
-
+function AccountContent() {
+  const [token, setToken] = useState("");
   const [data, setData] = useState<AccountResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [canceling, setCanceling] = useState(false);
   const [cancelMessage, setCancelMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("token")?.trim() ?? "";
+    setToken(t);
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -234,6 +235,25 @@ export default function AccountPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#FAF9F6] px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
+            <h1 className="mb-2 text-2xl font-light text-slate-800">
+              Account information
+            </h1>
+            <p className="text-sm text-slate-500">Loading your account…</p>
+          </div>
+        </main>
+      }
+    >
+      <AccountContent />
+    </Suspense>
   );
 }
 

@@ -14,9 +14,16 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config";
-import * as WebBrowser from "expo-web-browser";
 
-WebBrowser.maybeCompleteAuthSession();
+let WebBrowser: typeof import("expo-web-browser") | null = null;
+try {
+  // Dynamically require so the app still runs even if the native module is missing.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  WebBrowser = require("expo-web-browser");
+  WebBrowser.maybeCompleteAuthSession();
+} catch {
+  WebBrowser = null;
+}
 
 export default function RegisterScreen() {
   const { setToken } = useAuth();
@@ -24,6 +31,17 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+
+  const ensureWebBrowser = () => {
+    if (!WebBrowser) {
+      Alert.alert(
+        "Not available",
+        "Social sign up isn't available in this test build. Please use email and password."
+      );
+      return false;
+    }
+    return true;
+  };
 
   const handleRegister = async () => {
     const trimmedEmail = email.trim();
@@ -62,10 +80,14 @@ export default function RegisterScreen() {
   };
 
   const handleOAuth = async (provider: "google" | "facebook" | "x") => {
+    if (!ensureWebBrowser()) {
+      return;
+    }
+
     setOauthLoading(provider);
     try {
       const oauthUrl = `${API_BASE_URL}/api/auth/oauth/${provider}?state=mobile`;
-      const result = await WebBrowser.openAuthSessionAsync(
+      const result = await WebBrowser!.openAuthSessionAsync(
         oauthUrl,
         "wisewave://oauth"
       );

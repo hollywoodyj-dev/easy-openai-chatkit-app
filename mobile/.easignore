@@ -1,0 +1,8 @@
+android/
+ios/
+.git/
+.gradle/
+node_modules/.cache/
+**/build/
+*.log
+

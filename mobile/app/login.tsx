@@ -14,10 +14,17 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config";
-import * as WebBrowser from "expo-web-browser";
 
-// Complete OAuth flow properly
-WebBrowser.maybeCompleteAuthSession();
+let WebBrowser: typeof import("expo-web-browser") | null = null;
+try {
+  // Dynamically require so the app still runs in builds
+  // where the native ExpoWebBrowser module isn't present.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  WebBrowser = require("expo-web-browser");
+  WebBrowser.maybeCompleteAuthSession();
+} catch {
+  WebBrowser = null;
+}
 
 export default function LoginScreen() {
   const { setToken } = useAuth();
@@ -59,6 +66,14 @@ export default function LoginScreen() {
   };
 
   const handleOAuth = async (provider: "google" | "facebook" | "x") => {
+    if (!WebBrowser) {
+      Alert.alert(
+        "Not available",
+        "Social login isn't available in this test build. Please use email and password."
+      );
+      return;
+    }
+
     setOauthLoading(provider);
     try {
       // Open OAuth flow with mobile state parameter

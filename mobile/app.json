@@ -19,6 +19,12 @@
     },
     "ios": {
       "bundleIdentifier": "com.wisewave.chatkit"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e1780162-70be-4694-aba9-a83370185fa3"
+      }
     }
   }
 }
