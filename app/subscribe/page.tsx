@@ -211,6 +211,10 @@ function SubscribeContent() {
     [token, isEmbedMobile]
   );
 
+  const chatHref = token
+    ? `/embed?token=${encodeURIComponent(token)}`
+    : "/embed";
+
   return (
     <main
       className="flex min-h-screen flex-col items-center justify-center p-6"
@@ -300,7 +304,7 @@ function SubscribeContent() {
         )}
 
         <p className="mt-8 text-center text-sm text-slate-500">
-          <Link href="/embed" className="underline">
+          <Link href={chatHref} className="underline">
             Back to chat
           </Link>
           {" · "}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
 import type { ColorScheme } from "@/hooks/useColorScheme";
@@ -47,6 +48,25 @@ function EmbedContent() {
       className="flex h-screen w-full flex-col bg-white dark:bg-slate-900"
       style={{ paddingTop: "env(safe-area-inset-top)", minHeight: "100dvh" }}
     >
+      <header className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 dark:border-slate-800">
+        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          WiseWave Chat
+        </div>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link
+            href={token ? `/account?token=${encodeURIComponent(token)}` : "/login"}
+            className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white underline-offset-4 hover:underline"
+          >
+            Account information
+          </Link>
+          <Link
+            href="/login"
+            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white underline-offset-4 hover:underline"
+          >
+            Logout
+          </Link>
+        </nav>
+      </header>
       <div className="flex h-full w-full min-h-0 flex-col p-2 sm:p-4">
         <ChatKitPanel
           theme="light"
