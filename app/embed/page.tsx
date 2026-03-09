@@ -50,11 +50,19 @@ function EmbedContent() {
     >
       <header className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 dark:border-slate-800">
         <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          WiseWave Chat
+          WiseWave
         </div>
         <nav className="flex items-center gap-4 text-sm">
           <Link
-            href={token ? `/account?token=${encodeURIComponent(token)}` : "/login"}
+            href={
+              token
+                ? isEmbedMobile
+                  ? `/account?token=${encodeURIComponent(
+                      token
+                    )}&embed=mobile`
+                  : `/account?token=${encodeURIComponent(token)}`
+                : "/login"
+            }
             className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white underline-offset-4 hover:underline"
           >
             Account information

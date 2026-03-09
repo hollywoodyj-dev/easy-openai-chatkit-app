@@ -51,6 +51,7 @@ function describeExpiry(sub: AccountResponse["subscription"]): string {
 
 function AccountContent() {
   const [token, setToken] = useState("");
+  const [isEmbedMobile, setIsEmbedMobile] = useState(false);
   const [data, setData] = useState<AccountResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +62,9 @@ function AccountContent() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const t = params.get("token")?.trim() ?? "";
+    const embed = params.get("embed");
     setToken(t);
+    setIsEmbedMobile(embed === "mobile");
   }, []);
 
   useEffect(() => {
@@ -165,7 +168,13 @@ function AccountContent() {
             Account information
           </h1>
           <Link
-            href={`/embed?token=${encodeURIComponent(token)}`}
+            href={
+              isEmbedMobile
+                ? `/embed?token=${encodeURIComponent(
+                    token
+                  )}&embed=mobile`
+                : `/embed?token=${encodeURIComponent(token)}`
+            }
             className="text-sm text-slate-500 underline-offset-4 hover:underline"
           >
             Back to chat
