@@ -78,7 +78,14 @@ export default async function handler(
       sub.currentPeriodEnd &&
       now < sub.currentPeriodEnd;
 
-    if (!isTrialing && !isActive) {
+    // Allow access for canceled subscriptions that are still within the paid-through period.
+    const isCanceledButPaid =
+      sub &&
+      sub.status === "canceled" &&
+      sub.currentPeriodEnd &&
+      now < sub.currentPeriodEnd;
+
+    if (!isTrialing && !isActive && !isCanceledButPaid) {
       return res.status(402).json({
         error: "Subscription required",
         code: "subscription_required",
