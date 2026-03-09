@@ -59,12 +59,14 @@ function EmbedContent() {
           >
             Account information
           </Link>
-          <Link
-            href="/login"
-            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white underline-offset-4 hover:underline"
-          >
-            Logout
-          </Link>
+          {!isEmbedMobile && (
+            <Link
+              href="/login"
+              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white underline-offset-4 hover:underline"
+            >
+              Logout
+            </Link>
+          )}
         </nav>
       </header>
       <div className="flex h-full w-full min-h-0 flex-col p-2 sm:p-4">
