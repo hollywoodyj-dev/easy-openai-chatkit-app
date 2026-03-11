@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   CHAT_SESSION_ENDPOINT,
   CHAT_SESSIONS_LIST_ENDPOINT,
@@ -9,7 +10,7 @@ import {
   CHAT_TURN_ENDPOINT,
 } from "@/lib/config";
 
-const CHAT_SESSION_STORAGE_KEY = "chat_session_id";
+const CHAT_SESSION_STORAGE_KEY_PREFIX = "chat_session_id";
 
 type MessageRow = {
   id: string;
@@ -28,7 +29,13 @@ type SessionItem = {
  * Preferred persisted chat: session_id from POST /api/chat/session or resumed from sessionStorage.
  * All turns saved via POST /api/chat/turn; messages loaded by user_id + session_id (GET /api/chat/messages).
  */
-export default function ChatPage() {
+function ChatContent() {
+  const searchParams = useSearchParams();
+  const token = useMemo(
+    () => searchParams?.get("token")?.trim() || null,
+    [searchParams]
+  );
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [input, setInput] = useState("");
@@ -40,10 +47,24 @@ export default function ChatPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const authHeaders = useCallback((): HeadersInit => {
+    const headers: HeadersInit = { "Content-Type": "application/json" };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  }, [token]);
+
+  const sessionStorageKey = useCallback(() => {
+    // Scope per account so switching users doesn't reuse the same session_id.
+    const suffix = token ? token.slice(0, 24) : "anon";
+    return `${CHAT_SESSION_STORAGE_KEY_PREFIX}:${suffix}`;
+  }, [token]);
+
   const fetchMessages = useCallback(async (sid: string): Promise<MessageRow[]> => {
     const res = await fetch(
       `${CHAT_MESSAGES_ENDPOINT}?session_id=${encodeURIComponent(sid)}`,
-      { credentials: "include" }
+      { credentials: "include", headers: authHeaders() }
     );
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -51,12 +72,12 @@ export default function ChatPage() {
     }
     const data = await res.json();
     return (data.messages ?? []) as MessageRow[];
-  }, []);
+  }, [authHeaders]);
 
   const createSession = useCallback(async (): Promise<string> => {
     const res = await fetch(CHAT_SESSION_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       credentials: "include",
     });
     if (!res.ok) {
@@ -67,11 +88,11 @@ export default function ChatPage() {
     const sid = data.session_id;
     if (!sid || typeof sid !== "string") throw new Error("No session_id in response");
     return sid;
-  }, []);
+  }, [authHeaders]);
 
   const initOrResumeSession = useCallback(async () => {
     if (typeof window === "undefined") return;
-    const stored = sessionStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+    const stored = sessionStorage.getItem(sessionStorageKey());
     if (stored) {
       try {
         const list = await fetchMessages(stored);
@@ -81,12 +102,12 @@ export default function ChatPage() {
         setSessionLoading(false);
         return;
       } catch {
-        sessionStorage.removeItem(CHAT_SESSION_STORAGE_KEY);
+        sessionStorage.removeItem(sessionStorageKey());
       }
     }
     try {
       const sid = await createSession();
-      sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, sid);
+      sessionStorage.setItem(sessionStorageKey(), sid);
       setSessionId(sid);
       const list = await fetchMessages(sid);
       setMessages(list);
@@ -96,7 +117,7 @@ export default function ChatPage() {
     } finally {
       setSessionLoading(false);
     }
-  }, [createSession, fetchMessages]);
+  }, [createSession, fetchMessages, sessionStorageKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,14 +129,14 @@ export default function ChatPage() {
   }, [initOrResumeSession]);
 
   const startNewChat = useCallback(async () => {
-    if (typeof window !== "undefined") sessionStorage.removeItem(CHAT_SESSION_STORAGE_KEY);
+    if (typeof window !== "undefined") sessionStorage.removeItem(sessionStorageKey());
     setSessionId(null);
     setMessages([]);
     setError(null);
     setSessionLoading(true);
     try {
       const sid = await createSession();
-      if (typeof window !== "undefined") sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, sid);
+      if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
       setSessionId(sid);
       const list = await fetchMessages(sid);
       setMessages(list);
@@ -124,24 +145,27 @@ export default function ChatPage() {
     } finally {
       setSessionLoading(false);
     }
-  }, [createSession, fetchMessages]);
+  }, [createSession, fetchMessages, sessionStorageKey]);
 
   const fetchSessionsList = useCallback(async (): Promise<SessionItem[]> => {
-    const res = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, { credentials: "include" });
+    const res = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
+      credentials: "include",
+      headers: authHeaders(),
+    });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error((data.error as string) || res.statusText);
     }
     const data = await res.json();
     return (data.sessions ?? []) as SessionItem[];
-  }, []);
+  }, [authHeaders]);
 
   const openSession = useCallback(
     async (sid: string) => {
       setShowHistoryPanel(false);
       setSessionLoading(true);
       try {
-        if (typeof window !== "undefined") sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, sid);
+        if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
         setSessionId(sid);
         const list = await fetchMessages(sid);
         setMessages(list);
@@ -152,7 +176,7 @@ export default function ChatPage() {
         setSessionLoading(false);
       }
     },
-    [fetchMessages]
+    [fetchMessages, sessionStorageKey]
   );
 
   const handleNewChatClick = useCallback(async () => {
@@ -181,7 +205,7 @@ export default function ChatPage() {
     try {
       const res = await fetch(CHAT_TURN_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         credentials: "include",
         body: JSON.stringify({ session_id: sessionId, message: text }),
       });
@@ -205,7 +229,7 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [input, sessionId, loading]);
+  }, [input, sessionId, loading, authHeaders]);
 
   if (sessionLoading) {
     return (
@@ -248,7 +272,7 @@ export default function ChatPage() {
             New chat
           </button>
           <Link
-            href="/embed"
+            href={token ? `/embed?token=${encodeURIComponent(token)}` : "/embed"}
             className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
           >
             Legacy (ChatKit)
@@ -381,5 +405,19 @@ export default function ChatPage() {
         </div>
       </form>
     </main>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4">
+          <p className="text-slate-500">Loading…</p>
+        </main>
+      }
+    >
+      <ChatContent />
+    </Suspense>
   );
 }
