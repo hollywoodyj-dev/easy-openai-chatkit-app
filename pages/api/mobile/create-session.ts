@@ -145,9 +145,14 @@ export default async function handler(
     const clientSecret = upstreamJson?.client_secret ?? null;
     const expiresAfter = upstreamJson?.expires_after ?? null;
 
+    const conversation = await prisma.conversation.create({
+      data: { userId: user.id },
+    });
+
     return res.status(200).json({
       client_secret: clientSecret,
       expires_after: expiresAfter,
+      session_id: conversation.id,
     });
   } catch (error) {
     console.error(

@@ -7,6 +7,7 @@ import {
   PLACEHOLDER_INPUT,
   GREETING,
   CREATE_SESSION_ENDPOINT,
+  CHAT_MESSAGES_ENDPOINT,
   WORKFLOW_ID,
   getThemeConfig,
 } from "@/lib/config";
@@ -62,6 +63,7 @@ export function ChatKitPanel({
   fullPage = false,
 }: ChatKitPanelProps) {
   const processedFacts = useRef(new Set<string>());
+  const sessionIdRef = useRef<string | null>(null);
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
   const [isInitializingSession, setIsInitializingSession] = useState(true);
   const isMountedRef = useRef(true);
@@ -159,6 +161,7 @@ export function ChatKitPanel({
 
   const handleResetChat = useCallback(() => {
     processedFacts.current.clear();
+    sessionIdRef.current = null;
     if (isBrowser) {
       setScriptStatus(
         window.customElements?.get("openai-chatkit") ? "ready" : "pending"
@@ -168,6 +171,37 @@ export function ChatKitPanel({
     setErrors(createInitialErrors());
     setWidgetInstanceKey((prev) => prev + 1);
   }, []);
+
+  const persistExchange = useCallback(
+    async (
+      sessionId: string | null,
+      userMessage: string,
+      assistantMessage: string
+    ) => {
+      if (!sessionId || !userMessage || !assistantMessage) return;
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (authToken?.trim()) {
+        headers.Authorization = `Bearer ${authToken.trim()}`;
+      }
+      try {
+        await fetch(CHAT_MESSAGES_ENDPOINT, {
+          method: "POST",
+          headers,
+          credentials: "include",
+          body: JSON.stringify({
+            session_id: sessionId,
+            messages: [
+              { role: "user", message: userMessage },
+              { role: "assistant", message: assistantMessage },
+            ],
+          }),
+        });
+      } catch (e) {
+        if (isDev) console.warn("[ChatKitPanel] persistExchange failed", e);
+      }
+    },
+    [authToken]
+  );
 
   const getClientSecret = useCallback(
     async (currentSecret: string | null) => {
@@ -273,6 +307,11 @@ export function ChatKitPanel({
           throw new Error("Missing client secret in response");
         }
 
+        const sessionId = data?.session_id as string | undefined;
+        if (sessionId && typeof sessionId === "string") {
+          sessionIdRef.current = sessionId;
+        }
+
         if (isMountedRef.current) {
           setErrorState({ session: null, integration: null });
         }
@@ -354,6 +393,8 @@ export function ChatKitPanel({
       return { success: false };
     },
     onResponseEnd: () => {
+      // Option A unavailable: ChatKit SDK does not pass message content in onResponseEnd/onThreadChange.
+      // For persisted chat, use Option B: open /chat (POST /api/chat/turn) or call persistExchange when you have content.
       onResponseEnd();
     },
     onResponseStart: () => {

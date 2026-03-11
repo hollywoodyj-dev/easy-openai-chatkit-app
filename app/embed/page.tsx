@@ -54,6 +54,12 @@ function EmbedContent() {
         </div>
         <nav className="flex items-center gap-4 text-sm">
           <Link
+            href="/chat"
+            className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white underline-offset-4 hover:underline"
+          >
+            Chat (Option B)
+          </Link>
+          <Link
             href={
               token
                 ? isEmbedMobile

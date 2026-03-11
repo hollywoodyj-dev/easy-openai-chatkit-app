@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 
@@ -18,10 +18,22 @@ const LoginPage: NextPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
-   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">("login");
+
+  // Show error from OAuth redirect (e.g. /login?error=OAuth+authentication+failed)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const q = router.query.error;
+    const message = typeof q === "string" ? decodeURIComponent(q) : "";
+    if (message) {
+      setError(message);
+      router.replace("/login", undefined, { shallow: true });
+    }
+  }, [router.isReady, router.query.error]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
       setError("Please enter email and password.");

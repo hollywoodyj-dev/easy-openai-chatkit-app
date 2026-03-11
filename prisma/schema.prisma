@@ -38,6 +38,29 @@ model Subscription {
   updatedAt              DateTime              @updatedAt
 }
 
+/// Chat conversation (session). userId is either User.id or anonymous cookie-based id.
+model Conversation {
+  id                 String    @id @default(cuid())
+  userId             String    // User.id for authenticated; cookie/generated id for anonymous
+  conversationSummary String?  @map("conversation_summary") @db.Text
+  summaryUpdatedAt   DateTime? @map("summary_updated_at")
+  createdAt          DateTime  @default(now())
+  messages           Message[]
+}
+
+/// Single message in a conversation. Persisted on every chat exchange.
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String   // Same as Conversation.userId (denormalized for queries)
+  role           String   // "user" | "assistant" | "system"
+  message        String   @db.Text
+  createdAt      DateTime @default(now())
+  metadata       Json?    // Optional JSON
+  insightTags    Json?    @map("insight_tags") // Optional JSON array
+}
+
 enum SubscriptionStatus {
   trialing
   active
