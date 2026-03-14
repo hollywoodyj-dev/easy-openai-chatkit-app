@@ -18,7 +18,7 @@ export default async function AgentTasksPage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-900 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1600px] mx-auto">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
             Agent tasks
@@ -37,14 +37,23 @@ export default async function AgentTasksPage() {
           </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm min-w-[640px]">
+              <colgroup>
+                <col className="w-20" />
+                <col className="min-w-[120px]" />
+                <col className="min-w-[160px]" />
+                <col className="w-24" />
+                <col className="min-w-[180px]" />
+                <col className="w-28" />
+                <col className="w-28" />
+              </colgroup>
               <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-3 font-medium">Agent</th>
                   <th className="px-4 py-3 font-medium">Title</th>
-                  <th className="px-4 py-3 font-medium hidden md:table-cell">Description</th>
+                  <th className="px-4 py-3 font-medium">Description</th>
                   <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium hidden lg:table-cell">Reply</th>
+                  <th className="px-4 py-3 font-medium">Reply</th>
                   <th className="px-4 py-3 font-medium">Created</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                 </tr>
@@ -55,16 +64,16 @@ export default async function AgentTasksPage() {
                     key={t.id}
                     className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   >
-                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200 align-top">
                       {t.agentName}
                     </td>
-                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 max-w-[200px] md:max-w-none truncate md:whitespace-normal">
+                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 align-top break-words">
                       {t.title}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 hidden md:table-cell max-w-[240px] truncate lg:max-w-xs">
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
                       {t.description ?? "—"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 align-top">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                           STATUS_COLORS[t.status] ?? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
@@ -73,13 +82,13 @@ export default async function AgentTasksPage() {
                         {t.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 hidden lg:table-cell max-w-[280px] truncate">
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
                       {t.replyContent ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
                       {t.createdAt.toLocaleDateString()} {t.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
                       {t.updatedAt.toLocaleDateString()} {t.updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </td>
                   </tr>
