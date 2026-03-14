@@ -9,6 +9,7 @@ import {
   CHAT_SESSIONS_LIST_ENDPOINT,
   CHAT_MESSAGES_ENDPOINT,
   CHAT_TURN_ENDPOINT,
+  CHAT_REFLECTION_ENDPOINT,
 } from "@/lib/config";
 
 const CHAT_SESSION_STORAGE_KEY_PREFIX = "chat_session_id";
@@ -24,6 +25,13 @@ type SessionItem = {
   id: string;
   created_at: string;
   topic: string;
+};
+
+type CheckpointRow = {
+  id: string;
+  summary: string;
+  user_input: string | null;
+  created_at: string;
 };
 
 /**
@@ -47,6 +55,10 @@ function ChatContent() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [tokenInvalid, setTokenInvalid] = useState(false);
   const [mobileConversationsOpen, setMobileConversationsOpen] = useState(false);
+  const [checkpoints, setCheckpoints] = useState<CheckpointRow[]>([]);
+  const [checkpointInput, setCheckpointInput] = useState("");
+  const [checkpointLoading, setCheckpointLoading] = useState(false);
+  const [showCheckpointForm, setShowCheckpointForm] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   const authHeaders = useCallback((): HeadersInit => {
@@ -218,9 +230,61 @@ function ChatContent() {
     }
   }, [fetchSessionsList]);
 
+  const fetchCheckpoints = useCallback(async (sid: string): Promise<CheckpointRow[]> => {
+    const res = await fetch(
+      `${CHAT_REFLECTION_ENDPOINT}?session_id=${encodeURIComponent(sid)}`,
+      { credentials: "include", headers: authHeaders() }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.checkpoints ?? []) as CheckpointRow[];
+  }, [authHeaders]);
+
+  const saveCheckpoint = useCallback(async () => {
+    if (!sessionId || checkpointLoading) return;
+    setCheckpointLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(CHAT_REFLECTION_ENDPOINT, {
+        method: "POST",
+        headers: authHeaders(),
+        credentials: "include",
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_reflection: checkpointInput.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError((data.details as string) || (data.error as string) || res.statusText);
+        return;
+      }
+      setCheckpointInput("");
+      setShowCheckpointForm(false);
+      const list = await fetchCheckpoints(sessionId);
+      setCheckpoints(list);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Reflection failed");
+    } finally {
+      setCheckpointLoading(false);
+    }
+  }, [sessionId, checkpointInput, checkpointLoading, authHeaders, fetchCheckpoints]);
+
   useEffect(() => {
     listRef.current?.scrollTo(0, listRef.current.scrollHeight);
   }, [messages]);
+
+  useEffect(() => {
+    if (!sessionId) {
+      setCheckpoints([]);
+      return;
+    }
+    let cancelled = false;
+    fetchCheckpoints(sessionId).then((list) => {
+      if (!cancelled) setCheckpoints(list);
+    });
+    return () => { cancelled = true; };
+  }, [sessionId, fetchCheckpoints]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -434,21 +498,62 @@ function ChatContent() {
 
       {/* Right: active chat */}
       <section className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <header className="flex items-center justify-between gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-800 shrink-0 flex-wrap">
           <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
             Chat
           </h1>
-          <button
-            type="button"
-            className="text-xs text-slate-600 dark:text-slate-400 hover:underline sm:hidden"
-            onClick={() => {
-              setMobileConversationsOpen(true);
-              handleNewChatClick();
-            }}
-          >
-            Conversations
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:underline"
+              onClick={() => setShowCheckpointForm((v) => !v)}
+              disabled={!sessionId}
+              title="Save a reflection checkpoint"
+            >
+              Checkpoint
+            </button>
+            <button
+              type="button"
+              className="text-xs text-slate-600 dark:text-slate-400 hover:underline sm:hidden"
+              onClick={() => {
+                setMobileConversationsOpen(true);
+                handleNewChatClick();
+              }}
+            >
+              Conversations
+            </button>
+          </div>
         </header>
+        {showCheckpointForm && sessionId && (
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Optional: add a note for this reflection</p>
+            <textarea
+              value={checkpointInput}
+              onChange={(e) => setCheckpointInput(e.target.value)}
+              placeholder="What stands out to you right now?"
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 mb-2"
+              rows={2}
+              disabled={checkpointLoading}
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={saveCheckpoint}
+                disabled={checkpointLoading}
+                className="rounded-lg bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900 px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+              >
+                {checkpointLoading ? "Saving…" : "Save reflection"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowCheckpointForm(false); setCheckpointInput(""); }}
+                className="text-xs text-slate-500 hover:underline"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
         {error && (
         <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm flex items-center justify-between gap-2">
           <span>{error}</span>
@@ -460,6 +565,24 @@ function ChatContent() {
             Dismiss
           </button>
         </div>
+        )}
+        {checkpoints.length > 0 && (
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Reflection checkpoints</p>
+            <div className="space-y-2">
+              {checkpoints.slice(0, 5).map((c) => (
+                <div key={c.id} className="rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-300">
+                  <p className="whitespace-pre-wrap">{c.summary}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                    {new Date(c.created_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+              {checkpoints.length > 5 && (
+                <p className="text-xs text-slate-400">+ {checkpoints.length - 5} more</p>
+              )}
+            </div>
+          </div>
         )}
         <div
         ref={listRef}

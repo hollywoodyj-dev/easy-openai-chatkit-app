@@ -49,6 +49,12 @@ When API keys are **not** set, `agent=admin` does **not** work (admin requires `
 
 ---
 
+## Archive (Tree, admin only)
+
+Archiving is **admin-only** (requires `AGENT_TASKS_ADMIN_API_KEY`). Tree reads the day’s tasks and replies, then finalizes one summary per agent and calls **POST /api/agent-tasks/archive** with `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }`. That marks those tasks as archived (they disappear from the default list) and stores the finalized content. The human page then shows only **current (non-archived)** tasks and the **latest day’s** finalized summaries. Full details: `docs/AGENT_TASKS.md`.
+
+---
+
 ## Quick reference (no keys)
 
 | Action           | Method | URL / body |

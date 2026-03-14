@@ -40,12 +40,26 @@ model Subscription {
 
 /// Chat conversation (session). userId is either User.id or anonymous cookie-based id.
 model Conversation {
-  id                 String    @id @default(cuid())
-  userId             String    // User.id for authenticated; cookie/generated id for anonymous
-  conversationSummary String?  @map("conversation_summary") @db.Text
-  summaryUpdatedAt   DateTime? @map("summary_updated_at")
-  createdAt          DateTime  @default(now())
-  messages           Message[]
+  id                  String    @id @default(cuid())
+  userId              String    // User.id for authenticated; cookie/generated id for anonymous
+  conversationSummary String?   @map("conversation_summary") @db.Text
+  summaryUpdatedAt    DateTime? @map("summary_updated_at")
+  createdAt           DateTime  @default(now())
+  messages            Message[]
+  reflectionCheckpoints ReflectionCheckpoint[]
+}
+
+/// User-triggered reflection checkpoint: optional user input + AI-generated summary. One per row; multiple per conversation.
+model ReflectionCheckpoint {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  userInput      String?  @map("user_input") @db.Text
+  summary        String   @db.Text
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
 }
 
 /// Single message in a conversation. Persisted on every chat exchange.
@@ -81,14 +95,28 @@ enum SubscriptionPlatform {
 
 /// Tasks assigned to an AI agent; agent fetches by name and can submit a reply to update the task.
 model AgentTask {
-  id           String   @id @default(cuid())
-  agentName    String   @map("agent_name")   // e.g. "Nova", "Lumen" — used to filter tasks for that agent
+  id           String    @id @default(cuid())
+  agentName    String    @map("agent_name")   // e.g. "Nova", "Lumen" — used to filter tasks for that agent
   title        String
-  description  String?  @db.Text
-  status       String   @default("open")    // open | in_progress | replied | closed
-  replyContent String?  @map("reply_content") @db.Text  // set when agent submits a reply
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  description  String?   @db.Text
+  status       String    @default("open")    // open | in_progress | replied | closed
+  replyContent String?   @map("reply_content") @db.Text  // set when agent submits a reply
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  archivedAt   DateTime? @map("archived_at")  // set when Tree archives the day; task then hidden from main list
 
   @@index([agentName, status])
+  @@index([archivedAt])
+}
+
+/// Per-agent, per-day finalized summary written by Tree when archiving. "Archive folder" = these records; display only latest day for tomorrow.
+model AgentTaskArchive {
+  id               String   @id @default(cuid())
+  agentName        String   @map("agent_name")
+  archiveDate      String   @map("archive_date")   // YYYY-MM-DD
+  finalizedContent String   @map("finalized_content") @db.Text
+  createdAt        DateTime @default(now())
+
+  @@unique([agentName, archiveDate])
+  @@index([archiveDate])
 }

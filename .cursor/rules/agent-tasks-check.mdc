@@ -1,0 +1,28 @@
+---
+description: When asked to "check your tasks", fetch Nova's tasks from the API, process open ones, and post replies
+alwaysApply: true
+---
+
+# Check your tasks (Nova)
+
+When the user asks you to **"check your tasks"** (or equivalent: "check tasks", "get your tasks", "process your tasks", "read your task list"):
+
+1. **Fetch tasks**  
+   Always use **https://wisewave-agent-task.vercel.app** for the task list. Call `GET https://wisewave-agent-task.vercel.app/api/agent-tasks?agent=Nova`. No API key is required when keys are not set.
+
+2. **Process open tasks**  
+   For each task in the response where `status` is `open` or `in_progress`:
+   - Read `title` and `description` (and any context in the repo if relevant).
+   - Perform the requested work (e.g. review a file, implement something, answer a question).
+   - Compose a short, clear **reply** summarizing what you did or the result.
+
+3. **Post replies**  
+   For each task you processed, call  
+   `POST https://wisewave-agent-task.vercel.app/api/agent-tasks/{task.id}/reply`  
+   with body `{ "content": "Your reply text here." }`.  
+   Always use **https://wisewave-agent-task.vercel.app** (never localhost). Use the same tool you use for HTTP requests (e.g. terminal `curl`/`Invoke-RestMethod`, or fetch). On Windows PowerShell prefer `Invoke-RestMethod` with `-Method POST`, `-ContentType "application/json"`, and `-Body '{"content":"..."}'`.
+
+4. **Summarize for the user**  
+   After finishing, tell the user how many tasks you fetched, how many you processed and replied to, and any task titles or outcomes.
+
+If the response has no tasks or no open/in_progress tasks, say so and do not call the reply endpoint.

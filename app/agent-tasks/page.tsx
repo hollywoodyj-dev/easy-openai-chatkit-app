@@ -11,10 +11,24 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default async function AgentTasksPage() {
-  const tasks = await prisma.agentTask.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  const [tasks, latestArchive] = await Promise.all([
+    prisma.agentTask.findMany({
+      where: { archivedAt: null },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+    prisma.agentTaskArchive.findFirst({
+      orderBy: { archiveDate: "desc" },
+      select: { archiveDate: true },
+    }),
+  ]);
+
+  const archiveSummaries = latestArchive
+    ? await prisma.agentTaskArchive.findMany({
+        where: { archiveDate: latestArchive.archiveDate },
+        orderBy: { agentName: "asc" },
+      })
+    : [];
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-900 p-4 md:p-6">
@@ -31,9 +45,38 @@ export default async function AgentTasksPage() {
           </Link>
         </header>
 
+        {archiveSummaries.length > 0 && (
+          <section className="mb-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-4">
+            <h2 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
+              Archive — {latestArchive!.archiveDate} (finalized by Tree)
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mb-3">
+              Latest day&apos;s finalized task content per agent. Only this day is shown here; older archives are stored and can be queried via API.
+            </p>
+            <div className="space-y-3">
+              {archiveSummaries.map((s) => (
+                <div
+                  key={`${s.agentName}-${s.archiveDate}`}
+                  className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3"
+                >
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    {s.agentName}
+                  </p>
+                  <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
+                    {s.finalizedContent}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          Current tasks (not archived)
+        </h2>
         {tasks.length === 0 ? (
           <p className="text-slate-500 dark:text-slate-400 py-8">
-            No tasks yet. Create tasks via the API or assign work to agents.
+            No current tasks. Create tasks via the API or assign work to agents. Archived tasks are hidden; use <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">?include_archived=1</code> in the API to include them.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -99,7 +142,7 @@ export default async function AgentTasksPage() {
         )}
 
         <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-          Tasks are created and updated via the Agent Tasks API. This page shows the latest 200.
+          Tasks are created and updated via the Agent Tasks API. Only non-archived tasks are shown. Tree can finalize the day and archive via POST /api/agent-tasks/archive (admin key).
         </p>
       </div>
     </main>

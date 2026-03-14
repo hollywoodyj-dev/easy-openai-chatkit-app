@@ -119,6 +119,36 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
    Response: `{ "updated": [ task, ... ], "errors": [ { "taskId", "error" }, ... ] }`  
    Each updated task’s `replyContent` is set and `status` becomes `replied`. Tasks can belong to different agents; you identify them by `taskId` from the admin “get all” response.
 
+3. **Archive the day (Tree)**  
+   Tree reads the whole day’s tasks and replies, finalizes one summary per agent, then archives so that:
+   - All tasks created on that day are marked archived (hidden from the default task list).
+   - The finalized content per agent is stored in the archive; the human page shows only the **latest day’s** finalized summaries tomorrow.
+
+   **POST** archive (admin key):
+   ```bash
+   curl -s -X POST "${BASE_URL}/api/agent-tasks/archive" \
+     -H "Content-Type: application/json" \
+     -H "x-api-key: YOUR_AGENT_TASKS_ADMIN_API_KEY" \
+     -d '{
+       "date": "2026-03-14",
+       "summaries": [
+         { "agent_name": "Nova", "finalized_content": "Nova completed reflection checkpoint implementation and QA handoff." },
+         { "agent_name": "Lumen", "finalized_content": "Lumen ran QA and confirmed chat + mobile drawer." }
+       ]
+     }'
+   ```
+   - `date`: optional, `YYYY-MM-DD` (default: today UTC).  
+   - `summaries`: array of `{ agent_name, finalized_content }`; one row per agent for that day (upserted).  
+   - All tasks for that date for those agents have `archivedAt` set, so they no longer appear in the default GET list.
+
+   **GET** archive (admin key):  
+   `GET ${BASE_URL}/api/agent-tasks/archive` returns the latest day’s finalized summaries and list of `dates`.  
+   `GET ${BASE_URL}/api/agent-tasks/archive?date=2026-03-14` returns summaries for that date.
+
+   **Default list behaviour:**  
+   - `GET /api/agent-tasks?agent=Nova` returns only **non-archived** tasks.  
+   - To include archived tasks: `GET /api/agent-tasks?agent=admin&include_archived=1`.
+
 ---
 
 ## Summary for the AI agent
@@ -129,5 +159,8 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
 | Agent  | Reply to one task| POST   | `/api/agent-tasks/:id/reply` with body `{ "content": "..." }` |
 | Admin  | Get all tasks    | GET    | `/api/agent-tasks?agent=admin` (admin key required) |
 | Admin  | Set multiple tasks (bulk reply) | POST | `/api/agent-tasks/admin/reply` with body `{ "updates": [ { "taskId", "content" }, ... ] }` (admin key required) |
+| Admin (Tree) | Archive day + finalized content per agent | POST | `/api/agent-tasks/archive` with body `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }` (admin key required) |
+| Admin  | Get archive (latest or by date) | GET  | `/api/agent-tasks/archive` or `?date=YYYY-MM-DD` (admin key required) |
 
-After an agent (or admin) replies, the corresponding task’s `replyContent` is set and `status` becomes `replied`.
+- By default, **only non-archived** tasks are returned. After Tree archives a day, those tasks are hidden; the human page shows **only the latest day’s finalized summaries** (archive section) and current (non-archived) tasks.
+- To include archived tasks in the list: add `?include_archived=1` to the GET request.

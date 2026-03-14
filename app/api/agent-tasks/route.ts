@@ -33,8 +33,14 @@ export async function GET(request: Request) {
     }
   }
 
+  const includeArchived = searchParams.get("include_archived") === "1";
+  const where = {
+    ...(isAdmin ? {} : { agentName: agent }),
+    ...(includeArchived ? {} : { archivedAt: null }),
+  };
+
   const tasks = await prisma.agentTask.findMany({
-    where: isAdmin ? undefined : { agentName: agent },
+    where,
     orderBy: { createdAt: "desc" },
     take: isAdmin ? MAX_TASKS_ADMIN : MAX_TASKS,
   });
@@ -48,6 +54,7 @@ export async function GET(request: Request) {
     replyContent: t.replyContent,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
+    archivedAt: t.archivedAt?.toISOString() ?? null,
   }));
 
   return NextResponse.json({ tasks: payload });
