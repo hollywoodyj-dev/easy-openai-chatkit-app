@@ -85,7 +85,7 @@ export async function extractReflectionState(
           { role: "system", content: EXTRACTION_SYSTEM_PROMPT },
           { role: "user", content: userContent },
         ],
-        max_tokens: 320,
+        max_completion_tokens: 320,
         temperature: 0.3,
       }),
     });

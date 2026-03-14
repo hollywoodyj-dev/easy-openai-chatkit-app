@@ -140,7 +140,7 @@ Return only the reflection text.`;
           { role: "system", content: REFLECTION_SYSTEM_PROMPT },
           { role: "user", content: userContent },
         ],
-        max_tokens: 140,
+        max_completion_tokens: 140,
         temperature: 0.5,
       }),
     });

@@ -91,7 +91,7 @@ async function refreshConversationSummary(
         { role: "system", content: SUMMARY_SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ],
-      max_tokens: 256,
+      max_completion_tokens: 256,
     }),
   });
 
@@ -304,7 +304,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model,
         messages: openaiMessagesForApi,
-        max_tokens: 2048,
+        max_completion_tokens: 2048,
       }),
     });
 
