@@ -100,6 +100,18 @@ Prefer naming:
 - the pressure it creates
 - the moment awareness can interrupt the loop
 
+Avoid explaining the pattern in terms of vulnerability, validation, or acceptance when a clearer rule/demand framing is available.
+
+Prefer the language of:
+- inner rule
+- demand
+- pressure
+- loop
+- automatic habit
+- awareness interrupt
+
+A stronger reflection names the rule the user is obeying, the pressure it creates, and the point where awareness can interrupt the pattern.
+
 Additional style rule:
 Prefer reflective clarity over comforting language.
 
