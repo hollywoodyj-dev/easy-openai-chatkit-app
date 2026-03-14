@@ -10,156 +10,83 @@ const STATUS_COLORS: Record<string, string> = {
   closed: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
 };
 
+type TaskRow =
+  | { type: "summary"; agentName: string; finalizedContent: string }
+  | { type: "task"; agentName: string; task: { id: string; title: string; description: string | null; status: string; replyContent: string | null; createdAt: Date; updatedAt: Date } };
+
 export default async function AgentTasksPage() {
-  const [tasks, latestArchive] = await Promise.all([
+  const [tasks, latestSummaries] = await Promise.all([
     prisma.agentTask.findMany({
       where: { archivedAt: null },
-      orderBy: { createdAt: "desc" },
-      take: 200,
+      orderBy: [{ agentName: "asc" }, { createdAt: "asc" }],
+      take: 500,
     }),
     prisma.agentTaskArchive.findFirst({
       orderBy: { archiveDate: "desc" },
       select: { archiveDate: true },
-    }),
+    }).then((latest) =>
+      latest
+        ? prisma.agentTaskArchive.findMany({
+            where: { archiveDate: latest.archiveDate },
+            orderBy: { agentName: "asc" },
+          })
+        : []
+    ),
   ]);
 
-  const archiveSummaries = latestArchive
-    ? await prisma.agentTaskArchive.findMany({
-        where: { archiveDate: latestArchive.archiveDate },
-        orderBy: { agentName: "asc" },
-      })
-    : [];
-
-  const archiveDate = latestArchive?.archiveDate;
-  const startOfDay = archiveDate ? new Date(archiveDate + "T00:00:00.000Z") : null;
-  const endOfDay = archiveDate ? new Date(archiveDate + "T23:59:59.999Z") : null;
-  const archivedTasks =
-    startOfDay && endOfDay
-      ? await prisma.agentTask.findMany({
-          where: {
-            archivedAt: { not: null },
-            createdAt: { gte: startOfDay, lte: endOfDay },
-          },
-          orderBy: [{ agentName: "asc" }, { createdAt: "asc" }],
-        })
-      : [];
+  const summaryByAgent = new Map(
+    latestSummaries.map((s) => [s.agentName, s.finalizedContent])
+  );
+  const tasksByAgent = new Map<string, typeof tasks>();
+  for (const t of tasks) {
+    if (!tasksByAgent.has(t.agentName)) tasksByAgent.set(t.agentName, []);
+    tasksByAgent.get(t.agentName)!.push(t);
+  }
+  const agentNames = new Set<string>([
+    ...summaryByAgent.keys(),
+    ...tasksByAgent.keys(),
+  ]);
+  const rows: TaskRow[] = [];
+  for (const agentName of [...agentNames].sort()) {
+    const summary = summaryByAgent.get(agentName);
+    if (summary) {
+      rows.push({ type: "summary", agentName, finalizedContent: summary });
+    }
+    for (const task of tasksByAgent.get(agentName) ?? []) {
+      rows.push({ type: "task", agentName, task });
+    }
+  }
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-900 p-4 md:p-6">
       <div className="max-w-[1600px] mx-auto">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
-            Agent tasks
+            Task list
           </h1>
-          <Link
-            href="/"
-            className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
-          >
-            Back
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/agent-tasks/archive"
+              className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
+            >
+              Archive by date
+            </Link>
+            <Link
+              href="/"
+              className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
+            >
+              Back
+            </Link>
+          </div>
         </header>
 
-        {archiveSummaries.length > 0 && (
-          <section className="mb-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 p-4">
-            <h2 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">
-              Archive — {latestArchive!.archiveDate} (finalized by Tree)
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mb-3">
-              Latest day&apos;s finalized summaries per agent and the full list of tasks and replies for that day. Older archives are stored and can be queried via API.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                  Summaries (finalized by Tree)
-                </h3>
-                <div className="space-y-3">
-                  {archiveSummaries.map((s) => (
-                    <div
-                      key={`${s.agentName}-${s.archiveDate}`}
-                      className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3"
-                    >
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-                        {s.agentName}
-                      </p>
-                      <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
-                        {s.finalizedContent}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {archivedTasks.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
-                    Tasks & replies for this day
-                  </h3>
-                  <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                    <table className="w-full text-left text-sm min-w-[640px]">
-                      <colgroup>
-                        <col className="w-20" />
-                        <col className="min-w-[120px]" />
-                        <col className="min-w-[160px]" />
-                        <col className="w-24" />
-                        <col className="min-w-[180px]" />
-                        <col className="w-28" />
-                      </colgroup>
-                      <thead className="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400">
-                        <tr>
-                          <th className="px-4 py-2 font-medium">Agent</th>
-                          <th className="px-4 py-2 font-medium">Title</th>
-                          <th className="px-4 py-2 font-medium">Description</th>
-                          <th className="px-4 py-2 font-medium">Status</th>
-                          <th className="px-4 py-2 font-medium">Reply</th>
-                          <th className="px-4 py-2 font-medium">Created</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-900">
-                        {archivedTasks.map((t) => (
-                          <tr
-                            key={t.id}
-                            className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                          >
-                            <td className="px-4 py-2 font-medium text-slate-800 dark:text-slate-200 align-top">
-                              {t.agentName}
-                            </td>
-                            <td className="px-4 py-2 text-slate-800 dark:text-slate-200 align-top break-words">
-                              {t.title}
-                            </td>
-                            <td className="px-4 py-2 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
-                              {t.description ?? "—"}
-                            </td>
-                            <td className="px-4 py-2 align-top">
-                              <span
-                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  STATUS_COLORS[t.status] ?? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                                }`}
-                              >
-                                {t.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
-                              {t.replyContent ?? "—"}
-                            </td>
-                            <td className="px-4 py-2 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
-                              {t.createdAt.toLocaleDateString()} {t.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+        <p className="text-xs text-slate-500 dark:text-slate-500 mb-3">
+          For each agent: summary (from latest archive) as the first row to start the day; then today&apos;s open tasks. The list fills as the day goes on. Full history: <Link href="/agent-tasks/archive" className="underline">Archive by date</Link>.
+        </p>
 
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-          Current tasks (not archived)
-        </h2>
-        {tasks.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="text-slate-500 dark:text-slate-400 py-8">
-            No current tasks. Create tasks via the API or assign work to agents. Archived tasks are hidden; use <code className="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">?include_archived=1</code> in the API to include them.
+            No tasks yet. Create tasks via the API or assign work to agents. After Tree archives a day, each agent&apos;s summary will appear here as the first row for the next day.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
@@ -185,47 +112,67 @@ export default async function AgentTasksPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {tasks.map((t) => (
-                  <tr
-                    key={t.id}
-                    className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200 align-top">
-                      {t.agentName}
-                    </td>
-                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 align-top break-words">
-                      {t.title}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
-                      {t.description ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          STATUS_COLORS[t.status] ?? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                        }`}
+                {rows.map((row, idx) =>
+                  row.type === "summary" ? (
+                    <tr
+                      key={`summary-${row.agentName}-${idx}`}
+                      className="bg-slate-50/80 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/70"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200 align-top">
+                        {row.agentName}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300 align-top italic">
+                        Summary — start for today
+                      </td>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap"
                       >
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
-                      {t.replyContent ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
-                      {t.createdAt.toLocaleDateString()} {t.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
-                      {t.updatedAt.toLocaleDateString()} {t.updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </td>
-                  </tr>
-                ))}
+                        {row.finalizedContent}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr
+                      key={row.task.id}
+                      className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    >
+                      <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200 align-top">
+                        {row.agentName}
+                      </td>
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-200 align-top break-words">
+                        {row.task.title}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
+                        {row.task.description ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 align-top">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                            STATUS_COLORS[row.task.status] ?? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {row.task.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
+                        {row.task.replyContent ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
+                        {row.task.createdAt.toLocaleDateString()} {row.task.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
+                        {row.task.updatedAt.toLocaleDateString()} {row.task.updatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           </div>
         )}
 
         <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-          Tasks are created and updated via the Agent Tasks API. Only non-archived tasks are shown. Tree can finalize the day and archive via POST /api/agent-tasks/archive (admin key).
+          Tasks are created and updated via the Agent Tasks API. Tree finalizes the day via POST /api/agent-tasks/archive (admin key); that creates the summary row for the next day.
         </p>
       </div>
     </main>

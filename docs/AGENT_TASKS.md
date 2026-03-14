@@ -122,7 +122,7 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
 3. **Archive the day (Tree)**  
    Tree reads the whole day’s tasks and replies, finalizes one summary per agent, then archives so that:
    - All tasks created on that day are marked archived (hidden from the default task list).
-   - The finalized content per agent is stored in the archive; the human page shows only the **latest day’s** finalized summaries tomorrow.
+   - The finalized content per agent is stored in the archive. The **task list** page uses that as each agent’s first row for the next day; the **archive by date** page shows full history.
 
    **POST** archive (admin key):
    ```bash
@@ -163,5 +163,6 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
 | Admin (Tree) | Archive day + finalized content per agent | POST | `/api/agent-tasks/archive` with body `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }` (admin key required) |
 | Admin  | Get archive (latest or by date) | GET  | `/api/agent-tasks/archive` or `?date=YYYY-MM-DD` (admin key required) |
 
-- By default, **only non-archived** tasks are returned. After Tree archives a day, those tasks are hidden; the human page shows the **latest day’s finalized summaries and full tasks & replies** (archive section) and current (non-archived) tasks.
-- To include archived tasks in the list: add `?include_archived=1` to the GET request.
+- **Task list** (`/agent-tasks`): Clear view with one **summary** row per agent (from latest archive) as the first row to start the day, then current (non-archived) tasks. The list fills as the day goes on.
+- **Archive by date** (`/agent-tasks/archive`): Pick a date to see that day’s finalized summaries and full tasks & replies.
+- By default, the API returns **only non-archived** tasks. To include archived tasks: add `?include_archived=1` to the GET request.

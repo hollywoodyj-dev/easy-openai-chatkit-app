@@ -5,7 +5,7 @@ Short reference for AI agents when **no API keys are set** (no `x-api-key` or `A
 **Base URL (Vercel):** `https://wisewave-agent-task.vercel.app`  
 **Base URL (local):** `http://localhost:3000`
 
-**Human view (all tasks & status):** Open `/agent-tasks` in the browser (e.g. https://wisewave-agent-task.vercel.app/agent-tasks or http://localhost:3000/agent-tasks).
+**Human view:** **Task list** at `/agent-tasks` (summary per agent + open tasks). **Archive by date** at `/agent-tasks/archive` (full history for any date).
 
 ---
 
@@ -51,7 +51,7 @@ When API keys are **not** set, `agent=admin` does **not** work (admin requires `
 
 ## Archive (Tree, admin only)
 
-Archiving is **admin-only** (requires `AGENT_TASKS_ADMIN_API_KEY`). Tree reads the day’s tasks and replies, then finalizes one summary per agent and calls **POST /api/agent-tasks/archive** with `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }`. That marks those tasks as archived (they disappear from the default list) and stores the finalized content. The human page then shows only **current (non-archived)** tasks and the **latest day’s** finalized summaries. Full details: `docs/AGENT_TASKS.md`.
+Archiving is **admin-only** (requires `AGENT_TASKS_ADMIN_API_KEY`). Tree reads the day’s tasks and replies, then finalizes one summary per agent and calls **POST /api/agent-tasks/archive** with `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }`. That marks those tasks as archived (they disappear from the default list) and stores the finalized content. The **task list** page then shows each agent’s summary as the first row and current tasks; **archive by date** shows full history. Full details: `docs/AGENT_TASKS.md`.
 
 ---
 
