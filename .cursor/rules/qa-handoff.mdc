@@ -1,0 +1,14 @@
+---
+description: Ensure QA requests from Lumen in docs/QA_HANDOFF.md are reviewed before coding changes
+alwaysApply: true
+---
+
+# QA Handoff from Lumen
+
+- Always check `docs/QA_HANDOFF.md` at the start of a task that touches the Wisewave chat experience (especially `/chat`).
+- Treat items in that file as the current QA perspective and priorities from Lumen.
+- When fixing a bug or implementing a request that came from that file:
+  - Reference the dated entry you are addressing.
+  - Update or append a short note in `docs/QA_HANDOFF.md` describing what changed and what Lumen should retest.
+- If `docs/QA_HANDOFF.md` lists blockers for internal beta, prioritize resolving those ahead of polish/nice‑to‑have items.
+

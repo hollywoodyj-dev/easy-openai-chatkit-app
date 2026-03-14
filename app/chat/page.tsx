@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   CHAT_SESSION_ENDPOINT,
+  CHAT_AUTH_CHECK_ENDPOINT,
   CHAT_SESSIONS_LIST_ENDPOINT,
   CHAT_MESSAGES_ENDPOINT,
   CHAT_TURN_ENDPOINT,
@@ -42,9 +43,10 @@ function ChatContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
-  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const [historySessions, setHistorySessions] = useState<SessionItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [tokenInvalid, setTokenInvalid] = useState(false);
+  const [mobileConversationsOpen, setMobileConversationsOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   const authHeaders = useCallback((): HeadersInit => {
@@ -90,63 +92,6 @@ function ChatContent() {
     return sid;
   }, [authHeaders]);
 
-  const initOrResumeSession = useCallback(async () => {
-    if (typeof window === "undefined") return;
-    const stored = sessionStorage.getItem(sessionStorageKey());
-    if (stored) {
-      try {
-        const list = await fetchMessages(stored);
-        setSessionId(stored);
-        setMessages(list);
-        setError(null);
-        setSessionLoading(false);
-        return;
-      } catch {
-        sessionStorage.removeItem(sessionStorageKey());
-      }
-    }
-    try {
-      const sid = await createSession();
-      sessionStorage.setItem(sessionStorageKey(), sid);
-      setSessionId(sid);
-      const list = await fetchMessages(sid);
-      setMessages(list);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create session");
-    } finally {
-      setSessionLoading(false);
-    }
-  }, [createSession, fetchMessages, sessionStorageKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      await initOrResumeSession();
-      if (cancelled) return;
-    })();
-    return () => { cancelled = true; };
-  }, [initOrResumeSession]);
-
-  const startNewChat = useCallback(async () => {
-    if (typeof window !== "undefined") sessionStorage.removeItem(sessionStorageKey());
-    setSessionId(null);
-    setMessages([]);
-    setError(null);
-    setSessionLoading(true);
-    try {
-      const sid = await createSession();
-      if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
-      setSessionId(sid);
-      const list = await fetchMessages(sid);
-      setMessages(list);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create session");
-    } finally {
-      setSessionLoading(false);
-    }
-  }, [createSession, fetchMessages, sessionStorageKey]);
-
   const fetchSessionsList = useCallback(async (): Promise<SessionItem[]> => {
     const res = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
       credentials: "include",
@@ -160,9 +105,91 @@ function ChatContent() {
     return (data.sessions ?? []) as SessionItem[];
   }, [authHeaders]);
 
+  /** Refresh sidebar conversation list; safe to call on load and after turns. */
+  const refreshHistorySessions = useCallback(async () => {
+    try {
+      const list = await fetchSessionsList();
+      setHistorySessions(list);
+    } catch {
+      setHistorySessions([]);
+    }
+  }, [fetchSessionsList]);
+
+  const initOrResumeSession = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    if (token) {
+      const res = await fetch(CHAT_AUTH_CHECK_ENDPOINT, {
+        credentials: "include",
+        headers: authHeaders(),
+      });
+      if (res.status === 401) {
+        setTokenInvalid(true);
+        setSessionLoading(false);
+        return;
+      }
+    }
+    const stored = sessionStorage.getItem(sessionStorageKey());
+    if (stored) {
+      try {
+        const list = await fetchMessages(stored);
+        setSessionId(stored);
+        setMessages(list);
+        setError(null);
+        setSessionLoading(false);
+        await refreshHistorySessions();
+        return;
+      } catch {
+        sessionStorage.removeItem(sessionStorageKey());
+      }
+    }
+    try {
+      const sid = await createSession();
+      sessionStorage.setItem(sessionStorageKey(), sid);
+      setSessionId(sid);
+      const list = await fetchMessages(sid);
+      setMessages(list);
+      setError(null);
+      await refreshHistorySessions();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create session");
+    } finally {
+      setSessionLoading(false);
+    }
+  }, [token, authHeaders, createSession, fetchMessages, sessionStorageKey, refreshHistorySessions]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await initOrResumeSession();
+      if (cancelled) return;
+    })();
+    return () => { cancelled = true; };
+  }, [initOrResumeSession]);
+
+  const startNewChat = useCallback(async () => {
+    setMobileConversationsOpen(false);
+    if (typeof window !== "undefined") sessionStorage.removeItem(sessionStorageKey());
+    setSessionId(null);
+    setMessages([]);
+    setError(null);
+    setSessionLoading(true);
+    try {
+      const sid = await createSession();
+      if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
+      setSessionId(sid);
+      const list = await fetchMessages(sid);
+      setMessages(list);
+      await refreshHistorySessions();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create session");
+    } finally {
+      setSessionLoading(false);
+    }
+  }, [createSession, fetchMessages, sessionStorageKey, refreshHistorySessions]);
+
   const openSession = useCallback(
     async (sid: string) => {
-      setShowHistoryPanel(false);
+      setMobileConversationsOpen(false);
       setSessionLoading(true);
       try {
         if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
@@ -180,7 +207,6 @@ function ChatContent() {
   );
 
   const handleNewChatClick = useCallback(async () => {
-    setShowHistoryPanel(true);
     setHistoryLoading(true);
     try {
       const list = await fetchSessionsList();
@@ -223,18 +249,48 @@ function ChatContent() {
         { id: `user-${Date.now()}`, role: "user", message: text, created_at: now },
         { id: `assistant-${Date.now()}`, role: "assistant", message: assistantMessage, created_at: now },
       ]);
+      refreshHistorySessions();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Request failed");
       setInput(text);
     } finally {
       setLoading(false);
     }
-  }, [input, sessionId, loading, authHeaders]);
+  }, [input, sessionId, loading, authHeaders, refreshHistorySessions]);
 
   if (sessionLoading) {
     return (
       <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4">
         <p className="text-slate-500">Loading session...</p>
+      </main>
+    );
+  }
+
+  if (tokenInvalid) {
+    return (
+      <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4 items-center justify-center">
+        <div className="max-w-md text-center space-y-4">
+          <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            Invalid or expired sign-in link
+          </h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Your sign-in link may be invalid or expired. Sign in again to use chat with your account, or continue without an account.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/login"
+              className="rounded-lg bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 px-4 py-2 text-sm font-medium"
+            >
+              Sign in again
+            </Link>
+            <Link
+              href="/chat"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Continue without account
+            </Link>
+          </div>
+        </div>
       </main>
     );
   }
@@ -258,83 +314,142 @@ function ChatContent() {
   }
 
   return (
-    <main className="flex flex-col h-[100dvh] bg-white dark:bg-slate-900">
-      <header className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          Chat
-        </h1>
-        <div className="flex items-center gap-3">
+    <main className="flex h-[100dvh] bg-white dark:bg-slate-900">
+      {/* Mobile: conversation list drawer */}
+      {mobileConversationsOpen && (
+        <div className="fixed inset-0 z-50 sm:hidden" aria-modal="true" role="dialog">
           <button
             type="button"
-            onClick={handleNewChatClick}
-            className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
-          >
-            New chat
-          </button>
-          <Link
-            href={token ? `/embed?token=${encodeURIComponent(token)}` : "/embed"}
-            className="text-sm text-slate-600 dark:text-slate-400 hover:underline"
-          >
-            Legacy (ChatKit)
-          </Link>
-        </div>
-      </header>
-
-      {showHistoryPanel && (
-        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowHistoryPanel(false)}>
-          <div
-            className="w-full max-w-md rounded-xl bg-white dark:bg-slate-800 shadow-xl p-4 max-h-[80dvh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Chat history</h2>
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileConversationsOpen(false)}
+            aria-label="Close conversations"
+          />
+          <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] flex flex-col bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Conversations
+              </span>
               <button
                 type="button"
-                onClick={() => setShowHistoryPanel(false)}
-                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                aria-label="Close"
+                onClick={() => setMobileConversationsOpen(false)}
+                className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:underline"
               >
-                ✕
+                Close
               </button>
             </div>
-            <button
-              type="button"
-              onClick={async () => {
-                setShowHistoryPanel(false);
-                await startNewChat();
-              }}
-              className="w-full rounded-lg bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 py-2.5 text-sm font-medium mb-4"
-            >
-              Start new conversation
-            </button>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Previous conversations</p>
-            <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
+            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
               {historyLoading ? (
-                <p className="text-sm text-slate-500">Loading…</p>
+                <p className="px-2 py-1 text-xs text-slate-500">Loading…</p>
               ) : historySessions.length === 0 ? (
-                <p className="text-sm text-slate-500">No previous conversations.</p>
+                <p className="px-2 py-1 text-xs text-slate-500">No saved conversations yet.</p>
               ) : (
-                historySessions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => openSession(s.id)}
-                    className="w-full text-left rounded-lg px-3 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 truncate"
-                    title={s.topic}
-                  >
-                    <span className="block truncate">{s.topic}</span>
-                    <span className="block text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                      {new Date(s.created_at).toLocaleDateString()}
-                    </span>
-                  </button>
-                ))
+                historySessions.map((s) => {
+                  const isActive = s.id === sessionId;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => openSession(s.id)}
+                      className={`w-full text-left rounded-lg px-3 py-2 text-xs ${
+                        isActive
+                          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                      title={s.topic}
+                    >
+                      <span className="block truncate">{s.topic}</span>
+                      <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {new Date(s.created_at).toLocaleDateString()}
+                      </span>
+                    </button>
+                  );
+                })
               )}
+            </div>
+            <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => startNewChat()}
+                className="w-full text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:underline py-1"
+              >
+                New conversation
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {error && (
+      {/* Left: conversation list (desktop) */}
+      <aside className="hidden sm:flex w-72 flex-col border-r border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Conversations
+          </h2>
+          <button
+            type="button"
+            onClick={() => startNewChat()}
+            className="text-xs font-medium text-slate-700 dark:text-slate-200 hover:underline"
+          >
+            New
+          </button>
+        </header>
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+          {historyLoading ? (
+            <p className="px-2 py-1 text-xs text-slate-500">Loading…</p>
+          ) : historySessions.length === 0 ? (
+            <p className="px-2 py-1 text-xs text-slate-500">No saved conversations yet.</p>
+          ) : (
+            historySessions.map((s) => {
+              const isActive = s.id === sessionId;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => openSession(s.id)}
+                  className={`w-full text-left rounded-lg px-3 py-2 text-xs ${
+                    isActive
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                  title={s.topic}
+                >
+                  <span className="block truncate">{s.topic}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    {new Date(s.created_at).toLocaleDateString()}
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+        <footer className="px-3 py-2 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-500">
+          <Link
+            href={token ? `/embed?token=${encodeURIComponent(token)}` : "/embed"}
+            className="hover:underline"
+          >
+            Legacy (ChatKit)
+          </Link>
+        </footer>
+      </aside>
+
+      {/* Right: active chat */}
+      <section className="flex flex-1 flex-col">
+        <header className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-800 shrink-0">
+          <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            Chat
+          </h1>
+          <button
+            type="button"
+            className="text-xs text-slate-600 dark:text-slate-400 hover:underline sm:hidden"
+            onClick={() => {
+              setMobileConversationsOpen(true);
+              handleNewChatClick();
+            }}
+          >
+            Conversations
+          </button>
+        </header>
+        {error && (
         <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm flex items-center justify-between gap-2">
           <span>{error}</span>
           <button
@@ -345,8 +460,8 @@ function ChatContent() {
             Dismiss
           </button>
         </div>
-      )}
-      <div
+        )}
+        <div
         ref={listRef}
         className="flex-1 overflow-y-auto p-4 space-y-3"
       >
@@ -355,21 +470,24 @@ function ChatContent() {
             Send a message below. Each turn is saved via the backend.
           </p>
         )}
-        {messages.map((m) => (
+        {messages.map((m) => {
+          const label = m.role === "user" ? "You" : m.role === "assistant" ? "Wisewave" : m.role;
+          const isUser = m.role === "user";
+          return (
           <div
             key={m.id}
             className={
-              m.role === "user"
+              isUser
                 ? "ml-4 text-right"
                 : "mr-4 text-left"
             }
           >
             <span className="text-xs text-slate-400 dark:text-slate-500 mr-2">
-              {m.role}
+              {label}
             </span>
             <div
               className={
-                m.role === "user"
+                isUser
                   ? "inline-block rounded-lg bg-slate-200 dark:bg-slate-700 px-3 py-2 text-sm"
                   : "rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm whitespace-pre-wrap"
               }
@@ -377,9 +495,9 @@ function ChatContent() {
               {m.message}
             </div>
           </div>
-        ))}
-      </div>
-      <form
+        );})}
+        </div>
+        <form
         className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0"
         onSubmit={(e) => {
           e.preventDefault();
@@ -404,6 +522,7 @@ function ChatContent() {
           </button>
         </div>
       </form>
+      </section>
     </main>
   );
 }

@@ -78,3 +78,17 @@ enum SubscriptionPlatform {
   app_store
   stripe_web
 }
+
+/// Tasks assigned to an AI agent; agent fetches by name and can submit a reply to update the task.
+model AgentTask {
+  id           String   @id @default(cuid())
+  agentName    String   @map("agent_name")   // e.g. "Nova", "Lumen" — used to filter tasks for that agent
+  title        String
+  description  String?  @db.Text
+  status       String   @default("open")    // open | in_progress | replied | closed
+  replyContent String?  @map("reply_content") @db.Text  // set when agent submits a reply
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([agentName, status])
+}

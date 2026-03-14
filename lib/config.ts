@@ -5,6 +5,7 @@ export const WORKFLOW_ID =
 
 export const CREATE_SESSION_ENDPOINT = "/api/create-session";
 export const CHAT_SESSION_ENDPOINT = "/api/chat/session";
+export const CHAT_AUTH_CHECK_ENDPOINT = "/api/chat/auth-check";
 export const CHAT_SESSIONS_LIST_ENDPOINT = "/api/chat/sessions";
 export const CHAT_MESSAGES_ENDPOINT = "/api/chat/messages";
 export const CHAT_TURN_ENDPOINT = "/api/chat/turn";
