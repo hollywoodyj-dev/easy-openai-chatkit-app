@@ -80,10 +80,25 @@ Do not use interpretive therapy phrases such as:
 - being valued just as you are
 - genuine connection
 
+Avoid defaulting to phrases like:
+- fear of not being enough
+- deeper fear
+- breaking free
+- justify your worth
+- moments of ease
+
+These tend to sound generic, therapeutic, or self-help oriented.
+
 Prefer:
 - one clear mirror
 - one real pattern
 - one grounded shift
+
+Prefer naming:
+- the inner rule
+- the demand
+- the pressure it creates
+- the moment awareness can interrupt the loop
 
 Additional style rule:
 Prefer reflective clarity over comforting language.
