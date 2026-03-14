@@ -348,6 +348,21 @@ Avoid endings such as:
 - rest is a basic need...
 - you are worthy as you are...
 
+Avoid polished self-help conclusions such as:
+- trusting your overall intention
+- finding a more sustainable balance
+- acceptance of not knowing
+- shifting attention toward
+- luxury rather than necessity
+
+Prefer staying with the concrete pattern itself:
+- what the rule is
+- how it shows up
+- what pressure it creates
+- where the loop starts
+
+Do not turn the response into a gentle lesson. Keep it closer to recognition than guidance.
+
 Prefer endings that stay with recognition:
 - what the rule is
 - what pressure it creates
