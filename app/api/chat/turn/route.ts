@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
+import { extractReflectionState } from "@/lib/wisewave-extract";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -144,8 +145,8 @@ export async function POST(request: Request) {
       ? (body.insight_tags as object)
       : undefined;
 
-  // 1. Save user message
-  await prisma.message.create({
+  // V1 persistence order: save user message before any AI processing so a failed model call never loses the user's reflection.
+  const userMsg = await prisma.message.create({
     data: {
       conversationId: sessionId,
       userId,
@@ -156,12 +157,6 @@ export async function POST(request: Request) {
     },
   });
 
-  // 2. Get message count and optionally refresh conversation summary (every SUMMARY_TRIGGER_EVERY messages)
-  const allMessages = await prisma.message.findMany({
-    where: { conversationId: sessionId },
-    orderBy: { createdAt: "asc" },
-  });
-  const messageCount = allMessages.length;
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -169,8 +164,49 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-
   const model = process.env.OPENAI_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
+
+  // V1 Ticket 2: extraction pipeline — structured reflection state for this message. Failure is non-blocking; we log and continue.
+  let reflectionState: {
+    trigger_label: string;
+    emotion_label: string;
+    interpretation_label: string;
+    regulation_label: string;
+    choice_label: string;
+    insight_candidate: string;
+  } | null = null;
+  const extracted = await extractReflectionState(
+    message.trim(),
+    apiKey,
+    model,
+    conversation.conversationSummary
+  );
+  if (extracted) {
+    reflectionState = extracted;
+    try {
+      await prisma.reflectionRun.create({
+        data: {
+          conversationId: sessionId,
+          messageId: userMsg.id,
+          triggerLabel: extracted.trigger_label,
+          emotionLabel: extracted.emotion_label,
+          interpretationLabel: extracted.interpretation_label,
+          regulationLabel: extracted.regulation_label,
+          choiceLabel: extracted.choice_label,
+          insightCandidate: extracted.insight_candidate || null,
+        },
+      });
+    } catch (e) {
+      console.warn("[chat/turn] ReflectionRun save failed", e);
+    }
+  }
+
+  // 2. Get message count and optionally refresh conversation summary (every SUMMARY_TRIGGER_EVERY messages)
+  const allMessages = await prisma.message.findMany({
+    where: { conversationId: sessionId },
+    orderBy: { createdAt: "asc" },
+  });
+  const messageCount = allMessages.length;
 
   if (
     messageCount >= SUMMARY_TRIGGER_EVERY &&
@@ -259,7 +295,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // 4. Save assistant message
+  // V1: persist assistant message after successful generation.
   await prisma.message.create({
     data: {
       conversationId: sessionId,
@@ -271,6 +307,7 @@ export async function POST(request: Request) {
 
   const res = NextResponse.json({
     assistant_message: assistantContent,
+    ...(reflectionState && { reflection_state: reflectionState }),
   });
   if (sessionCookie) {
     res.headers.append("Set-Cookie", sessionCookie);

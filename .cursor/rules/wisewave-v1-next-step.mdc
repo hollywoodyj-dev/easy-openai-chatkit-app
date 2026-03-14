@@ -1,0 +1,25 @@
+---
+description: When asked to "process project with next step", read V1 progress and execute the current ticket's Next Action
+globs: docs/WISEWAVE_V1_*.md
+---
+
+# Wisewave V1 — Process project with next step
+
+When the user says **"process project with next step"** (or equivalent: "next step", "continue the project", "do the next step for Wisewave V1"):
+
+1. **Read** `docs/WISEWAVE_V1_PROGRESS.md` to get:
+   - Current milestone (A, B, or C)
+   - Current ticket number and title
+   - **Next Action** for that ticket
+   - Definition of Done for that ticket
+
+2. **Execute** the Next Action:
+   - Implement the described work (e.g. session/message persistence, extraction pipeline, continuity strip).
+   - If the repo already has partial implementation (e.g. /chat, reflection route), align with existing code and extend rather than duplicate.
+
+3. **Update** `docs/WISEWAVE_V1_PROGRESS.md` after completing work:
+   - Set the ticket **State** to **In Progress** or **Done** as appropriate.
+   - If Done, advance **Current Focus** to the next ticket and set its Next Action.
+   - Add a **Last completed** line with a brief note.
+
+4. **Reference** `docs/WISEWAVE_V1_SPEC.md` for full product requirements, data model, API shape, and quality bar when implementing.

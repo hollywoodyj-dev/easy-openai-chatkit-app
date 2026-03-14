@@ -47,6 +47,7 @@ model Conversation {
   createdAt           DateTime  @default(now())
   messages            Message[]
   reflectionCheckpoints ReflectionCheckpoint[]
+  reflectionRuns       ReflectionRun[]
 }
 
 /// User-triggered reflection checkpoint: optional user input + AI-generated summary. One per row; multiple per conversation.
@@ -73,6 +74,24 @@ model Message {
   createdAt      DateTime @default(now())
   metadata       Json?    // Optional JSON
   insightTags    Json?    @map("insight_tags") // Optional JSON array
+}
+
+/// V1 reflection extraction run: structured labels + insight candidate per user message (Wisewave Core Loop).
+model ReflectionRun {
+  id                  String   @id @default(cuid())
+  conversationId      String   @map("conversation_id")
+  conversation        Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  messageId           String   @map("message_id")
+  triggerLabel        String?  @map("trigger_label")
+  emotionLabel        String?  @map("emotion_label")
+  interpretationLabel String?  @map("interpretation_label")
+  regulationLabel     String?  @map("regulation_label")
+  choiceLabel         String?  @map("choice_label")
+  insightCandidate    String?  @map("insight_candidate") @db.Text
+  createdAt           DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([messageId])
 }
 
 enum SubscriptionStatus {
