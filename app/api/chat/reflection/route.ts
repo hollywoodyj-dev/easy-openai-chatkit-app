@@ -93,6 +93,13 @@ A stronger ending points to:
 - the loop being obeyed
 - the place where awareness can interrupt the pattern
 
+Additional style rules:
+- Do not frame the pattern as protection, shielding, or defense.
+- Do not use healing affirmations about worth, acceptance, or validation.
+- Do not end with "consider," "what if," "explore," or similar coaching language.
+- Prefer naming the inner rule, pressure, demand, or loop directly.
+- The checkpoint should feel like a clean recognition, not a comforting interpretation.
+
 A strong reflection should make the user feel:
 "Yes, that is the real thing."
 
