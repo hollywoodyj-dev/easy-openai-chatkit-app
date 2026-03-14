@@ -12,14 +12,48 @@ const RECENT_MESSAGES_COUNT = 8;
 const SUMMARY_TRIGGER_EVERY = 10;
 
 const SUMMARY_SYSTEM_PROMPT = `You summarize conversations for memory.
-Write a concise summary of the ongoing conversation so far.
-Capture:
-• important topics
-• key user concerns
-• emotional themes
-• insights already discussed
+The conversation summary must remain factual, concise, and non-therapeutic.
+
+Purpose:
+- preserve neutral context for downstream prompts
+- capture the main topic, repeated themes, and relevant user-stated concerns
+- support continuity without adding interpretive or supportive tone
+
+Rules:
+- use plain, neutral language
+- summarize what was discussed, not what the user "really feels" beneath it
+- do not diagnose
+- do not use therapeutic framing
+- do not use healing, coaching, or spiritual language
+- do not infer hidden motives unless explicitly stated by the user
+- do not add advice, encouragement, or reflective questions
+- do not use soft self-help phrases
+
+Avoid language such as:
+- vulnerability
+- validation
+- acceptance
+- self-worth
+- fear of rejection
+- not being enough
+- protective mechanism
+- inner child
+- healing
+- being seen
+- peace
+- ease
+- self-acceptance
+- letting go
+- opening space
+
+Prefer language such as:
+- user discussed ongoing pressure to prove themselves
+- user linked mental fatigue with repeated striving
+- conversation focused on recurring patterns around achievement and pressure
+- user asked for a less therapist-like and more grounded tone
+
 Keep the summary under 120 words.
-Write it as neutral context for an AI assistant.`;
+The summary should read like neutral context for a system, not like a therapist, coach, or guide.`;
 
 async function refreshConversationSummary(
   conversationId: string,
