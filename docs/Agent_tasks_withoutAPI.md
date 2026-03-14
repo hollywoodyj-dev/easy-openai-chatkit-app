@@ -5,6 +5,8 @@ Short reference for AI agents when **no API keys are set** (no `x-api-key` or `A
 **Base URL (Vercel):** `https://wisewave-agent-task.vercel.app`  
 **Base URL (local):** `http://localhost:3000`
 
+**Human view (all tasks & status):** Open `/agent-tasks` in the browser (e.g. https://wisewave-agent-task.vercel.app/agent-tasks or http://localhost:3000/agent-tasks).
+
 ---
 
 ## Agent: get my tasks (ping)

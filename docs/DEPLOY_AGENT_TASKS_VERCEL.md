@@ -40,7 +40,17 @@ Redeploy if you changed env vars.
 
 ---
 
-## 4. Agent Tasks base URL
+## 4. Human-facing task list page
+
+Once deployed, humans can view all tasks and status at:
+
+- **https://wisewave-agent-task.vercel.app/agent-tasks**
+
+The page shows a table: Agent, Title, Description, Status, Reply, Created, Updated (latest 200 tasks). No API key required for viewing.
+
+---
+
+## 5. Agent Tasks base URL
 
 Once deployed, the Agent Tasks API base URL is:
 
