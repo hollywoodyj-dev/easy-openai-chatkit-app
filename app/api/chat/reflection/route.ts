@@ -7,7 +7,73 @@ export const dynamic = "force-dynamic";
 const REFLECTION_RECENT_MESSAGES = 12;
 const DEFAULT_CHAT_MODEL = "gpt-4o";
 
-const REFLECTION_SYSTEM_PROMPT = `You are a reflective assistant supporting self-awareness. Given the conversation so far and an optional user reflection, write one concise reflection or insight summary (1-3 sentences) that captures what matters for the user's awareness. Tone: calm, clear, supportive. Output only the reflection text, no preamble.`;
+const REFLECTION_SYSTEM_PROMPT = `You are generating a Wisewave reflection checkpoint for a chat conversation.
+
+Your task is to write a short reflection that feels like a wise inner guide:
+clear, grounded, simple, and real.
+
+The reflection must do 3 things:
+1. Mirror the user's real inner dynamic
+2. Name one core pattern, tension, or loop
+3. Offer one grounded direction or opening
+
+Output requirements:
+- 2 to 4 sentences only
+- preferably under 80 words
+- plain, human language
+- specific to this actual conversation
+- must feel worth saving as a checkpoint
+- return only the reflection text
+
+Tone:
+- calm
+- clear
+- warm
+- grounded
+- lightly wise
+- non-clinical
+- non-preachy
+- non-mystical
+- non-therapeutic
+
+Hard rules:
+- do not sound like a therapist
+- do not diagnose
+- do not explain the user too much
+- do not summarize the whole conversation
+- do not give a list of advice
+- do not use abstract self-help language
+- do not sound overly certain about hidden motives
+- do not use inflated or soft cliché wording
+
+Avoid phrases like:
+- protective mechanism
+- this may stem from
+- important step
+- create more space
+- embrace moments of just being
+- external approval
+- self-worth independent of
+- gently urging you
+- there may be room here
+- it seems like there's
+
+Prefer:
+- one clear mirror
+- one real pattern
+- one grounded shift
+
+A strong reflection should make the user feel:
+"Yes, that is the real thing."
+
+Return only the reflection text. No bullets. No labels. No quotation marks.`;
+
+function sanitizeReflection(text: string): string {
+  return text
+    .replace(/^["'\s]+|["'\s]+$/g, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
 
 /**
  * POST: Create a reflection checkpoint. Body: { session_id, user_reflection? }.
@@ -15,6 +81,7 @@ const REFLECTION_SYSTEM_PROMPT = `You are a reflective assistant supporting self
  */
 export async function POST(request: Request) {
   const { userId, sessionCookie } = await resolveChatUserId(request);
+
   let body: { session_id?: string; user_reflection?: string };
   try {
     body = await request.json();
@@ -51,24 +118,61 @@ export async function POST(request: Request) {
   }
 
   const model = process.env.OPENAI_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
-  const userReflection = typeof body.user_reflection === "string" ? body.user_reflection.trim() || null : null;
+  const userReflection =
+    typeof body.user_reflection === "string"
+      ? body.user_reflection.trim() || null
+      : null;
 
-  const messages = await prisma.message.findMany({
+  // Fetch the most recent messages, then reverse for chronological prompt order.
+  const recentMessagesDesc = await prisma.message.findMany({
     where: { conversationId: sessionId },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
     take: REFLECTION_RECENT_MESSAGES,
     select: { role: true, message: true },
   });
-  const recentText = messages.length > 0
-    ? messages.map((m) => `${m.role}: ${m.message}`).join("\n\n")
-    : "(No messages yet)";
+
+  const messages = recentMessagesDesc.reverse();
+
+  // Avoid generating generic reflections when there is no actual content.
+  if (messages.length === 0 && !userReflection) {
+    return NextResponse.json(
+      { error: "No conversation content available for reflection" },
+      { status: 400 }
+    );
+  }
+
+  const recentText = messages
+    .map((m) => `${m.role}: ${m.message}`)
+    .join("\n\n");
+
   const summaryBlock = conversation.conversationSummary?.trim()
-    ? `\nConversation summary:\n${conversation.conversationSummary}`
+    ? `\nConversation summary:\n${conversation.conversationSummary.trim()}`
     : "";
-  const userBlock = userReflection ? `\nUser reflection for this checkpoint:\n${userReflection}` : "";
-  const userContent = `Conversation so far:\n${recentText}${summaryBlock}${userBlock}\n\nWrite the reflection summary.`;
+
+  const userBlock = userReflection
+    ? `\nUser reflection for this checkpoint:\n${userReflection}`
+    : "";
+
+  const userContent = `Use the latest conversation signals most heavily.
+If a user reflection is provided, treat it as the clearest checkpoint focus.
+
+Conversation so far:
+${recentText}${summaryBlock}${userBlock}
+
+Write one Wisewave reflection checkpoint.
+
+Requirements:
+- 2 to 4 sentences
+- under 80 words if possible
+- one real pattern
+- one grounded direction
+- no therapy tone
+- no summary of the whole conversation
+
+Return only the reflection text.`;
 
   let summary: string;
+
   try {
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -82,7 +186,8 @@ export async function POST(request: Request) {
           { role: "system", content: REFLECTION_SYSTEM_PROMPT },
           { role: "user", content: userContent },
         ],
-        max_tokens: 256,
+        max_tokens: 140,
+        temperature: 0.5,
       }),
     });
 
@@ -101,7 +206,10 @@ export async function POST(request: Request) {
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    summary = data.choices?.[0]?.message?.content?.trim() ?? "";
+
+    summary = sanitizeReflection(
+      data.choices?.[0]?.message?.content?.trim() ?? ""
+    );
   } catch (e) {
     console.error("[chat/reflection] OpenAI request failed", e);
     return NextResponse.json(
@@ -130,9 +238,11 @@ export async function POST(request: Request) {
     summary: checkpoint.summary,
     checkpoint_id: checkpoint.id,
   });
+
   if (sessionCookie) {
     response.headers.append("Set-Cookie", sessionCookie);
   }
+
   return response;
 }
 
@@ -177,7 +287,7 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    checkpoints: checkpoints.map((c) => ({
+    checkpoints: checkpoints.map((c: { id: string; summary: string; userInput: string | null; createdAt: Date }) => ({
       id: c.id,
       summary: c.summary,
       user_input: c.userInput,
