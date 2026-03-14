@@ -4,6 +4,20 @@ import { resolveChatUserId } from "@/lib/chat-identity";
 
 export const dynamic = "force-dynamic";
 
+// Use delegate type so TS recognizes reflectionCheckpoint (generated client may be out of sync in IDE)
+type ReflectionCheckpointDelegate = {
+  create: (args: {
+    data: { conversationId: string; userId: string; userInput: string | null; summary: string };
+  }) => Promise<{ id: string; summary: string }>;
+  findMany: (args: {
+    where: { conversationId: string };
+    orderBy: { createdAt: "asc" | "desc" };
+    take: number;
+    select: { id: true; summary: true; userInput: true; createdAt: true };
+  }) => Promise<Array<{ id: string; summary: string; userInput: string | null; createdAt: Date }>>;
+};
+const db = prisma as typeof prisma & { reflectionCheckpoint: ReflectionCheckpointDelegate };
+
 const REFLECTION_RECENT_MESSAGES = 12;
 const DEFAULT_CHAT_MODEL = "gpt-4o";
 
@@ -62,6 +76,22 @@ Prefer:
 - one clear mirror
 - one real pattern
 - one grounded shift
+
+Additional style rule:
+Prefer reflective clarity over comforting language.
+
+Do not end with soft healing phrases like:
+- find peace
+- simply being
+- self-acceptance
+- feel your emotions
+- embrace yourself as you are
+
+A stronger ending points to:
+- the actual inner rule
+- the hidden pressure
+- the loop being obeyed
+- the place where awareness can interrupt the pattern
 
 A strong reflection should make the user feel:
 "Yes, that is the real thing."
@@ -225,7 +255,7 @@ Return only the reflection text.`;
     );
   }
 
-  const checkpoint = await prisma.reflectionCheckpoint.create({
+  const checkpoint = await db.reflectionCheckpoint.create({
     data: {
       conversationId: sessionId,
       userId,
@@ -274,7 +304,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const checkpoints = await prisma.reflectionCheckpoint.findMany({
+  const checkpoints = await db.reflectionCheckpoint.findMany({
     where: { conversationId: sessionId },
     orderBy: { createdAt: "desc" },
     take: 50,
