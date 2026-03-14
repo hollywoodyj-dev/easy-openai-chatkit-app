@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { extractReflectionState } from "@/lib/wisewave-extract";
+import { CHAT_SYSTEM_PROMPT as WISEWAVE_CHAT_PROMPT } from "@/lib/wisewave-prompts";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -262,7 +263,7 @@ export async function POST(request: Request) {
     })
   );
 
-  // Use Wisewave/chatbot instructions: set OPENAI_CHAT_SYSTEM_PROMPT or OPENAI_CHAT_SYSTEM_PROMPT_FILE
+  // Use Wisewave reflection-style prompt by default; override with OPENAI_CHAT_SYSTEM_PROMPT or OPENAI_CHAT_SYSTEM_PROMPT_FILE
   let systemPrompt = process.env.OPENAI_CHAT_SYSTEM_PROMPT?.trim();
   if (!systemPrompt && process.env.OPENAI_CHAT_SYSTEM_PROMPT_FILE?.trim()) {
     try {
@@ -271,6 +272,9 @@ export async function POST(request: Request) {
     } catch (e) {
       console.warn("[chat/turn] Could not read OPENAI_CHAT_SYSTEM_PROMPT_FILE", e);
     }
+  }
+  if (!systemPrompt) {
+    systemPrompt = WISEWAVE_CHAT_PROMPT;
   }
   const openaiMessagesForApi: { role: "user" | "assistant" | "system"; content: string }[] = [];
   if (systemPrompt) {
