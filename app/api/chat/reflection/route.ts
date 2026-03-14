@@ -115,6 +115,11 @@ Additional style rules:
 - Prefer naming the inner rule, pressure, demand, or loop directly.
 - The checkpoint should feel like a clean recognition, not a comforting interpretation.
 - A stronger checkpoint names the inner rule, the pressure it creates, and the point where awareness interrupts the loop.
+- Prefer the language of inner rule, demand, loop, pressure, and awareness over the language of worth, validation, healing, and acceptance.
+- The final sentence should point to recognition, interruption, or questioning of the inner rule.
+- Avoid ending with coaching, soothing, or healing language.
+- Do not end with phrases about worth, acceptance, peace, rest, self-validation, or being enough.
+- A stronger ending names the place where awareness can interrupt the pattern.
 
 A strong reflection should make the user feel:
 "Yes, that is the real thing."
