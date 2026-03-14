@@ -20,16 +20,39 @@ export async function GET(request: Request) {
   }
 
   if (dateParam) {
-    const summaries = await prisma.agentTaskArchive.findMany({
-      where: { archiveDate: dateParam },
-      orderBy: { agentName: "asc" },
-    });
+    const [summaries, tasks] = await Promise.all([
+      prisma.agentTaskArchive.findMany({
+        where: { archiveDate: dateParam },
+        orderBy: { agentName: "asc" },
+      }),
+      (() => {
+        const start = new Date(dateParam + "T00:00:00.000Z");
+        const end = new Date(dateParam + "T23:59:59.999Z");
+        return prisma.agentTask.findMany({
+          where: {
+            archivedAt: { not: null },
+            createdAt: { gte: start, lte: end },
+          },
+          orderBy: [{ agentName: "asc" }, { createdAt: "asc" }],
+        });
+      })(),
+    ]);
     return NextResponse.json({
       date: dateParam,
       summaries: summaries.map((s) => ({
         agentName: s.agentName,
         finalizedContent: s.finalizedContent,
         createdAt: s.createdAt.toISOString(),
+      })),
+      tasks: tasks.map((t) => ({
+        id: t.id,
+        agentName: t.agentName,
+        title: t.title,
+        description: t.description,
+        status: t.status,
+        replyContent: t.replyContent,
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
       })),
     });
   }
@@ -39,19 +62,30 @@ export async function GET(request: Request) {
     select: { archiveDate: true },
   });
   if (!latest) {
-    return NextResponse.json({ date: null, summaries: [], dates: [] });
+    return NextResponse.json({ date: null, summaries: [], tasks: [], dates: [] });
   }
 
-  const summaries = await prisma.agentTaskArchive.findMany({
-    where: { archiveDate: latest.archiveDate },
-    orderBy: { agentName: "asc" },
-  });
-  const dates = await prisma.agentTaskArchive.findMany({
-    select: { archiveDate: true },
-    distinct: ["archiveDate"],
-    orderBy: { archiveDate: "desc" },
-    take: 30,
-  });
+  const startOfDay = new Date(latest.archiveDate + "T00:00:00.000Z");
+  const endOfDay = new Date(latest.archiveDate + "T23:59:59.999Z");
+  const [summaries, tasks, dates] = await Promise.all([
+    prisma.agentTaskArchive.findMany({
+      where: { archiveDate: latest.archiveDate },
+      orderBy: { agentName: "asc" },
+    }),
+    prisma.agentTask.findMany({
+      where: {
+        archivedAt: { not: null },
+        createdAt: { gte: startOfDay, lte: endOfDay },
+      },
+      orderBy: [{ agentName: "asc" }, { createdAt: "asc" }],
+    }),
+    prisma.agentTaskArchive.findMany({
+      select: { archiveDate: true },
+      distinct: ["archiveDate"],
+      orderBy: { archiveDate: "desc" },
+      take: 30,
+    }),
+  ]);
 
   return NextResponse.json({
     date: latest.archiveDate,
@@ -59,6 +93,16 @@ export async function GET(request: Request) {
       agentName: s.agentName,
       finalizedContent: s.finalizedContent,
       createdAt: s.createdAt.toISOString(),
+    })),
+    tasks: tasks.map((t) => ({
+      id: t.id,
+      agentName: t.agentName,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      replyContent: t.replyContent,
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
     })),
     dates: dates.map((d) => d.archiveDate),
   });

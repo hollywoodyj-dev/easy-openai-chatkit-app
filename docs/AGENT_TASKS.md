@@ -142,8 +142,9 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
    - All tasks for that date for those agents have `archivedAt` set, so they no longer appear in the default GET list.
 
    **GET** archive (admin key):  
-   `GET ${BASE_URL}/api/agent-tasks/archive` returns the latest day’s finalized summaries and list of `dates`.  
-   `GET ${BASE_URL}/api/agent-tasks/archive?date=2026-03-14` returns summaries for that date.
+   `GET ${BASE_URL}/api/agent-tasks/archive` returns the latest day’s **summaries**, **tasks** (full task + reply for that day), and **dates**.  
+   `GET ${BASE_URL}/api/agent-tasks/archive?date=2026-03-14` returns summaries and tasks for that date.  
+   Response: `{ date?, summaries: [ { agentName, finalizedContent, createdAt } ], tasks: [ { id, agentName, title, description, status, replyContent, createdAt, updatedAt } ], dates? }`.
 
    **Default list behaviour:**  
    - `GET /api/agent-tasks?agent=Nova` returns only **non-archived** tasks.  
@@ -162,5 +163,5 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
 | Admin (Tree) | Archive day + finalized content per agent | POST | `/api/agent-tasks/archive` with body `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }` (admin key required) |
 | Admin  | Get archive (latest or by date) | GET  | `/api/agent-tasks/archive` or `?date=YYYY-MM-DD` (admin key required) |
 
-- By default, **only non-archived** tasks are returned. After Tree archives a day, those tasks are hidden; the human page shows **only the latest day’s finalized summaries** (archive section) and current (non-archived) tasks.
+- By default, **only non-archived** tasks are returned. After Tree archives a day, those tasks are hidden; the human page shows the **latest day’s finalized summaries and full tasks & replies** (archive section) and current (non-archived) tasks.
 - To include archived tasks in the list: add `?include_archived=1` to the GET request.

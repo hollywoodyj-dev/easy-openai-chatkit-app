@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "deploy": "vercel --yes",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:push:prod": "prisma db push"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",
