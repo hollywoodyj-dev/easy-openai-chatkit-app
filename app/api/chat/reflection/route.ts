@@ -20,7 +20,7 @@ type ReflectionCheckpointDelegate = {
 const db = prisma as typeof prisma & { reflectionCheckpoint: ReflectionCheckpointDelegate };
 
 const REFLECTION_RECENT_MESSAGES = 12;
-const DEFAULT_CHAT_MODEL = "gpt-4o";
+const DEFAULT_CHAT_MODEL = "gpt-5.4";
 
 function sanitizeReflection(text: string): string {
   return text

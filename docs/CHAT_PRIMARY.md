@@ -50,7 +50,7 @@ None of these block using /chat as the primary interface for anonymous or cookie
 
 - `DATABASE_URL` — Postgres with `Conversation` and `Message` (e.g. `npx prisma db push`).
 - `OPENAI_API_KEY` — Required for turn.
-- `OPENAI_CHAT_MODEL` — Optional; default `gpt-4o`.
+- `OPENAI_CHAT_MODEL` — Optional; default `gpt-5.4`.
 - **`OPENAI_CHAT_SYSTEM_PROMPT`** — **Recommended.** Set to the same instructions as your Wisewave/ChatKit workflow (from Agent Builder) so /chat uses the same assistant behavior instead of plain GPT. Use `\n` for new lines in .env.
 - **`OPENAI_CHAT_SYSTEM_PROMPT_FILE`** — Optional. Path to a file (relative to project root) containing the system prompt, e.g. `prompts/wisewave-system.txt`. Useful for long instructions.
 

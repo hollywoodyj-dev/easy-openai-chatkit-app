@@ -15,7 +15,7 @@ All three were exercised in one flow; persistence and cookie identity work as in
 1. **Env**
    - `DATABASE_URL` — Postgres (Conversation + Message tables; run `npx prisma db push` or migrate if not done).
    - `OPENAI_API_KEY` — Required for `/api/chat/turn` (Chat Completions).
-   - `OPENAI_CHAT_MODEL` — Optional; defaults to `gpt-4o` if unset.
+   - `OPENAI_CHAT_MODEL` — Optional; defaults to `gpt-5.4` if unset.
 
 2. **Identity**
    - **Anonymous:** Cookie only; no auth header. Same as existing create-session (cookie or generated id).
@@ -45,7 +45,7 @@ All three were exercised in one flow; persistence and cookie identity work as in
 | Adopt /chat now | Keep as scaffold |
 |-----------------|------------------|
 | You want persisted chat without depending on ChatKit callbacks. | You need ChatKit workflow parity or streaming first. |
-| You accept Chat Completions (e.g. gpt-4o) as the backend model. | You must keep the exact workflow/model/tools. |
+| You accept Chat Completions (e.g. gpt-5.4) as the backend model. | You must keep the exact workflow/model/tools. |
 | You’re fine with cookie + optional Bearer and the current simple UI. | You’re waiting for Option A or a custom turn that uses the workflow. |
 
 **Concrete next step to adopt:** Set `DATABASE_URL`, `OPENAI_API_KEY`, (optionally `OPENAI_CHAT_MODEL`), run DB sync, then use `/chat` or call `POST /api/chat/session`, `POST /api/chat/turn`, and `GET /api/chat/messages` from your own client.

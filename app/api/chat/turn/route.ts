@@ -8,7 +8,7 @@ import { join } from "path";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_CHAT_MODEL = "gpt-4o";
+const DEFAULT_CHAT_MODEL = "gpt-5.4";
 const RECENT_MESSAGES_COUNT = 8;
 const SUMMARY_TRIGGER_EVERY = 10;
 
