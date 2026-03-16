@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   }
 
   const latest = await anyPrisma.insight.findFirst({
-    where: { userId, status: "active" },
+    where: { userId, status: "active", isContinuityEligible: true },
     orderBy: { lastSeenAt: "desc" },
     select: {
       id: true,

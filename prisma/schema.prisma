@@ -108,10 +108,12 @@ model Insight {
   confidenceScore  Float?   @map("confidence_score")
   createdAt        DateTime @default(now())
   lastSeenAt       DateTime @map("last_seen_at") @default(now())
+  isContinuityEligible Boolean @map("is_continuity_eligible") @default(true)
 
   @@index([userId])
   @@index([conversationId])
   @@index([status])
+  @@index([isContinuityEligible])
 }
 
 enum SubscriptionStatus {

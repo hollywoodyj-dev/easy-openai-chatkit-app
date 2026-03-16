@@ -351,6 +351,44 @@ export async function POST(request: Request) {
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
     const continuityText = corePattern;
+
+    const weakLabels = new Set(["unknown", "uncertain"]);
+    const allLabelsWeak =
+      weakLabels.has(reflectionState.trigger_label) &&
+      weakLabels.has(reflectionState.emotion_label) &&
+      weakLabels.has(reflectionState.interpretation_label) &&
+      weakLabels.has(reflectionState.regulation_label) &&
+      weakLabels.has(reflectionState.choice_label);
+
+    const lower = corePattern.toLowerCase();
+    const bannedPhrases = [
+      "too ambiguous to infer",
+      "unable to infer",
+      "insufficient signal",
+      "insufficient information",
+      "not enough information",
+      "unclear trigger",
+      "unclear emotion",
+      "user reflection is ambiguous",
+      "ambiguous",
+    ];
+    const isSystemy =
+      lower.startsWith("as an ai") ||
+      lower.startsWith("the model") ||
+      lower.includes("insufficient signal") ||
+      bannedPhrases.some((p) => lower.includes(p));
+
+    const isVeryShort = corePattern.length < 24;
+    const isTooGeneric =
+      lower === "you were upset today." ||
+      lower === "you were upset today" ||
+      lower === "you had a hard conversation." ||
+      lower === "you had a hard conversation" ||
+      lower === "you feel emotions strongly." ||
+      lower === "you feel emotions strongly";
+
+    const isContinuityEligible =
+      !allLabelsWeak && !isSystemy && !isVeryShort && !isTooGeneric;
     try {
       const anyPrisma = prisma as unknown as {
         insight?: {
@@ -382,6 +420,7 @@ export async function POST(request: Request) {
           continuityText,
           status: "active",
           confidenceScore: null,
+          isContinuityEligible,
         },
         });
       }
