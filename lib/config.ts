@@ -10,6 +10,7 @@ export const CHAT_SESSIONS_LIST_ENDPOINT = "/api/chat/sessions";
 export const CHAT_MESSAGES_ENDPOINT = "/api/chat/messages";
 export const CHAT_TURN_ENDPOINT = "/api/chat/turn";
 export const CHAT_REFLECTION_ENDPOINT = "/api/chat/reflection";
+export const CHAT_CONTINUITY_ENDPOINT = "/api/chat/continuity";
 
 export const STARTER_PROMPTS: StartScreenPrompt[] = [
   {

@@ -8,7 +8,7 @@
 
 | Milestone | Goal | Status |
 |-----------|------|--------|
-| **A — Loop Foundation** | Minimum working reflection loop: submit reflection → AI reflection → insight saved → continuity on return | In Progress |
+| **A — Loop Foundation** | Minimum working reflection loop: submit reflection → AI reflection → insight saved → continuity on return | Done |
 | **B — Guided Reflection Layer** | Regulation cue, action prompt, feedback capture, metadata rendering | Not Started |
 | **C — Measurement + Reliability** | Logging, fallback validation, continuity checks, multi-user isolation | Not Started |
 
@@ -22,22 +22,20 @@
 | 2 | Build extraction pipeline returning structured reflection JSON | Nova | Done | none | — |
 | 3 | Build response generation pipeline for concise reflection output | Nova | Done | none | — |
 | 4 | Create insights persistence model and save logic | Nova | Done | none | — |
-| 5 | Load latest active insight and render continuity strip on /chat | Nova | Not Started | Ticket 4 | Fetch latest active insight on chat load; render continuity strip when present; hide cleanly when none. |
+| 5 | Load latest active insight and render continuity strip on /chat | Nova | Done | none | — |
 
 ---
 
 ## Current Focus
 
 **Current milestone:** A — Loop Foundation  
-**Current ticket:** **Ticket 5 — Load latest active insight and render continuity strip on /chat**  
-**State:** Not Started  
+**Current ticket:** **(All Milestone A tickets complete)**  
+**State:** Done  
 **Blocker:** none  
 
 ### Next Action (do this when user says "process project with next step")
 
-1. Implement a way to fetch the **latest active Insight** for the current user (e.g. backend helper or `/api/chat/continuity`), using `Insight` with `status = 'active'` ordered by `createdAt` or `lastSeenAt`.
-2. On `/chat` page load, fetch that latest active Insight and render a **continuity strip** above the chat input using `continuityText` (short, readable, non-intrusive).
-3. Ensure no continuity appears when there is no active insight, and insights are always scoped to the current user only.
+Milestone A is complete. When continuing, start with **Milestone B — Guided Reflection Layer** (Ticket 6 or 8) or **Milestone C — Measurement + Reliability** (Ticket 7), depending on priority.
 
 ### Definition of Done — Ticket 3
 
@@ -93,4 +91,4 @@ After completing a **Next Action** or finishing a ticket:
 3. If blocked, set **Blocker** and **Next Action** to the unblock step.
 4. Optionally add a short **Last completed** line with date and what was done.
 
-**Last completed:** Ticket 4 — Insight persistence added: Prisma `Insight` model; `prisma.insight.create` in `/api/chat/turn` using `insight_candidate` as `corePattern` + `continuityText`; errors are logged and do not affect chat responses. Next: Ticket 5 — load latest active insight and render continuity strip on `/chat`.
+**Last completed:** Ticket 5 — Continuity added: `/api/chat/continuity` returns latest active Insight for current user; `/chat` fetches it on load and renders a \"Last insight\" continuity strip using `continuityText` above the chat input. Milestone A (Loop Foundation) is now complete.

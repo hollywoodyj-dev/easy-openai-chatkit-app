@@ -10,6 +10,7 @@ import {
   CHAT_MESSAGES_ENDPOINT,
   CHAT_TURN_ENDPOINT,
   CHAT_REFLECTION_ENDPOINT,
+  CHAT_CONTINUITY_ENDPOINT,
 } from "@/lib/config";
 
 const CHAT_SESSION_STORAGE_KEY_PREFIX = "chat_session_id";
@@ -31,6 +32,13 @@ type CheckpointRow = {
   id: string;
   summary: string;
   user_input: string | null;
+  created_at: string;
+};
+
+type ContinuityInsight = {
+  id: string;
+  core_pattern: string;
+  continuity_text: string;
   created_at: string;
 };
 
@@ -61,6 +69,7 @@ function ChatContent() {
   const [showCheckpointForm, setShowCheckpointForm] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const [thinkingDots, setThinkingDots] = useState(0);
+  const [continuity, setContinuity] = useState<ContinuityInsight | null>(null);
 
   const authHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -241,6 +250,19 @@ function ChatContent() {
     return (data.checkpoints ?? []) as CheckpointRow[];
   }, [authHeaders]);
 
+  const fetchContinuity = useCallback(async (): Promise<ContinuityInsight | null> => {
+    const res = await fetch(CHAT_CONTINUITY_ENDPOINT, {
+      credentials: "include",
+      headers: authHeaders(),
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    const insight = (data.insight ?? null) as
+      | { id: string; core_pattern: string; continuity_text: string; created_at: string }
+      | null;
+    return insight;
+  }, [authHeaders]);
+
   const saveCheckpoint = useCallback(async () => {
     if (!sessionId || checkpointLoading) return;
     setCheckpointLoading(true);
@@ -292,14 +314,18 @@ function ChatContent() {
   useEffect(() => {
     if (!sessionId) {
       setCheckpoints([]);
+      setContinuity(null);
       return;
     }
     let cancelled = false;
     fetchCheckpoints(sessionId).then((list) => {
       if (!cancelled) setCheckpoints(list);
     });
+    fetchContinuity().then((insight) => {
+      if (!cancelled) setContinuity(insight);
+    });
     return () => { cancelled = true; };
-  }, [sessionId, fetchCheckpoints]);
+  }, [sessionId, fetchCheckpoints, fetchContinuity]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -581,12 +607,27 @@ function ChatContent() {
           </button>
         </div>
         )}
+        {continuity && (
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+              Last insight
+            </p>
+            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+              {continuity.continuity_text}
+            </p>
+          </div>
+        )}
         {checkpoints.length > 0 && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Reflection checkpoints</p>
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+              Reflection checkpoints
+            </p>
             <div className="space-y-2">
               {checkpoints.slice(0, 5).map((c) => (
-                <div key={c.id} className="rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-300">
+                <div
+                  key={c.id}
+                  className="rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-300"
+                >
                   <p className="whitespace-pre-wrap">{c.summary}</p>
                   <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                     {new Date(c.created_at).toLocaleString()}
@@ -594,7 +635,9 @@ function ChatContent() {
                 </div>
               ))}
               {checkpoints.length > 5 && (
-                <p className="text-xs text-slate-400">+ {checkpoints.length - 5} more</p>
+                <p className="text-xs text-slate-400">
+                  + {checkpoints.length - 5} more
+                </p>
               )}
             </div>
           </div>
