@@ -347,6 +347,27 @@ export async function POST(request: Request) {
     },
   });
 
+  // Ticket 4: save one durable insight when we have a good candidate.
+  if (reflectionState && reflectionState.insight_candidate.trim()) {
+    const corePattern = reflectionState.insight_candidate.trim();
+    const continuityText = corePattern;
+    try {
+      await prisma.insight.create({
+        data: {
+          userId,
+          conversationId: sessionId,
+          sourceMessageId: userMsg.id,
+          corePattern,
+          continuityText,
+          status: "active",
+          confidenceScore: null,
+        },
+      });
+    } catch (e) {
+      console.warn("[chat/turn] Insight save failed", e);
+    }
+  }
+
   const res = NextResponse.json({
     assistant_message: assistantContent,
     ...(reflectionState && { reflection_state: reflectionState }),

@@ -21,7 +21,7 @@
 | 1 | Create session and message persistence for /chat | Nova | Done | none | — |
 | 2 | Build extraction pipeline returning structured reflection JSON | Nova | Done | none | — |
 | 3 | Build response generation pipeline for concise reflection output | Nova | Done | none | — |
-| 4 | Create insights persistence model and save logic | Nova | Not Started | Ticket 2 | Add insights table/model; save one durable insight per successful reflection; user-scoped; log save failures. |
+| 4 | Create insights persistence model and save logic | Nova | Done | none | — |
 | 5 | Load latest active insight and render continuity strip on /chat | Nova | Not Started | Ticket 4 | Fetch latest active insight on chat load; render continuity strip when present; hide cleanly when none. |
 
 ---
@@ -29,19 +29,19 @@
 ## Current Focus
 
 **Current milestone:** A — Loop Foundation  
-**Current ticket:** **Ticket 4 — Create insights persistence model and save logic**  
+**Current ticket:** **Ticket 5 — Load latest active insight and render continuity strip on /chat**  
 **State:** Not Started  
 **Blocker:** none  
 
 ### Next Action (do this when user says "process project with next step")
 
-1. Design and create an **Insight** persistence model (table) that stores one durable insight per reflection cycle (core pattern text, continuity text, status, timestamps, user/session linkage).
-2. After a successful chat turn + reflection state, select one durable insight (e.g. from `insight_candidate` or from the reflection output) and save it to the insights table.
-3. Ensure insights are **user-scoped** and tied to the correct session/message; log save failures but do not break the chat response.
+1. Implement a way to fetch the **latest active Insight** for the current user (e.g. backend helper or `/api/chat/continuity`), using `Insight` with `status = 'active'` ordered by `createdAt` or `lastSeenAt`.
+2. On `/chat` page load, fetch that latest active Insight and render a **continuity strip** above the chat input using `continuityText` (short, readable, non-intrusive).
+3. Ensure no continuity appears when there is no active insight, and insights are always scoped to the current user only.
 
 ### Definition of Done — Ticket 3
 
-- [x] Response generation uses extracted state when available (reflection_state injected into chat system prompt as \"Latest reflection state\" block).
+- [x] Response generation uses extracted state when available (reflection_state injected into chat system prompt as "Latest reflection state" block).
 - [x] Output follows V1 style constraints via the Wisewave chat prompt (mirror/pattern/regulation framing and tone); length controlled via prompt and max_completion_tokens.
 - [x] Generation failure path remains unchanged: graceful error JSON and assistant message persisted only on success.
 
@@ -55,6 +55,12 @@
 - [x] Extraction prompt returns valid JSON with required fields (null-safe defaults in lib/wisewave-extract.ts)
 - [x] Malformed model output caught and handled; failed extraction logged; extraction non-blocking
 - [x] Extracted result saved to ReflectionRun and returned as reflection_state in turn response
+
+### Definition of Done — Ticket 4
+
+- [x] Insight persistence model exists (Prisma `Insight` model) with user-scoped, session-linked fields.
+- [x] After a successful chat turn with a non-empty `insight_candidate`, one durable insight is saved per interaction (corePattern + continuityText).
+- [x] Insight save failures are logged but do not break the chat response.
 
 ---
 
@@ -87,4 +93,4 @@ After completing a **Next Action** or finishing a ticket:
 3. If blocked, set **Blocker** and **Next Action** to the unblock step.
 4. Optionally add a short **Last completed** line with date and what was done.
 
-**Last completed:** Ticket 3 — Response generation now uses `reflection_state` when available (injected into chat system prompt as latest reflection state); chat still uses Wisewave prompt with non-therapeutic tone and persists assistant messages as before.
+**Last completed:** Ticket 4 — Insight persistence added: Prisma `Insight` model; `prisma.insight.create` in `/api/chat/turn` using `insight_candidate` as `corePattern` + `continuityText`; errors are logged and do not affect chat responses. Next: Ticket 5 — load latest active insight and render continuity strip on `/chat`.

@@ -48,6 +48,7 @@ model Conversation {
   messages            Message[]
   reflectionCheckpoints ReflectionCheckpoint[]
   reflectionRuns       ReflectionRun[]
+  insights             Insight[]
 }
 
 /// User-triggered reflection checkpoint: optional user input + AI-generated summary. One per row; multiple per conversation.
@@ -92,6 +93,25 @@ model ReflectionRun {
 
   @@index([conversationId])
   @@index([messageId])
+}
+
+/// Durable insight saved from a reflection cycle; used for continuity strip and memory.
+model Insight {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  conversationId   String   @map("conversation_id")
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sourceMessageId  String   @map("source_message_id")
+  corePattern      String   @map("core_pattern") @db.Text
+  continuityText   String   @map("continuity_text") @db.Text
+  status           String   @default("active") // active | archived
+  confidenceScore  Float?   @map("confidence_score")
+  createdAt        DateTime @default(now())
+  lastSeenAt       DateTime @map("last_seen_at") @default(now())
+
+  @@index([userId])
+  @@index([conversationId])
+  @@index([status])
 }
 
 enum SubscriptionStatus {
