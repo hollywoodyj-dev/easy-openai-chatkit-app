@@ -370,7 +370,6 @@ export async function POST(request: Request) {
       "unclear trigger",
       "unclear emotion",
       "user reflection is ambiguous",
-      "ambiguous",
     ];
     const isSystemy =
       lower.startsWith("as an ai") ||
@@ -379,6 +378,14 @@ export async function POST(request: Request) {
       bannedPhrases.some((p) => lower.includes(p));
 
     const isVeryShort = corePattern.length < 24;
+    const isTooShortAndFlat =
+      isVeryShort &&
+      !corePattern.includes(",") &&
+      !corePattern.includes(".") &&
+      !/(rule|pressure|loop|demand|pattern|reaction|uncertainty|habit)/i.test(
+        corePattern
+      );
+
     const isTooGeneric =
       lower === "you were upset today." ||
       lower === "you were upset today" ||
@@ -387,8 +394,26 @@ export async function POST(request: Request) {
       lower === "you feel emotions strongly." ||
       lower === "you feel emotions strongly";
 
+    const genericStarts = [
+      "you feel",
+      "you felt",
+      "you were",
+      "you had",
+      "the user feels",
+      "the user had",
+    ];
+    const isFlatRestatement =
+      genericStarts.some((p) => lower.startsWith(p)) &&
+      !/(rule|pressure|loop|demand|pattern|reaction|uncertainty|habit)/i.test(
+        corePattern
+      );
+
     const isContinuityEligible =
-      !allLabelsWeak && !isSystemy && !isVeryShort && !isTooGeneric;
+      !allLabelsWeak &&
+      !isSystemy &&
+      !isTooShortAndFlat &&
+      !isTooGeneric &&
+      !isFlatRestatement;
     try {
       const anyPrisma = prisma as unknown as {
         insight?: {
