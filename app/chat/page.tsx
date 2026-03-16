@@ -60,6 +60,7 @@ function ChatContent() {
   const [checkpointLoading, setCheckpointLoading] = useState(false);
   const [showCheckpointForm, setShowCheckpointForm] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const [thinkingDots, setThinkingDots] = useState(0);
 
   const authHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -273,6 +274,20 @@ function ChatContent() {
   useEffect(() => {
     listRef.current?.scrollTo(0, listRef.current.scrollHeight);
   }, [messages]);
+
+  // Simple animated "Thinking.", "Thinking..", "Thinking..." indicator while waiting for a response.
+  useEffect(() => {
+    if (!loading) {
+      setThinkingDots(0);
+      return;
+    }
+    const id = setInterval(() => {
+      setThinkingDots((prev) => (prev + 1) % 3);
+    }, 500);
+    return () => {
+      clearInterval(id);
+    };
+  }, [loading]);
 
   useEffect(() => {
     if (!sessionId) {
@@ -585,40 +600,43 @@ function ChatContent() {
           </div>
         )}
         <div
-        ref={listRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3"
-      >
+          ref={listRef}
+          className="flex-1 overflow-y-auto p-4 space-y-3"
+        >
         {messages.length === 0 && (
           <p className="text-slate-500 dark:text-slate-400 text-sm">
             Send a message below. Each turn is saved via the backend.
           </p>
         )}
         {messages.map((m) => {
-          const label = m.role === "user" ? "You" : m.role === "assistant" ? "Wisewave" : m.role;
+          const label =
+            m.role === "user" ? "You" : m.role === "assistant" ? "Wisewave" : m.role;
           const isUser = m.role === "user";
           return (
-          <div
-            key={m.id}
-            className={
-              isUser
-                ? "ml-4 text-right"
-                : "mr-4 text-left"
-            }
-          >
-            <span className="text-xs text-slate-400 dark:text-slate-500 mr-2">
-              {label}
-            </span>
             <div
-              className={
-                isUser
-                  ? "inline-block rounded-lg bg-slate-200 dark:bg-slate-700 px-3 py-2 text-sm"
-                  : "rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm whitespace-pre-wrap"
-              }
+              key={m.id}
+              className={isUser ? "ml-4 text-right" : "mr-4 text-left"}
             >
-              {m.message}
+              <span className="text-xs text-slate-400 dark:text-slate-500 mr-2">
+                {label}
+              </span>
+              <div
+                className={
+                  isUser
+                    ? "inline-block rounded-lg bg-slate-200 dark:bg-slate-700 px-3 py-2 text-sm"
+                    : "rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm whitespace-pre-wrap"
+                }
+              >
+                {m.message}
+              </div>
             </div>
+          );
+        })}
+        {loading && (
+          <div className="ml-4 text-left text-xs text-slate-400 dark:text-slate-500">
+            Thinking{"." + ".".repeat(thinkingDots)}
           </div>
-        );})}
+        )}
         </div>
         <form
         className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0"
