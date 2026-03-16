@@ -352,6 +352,26 @@ export async function POST(request: Request) {
     const corePattern = reflectionState.insight_candidate.trim();
     const continuityText = corePattern;
 
+    const sourceLower = message.trim().toLowerCase();
+    const vagueSourcePatterns = [
+      "feel off",
+      "feels off",
+      "something feels weird",
+      "i'm tired",
+      "i am tired",
+      "not sure what's wrong",
+      "not sure what is wrong",
+      "i don't know. i just feel off",
+      "everything feels a bit off",
+    ];
+    const isVagueSource = vagueSourcePatterns.some((p) =>
+      sourceLower.includes(p)
+    );
+
+    const hasPatternCue = /(rule|pressure|loop|demand|pattern|reaction|interpretation|tend to|whenever|keeps|turns into|treats .* as)/i.test(
+      corePattern
+    );
+
     const weakLabels = new Set(["unknown", "uncertain"]);
     const allLabelsWeak =
       weakLabels.has(reflectionState.trigger_label) &&
@@ -413,7 +433,11 @@ export async function POST(request: Request) {
       !isSystemy &&
       !isTooShortAndFlat &&
       !isTooGeneric &&
-      !isFlatRestatement;
+      !isFlatRestatement &&
+      // For vague-state inputs like "I feel off" / "I'm tired", only allow
+      // continuity when the candidate insight clearly contains a reusable pattern
+      // (rule / loop / demand / pressure-style cue).
+      !(isVagueSource && !hasPatternCue);
     try {
       const anyPrisma = prisma as unknown as {
         insight?: {
