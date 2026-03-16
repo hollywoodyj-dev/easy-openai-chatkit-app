@@ -28,14 +28,14 @@
 
 ## Current Focus
 
-**Current milestone:** A — Loop Foundation  
-**Current ticket:** **(All Milestone A tickets complete)**  
-**State:** Done  
+**Current milestone:** B — Guided Reflection Layer  
+**Current ticket:** 6 — Add optional feedback capture structure for prior action outcome  
+**State:** Not Started  
 **Blocker:** none  
 
 ### Next Action (do this when user says "process project with next step")
 
-Milestone A is complete. When continuing, start with **Milestone B — Guided Reflection Layer** (Ticket 6 or 8) or **Milestone C — Measurement + Reliability** (Ticket 7), depending on priority.
+Start **Ticket 6** (feedback capture) with the smallest v1-friendly shape: add an optional `feedback` object to the chat turn payload/response and persist it in a new model/table (or reuse an existing safe place) without changing the main reflection prompts.
 
 ### Definition of Done — Ticket 3
 
@@ -91,4 +91,6 @@ After completing a **Next Action** or finishing a ticket:
 3. If blocked, set **Blocker** and **Next Action** to the unblock step.
 4. Optionally add a short **Last completed** line with date and what was done.
 
-**Last completed:** Ticket 5 — Continuity added: `/api/chat/continuity` returns latest active Insight for current user; `/chat` fetches it on load and renders a \"Last insight\" continuity strip using `continuityText` above the chat input. Milestone A (Loop Foundation) is now complete.
+**Last completed:** Ticket 5 — Continuity added: `/api/chat/continuity` returns latest active Insight for current user; `/chat` fetches it on load and renders a "Last insight" continuity strip using `continuityText` above the chat input. Milestone A (Loop Foundation) is now complete.
+
+**QA closeout (Milestone A):** Clean-state debug retesting confirms weak vague-state turns are saved with `debug_is_continuity_eligible = false` (no new continuity), strong turns are saved with `debug_is_continuity_eligible = true`, and the remaining “prove myself / worth still needing to be earned” false negative was fixed. Note: `continuity_present = true` after a weak turn can be correct if the user already has an older strong eligible insight; the correct check is whether the new weak turn was marked non-eligible.

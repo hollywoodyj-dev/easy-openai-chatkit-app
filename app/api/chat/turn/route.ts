@@ -347,6 +347,19 @@ export async function POST(request: Request) {
     },
   });
 
+  // --- Debug / QA: track per-turn insight save + full eligibility decision chain ---
+  let debugInsightId: string | null = null;
+  let debugIsContinuityEligible: boolean | null = null;
+  let debugInsightCorePattern: string | null = null;
+  let debugHasStrongPatternCue: boolean | null = null;
+  let debugIsFlatRestatement: boolean | null = null;
+  let debugIsVagueSource: boolean | null = null;
+  let debugAllLabelsWeak: boolean | null = null;
+  let debugIsSystemy: boolean | null = null;
+  let debugIsVeryShort: boolean | null = null;
+  let debugIsTooShortAndFlat: boolean | null = null;
+  let debugIsTooGeneric: boolean | null = null;
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -363,14 +376,50 @@ export async function POST(request: Request) {
       "not sure what is wrong",
       "i don't know. i just feel off",
       "everything feels a bit off",
+      "i feel strange",
+      "feel strange",
+      "i'm low",
+      "i am low",
+      "im low",
+      "i'm not okay",
+      "i am not okay",
+      "today feels odd",
+      "today feels a bit odd",
+      "i can't explain it",
+      "cant explain it",
     ];
     const isVagueSource = vagueSourcePatterns.some((p) =>
       sourceLower.includes(p)
     );
 
-    const hasPatternCue = /(rule|pressure|loop|demand|pattern|reaction|interpretation|tend to|whenever|keeps|turns into|treats .* as)/i.test(
+    const lower = corePattern.toLowerCase();
+
+    // For continuity, we want a genuinely reusable pattern, not just a vague
+    // state summary that happens to be well phrased.
+    const hasStrongPatternCue =
+      /(inner rule|rule that|demand|pressure|loop|automatic habit|keeps .* (going|building)|treats .* as|turns .* into|have to prove|has to prove|must prove|prove (myself|yourself|themselves)|prove your worth|worth (still )?needs? to be earned|worth must be earned|earn (my|your|their) place|not enough even after|still not enough after|after accomplishing a lot|effort still (doesn't|does not) count|accomplishment doesn't settle it|doing a lot but still not enough)/i.test(
+        corePattern
+      );
+    const hasTriggerStructure = /\bwhen\b|\bwhenever\b|\bevery time\b/i.test(
       corePattern
     );
+    const looksLikeVagueStateSummary =
+      /feels off|feel off|tired\b|weird\b|something (may be|is) wrong|cannot identify what is happening|not sure what(?:'s| is) wrong|vague sense/i.test(
+        lower
+      );
+    // Sentences that technically look like "when X then Y" but where X is still
+    // just a vague state ("feels off", "is tired", "not sure what's wrong").
+    // These are useful for the immediate reflection, but too weak as durable,
+    // resurfaced continuity insights.
+    const hasVagueTriggerRule = /^when\b[^.]*\b(feels? off|feel off|something feels weird|is tired|feels tired|cannot identify what is happening|not sure what(?:'s| is) wrong|everything feels a bit off)[^.]*\./i.test(
+      lower
+    );
+
+    // Positive durability requirement: only treat as continuity-grade if there
+    // is a clearly reusable pattern, not just a cleaned-up vague-state summary.
+    const hasDurablePattern =
+      hasStrongPatternCue ||
+      (hasTriggerStructure && !looksLikeVagueStateSummary && !hasVagueTriggerRule);
 
     const weakLabels = new Set(["unknown", "uncertain"]);
     const allLabelsWeak =
@@ -379,8 +428,6 @@ export async function POST(request: Request) {
       weakLabels.has(reflectionState.interpretation_label) &&
       weakLabels.has(reflectionState.regulation_label) &&
       weakLabels.has(reflectionState.choice_label);
-
-    const lower = corePattern.toLowerCase();
     const bannedPhrases = [
       "too ambiguous to infer",
       "unable to infer",
@@ -422,22 +469,60 @@ export async function POST(request: Request) {
       "the user feels",
       "the user had",
     ];
+    // Treat "the user feels..." as flat only when there is no strong pattern
+    // cue (rule/loop/pressure/proving/keep up, etc.). For strong cases like
+    // "have to prove myself", we want them to stay eligible.
     const isFlatRestatement =
       genericStarts.some((p) => lower.startsWith(p)) &&
+      !hasStrongPatternCue &&
       !/(rule|pressure|loop|demand|pattern|reaction|uncertainty|habit)/i.test(
         corePattern
       );
 
-    const isContinuityEligible =
-      !allLabelsWeak &&
+    // For strongly patterned, non-vague sources (like "prove myself" / "constant
+    // pressure"), we allow eligibility even if the extractor labels are all
+    // "unknown"/"uncertain" — the text pattern itself carries enough durability.
+    const labelsMustBeStrong = !hasStrongPatternCue || isVagueSource;
+
+    let isContinuityEligible =
+      (!labelsMustBeStrong || !allLabelsWeak) &&
       !isSystemy &&
       !isTooShortAndFlat &&
       !isTooGeneric &&
       !isFlatRestatement &&
-      // For vague-state inputs like "I feel off" / "I'm tired", only allow
-      // continuity when the candidate insight clearly contains a reusable pattern
-      // (rule / loop / demand / pressure-style cue).
-      !(isVagueSource && !hasPatternCue);
+      // Positive durability rule: require a reusable pattern (inner rule / loop /
+      // pressure / trigger→interpretation link). If the insight is only a vague-
+      // state summary, it remains non-eligible even if wording is clean.
+      hasDurablePattern;
+
+    // v4 default-deny for weak vague-state sources:
+    // If the *source* input is a vague state ("feel off", "tired", "not sure
+    // what's wrong", etc.), then continuity is *off by default*. Only allow
+    // an override when there is an especially clear, strong pattern: explicit
+    // rule/pressure language *and* a trigger→interpretation chain, and it is
+    // not just a cleaned-up vague-state summary.
+    if (isVagueSource) {
+      const strongOverride =
+        hasStrongPatternCue &&
+        hasTriggerStructure &&
+        !looksLikeVagueStateSummary &&
+        !hasVagueTriggerRule;
+
+      if (!strongOverride) {
+        isContinuityEligible = false;
+      }
+    }
+
+    // Capture full decision chain for this turn (debug only).
+    debugInsightCorePattern = corePattern;
+    debugHasStrongPatternCue = hasStrongPatternCue;
+    debugIsFlatRestatement = isFlatRestatement;
+    debugIsVagueSource = isVagueSource;
+    debugAllLabelsWeak = allLabelsWeak;
+    debugIsSystemy = isSystemy;
+    debugIsVeryShort = isVeryShort;
+    debugIsTooShortAndFlat = isTooShortAndFlat;
+    debugIsTooGeneric = isTooGeneric;
     try {
       const anyPrisma = prisma as unknown as {
         insight?: {
@@ -450,8 +535,9 @@ export async function POST(request: Request) {
               continuityText: string;
               status: string;
               confidenceScore: number | null;
+              isContinuityEligible: boolean;
             };
-          }) => Promise<unknown>;
+          }) => Promise<{ id: string }>;
         };
       };
 
@@ -460,18 +546,20 @@ export async function POST(request: Request) {
           "[chat/turn] prisma.insight delegate not available; skipping insight save"
         );
       } else {
-        await anyPrisma.insight.create({
-        data: {
-          userId,
-          conversationId: sessionId,
-          sourceMessageId: userMsg.id,
-          corePattern,
-          continuityText,
-          status: "active",
-          confidenceScore: null,
-          isContinuityEligible,
-        },
+        const created = await anyPrisma.insight.create({
+          data: {
+            userId,
+            conversationId: sessionId,
+            sourceMessageId: userMsg.id,
+            corePattern,
+            continuityText,
+            status: "active",
+            confidenceScore: null,
+            isContinuityEligible,
+          },
         });
+        debugInsightId = created?.id ?? null;
+        debugIsContinuityEligible = isContinuityEligible;
       }
     } catch (e) {
       console.warn("[chat/turn] Insight save failed", e);
@@ -481,6 +569,21 @@ export async function POST(request: Request) {
   const res = NextResponse.json({
     assistant_message: assistantContent,
     ...(reflectionState && { reflection_state: reflectionState }),
+    // Debug-only fields to help QA distinguish:
+    // - whether this turn created an Insight row
+    // - whether that row was continuity-eligible
+    // - full decision chain for that eligibility
+    debug_insight_id: debugInsightId,
+    debug_is_continuity_eligible: debugIsContinuityEligible,
+    debug_insight_core_pattern: debugInsightCorePattern,
+    debug_has_strong_pattern_cue: debugHasStrongPatternCue,
+    debug_is_flat_restatement: debugIsFlatRestatement,
+    debug_is_vague_source: debugIsVagueSource,
+    debug_all_labels_weak: debugAllLabelsWeak,
+    debug_is_systemy: debugIsSystemy,
+    debug_is_very_short: debugIsVeryShort,
+    debug_is_too_short_and_flat: debugIsTooShortAndFlat,
+    debug_is_too_generic: debugIsTooGeneric,
   });
   if (sessionCookie) {
     res.headers.append("Set-Cookie", sessionCookie);
