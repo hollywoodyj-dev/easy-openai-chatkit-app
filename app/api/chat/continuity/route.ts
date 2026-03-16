@@ -11,7 +11,34 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const { userId } = await resolveChatUserId(request);
 
-  const latest = await prisma.insight.findFirst({
+  const anyPrisma = prisma as unknown as {
+    insight?: {
+      findFirst: (args: {
+        where: { userId: string; status: string };
+        orderBy: { lastSeenAt: "asc" | "desc" };
+        select: {
+          id: true;
+          corePattern: true;
+          continuityText: true;
+          createdAt: true;
+        };
+      }) => Promise<{
+        id: string;
+        corePattern: string;
+        continuityText: string;
+        createdAt: Date;
+      } | null>;
+    };
+  };
+
+  if (!anyPrisma.insight || typeof anyPrisma.insight.findFirst !== "function") {
+    console.warn(
+      "[chat/continuity] prisma.insight delegate not available; returning null continuity"
+    );
+    return NextResponse.json({ insight: null });
+  }
+
+  const latest = await anyPrisma.insight.findFirst({
     where: { userId, status: "active" },
     orderBy: { lastSeenAt: "desc" },
     select: {

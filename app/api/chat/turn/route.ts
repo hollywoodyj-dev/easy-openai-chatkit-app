@@ -352,7 +352,28 @@ export async function POST(request: Request) {
     const corePattern = reflectionState.insight_candidate.trim();
     const continuityText = corePattern;
     try {
-      await prisma.insight.create({
+      const anyPrisma = prisma as unknown as {
+        insight?: {
+          create: (args: {
+            data: {
+              userId: string;
+              conversationId: string;
+              sourceMessageId: string;
+              corePattern: string;
+              continuityText: string;
+              status: string;
+              confidenceScore: number | null;
+            };
+          }) => Promise<unknown>;
+        };
+      };
+
+      if (!anyPrisma.insight || typeof anyPrisma.insight.create !== "function") {
+        console.warn(
+          "[chat/turn] prisma.insight delegate not available; skipping insight save"
+        );
+      } else {
+        await anyPrisma.insight.create({
         data: {
           userId,
           conversationId: sessionId,
@@ -362,7 +383,8 @@ export async function POST(request: Request) {
           status: "active",
           confidenceScore: null,
         },
-      });
+        });
+      }
     } catch (e) {
       console.warn("[chat/turn] Insight save failed", e);
     }
