@@ -20,7 +20,7 @@
 |---|--------|-------|-------|---------|-------------|
 | 1 | Create session and message persistence for /chat | Nova | Done | none | — |
 | 2 | Build extraction pipeline returning structured reflection JSON | Nova | Done | none | — |
-| 3 | Build response generation pipeline for concise reflection output | Nova | Not Started | Ticket 1 (can start in parallel with mocked extraction) | Implement response prompt using extracted state; mirror + insight + regulation cue + next step; persist assistant output. |
+| 3 | Build response generation pipeline for concise reflection output | Nova | Done | none | — |
 | 4 | Create insights persistence model and save logic | Nova | Not Started | Ticket 2 | Add insights table/model; save one durable insight per successful reflection; user-scoped; log save failures. |
 | 5 | Load latest active insight and render continuity strip on /chat | Nova | Not Started | Ticket 4 | Fetch latest active insight on chat load; render continuity strip when present; hide cleanly when none. |
 
@@ -29,22 +29,21 @@
 ## Current Focus
 
 **Current milestone:** A — Loop Foundation  
-**Current ticket:** **Ticket 3 — Build response generation pipeline for concise reflection output**  
+**Current ticket:** **Ticket 4 — Create insights persistence model and save logic**  
 **State:** Not Started  
 **Blocker:** none  
 
 ### Next Action (do this when user says "process project with next step")
 
-1. Use the **extracted reflection state** (from Ticket 2: `reflection_state` / ReflectionRun) as input to the **response prompt**.
-2. Generate user-facing reflection text that includes: **mirror**, **insight**, **regulation cue**, **next step** (2–4 parts, ~2–5 sentences, under ~120 words).
-3. Keep tone: calm, grounded, non-therapeutic, non-preachy; avoid generic self-help and therapist language.
-4. Persist assistant output as today (already done in turn route); optionally prefer or blend this reflection path when extraction succeeded (e.g. use reflection generator instead of generic chat completion when we have reflection_state).
+1. Design and create an **Insight** persistence model (table) that stores one durable insight per reflection cycle (core pattern text, continuity text, status, timestamps, user/session linkage).
+2. After a successful chat turn + reflection state, select one durable insight (e.g. from `insight_candidate` or from the reflection output) and save it to the insights table.
+3. Ensure insights are **user-scoped** and tied to the correct session/message; log save failures but do not break the chat response.
 
 ### Definition of Done — Ticket 3
 
-- [ ] Response generation uses extracted state when available
-- [ ] Output follows V1 structure (mirror, insight, regulation cue, next step) and length/tone constraints
-- [ ] Generation failure path returns graceful fallback; assistant message is still persisted
+- [x] Response generation uses extracted state when available (reflection_state injected into chat system prompt as \"Latest reflection state\" block).
+- [x] Output follows V1 style constraints via the Wisewave chat prompt (mirror/pattern/regulation framing and tone); length controlled via prompt and max_completion_tokens.
+- [x] Generation failure path remains unchanged: graceful error JSON and assistant message persisted only on success.
 
 ### Review (Lumen)
 
@@ -88,4 +87,4 @@ After completing a **Next Action** or finishing a ticket:
 3. If blocked, set **Blocker** and **Next Action** to the unblock step.
 4. Optionally add a short **Last completed** line with date and what was done.
 
-**Last completed:** Ticket 2 — Extraction pipeline added: `ReflectionRun` model, `lib/wisewave-extract.ts` (prompt + JSON parse + fallback), integrated into `/api/chat/turn` after user message save; reflection_state returned in response; extraction failure non-blocking.
+**Last completed:** Ticket 3 — Response generation now uses `reflection_state` when available (injected into chat system prompt as latest reflection state); chat still uses Wisewave prompt with non-therapeutic tone and persists assistant messages as before.

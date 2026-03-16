@@ -286,9 +286,13 @@ export async function POST(request: Request) {
       conversationUpdated?.conversationSummary?.trim()
         ? `\n\nConversation summary:\n${conversationUpdated.conversationSummary.trim()}`
         : "";
+    const reflectionBlock =
+      reflectionState && reflectionState.insight_candidate.trim()
+        ? `\n\nLatest reflection state (for this user message):\n- trigger_label: ${reflectionState.trigger_label}\n- emotion_label: ${reflectionState.emotion_label}\n- interpretation_label: ${reflectionState.interpretation_label}\n- regulation_label: ${reflectionState.regulation_label}\n- choice_label: ${reflectionState.choice_label}\n- insight_candidate: ${reflectionState.insight_candidate}`
+        : "";
     openaiMessagesForApi.push({
       role: "system",
-      content: systemPrompt + continuationHint + summaryBlock,
+      content: systemPrompt + continuationHint + summaryBlock + reflectionBlock,
     });
   }
   openaiMessagesForApi.push(...openaiMessages);
