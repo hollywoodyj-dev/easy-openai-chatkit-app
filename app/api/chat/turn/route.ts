@@ -56,6 +56,142 @@ Prefer language such as:
 Keep the summary under 120 words.
 The summary should read like neutral context for a system, not like a therapist, coach, or guide.`;
 
+// Light user-facing rephrasing for continuity text:
+// 1) detect a small set of common pattern families
+// 2) map each family to a short, natural reminder template
+// 3) keep continuity selection logic unchanged
+function lowerFirst(s: string): string {
+  return s ? s.charAt(0).toLowerCase() + s.slice(1).trim() : s;
+}
+
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).trim() : s;
+}
+
+function sentence(s: string): string {
+  const trimmed = s.trim().replace(/[.]+$/, "");
+  return trimmed ? trimmed + "." : trimmed;
+}
+
+type ContinuityPatternFamily =
+  | "earned_value_after_effort"
+  | "delayed_reply_means_i_did_something_wrong"
+  | "rest_must_be_earned"
+  | "constant_pressure_keep_up"
+  | "replay_for_mistakes"
+  | "fallback_generic";
+
+function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
+  const text = corePattern.trim().toLowerCase();
+
+  if (
+    /even after .*the user tends to interpret their (worth|value) as still needing to be earned/.test(
+      text
+    ) ||
+    /prove (myself|yourself|themselves|your worth)/.test(text) ||
+    /earn(ed)? (my|their|your) place/.test(text)
+  ) {
+    return "earned_value_after_effort";
+  }
+
+  if (
+    /reply is delayed/.test(text) &&
+    /(did something wrong|prove (myself|yourself|themselves) again|must prove)/.test(text)
+  ) {
+    return "delayed_reply_means_i_did_something_wrong";
+  }
+
+  if (/rest.*earned/.test(text) || /pause.*before feeling finished/.test(text)) {
+    return "rest_must_be_earned";
+  }
+
+  if (
+    /constant pressure/.test(text) ||
+    /must always keep up/.test(text) ||
+    /always perform/.test(text)
+  ) {
+    return "constant_pressure_keep_up";
+  }
+
+  if (
+    /replay/.test(text) ||
+    /did something wrong/.test(text) ||
+    /searching for mistakes|missteps/.test(text)
+  ) {
+    return "replay_for_mistakes";
+  }
+
+  return "fallback_generic";
+}
+
+function rewriteEarnedValueAfterEffort(corePattern: string): string {
+  const normalized = corePattern.trim().replace(/\s+/g, " ");
+
+  const m = normalized.match(
+    /^Even after (.*?), the user tends to interpret their (worth|value) as still needing to be earned[.]?$/i
+  );
+  if (m) {
+    const afterPart = lowerFirst(m[1]);
+    return sentence(
+      `Even after ${afterPart}, it can still feel like your value has to be earned again.`
+    );
+  }
+
+  return "Doing a lot can still leave the feeling that it is not enough yet.";
+}
+
+function fallbackContinuityReminder(corePattern: string): string {
+  const text = corePattern.trim();
+
+  const cleaned = text
+    .replace(/\bthe user\b/gi, "you")
+    .replace(/\btends to\b/gi, "can often")
+    .trim();
+
+  if (
+    /you can often interpret|you can often assume|interpret their|value as/i.test(
+      cleaned
+    )
+  ) {
+    return sentence(
+      "This pattern can come back quickly, especially when things feel uncertain."
+    );
+  }
+
+  return sentence(cleaned);
+}
+
+function continuityReminderFromFamily(
+  family: ContinuityPatternFamily,
+  corePattern: string
+): string {
+  switch (family) {
+    case "earned_value_after_effort":
+      return rewriteEarnedValueAfterEffort(corePattern);
+
+    case "delayed_reply_means_i_did_something_wrong":
+      return "A delayed reply can quickly start to feel like proof you did something wrong.";
+
+    case "rest_must_be_earned":
+      return "Rest can quickly start to feel like something you still have to earn.";
+
+    case "constant_pressure_keep_up":
+      return "It can start to feel like you are only allowed to relax when you are keeping up.";
+
+    case "replay_for_mistakes":
+      return "Unclear moments can quickly turn into checking for what you might have done wrong.";
+
+    case "fallback_generic":
+    default:
+      return fallbackContinuityReminder(corePattern);
+  }
+}
+
+function toContinuityReminderText(corePattern: string): string {
+  const family = detectContinuityPatternFamily(corePattern);
+  return continuityReminderFromFamily(family, corePattern);
+}
+
 async function refreshConversationSummary(
   conversationId: string,
   apiKey: string,
@@ -121,8 +257,19 @@ async function refreshConversationSummary(
  * To match the Wisewave (ChatKit workflow) chatbot: set OPENAI_CHAT_SYSTEM_PROMPT to the same
  * instructions as in Agent Builder, and OPENAI_CHAT_MODEL to the workflow model if known.
  *
- * POST body: { session_id, message, metadata?, insight_tags? }
- * Response: { assistant_message } or stream (future).
+ * POST body: {
+ *   session_id,
+ *   message,
+ *   metadata?,
+ *   insight_tags?,
+ *   feedback?    // optional: feedback about a prior suggested action/outcome
+ * }
+ * Response: {
+ *   assistant_message,
+ *   reflection_state?,
+ *   debug_*?,
+ *   feedback_saved?: boolean
+ * }
  */
 export async function POST(request: Request) {
   const { userId, sessionCookie } = await resolveChatUserId(request);
@@ -131,6 +278,7 @@ export async function POST(request: Request) {
     message?: string;
     metadata?: unknown;
     insight_tags?: unknown;
+    feedback?: unknown;
   };
   try {
     body = await request.json();
@@ -179,18 +327,51 @@ export async function POST(request: Request) {
     body.insight_tags !== undefined && body.insight_tags !== null
       ? (body.insight_tags as object)
       : undefined;
+  const rawFeedback =
+    body.feedback !== undefined && body.feedback !== null
+      ? (body.feedback as unknown)
+      : undefined;
 
   // V1 persistence order: save user message before any AI processing so a failed model call never loses the user's reflection.
-  const userMsg = await prisma.message.create({
-    data: {
-      conversationId: sessionId,
-      userId,
-      role: "user",
-      message: message.trim(),
-      metadata: metadata ?? undefined,
-      insightTags: insightTags ?? undefined,
-    },
-  });
+  let userMsg;
+  try {
+    userMsg = await prisma.message.create({
+      data: {
+        conversationId: sessionId,
+        userId,
+        role: "user",
+        message: message.trim(),
+        metadata: metadata ?? undefined,
+        insightTags: insightTags ?? undefined,
+      },
+    });
+    console.debug("[ticket7][chat/turn] message_save", {
+      sessionId,
+      userMessageId: userMsg.id,
+      assistantMessageId: null,
+      phase: "user",
+      success: true,
+    });
+  } catch (e) {
+    console.error("[chat/turn] user message save failed", e);
+    console.debug("[ticket7][chat/turn] message_save", {
+      sessionId,
+      userMessageId: null,
+      assistantMessageId: null,
+      phase: "user",
+      success: false,
+      errorType:
+        e instanceof Error
+          ? e.name
+          : typeof e === "object" && e !== null
+          ? "object"
+          : "unknown",
+    });
+    return NextResponse.json(
+      { error: "Failed to save user message" },
+      { status: 500 }
+    );
+  }
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -235,6 +416,12 @@ export async function POST(request: Request) {
       console.warn("[chat/turn] ReflectionRun save failed", e);
     }
   }
+  // Ticket 7: lightweight, structured log for extraction outcome.
+  console.debug("[ticket7][chat/turn] extraction", {
+    sessionId,
+    userMessageId: userMsg.id,
+    hasReflectionState: !!reflectionState,
+  });
 
   // 2. Get message count and optionally refresh conversation summary (every SUMMARY_TRIGGER_EVERY messages)
   const allMessages = await prisma.message.findMany({
@@ -315,12 +502,17 @@ export async function POST(request: Request) {
     if (!completion.ok) {
       const err = await completion.json().catch(() => ({}));
       console.error("[chat/turn] OpenAI error", completion.status, err);
+      console.debug("[ticket7][chat/turn] generation_error", {
+        sessionId,
+        userMessageId: userMsg.id,
+        status: completion.status,
+      });
       return NextResponse.json(
         {
-          error: "Assistant request failed",
-          details: (err as { error?: { message?: string } })?.error?.message,
+          assistant_message:
+            "I had trouble generating a response just now. You can try sending that again or rephrasing it a bit.",
         },
-        { status: completion.status >= 500 ? 500 : 502 }
+        { status: 200 }
       );
     }
 
@@ -331,21 +523,56 @@ export async function POST(request: Request) {
       data.choices?.[0]?.message?.content?.trim() ?? "";
   } catch (e) {
     console.error("[chat/turn] OpenAI request failed", e);
+    console.debug("[ticket7][chat/turn] generation_error", {
+      sessionId,
+      userMessageId: userMsg.id,
+      networkFailure: true,
+    });
     return NextResponse.json(
-      { error: "Assistant request failed" },
-      { status: 502 }
+      {
+        assistant_message:
+          "I had trouble generating a response just now. You can try sending that again or rephrasing it a bit.",
+      },
+      { status: 200 }
     );
   }
 
   // V1: persist assistant message after successful generation.
-  await prisma.message.create({
-    data: {
-      conversationId: sessionId,
-      userId,
-      role: "assistant",
-      message: assistantContent,
-    },
-  });
+  let assistantMsgId: string | null = null;
+  try {
+    const assistantMsg = await prisma.message.create({
+      data: {
+        conversationId: sessionId,
+        userId,
+        role: "assistant",
+        message: assistantContent,
+      },
+    });
+    assistantMsgId = assistantMsg.id;
+    console.debug("[ticket7][chat/turn] message_save", {
+      sessionId,
+      userMessageId: userMsg.id,
+      assistantMessageId: assistantMsgId,
+      phase: "assistant",
+      success: true,
+    });
+  } catch (e) {
+    console.error("[chat/turn] assistant message save failed", e);
+    console.debug("[ticket7][chat/turn] message_save", {
+      sessionId,
+      userMessageId: userMsg.id,
+      assistantMessageId: null,
+      phase: "assistant",
+      success: false,
+      errorType:
+        e instanceof Error
+          ? e.name
+          : typeof e === "object" && e !== null
+          ? "object"
+          : "unknown",
+    });
+    // Assistant save failure should not break the user-facing reply.
+  }
 
   // --- Debug / QA: track per-turn insight save + full eligibility decision chain ---
   let debugInsightId: string | null = null;
@@ -359,11 +586,12 @@ export async function POST(request: Request) {
   let debugIsVeryShort: boolean | null = null;
   let debugIsTooShortAndFlat: boolean | null = null;
   let debugIsTooGeneric: boolean | null = null;
+  let feedbackSaved: boolean = false;
 
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
-    const continuityText = corePattern;
+    const continuityText = toContinuityReminderText(corePattern);
 
     const sourceLower = message.trim().toLowerCase();
     const vagueSourcePatterns = [
@@ -372,8 +600,11 @@ export async function POST(request: Request) {
       "something feels weird",
       "i'm tired",
       "i am tired",
+      "not sure",
       "not sure what's wrong",
       "not sure what is wrong",
+      "i don't know",
+      "i dont know",
       "i don't know. i just feel off",
       "everything feels a bit off",
       "i feel strange",
@@ -387,6 +618,7 @@ export async function POST(request: Request) {
       "today feels a bit odd",
       "i can't explain it",
       "cant explain it",
+      "...",
     ];
     const isVagueSource = vagueSourcePatterns.some((p) =>
       sourceLower.includes(p)
@@ -565,6 +797,60 @@ export async function POST(request: Request) {
       console.warn("[chat/turn] Insight save failed", e);
     }
   }
+  // Ticket 7: structured log for insight + continuity decision.
+  console.debug("[ticket7][chat/turn] insight_continuity", {
+    sessionId,
+    userMessageId: userMsg.id,
+    hasReflectionState: !!reflectionState,
+    insightCreated: !!debugInsightId,
+    insightId: debugInsightId,
+    isContinuityEligible: debugIsContinuityEligible,
+  });
+
+  // Ticket 6 (Milestone B): optional feedback capture about prior action outcome.
+  // Only persist when feedback.note exists, is a string, and is non-empty after trim.
+  // Otherwise do not save; feedback_saved stays false.
+  const note =
+    rawFeedback &&
+    typeof rawFeedback === "object" &&
+    "note" in rawFeedback &&
+    typeof (rawFeedback as { note?: unknown }).note === "string"
+      ? ((rawFeedback as { note: string }).note || "").trim()
+      : "";
+  if (note) {
+    try {
+      const anyPrisma = prisma as unknown as {
+        feedback?: {
+          create: (args: {
+            data: {
+              userId: string;
+              conversationId: string;
+              sourceMessageId: string;
+              payload: unknown;
+            };
+          }) => Promise<unknown>;
+        };
+      };
+
+      if (!anyPrisma.feedback || typeof anyPrisma.feedback.create !== "function") {
+        console.warn(
+          "[chat/turn] prisma.feedback delegate not available; skipping feedback save"
+        );
+      } else {
+        await anyPrisma.feedback.create({
+          data: {
+            userId,
+            conversationId: sessionId,
+            sourceMessageId: userMsg.id,
+            payload: { note },
+          },
+        });
+        feedbackSaved = true;
+      }
+    } catch (e) {
+      console.warn("[chat/turn] Feedback save failed", e);
+    }
+  }
 
   const res = NextResponse.json({
     assistant_message: assistantContent,
@@ -584,6 +870,7 @@ export async function POST(request: Request) {
     debug_is_very_short: debugIsVeryShort,
     debug_is_too_short_and_flat: debugIsTooShortAndFlat,
     debug_is_too_generic: debugIsTooGeneric,
+    feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
     res.headers.append("Set-Cookie", sessionCookie);

@@ -42,6 +42,136 @@ type ContinuityInsight = {
   created_at: string;
 };
 
+type ReflectionMetadata = {
+  trigger_label: string;
+  emotion_label: string;
+  interpretation_label: string;
+  regulation_label: string;
+  choice_label: string;
+  insight_candidate: string;
+};
+
+function formatLabel(value: string): string {
+  if (!value || value === "—" || value === "unknown" || value === "uncertain") return "—";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+}
+
+/** Render metadata only when it adds lightweight human-readable value. Hide when most fields are weak/fallback. */
+function isMetadataMeaningful(m: ReflectionMetadata): boolean {
+  const weak = new Set([
+    "unknown", "uncertain", "", "unclear", "unclear_reflection", "unclear reflection",
+    "unable_to_infer", "unable to infer",
+  ]);
+  const isWeak = (v: string) => !v || weak.has(v.toLowerCase().trim()) || /^unclear\b/i.test(v.trim());
+  const t = isWeak(m.trigger_label);
+  const e = isWeak(m.emotion_label);
+  const i = isWeak(m.interpretation_label);
+  const insight = (m.insight_candidate || "").trim().toLowerCase();
+  const insightFallback = /not enough|unable to identify|unclear reflection|insufficient|did not include enough|to identify a specific trigger|no.*pattern|insufficient signal|unclear trigger|too ambiguous|too unclear|ambiguous to infer/i.test(insight);
+  if (insightFallback && insight.length > 20) return false;
+  const meaningfulCount = [t, e, i].filter((x) => !x).length;
+  return meaningfulCount >= 2 || (meaningfulCount >= 1 && !insightFallback);
+}
+
+/** Stricter guard for regulation cue: cue is coaching-like, so require stronger signal than metadata. */
+function isRegulationCueMeaningful(m: ReflectionMetadata): boolean {
+  if (!isMetadataMeaningful(m)) return false;
+  const weak = new Set([
+    "unknown", "uncertain", "", "unclear", "unclear_reflection", "unclear reflection",
+    "unable_to_infer", "unable to infer",
+    "feeling_off", "feel_off", "vague_discomfort", "vague",
+    "something_feels_off", "something_feels_weird", "weird_feeling", "uneasy", "unsettled",
+  ]);
+  const weakTrigger = /^unclear\b|feeling_off|feel_off|vague|something_feels|weird|uncertain|unknown|uneasy|unsettled/i;
+  const isWeak = (v: string) =>
+    !v || weak.has(v.toLowerCase().trim()) || /^unclear\b/i.test(v.trim());
+
+  const triggerWeak = isWeak(m.trigger_label);
+  const emotionWeak = isWeak(m.emotion_label);
+  const interpretationWeak = isWeak(m.interpretation_label);
+
+  const meaningfulTrigger = !triggerWeak;
+  const meaningfulEmotion = !emotionWeak;
+  const meaningfulInterpretation = !interpretationWeak;
+
+  const triggerIsWeakState = weakTrigger.test(
+    (m.trigger_label || "").trim().toLowerCase().replace(/\s+/g, "_")
+  );
+  const insight = (m.insight_candidate || "").trim().toLowerCase();
+  const insightFallback = /not enough|unable to identify|unclear reflection|insufficient|did not include enough|to identify a specific trigger|no.*pattern|insufficient signal|unclear trigger|too ambiguous|too unclear|ambiguous to infer/i.test(insight);
+  const meaningfulCount = [meaningfulTrigger, meaningfulEmotion, meaningfulInterpretation].filter(Boolean).length;
+
+  // Require at least two strong fields overall, as before.
+  if (meaningfulCount < 2) return false;
+  if (triggerIsWeakState || insightFallback) return false;
+
+  // New tightening: regulation cue should only show when there's
+  // (a) at least one strong cognitive anchor (trigger or interpretation), and
+  // (b) a reasonably specific emotion, not just vague discomfort/uncertainty.
+  const hasStrongCognitive = meaningfulTrigger || meaningfulInterpretation;
+  const emotionLabel = (m.emotion_label || "").trim().toLowerCase().replace(/\s+/g, "_");
+  const emotionIsVague =
+    /feeling_off|feel_off|vague|something_feels|weird|uncertain|unknown|uneasy|unsettled/.test(
+      emotionLabel
+    );
+
+  if (!hasStrongCognitive) return false;
+  if (!meaningfulEmotion || emotionIsVague) return false;
+
+  return true;
+}
+
+const REGULATION_CUE_MAP: Record<string, string> = {
+  pause: "Pause and notice first",
+  pause_before_reacting: "Pause and notice before reacting",
+  name_emotion: "Name the emotion",
+  soften_urgency: "Soften the urgency",
+  wait_then_reassess: "Wait a little, then reassess",
+  check_facts_first: "Check the facts first",
+  wait_before_responding: "Wait before responding",
+  one_small_step: "Take one small step",
+  delay_reaction: "Delay the reaction",
+  reassess: "Reassess from a calmer place",
+};
+function regulationLabelToCue(label: string): string | null {
+  const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
+  if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
+  return REGULATION_CUE_MAP[v] || formatLabel(label);
+}
+
+/** Guard for action prompt: only show when overall reflection is meaningful and choice_label is a concrete alternative. */
+function isActionPromptMeaningful(m: ReflectionMetadata): boolean {
+  if (!isMetadataMeaningful(m)) return false;
+  const raw = (m.choice_label || "").trim().toLowerCase().replace(/\s+/g, "_");
+  if (!raw) return false;
+  const weak = new Set(["unknown", "uncertain", "unclear"]);
+  if (weak.has(raw)) return false;
+  // Tie action prompt to the same stronger-signal requirement as regulation cue,
+  // so we don't suggest actions off very weak / vague states.
+  if (!isRegulationCueMeaningful(m)) return false;
+  return true;
+}
+
+const ACTION_PROMPT_MAP: Record<string, string> = {
+  wait_before_responding: "Wait a little before you respond.",
+  one_small_step: "Pick one small, concrete step you can take.",
+  check_facts_first: "Check the concrete facts before you decide what to do.",
+  wait_then_reassess: "Give it a bit of time, then reassess.",
+  acknowledge_existing_effort: "Notice what you have already done before pushing for more.",
+  acknowledge_done_work: "Notice what you have already done before pushing for more.",
+  reassess: "Step back for a moment and reassess what feels most important right now.",
+};
+
+function choiceLabelToActionPrompt(label: string): string | null {
+  const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
+  if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
+  // Only show when we have a deliberately written, user-facing sentence.
+  return ACTION_PROMPT_MAP[v] ?? null;
+}
+
 /**
  * Preferred persisted chat: session_id from POST /api/chat/session or resumed from sessionStorage.
  * All turns saved via POST /api/chat/turn; messages loaded by user_id + session_id (GET /api/chat/messages).
@@ -70,6 +200,11 @@ function ChatContent() {
   const listRef = useRef<HTMLDivElement>(null);
   const [thinkingDots, setThinkingDots] = useState(0);
   const [continuity, setContinuity] = useState<ContinuityInsight | null>(null);
+  const [feedbackDraft, setFeedbackDraft] = useState("");
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [latestMetadata, setLatestMetadata] = useState<ReflectionMetadata | null>(null);
+  const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
+  const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const authHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -193,6 +328,7 @@ function ChatContent() {
     if (typeof window !== "undefined") sessionStorage.removeItem(sessionStorageKey());
     setSessionId(null);
     setMessages([]);
+    setLatestMetadata(null);
     setError(null);
     setSessionLoading(true);
     try {
@@ -213,6 +349,7 @@ function ChatContent() {
     async (sid: string) => {
       setMobileConversationsOpen(false);
       setSessionLoading(true);
+      setLatestMetadata(null);
       try {
         if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
         setSessionId(sid);
@@ -334,11 +471,28 @@ function ChatContent() {
     setLoading(true);
     setError(null);
     try {
+      // Live-path debug for regulation cue behavior.
+      // Helpful when inspecting weak follow-up turns like "I feel off".
+      // Safe to remove once Ticket 9 is fully verified.
+      console.debug("[chat/send] before turn", {
+        input: text,
+        latestRegulationMetadataBefore: latestRegulationMetadata,
+      });
       const res = await fetch(CHAT_TURN_ENDPOINT, {
         method: "POST",
         headers: authHeaders(),
         credentials: "include",
-        body: JSON.stringify({ session_id: sessionId, message: text }),
+        body: JSON.stringify({
+          session_id: sessionId,
+          message: text,
+          ...(feedbackDraft.trim()
+            ? {
+                feedback: {
+                  note: feedbackDraft.trim(),
+                },
+              }
+            : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -348,6 +502,36 @@ function ChatContent() {
         return;
       }
       const assistantMessage = (data.assistant_message as string) ?? "";
+      const rs = data.reflection_state as ReflectionMetadata | null | undefined;
+      const isVagueSource = Boolean(data.debug_is_vague_source);
+      const cueMeaningful =
+        rs && typeof rs === "object" && !isVagueSource
+          ? isRegulationCueMeaningful(rs)
+          : false;
+      const choiceLabel = rs && typeof rs === "object" ? rs.choice_label : null;
+      const actionPrompt =
+        rs && typeof rs === "object" ? choiceLabelToActionPrompt(rs.choice_label) : null;
+      const actionMeaningful =
+        rs && typeof rs === "object" ? isActionPromptMeaningful(rs) : false;
+      console.debug("[chat/send] after turn", {
+        input: text,
+        reflectionState: rs,
+        choiceLabel,
+        actionPrompt,
+        isRegulationCueMeaningful: cueMeaningful,
+        isActionPromptMeaningful: actionMeaningful,
+      });
+      if (rs && typeof rs === "object" && rs.trigger_label != null) {
+        setLatestMetadata(rs);
+        if (cueMeaningful) {
+          setLatestRegulationMetadata(rs);
+        } else {
+          setLatestRegulationMetadata(null);
+        }
+      } else {
+        setLatestMetadata(null);
+        setLatestRegulationMetadata(null);
+      }
       const now = new Date().toISOString();
       setMessages((prev) => [
         ...prev,
@@ -355,6 +539,9 @@ function ChatContent() {
         { id: `assistant-${Date.now()}`, role: "assistant", message: assistantMessage, created_at: now },
       ]);
       refreshHistorySessions();
+      // Clear feedback draft after a successful send, so feedback remains opt-in per turn.
+      setFeedbackDraft("");
+      setFeedbackVisible(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Request failed");
       setInput(text);
@@ -617,6 +804,72 @@ function ChatContent() {
             </p>
           </div>
         )}
+        {(() => {
+          const shouldShowRegulationCue =
+            !!latestRegulationMetadata &&
+            isRegulationCueMeaningful(latestRegulationMetadata) &&
+            !!regulationLabelToCue(latestRegulationMetadata.regulation_label);
+          if (!shouldShowRegulationCue) return null;
+          return (
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
+              Regulation cue
+            </p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              Try: {regulationLabelToCue(latestRegulationMetadata.regulation_label)}
+            </p>
+          </div>
+          );
+        })()}
+        {(() => {
+          if (!latestMetadata) return null;
+          const actionPrompt = choiceLabelToActionPrompt(latestMetadata.choice_label);
+          const shouldShowAction =
+            !!actionPrompt && isActionPromptMeaningful(latestMetadata);
+          console.debug("[chat/render] action prompt", {
+            reflectionState: latestMetadata,
+            choiceLabel: latestMetadata.choice_label,
+            actionPrompt,
+            shouldShowAction,
+          });
+          if (!shouldShowAction) return null;
+          return (
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-sky-50/60 dark:bg-sky-900/20">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
+                Next step
+              </p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                You might try: {actionPrompt}
+              </p>
+            </div>
+          );
+        })()}
+        {latestMetadata && isMetadataMeaningful(latestMetadata) && (
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/30">
+            <button
+              type="button"
+              onClick={() => setMetadataExpanded((v) => !v)}
+              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1"
+            >
+              What was noticed
+              <span className="text-[10px]">{metadataExpanded ? "▼" : "▶"}</span>
+            </button>
+            {metadataExpanded && (
+              <div className="mt-1.5 space-y-1 text-[11px] text-slate-600 dark:text-slate-400 font-sans">
+                <div><span className="text-slate-500 dark:text-slate-500">Event</span> {formatLabel(latestMetadata.trigger_label)}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Feeling</span> {formatLabel(latestMetadata.emotion_label)}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Interpretation</span> {formatLabel(latestMetadata.interpretation_label)}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Regulation</span> {formatLabel(latestMetadata.regulation_label)}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Next step</span> {formatLabel(latestMetadata.choice_label)}</div>
+                {latestMetadata.insight_candidate?.trim() && (
+                  <div className="pt-1 border-t border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300">
+                    <span className="text-slate-500 dark:text-slate-500">Insight</span> {latestMetadata.insight_candidate}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {checkpoints.length > 0 && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
@@ -682,30 +935,49 @@ function ChatContent() {
         )}
         </div>
         <form
-        className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send();
-        }}
-      >
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Message..."
-            className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="rounded-lg bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
-          >
-            {loading ? "…" : "Send"}
-          </button>
-        </div>
-      </form>
+          className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message..."
+              className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="rounded-lg bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              {loading ? "…" : "Send"}
+            </button>
+          </div>
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => setFeedbackVisible((v) => !v)}
+              className="self-start text-[11px] text-slate-500 dark:text-slate-400 hover:underline"
+            >
+              {feedbackVisible ? "Hide feedback about last suggestion" : "Add feedback about what happened after the last suggestion"}
+            </button>
+            {feedbackVisible && (
+              <textarea
+                value={feedbackDraft}
+                onChange={(e) => setFeedbackDraft(e.target.value)}
+                placeholder="Optional: how did the last suggestion or regulation cue land for you?"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 resize-none"
+                rows={2}
+                disabled={loading}
+              />
+            )}
+          </div>
+        </form>
       </section>
     </main>
   );

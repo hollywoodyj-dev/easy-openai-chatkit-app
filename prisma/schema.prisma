@@ -116,6 +116,19 @@ model Insight {
   @@index([isContinuityEligible])
 }
 
+/// Optional feedback captured about how a prior suggested action / regulation cue landed.
+model Feedback {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  conversationId  String   @map("conversation_id")
+  sourceMessageId String   @map("source_message_id")
+  payload         Json     @db.Json
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([conversationId])
+}
+
 enum SubscriptionStatus {
   trialing
   active

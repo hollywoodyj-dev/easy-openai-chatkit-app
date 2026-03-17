@@ -28,14 +28,18 @@
 
 ## Current Focus
 
-**Current milestone:** B — Guided Reflection Layer  
-**Current ticket:** 6 — Add optional feedback capture structure for prior action outcome  
+**Current milestone:** C — Measurement + Reliability  
+**Current ticket:** 13 — Validate multi-user isolation and memory boundaries  
 **State:** Not Started  
 **Blocker:** none  
 
 ### Next Action (do this when user says "process project with next step")
 
-Start **Ticket 6** (feedback capture) with the smallest v1-friendly shape: add an optional `feedback` object to the chat turn payload/response and persist it in a new model/table (or reuse an existing safe place) without changing the main reflection prompts.
+Milestone C: Tickets 7, 11, and 12 are now PASS (logging, fallback handling, and continuity success checks).  
+When continuing, start **Ticket 13 — Validate multi-user isolation and memory boundaries**:
+- Design a small set of test users and sessions to verify that insights, continuity, feedback, and reflection logs do not leak across users or sessions.  
+- Confirm that continuity and “Last insight” strips always reflect the current user’s data only, and that session IDs cannot be used to access another user’s history.  
+- Use `[ticket7]` logs and DB inspection (if available) to check for any unintended cross-user sharing of insights or reflection state; capture any findings as follow-up tickets.
 
 ### Definition of Done — Ticket 3
 
@@ -66,18 +70,18 @@ Start **Ticket 6** (feedback capture) with the smallest v1-friendly shape: add a
 
 | # | Ticket | Owner | State |
 |---|--------|-------|-------|
-| 6 | Add optional feedback capture structure for prior action outcome | Nova | Not Started |
-| 8 | Add reflection metadata rendering | Nova | Not Started |
-| 9 | Add regulation cue rendering | Nova | Not Started |
-| 10 | Add action prompt rendering | Nova | Not Started |
+| 6 | Add optional feedback capture structure for prior action outcome | Nova | Done |
+| 8 | Add reflection metadata rendering | Nova | Done |
+| 9 | Add regulation cue rendering | Nova | Done |
+| 10 | Add action prompt rendering | Nova | Done |
 
 ## Ticket Table (Milestone C — reference only for later)
 
 | # | Ticket | Owner | State |
 |---|--------|-------|-------|
-| 7 | Add logging for reflection success, insight save, continuity load | Nova | Not Started |
-| 11 | Validate fallback handling paths | Lumen | Not Started |
-| 12 | Validate continuity success checks | Lumen | Not Started |
+| 7 | Add logging for reflection success, insight save, continuity load | Nova | Done |
+| 11 | Validate fallback handling paths | Lumen | Done |
+| 12 | Validate continuity success checks | Lumen | Done |
 | 13 | Validate multi-user isolation and memory boundaries | Lumen | Not Started |
 
 ---
@@ -94,3 +98,17 @@ After completing a **Next Action** or finishing a ticket:
 **Last completed:** Ticket 5 — Continuity added: `/api/chat/continuity` returns latest active Insight for current user; `/chat` fetches it on load and renders a "Last insight" continuity strip using `continuityText` above the chat input. Milestone A (Loop Foundation) is now complete.
 
 **QA closeout (Milestone A):** Clean-state debug retesting confirms weak vague-state turns are saved with `debug_is_continuity_eligible = false` (no new continuity), strong turns are saved with `debug_is_continuity_eligible = true`, and the remaining “prove myself / worth still needing to be earned” false negative was fixed. Note: `continuity_present = true` after a weak turn can be correct if the user already has an older strong eligible insight; the correct check is whether the new weak turn was marked non-eligible.
+
+**QA closeout (Ticket 6):** Lumen retest pass. No-feedback turn → feedback_saved=false; normal feedback turn → feedback_saved=true; empty/whitespace feedback API case → feedback_saved=false. DB: one Feedback row with note payload; no empty-note row. Empty-feedback backend guard verified.
+
+**Last completed:** Ticket 8 — Reflection metadata rendering. /chat now captures `reflection_state` from the turn response and renders it in a collapsible "What was noticed" strip when extraction is meaningful. Render guard hides strip for weak/fallback extraction.
+
+**QA closeout (Ticket 8):** Lumen retest pass. Metadata strip appears for strong extraction; hidden for weak/fallback. Render guard suppresses robotic panel when most fields are unknown/uncertain or insight is generic fallback. No regression.
+
+**Last completed:** Ticket 9 — Regulation cue rendering. /chat now shows a compact "Regulation cue" strip ("Try: Pause and notice first", "Name the emotion", etc.) when extraction is meaningful and regulation_label maps to a cue. Same guard as metadata.
+
+**Last completed:** Ticket 10 — Action prompt rendering. /chat now shows a small "Next step" strip ("You might try: Wait a little before you respond.", etc.) under the regulation cue when the overall reflection is meaningful and choice_label encodes a concrete alternative. Weak/fallback extraction or vague/default choices do not surface this strip.
+
+**Last completed:** Ticket 7 — Logging for reflection success, insight save, continuity load. `/api/chat/turn` now emits lightweight `[ticket7][chat/turn] message_save`, `[ticket7][chat/turn] extraction`, `[ticket7][chat/turn] insight_continuity`, and `[ticket7][chat/turn] generation_error` logs per turn, plus `[ticket7][chat/continuity] load` in `/api/chat/continuity`. Together they capture whether messages were persisted, whether extraction succeeded, whether an Insight row was created and continuity-eligible, whether generation failed, and whether continuity load found an eligible insight. Logging is non-blocking and includes only IDs/booleans already present in persisted state.
+
+**Last completed:** Ticket 11 — Validate fallback handling paths. Weak and vague reflections (e.g. "I feel off", "something feels weird", "...") now degrade cleanly in `/chat`: they do not create new continuity, do not surface a Next step strip, and—with the latest guard tighten—do not surface an unintended regulation cue, while strong patterned reflections continue to behave as intended. Full subsystem-failure fault injection (extraction/generation/insight-save/continuity-query failures) is deferred to a separate resilience validation task.

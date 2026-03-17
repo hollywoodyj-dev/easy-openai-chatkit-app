@@ -35,23 +35,49 @@ export async function GET(request: Request) {
     console.warn(
       "[chat/continuity] prisma.insight delegate not available; returning null continuity"
     );
+    console.debug("[ticket7][chat/continuity] load", {
+      userId,
+      hasInsight: false,
+      reason: "delegate_missing",
+    });
     return NextResponse.json({ insight: null });
   }
 
-  const latest = await anyPrisma.insight.findFirst({
-    where: { userId, status: "active", isContinuityEligible: true },
-    orderBy: { lastSeenAt: "desc" },
-    select: {
-      id: true,
-      corePattern: true,
-      continuityText: true,
-      createdAt: true,
-    },
-  });
+  const latest = await anyPrisma.insight
+    .findFirst({
+      where: { userId, status: "active", isContinuityEligible: true },
+      orderBy: { lastSeenAt: "desc" },
+      select: {
+        id: true,
+        corePattern: true,
+        continuityText: true,
+        createdAt: true,
+      },
+    })
+    .catch((e) => {
+      console.warn("[chat/continuity] load failed", e);
+      console.debug("[ticket7][chat/continuity] load", {
+        userId,
+        hasInsight: false,
+        reason: "query_error",
+      });
+      return null;
+    });
 
   if (!latest) {
+    console.debug("[ticket7][chat/continuity] load", {
+      userId,
+      hasInsight: false,
+      reason: "none_found",
+    });
     return NextResponse.json({ insight: null });
   }
+
+  console.debug("[ticket7][chat/continuity] load", {
+    userId,
+    hasInsight: true,
+    insightId: latest.id,
+  });
 
   return NextResponse.json({
     insight: {
