@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const anyPrisma = prisma as unknown as {
     insight?: {
       findFirst: (args: {
-        where: { userId: string; status: string };
+        where: { userId: string; status: string; isContinuityEligible?: boolean };
         orderBy: { lastSeenAt: "asc" | "desc" };
         select: {
           id: true;
