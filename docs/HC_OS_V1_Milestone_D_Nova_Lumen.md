@@ -275,66 +275,132 @@ Additional Milestone D rules:
 
 1. QA checklist
 - reflection quality checks
-  - confirm main reflection is specific enough (mirror + one grounded underlying tension/pattern)
-  - reject generic paraphrase-only reflections and “unsupported certainty”
+  - confirm main reflection does more than paraphrase:
+    - it mirrors the present user state accurately
+    - it names at most one grounded underlying tension/pattern
+  - reject outputs that are:
+    - generic
+    - over-interpreted
+    - preachy / mystical
+    - therapy-like
+  - pass bar:
+    - readable in one pass
+    - emotionally precise
+    - brief
+    - founder-readable without explanation gymnastics
 - structure consistency checks
-  - canonical visible order matches:
-    - main reflection
-    - `Last insight`
-    - regulation cue (optional)
-    - next step (optional)
-  - verify optional layers do not appear together if they were not meaningfully triggered
-  - verify the response never feels bloated for a founder demo slice
+  - verify canonical visible order stays:
+    1. main reflection
+    2. `Last insight`
+    3. regulation cue *(optional)*
+    4. next step *(optional)*
+  - verify main reflection remains primary (no optional layer “steals” the response)
+  - verify optional layers appear only when explicitly warranted:
+    - weak/vague turns must suppress regulation cue + next step + layered overload
+    - optional layers must not show by default
+  - verify the response never feels bloated in either EN or ZH
 - continuity save/display checks
-  - strong case:
-    - `Last insight` shows in the same session
-    - `GET /api/chat/continuity` returns the expected eligible item after reload
-  - weak/vague case:
-    - `Last insight` does not show
-    - regulation cue and next step do not show
+  - language-agnostic identity requirement (applies to EN and ZH):
+    - continuity must be stable and tied to underlying identity, not prose-only display
+  - strong case (same eligible continuity expected):
+    - confirm eligible continuity is created:
+      - `/api/chat/turn` returns `continuity_insight` with `is_continuity_eligible: true`
+      - `continuity_insight.continuity_key` is present
+    - confirm `Last insight` renders in the same session
+    - confirm reload correctness:
+      - `GET /api/chat/continuity` returns non-null `insight`
+      - returned `insight.continuity_key` matches the expected eligible identity
+      - `Last insight` renders again after reload
+    - confirm ZH display path uses language-specific templates:
+      - in ZH, `Last insight` display should derive from `continuity_key` → ZH template
+      - fail if ZH visibly falls back to English continuity prose when a key-based template exists
+  - weak/vague case (control):
+    - confirm no `Last insight`
+    - confirm no accidental resurfacing after reload
+    - confirm regulation cue and next step do not show
+    - confirm “What was noticed” remains hidden for weak/vague control (header stays out of view)
+    - verify UI continuity matches API continuity meaning:
+      - if API continuity is null/non-eligible, UI must not render continuity-related layers
+      - if UI renders while API indicates null, fail as a render/state bug
 - English/Chinese baseline checks
-  - run the same two scenarios (strong + weak) in EN and ZH
+  - run a minimal scenario set in both directions:
+    - one strong continuity case
+    - one weak suppression case
+    - one regulation-cue-trigger case
+    - one next-step-trigger case
+  - run each scenario with English input and Chinese input
   - verify:
-    - same functional continuity meaning is resurfaced (via `continuity_key`, not identical wording)
-    - same show/hide behavior for optional layers
-    - tone stays lightweight, grounded, non-clinical, non-mystical
+    - same layer ordering in both EN and ZH
+    - same hide/show behavior under equivalent conditions
+    - continuity meaning preserved via `continuity_key` (not identical wording)
+    - equivalent tone class: lightweight, grounded, non-clinical, non-mystical
 
 2. Demo acceptance checklist
-- founder can view one clean bilingual slice:
-  - EN demo run shows: main reflection + `Last insight` (+ optional cue/next step only when legitimately triggered)
-  - ZH demo run shows: same functional layers with ZH display text
-- continuity is clearly stable/readable:
-  - `Last insight` is present when eligible and absent when weak
-  - reload does not confuse the user with missing/incorrect continuity
-- demo does not require expert-level explanation
-- weak control remains quiet (no accidental continuity/cue/next step surfacing)
+- founder can view one clean EN slice and one clean ZH slice
+- each slice is understandable without debug metadata
+- main reflection feels specific, grounded, and brief
+- `Last insight` appears only when genuinely earned
+- continuity wording is readable and user-facing
+- regulation cue appears only when the turn warrants stabilization
+- next step appears only when it adds a small opening/value (not homework)
+- weak control stays quiet:
+  - no continuity
+  - no forced cue
+  - no forced next step
+  - reload does not break continuity readability or trust
+  - the slice feels like a coherent product, not a partially working prototype
+- UI clarity check:
+  - “What was noticed” (collapsible) remains unobtrusive by default and does not appear for weak/vague control
 
 3. Parity check rule
-- English/Chinese parity passes when:
-  - functional equivalence holds (same continuity meaning + same layer roles)
-  - hide/show rules match
-  - tone is equivalent (lightweight, grounded, non-therapeutic)
+- EN/Chinese parity passes when:
+  - the same underlying continuity meaning is preserved (via `continuity_key`)
+  - the same visible layers are shown/hidden under equivalent conditions
+  - product function is preserved across:
+    - present reflection
+    - continuity
+    - stabilization
+    - gentle forward movement
+  - tone stays lightweight, grounded, non-clinical, non-mystical in both languages
 - parity does NOT require:
   - identical wording
-  - literal translation sameness
+  - literal translation
+  - identical rhythm or phrasing nuance
+- parity test question:
+  - “Does this do the same product job in both languages?”
+  - not: “Are these the same words?”
 
 4. Failure conditions
 - Milestone D fails or requires revision if any of these happen:
+  - main reflection is generic, bloated, or over-interpreted
   - `Last insight` appears for weak/vague inputs
-  - `Last insight` fails to appear for a clearly eligible strong continuity candidate (with continuity key present)
-  - optional layers (regulation cue / next step) appear when they should be hidden, causing overload
-  - reload breaks continuity visibility in a way that looks like a UI render-state bug
-  - EN and ZH diverge functionally (e.g., continuity eligibility meaning doesn’t match or layer gating behaves differently)
+  - `Last insight` fails to appear for a clearly eligible strong case (where `continuity_key` is present/eligible)
+  - continuity depends on display text only (no stable identity behavior)
+  - UI continuity differs from API continuity meaning (e.g., UI shows while API returns null)
+  - reload breaks continuity visibility in a way that reduces trust (looks like a render-state bug)
+  - regulation cue or next step appear by default and create overload
+  - ZH continuity render falls back to English prose when key-based ZH templates exist
+  - EN and ZH diverge in function/tone class/continuity meaning (not just wording)
+  - founder demo requires technical explanation to understand what is happening
 
 5. Revision loop rule
-- if a check fails, convert it into an exact next action for Nova:
-  - if `Last insight` shows when weak: tighten client show/hide gating using the already-available weak/vague signal (hosted path only)
-  - if `Last insight` missing when eligible:
-    - verify backend eligibility + `continuity_key` persistence
-    - then verify the continuity return wiring (`continuity_insight`) and client state update
-  - if EN/ZH show/hide diverges:
-    - update only the EN/ZH display mappings/templates and `uiLang` selection flow
-    - do not alter eligibility logic unless parity requires a functional meaning correction
-  - if reload causes continuity mismatch:
-    - ensure the reload path uses `continuity_key` + eligibility and not stale display-only state
+- when a QA check fails, convert it into one exact next action for Nova:
+  - if strong case is not continuity-eligible:
+    - inspect continuity eligibility threshold / `continuity_key` assignment (backend)
+  - if eligible continuity exists but `Last insight` does not render:
+    - inspect client render-state wiring and reload hydration path
+  - if UI continuity differs from API continuity meaning:
+    - treat as a render/state bug and fix the client gating + state update path
+  - if weak input still shows continuity/cues/next-step:
+    - tighten hosted show/hide gating using the weak/vague signal (hosted path)
+  - if EN/ZH parity fails:
+    - adjust only EN/ZH display templates/mappings and `uiLang` behavior
+    - do not fork core product logic unless the functional meaning itself is wrong
+  - if tone is off:
+    - tighten prompt/spec wording (no scope expansion)
+  - escalation rule:
+    - each failed check must produce:
+      - one observed failure
+      - one likely layer causing it
+      - one precise next Nova implementation action
 
