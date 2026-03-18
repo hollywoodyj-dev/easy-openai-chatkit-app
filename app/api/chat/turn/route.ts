@@ -84,6 +84,15 @@ type ContinuityPatternFamily =
 function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
   const text = corePattern.trim().toLowerCase();
 
+  // Rest-specific earnedness patterns (e.g. "rest is undeserved", "deserve to rest", "more effort").
+  // Put this before the "prove worth" rules so this family doesn't collapse to fallback_generic.
+  if (
+    /rest/.test(text) &&
+    /(prove|proof|deserve|undeserved|not enough|more effort)/.test(text)
+  ) {
+    return "rest_must_be_earned";
+  }
+
   if (
     /even after .*the user tends to interpret their (worth|value) as still needing to be earned/.test(
       text
@@ -744,10 +753,11 @@ export async function POST(request: Request) {
         corePattern
       );
 
-    // For strongly patterned, non-vague sources (like "prove myself" / "constant
-    // pressure"), we allow eligibility even if the extractor labels are all
+    // For strongly patterned sources (including rest/earned-value families),
+    // we allow eligibility even if the extractor labels are all
     // "unknown"/"uncertain" — the text pattern itself carries enough durability.
-    const labelsMustBeStrong = !hasStrongPatternCue || isVagueSource;
+    const labelsMustBeStrong =
+      (!hasStrongPatternCue && !isRestOrEarnedValueFamily) || isVagueSource;
 
     let isContinuityEligible =
       (!labelsMustBeStrong || !allLabelsWeak) &&

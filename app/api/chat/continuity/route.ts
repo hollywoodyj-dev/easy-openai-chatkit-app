@@ -15,6 +15,14 @@ type ContinuityPatternFamily =
 function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
   const text = corePattern.trim().toLowerCase();
 
+  // Rest-specific earnedness patterns (e.g. "rest is undeserved", "deserve to rest", "more effort").
+  if (
+    /rest/.test(text) &&
+    /(prove|proof|deserve|undeserved|not enough|more effort)/.test(text)
+  ) {
+    return "rest_must_be_earned";
+  }
+
   if (
     /even after .*the user tends to interpret their (worth|value) as still needing to be earned/.test(
       text
