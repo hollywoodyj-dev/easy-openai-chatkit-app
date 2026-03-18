@@ -503,6 +503,16 @@ function ChatContent() {
         return;
       }
       const assistantMessage = (data.assistant_message as string) ?? "";
+      const continuityFromTurn = (data.continuity_insight ??
+        null) as
+        | {
+            id: string;
+            core_pattern: string;
+            continuity_text: string;
+            created_at: string;
+            is_continuity_eligible?: boolean | null;
+          }
+        | null;
       const rs = data.reflection_state as ReflectionMetadata | null | undefined;
       const isVagueSource = Boolean(data.debug_is_vague_source);
       const cueMeaningful =
@@ -542,10 +552,23 @@ function ChatContent() {
         { id: `assistant-${Date.now()}`, role: "assistant", message: assistantMessage, created_at: now },
       ]);
       refreshHistorySessions();
-      // Refresh continuity after each successful turn so eligible insights visibly resurface.
-      fetchContinuity().then((insight) => {
-        setContinuity(insight);
-      });
+      // Update continuity immediately when this turn created an eligible insight.
+      if (
+        continuityFromTurn &&
+        (continuityFromTurn.is_continuity_eligible ?? true)
+      ) {
+        setContinuity({
+          id: continuityFromTurn.id,
+          core_pattern: continuityFromTurn.core_pattern,
+          continuity_text: continuityFromTurn.continuity_text,
+          created_at: continuityFromTurn.created_at,
+        });
+      } else {
+        // Fallback: refresh continuity after each successful turn so eligible insights visibly resurface.
+        fetchContinuity().then((insight) => {
+          setContinuity(insight);
+        });
+      }
       // Clear feedback draft after a successful send, so feedback remains opt-in per turn.
       setFeedbackDraft("");
       setFeedbackVisible(false);

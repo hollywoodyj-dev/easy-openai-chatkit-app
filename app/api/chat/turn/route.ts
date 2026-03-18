@@ -587,6 +587,15 @@ export async function POST(request: Request) {
   let debugIsTooShortAndFlat: boolean | null = null;
   let debugIsTooGeneric: boolean | null = null;
   let feedbackSaved: boolean = false;
+  let responseContinuityInsight:
+    | {
+        id: string;
+        corePattern: string;
+        continuityText: string;
+        createdAt: Date;
+        isContinuityEligible: boolean;
+      }
+    | null = null;
 
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
@@ -769,7 +778,7 @@ export async function POST(request: Request) {
               confidenceScore: number | null;
               isContinuityEligible: boolean;
             };
-          }) => Promise<{ id: string }>;
+          }) => Promise<{ id: string; createdAt: Date }>;
         };
       };
 
@@ -792,6 +801,13 @@ export async function POST(request: Request) {
         });
         debugInsightId = created?.id ?? null;
         debugIsContinuityEligible = isContinuityEligible;
+        responseContinuityInsight = {
+          id: created.id,
+          corePattern,
+          continuityText,
+          createdAt: created.createdAt,
+          isContinuityEligible,
+        };
       }
     } catch (e) {
       console.warn("[chat/turn] Insight save failed", e);
@@ -855,6 +871,15 @@ export async function POST(request: Request) {
   const res = NextResponse.json({
     assistant_message: assistantContent,
     ...(reflectionState && { reflection_state: reflectionState }),
+    ...(responseContinuityInsight && {
+      continuity_insight: {
+        id: responseContinuityInsight.id,
+        core_pattern: responseContinuityInsight.corePattern,
+        continuity_text: responseContinuityInsight.continuityText,
+        created_at: responseContinuityInsight.createdAt.toISOString(),
+        is_continuity_eligible: responseContinuityInsight.isContinuityEligible,
+      },
+    }),
     // Debug-only fields to help QA distinguish:
     // - whether this turn created an Insight row
     // - whether that row was continuity-eligible
