@@ -658,8 +658,13 @@ export async function POST(request: Request) {
 
     // Positive durability requirement: only treat as continuity-grade if there
     // is a clearly reusable pattern, not just a cleaned-up vague-state summary.
+    const patternFamily = detectContinuityPatternFamily(corePattern);
+    const isRestOrEarnedValueFamily =
+      patternFamily === "earned_value_after_effort" ||
+      patternFamily === "rest_must_be_earned";
     const hasDurablePattern =
       hasStrongPatternCue ||
+      isRestOrEarnedValueFamily ||
       (hasTriggerStructure && !looksLikeVagueStateSummary && !hasVagueTriggerRule);
 
     const weakLabels = new Set(["unknown", "uncertain"]);
