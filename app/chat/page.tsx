@@ -154,7 +154,8 @@ function regulationLabelToCue(label: string, uiLang: "en" | "zh"): string | null
   const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
   if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
   const map = uiLang === "zh" ? REGULATION_CUE_MAP_ZH : REGULATION_CUE_MAP;
-  return map[v] || formatLabel(label);
+  if (uiLang === "zh") return map[v] ?? null; // avoid English fallback leakage in ZH
+  return map[v] ?? formatLabel(label);
 }
 
 /** Guard for action prompt: only show when overall reflection is meaningful and choice_label is a concrete alternative. */
@@ -882,19 +883,33 @@ function ChatContent() {
           </button>
         </div>
         )}
-        {continuity && (
-          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-              {uiLang === "zh" ? "上一次洞见" : "Last insight"}
-            </p>
-            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-              {uiLang === "zh"
-                ? continuityKeyToReminderTextZh(continuity.continuity_key) ??
-                  continuity.continuity_text
-                : continuity.continuity_text}
-            </p>
-          </div>
-        )}
+        {(() => {
+          if (!continuity) return null;
+          if (uiLang === "zh") {
+            const zhText = continuityKeyToReminderTextZh(continuity.continuity_key);
+            if (!zhText) return null; // avoid English fallback leakage in ZH
+            return (
+              <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  上一次洞见
+                </p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                  {zhText}
+                </p>
+              </div>
+            );
+          }
+          return (
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                Last insight
+              </p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                {continuity.continuity_text}
+              </p>
+            </div>
+          );
+        })()}
         {(() => {
           const shouldShowRegulationCue =
             !!latestRegulationMetadata &&
