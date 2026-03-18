@@ -39,6 +39,7 @@ type ContinuityInsight = {
   id: string;
   core_pattern: string;
   continuity_text: string;
+  continuity_key?: string;
   created_at: string;
 };
 
@@ -136,10 +137,24 @@ const REGULATION_CUE_MAP: Record<string, string> = {
   delay_reaction: "Delay the reaction",
   reassess: "Reassess from a calmer place",
 };
-function regulationLabelToCue(label: string): string | null {
+const REGULATION_CUE_MAP_ZH: Record<string, string> = {
+  pause: "先停一下，留意当下",
+  pause_before_reacting: "在反应前先停一下",
+  name_emotion: "先把情绪叫出来",
+  soften_urgency: "把紧迫感放轻一点",
+  wait_then_reassess: "等一会儿，再重新评估",
+  check_facts_first: "先核对事实",
+  wait_before_responding: "先别马上回应",
+  one_small_step: "只做一个小步骤",
+  delay_reaction: "稍微延后你的反应",
+  reassess: "从更平稳的角度再看一遍",
+};
+
+function regulationLabelToCue(label: string, uiLang: "en" | "zh"): string | null {
   const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
   if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
-  return REGULATION_CUE_MAP[v] || formatLabel(label);
+  const map = uiLang === "zh" ? REGULATION_CUE_MAP_ZH : REGULATION_CUE_MAP;
+  return map[v] || formatLabel(label);
 }
 
 /** Guard for action prompt: only show when overall reflection is meaningful and choice_label is a concrete alternative. */
@@ -164,12 +179,40 @@ const ACTION_PROMPT_MAP: Record<string, string> = {
   acknowledge_done_work: "Notice what you have already done before pushing for more.",
   reassess: "Step back for a moment and reassess what feels most important right now.",
 };
+const ACTION_PROMPT_MAP_ZH: Record<string, string> = {
+  wait_before_responding: "先等一等再回应。",
+  one_small_step: "挑一个你能做的小、具体步骤。",
+  check_facts_first: "在你决定之前，先确认具体事实。",
+  wait_then_reassess: "给一点时间，然后再重新评估。",
+  acknowledge_existing_effort: "先注意到你已经做了什么，而不是立刻想要更多。",
+  acknowledge_done_work: "先注意到你已经完成了什么，而不是立刻想要更多。",
+  reassess: "退一步，先看看此刻更重要的是什么。",
+};
 
-function choiceLabelToActionPrompt(label: string): string | null {
+function choiceLabelToActionPrompt(
+  label: string,
+  uiLang: "en" | "zh"
+): string | null {
   const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
   if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
   // Only show when we have a deliberately written, user-facing sentence.
-  return ACTION_PROMPT_MAP[v] ?? null;
+  const map = uiLang === "zh" ? ACTION_PROMPT_MAP_ZH : ACTION_PROMPT_MAP;
+  return map[v] ?? null;
+}
+
+const CONTINUITY_REMINDER_ZH_MAP: Record<string, string> = {
+  earned_value_after_effort: "即使你做完了重要的事，你也仍会觉得：休息好像还不算“应得”。",
+  delayed_reply_means_i_did_something_wrong:
+    "对方回得很快/很慢时，你可能会把它读成：你是不是哪里做错了。",
+  rest_must_be_earned: "休息很快会让你觉得：你还得先证明些什么才配停下来。",
+  constant_pressure_keep_up: "你可能会觉得，只有一直跟上，你才允许放松。",
+  replay_for_mistakes: "不清楚的时候，你很容易开始反复检查自己可能做错了什么。",
+  fallback_generic: "当事情不确定时，这个模式会很快又回来。",
+};
+
+function continuityKeyToReminderTextZh(key?: string | null): string | null {
+  if (!key) return null;
+  return CONTINUITY_REMINDER_ZH_MAP[key] ?? null;
 }
 
 /**
@@ -206,6 +249,13 @@ function ChatContent() {
   const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
   const [latestIsVagueSource, setLatestIsVagueSource] = useState(false);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
+
+  const uiLang: "en" | "zh" = useMemo(() => {
+    // Milestone D baseline: the user-facing language follows the last user input.
+    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUser) return "en";
+    return /[\u4E00-\u9FFF]/.test(lastUser.message) ? "zh" : "en";
+  }, [messages]);
 
   const authHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -396,7 +446,13 @@ function ChatContent() {
     if (!res.ok) return null;
     const data = await res.json().catch(() => ({}));
     const insight = (data.insight ?? null) as
-      | { id: string; core_pattern: string; continuity_text: string; created_at: string }
+      | {
+          id: string;
+          core_pattern: string;
+          continuity_text: string;
+          continuity_key?: string;
+          created_at: string;
+        }
       | null;
     return insight;
   }, [authHeaders]);
@@ -509,6 +565,7 @@ function ChatContent() {
             id: string;
             core_pattern: string;
             continuity_text: string;
+            continuity_key?: string;
             created_at: string;
             is_continuity_eligible?: boolean | null;
           }
@@ -521,7 +578,7 @@ function ChatContent() {
           : false;
       const choiceLabel = rs && typeof rs === "object" ? rs.choice_label : null;
       const actionPrompt =
-        rs && typeof rs === "object" ? choiceLabelToActionPrompt(rs.choice_label) : null;
+        rs && typeof rs === "object" ? choiceLabelToActionPrompt(rs.choice_label, "en") : null;
       const actionMeaningful =
         rs && typeof rs === "object" ? isActionPromptMeaningful(rs) : false;
       console.debug("[chat/send] after turn", {
@@ -561,6 +618,7 @@ function ChatContent() {
           id: continuityFromTurn.id,
           core_pattern: continuityFromTurn.core_pattern,
           continuity_text: continuityFromTurn.continuity_text,
+          continuity_key: continuityFromTurn.continuity_key,
           created_at: continuityFromTurn.created_at,
         });
       } else {
@@ -827,10 +885,13 @@ function ChatContent() {
         {continuity && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-              Last insight
+              {uiLang === "zh" ? "上一次洞见" : "Last insight"}
             </p>
             <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-              {continuity.continuity_text}
+              {uiLang === "zh"
+                ? continuityKeyToReminderTextZh(continuity.continuity_key) ??
+                  continuity.continuity_text
+                : continuity.continuity_text}
             </p>
           </div>
         )}
@@ -838,22 +899,22 @@ function ChatContent() {
           const shouldShowRegulationCue =
             !!latestRegulationMetadata &&
             isRegulationCueMeaningful(latestRegulationMetadata) &&
-            !!regulationLabelToCue(latestRegulationMetadata.regulation_label);
+            !!regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang);
           if (!shouldShowRegulationCue) return null;
           return (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
-              Regulation cue
+              {uiLang === "zh" ? "调节提示" : "Regulation cue"}
             </p>
             <p className="text-sm text-slate-700 dark:text-slate-300">
-              Try: {regulationLabelToCue(latestRegulationMetadata.regulation_label)}
+              Try: {regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang)}
             </p>
           </div>
           );
         })()}
         {(() => {
           if (!latestMetadata) return null;
-          const actionPrompt = choiceLabelToActionPrompt(latestMetadata.choice_label);
+          const actionPrompt = choiceLabelToActionPrompt(latestMetadata.choice_label, uiLang);
           const shouldShowAction =
             !!actionPrompt &&
             isActionPromptMeaningful(latestMetadata) &&
@@ -868,7 +929,7 @@ function ChatContent() {
           return (
             <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-sky-50/60 dark:bg-sky-900/20">
               <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
-                Next step
+                {uiLang === "zh" ? "下一步" : "Next step"}
               </p>
               <p className="text-sm text-slate-700 dark:text-slate-300">
                 You might try: {actionPrompt}

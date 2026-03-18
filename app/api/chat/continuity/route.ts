@@ -4,6 +4,49 @@ import { resolveChatUserId } from "@/lib/chat-identity";
 
 export const dynamic = "force-dynamic";
 
+type ContinuityPatternFamily =
+  | "earned_value_after_effort"
+  | "delayed_reply_means_i_did_something_wrong"
+  | "rest_must_be_earned"
+  | "constant_pressure_keep_up"
+  | "replay_for_mistakes"
+  | "fallback_generic";
+
+function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
+  const text = corePattern.trim().toLowerCase();
+
+  if (
+    /even after .*the user tends to interpret their (worth|value) as still needing to be earned/.test(
+      text
+    ) ||
+    /prove (myself|yourself|themselves|your worth)/.test(text) ||
+    /earn(ed)? (my|their|your) place/.test(text)
+  ) {
+    return "earned_value_after_effort";
+  }
+
+  if (
+    /reply is delayed/.test(text) &&
+    /(did something wrong|prove (myself|yourself|themselves) again|must prove)/.test(text)
+  ) {
+    return "delayed_reply_means_i_did_something_wrong";
+  }
+
+  if (/rest.*earned/.test(text) || /pause.*before feeling finished/.test(text)) {
+    return "rest_must_be_earned";
+  }
+
+  if (/constant pressure/.test(text) || /must always keep up/.test(text) || /always perform/.test(text)) {
+    return "constant_pressure_keep_up";
+  }
+
+  if (/replay/.test(text) || /did something wrong/.test(text) || /searching for mistakes|missteps/.test(text)) {
+    return "replay_for_mistakes";
+  }
+
+  return "fallback_generic";
+}
+
 /**
  * GET: Latest active insight (continuity) for the current user.
  * Returns { insight: { id, core_pattern, continuity_text, created_at } } or { insight: null }.
@@ -84,6 +127,7 @@ export async function GET(request: Request) {
       id: latest.id,
       core_pattern: latest.corePattern,
       continuity_text: latest.continuityText,
+      continuity_key: detectContinuityPatternFamily(latest.corePattern),
       created_at: latest.createdAt.toISOString(),
     },
   });

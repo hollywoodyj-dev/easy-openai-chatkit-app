@@ -442,6 +442,13 @@ export async function POST(request: Request) {
     where: { id: sessionId, userId },
     select: { conversationSummary: true },
   });
+
+  // Minimal bilingual baseline: detect input language and instruct the model output language.
+  // Canonical continuity meaning remains language-neutral (extraction returns English corePattern).
+  const wantsChinese = /[\u4E00-\u9FFF]/.test(message);
+  const languageInstruction = wantsChinese
+    ? "\n\nLanguage rule: Respond in Chinese."
+    : "\n\nLanguage rule: Respond in English.";
   const recent = allMessages.slice(-RECENT_MESSAGES_COUNT);
   const openaiMessages: { role: "user" | "assistant" | "system"; content: string }[] = recent.map(
     (m) => ({
@@ -479,7 +486,8 @@ export async function POST(request: Request) {
         : "";
     openaiMessagesForApi.push({
       role: "system",
-      content: systemPrompt + continuationHint + summaryBlock + reflectionBlock,
+      content:
+        systemPrompt + continuationHint + summaryBlock + reflectionBlock + languageInstruction,
     });
   }
   openaiMessagesForApi.push(...openaiMessages);
@@ -594,6 +602,7 @@ export async function POST(request: Request) {
         continuityText: string;
         createdAt: Date;
         isContinuityEligible: boolean;
+        continuityKey: string;
       }
     | null = null;
 
@@ -609,6 +618,16 @@ export async function POST(request: Request) {
       "something feels weird",
       "i'm tired",
       "i am tired",
+      "不确定",
+      "我不确定",
+      "我不知道",
+      "不知道",
+      "说不清",
+      "说不出哪里不对",
+      "感觉不对",
+      "感觉有点不对",
+      "感觉很奇怪",
+      "感觉怪",
       "not sure",
       "not sure what's wrong",
       "not sure what is wrong",
@@ -812,6 +831,7 @@ export async function POST(request: Request) {
           continuityText,
           createdAt: created.createdAt,
           isContinuityEligible,
+          continuityKey: patternFamily,
         };
       }
     } catch (e) {
@@ -879,6 +899,7 @@ export async function POST(request: Request) {
     ...(responseContinuityInsight && {
       continuity_insight: {
         id: responseContinuityInsight.id,
+        continuity_key: responseContinuityInsight.continuityKey,
         core_pattern: responseContinuityInsight.corePattern,
         continuity_text: responseContinuityInsight.continuityText,
         created_at: responseContinuityInsight.createdAt.toISOString(),
