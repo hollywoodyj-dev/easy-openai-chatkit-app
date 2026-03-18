@@ -204,6 +204,7 @@ function ChatContent() {
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [latestMetadata, setLatestMetadata] = useState<ReflectionMetadata | null>(null);
   const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
+  const [latestIsVagueSource, setLatestIsVagueSource] = useState(false);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const authHeaders = useCallback((): HeadersInit => {
@@ -523,6 +524,7 @@ function ChatContent() {
       });
       if (rs && typeof rs === "object" && rs.trigger_label != null) {
         setLatestMetadata(rs);
+        setLatestIsVagueSource(isVagueSource);
         if (cueMeaningful) {
           setLatestRegulationMetadata(rs);
         } else {
@@ -531,6 +533,7 @@ function ChatContent() {
       } else {
         setLatestMetadata(null);
         setLatestRegulationMetadata(null);
+        setLatestIsVagueSource(false);
       }
       const now = new Date().toISOString();
       setMessages((prev) => [
@@ -539,6 +542,10 @@ function ChatContent() {
         { id: `assistant-${Date.now()}`, role: "assistant", message: assistantMessage, created_at: now },
       ]);
       refreshHistorySessions();
+      // Refresh continuity after each successful turn so eligible insights visibly resurface.
+      fetchContinuity().then((insight) => {
+        setContinuity(insight);
+      });
       // Clear feedback draft after a successful send, so feedback remains opt-in per turn.
       setFeedbackDraft("");
       setFeedbackVisible(false);
@@ -825,7 +832,9 @@ function ChatContent() {
           if (!latestMetadata) return null;
           const actionPrompt = choiceLabelToActionPrompt(latestMetadata.choice_label);
           const shouldShowAction =
-            !!actionPrompt && isActionPromptMeaningful(latestMetadata);
+            !!actionPrompt &&
+            isActionPromptMeaningful(latestMetadata) &&
+            !latestIsVagueSource;
           console.debug("[chat/render] action prompt", {
             reflectionState: latestMetadata,
             choiceLabel: latestMetadata.choice_label,
@@ -844,7 +853,7 @@ function ChatContent() {
             </div>
           );
         })()}
-        {latestMetadata && isMetadataMeaningful(latestMetadata) && (
+        {latestMetadata && isMetadataMeaningful(latestMetadata) && !latestIsVagueSource && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/30">
             <button
               type="button"
@@ -903,6 +912,11 @@ function ChatContent() {
           <p className="text-slate-500 dark:text-slate-400 text-sm">
             Send a message below. Each turn is saved via the backend.
           </p>
+        )}
+        {messages.length === 1 && messages[0]?.role === "user" && !loading && (
+          <div className="rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-900/20 px-3 py-2 text-[11px] text-amber-800 dark:text-amber-200">
+            Your last message was saved, but the response may not have finished. You can send a new message or resend what you wrote.
+          </div>
         )}
         {messages.map((m) => {
           const label =
