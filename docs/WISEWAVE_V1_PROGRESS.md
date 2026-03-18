@@ -11,6 +11,7 @@
 | **A — Loop Foundation** | Minimum working reflection loop: submit reflection → AI reflection → insight saved → continuity on return | Done |
 | **B — Guided Reflection Layer** | Regulation cue, action prompt, feedback capture, metadata rendering | Not Started |
 | **C — Measurement + Reliability** | Logging, fallback validation, continuity checks, multi-user isolation | Not Started |
+| **D — HC-OS V1 consolidation** | Founder-ready reflection slice + minimal EN/ZH baseline | In Progress |
 
 ---
 
@@ -28,9 +29,9 @@
 
 ## Current Focus
 
-**Current milestone:** C — Measurement + Reliability  
-**Current ticket:** 13 — Validate multi-user isolation and memory boundaries  
-**State:** Not Started  
+**Current milestone:** D — HC-OS V1 consolidation, product-readiness, and language-baseline phase  
+**Current ticket:** D1-D4 — Reflection quality, multilingual scope boundary, minimal Nova path, QA demo verification  
+**State:** In Progress  
 **Blocker:** none  
 
 ### Next Action (do this when user says "process project with next step")
