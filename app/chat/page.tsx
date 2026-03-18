@@ -922,7 +922,12 @@ function ChatContent() {
               {uiLang === "zh" ? "调节提示" : "Regulation cue"}
             </p>
             <p className="text-sm text-slate-700 dark:text-slate-300">
-              Try: {regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang)}
+              {uiLang === "zh"
+                ? `试试：${regulationLabelToCue(
+                    latestRegulationMetadata.regulation_label,
+                    uiLang
+                  )}`
+                : `Try: ${regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang)}`}
             </p>
           </div>
           );
@@ -947,7 +952,7 @@ function ChatContent() {
                 {uiLang === "zh" ? "下一步" : "Next step"}
               </p>
               <p className="text-sm text-slate-700 dark:text-slate-300">
-                You might try: {actionPrompt}
+                {uiLang === "zh" ? `你可以试试：${actionPrompt}` : `You might try: ${actionPrompt}`}
               </p>
             </div>
           );

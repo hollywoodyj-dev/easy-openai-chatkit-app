@@ -447,8 +447,8 @@ export async function POST(request: Request) {
   // Canonical continuity meaning remains language-neutral (extraction returns English corePattern).
   const wantsChinese = /[\u4E00-\u9FFF]/.test(message);
   const languageInstruction = wantsChinese
-    ? "\n\nLanguage rule: Respond in Chinese."
-    : "\n\nLanguage rule: Respond in English.";
+    ? "\n\nLanguage rule: Respond in Chinese only. Do not include English words."
+    : "\n\nLanguage rule: Respond in English only. Do not include Chinese characters.";
   const recent = allMessages.slice(-RECENT_MESSAGES_COUNT);
   const openaiMessages: { role: "user" | "assistant" | "system"; content: string }[] = recent.map(
     (m) => ({
