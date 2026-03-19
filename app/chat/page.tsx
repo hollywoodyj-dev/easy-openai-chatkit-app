@@ -578,17 +578,6 @@ function ChatContent() {
         return;
       }
       const assistantMessage = (data.assistant_message as string) ?? "";
-      const continuityFromTurn = (data.continuity_insight ??
-        null) as
-        | {
-            id: string;
-            core_pattern: string;
-            continuity_text: string;
-            continuity_key?: string;
-            created_at: string;
-            is_continuity_eligible?: boolean | null;
-          }
-        | null;
       const rs = data.reflection_state as ReflectionMetadata | null | undefined;
       const isVagueSource = Boolean(data.debug_is_vague_source);
       const cueMeaningful =
@@ -630,25 +619,13 @@ function ChatContent() {
       refreshHistorySessions();
       // Continuity timing (Ibu memo): for first-time users, avoid showing "Last insight"
       // immediately on the same turn that creates the first continuity insight.
-      // If continuity existed at session start, we keep same-session resurfacing behavior.
+      // If continuity existed at session start, keep continuity anchored to prior sessions only.
       if (hadContinuityAtSessionStart) {
-        if (
-          continuityFromTurn &&
-          (continuityFromTurn.is_continuity_eligible ?? true)
-        ) {
-          setContinuity({
-            id: continuityFromTurn.id,
-            core_pattern: continuityFromTurn.core_pattern,
-            continuity_text: continuityFromTurn.continuity_text,
-            continuity_key: continuityFromTurn.continuity_key,
-            created_at: continuityFromTurn.created_at,
-          });
-        } else {
-          // Fallback: refresh continuity after each successful turn so eligible insights visibly resurface.
-          fetchContinuity(sessionId).then((insight) => {
-            setContinuity(insight);
-          });
-        }
+        // Always refetch with session exclusion rules so current-session insights
+        // do not replace the surfaced "last" continuity context.
+        fetchContinuity(sessionId).then((insight) => {
+          setContinuity(insight);
+        });
       }
       // Clear feedback draft after a successful send, so feedback remains opt-in per turn.
       setFeedbackDraft("");

@@ -63,6 +63,14 @@ export async function GET(request: Request) {
   const { userId } = await resolveChatUserId(request);
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("session_id")?.trim() || null;
+  const sessionCreatedAt = sessionId
+    ? (
+        await prisma.conversation.findFirst({
+          where: { id: sessionId, userId },
+          select: { createdAt: true },
+        })
+      )?.createdAt ?? null
+    : null;
 
   const anyPrisma = prisma as unknown as {
     insight?: {
@@ -72,6 +80,7 @@ export async function GET(request: Request) {
           status: string;
           isContinuityEligible?: boolean;
           conversationId?: string | { not: string };
+          createdAt?: { lt: Date };
         };
         orderBy: { lastSeenAt: "asc" | "desc" };
         select: {
@@ -108,6 +117,7 @@ export async function GET(request: Request) {
         status: "active",
         isContinuityEligible: true,
         ...(sessionId ? { conversationId: { not: sessionId } } : {}),
+        ...(sessionCreatedAt ? { createdAt: { lt: sessionCreatedAt } } : {}),
       },
       orderBy: { lastSeenAt: "desc" },
       select: {
