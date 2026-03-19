@@ -60,6 +60,37 @@ type RecurrenceCue = {
   text_zh: string;
 };
 
+function shortenCueText(
+  text: string,
+  uiLang: "en" | "zh",
+  confidence: RecurrenceCue["confidence"]
+): string {
+  const raw = (text || "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+
+  // Milestone E non-competition safeguard:
+  // low-confidence must stay extremely light (single sentence).
+  if (confidence === "low") {
+    if (uiLang === "zh") {
+      const m = raw.match(/^(.+?[。！？])\s*/);
+      return (m?.[1] ?? raw).trim();
+    }
+    const parts = raw.split(/(?<=[.!?])\s+/);
+    return (parts[0] ?? raw).trim();
+  }
+
+  // Medium/high: keep at most 2 sentences.
+  if (uiLang === "zh") {
+    const parts = raw.split(/([。！？])/).filter(Boolean);
+    if (parts.length >= 4) {
+      return `${parts[0]}${parts[1]}${parts[2]}${parts[3]}`.trim();
+    }
+    return raw;
+  }
+  const parts = raw.split(/(?<=[.!?])\s+/);
+  return parts.slice(0, 2).join(" ").trim() || raw;
+}
+
 function formatLabel(value: string): string {
   if (!value || value === "—" || value === "unknown" || value === "uncertain") return "—";
   return value
@@ -615,9 +646,6 @@ function ChatContent() {
       if (rs && typeof rs === "object" && rs.trigger_label != null) {
         setLatestMetadata(rs);
         setLatestIsVagueSource(isVagueSource);
-        setLatestRecurrenceCue(
-          recurrenceCue && !isVagueSource ? recurrenceCue : null
-        );
         if (cueMeaningful) {
           setLatestRegulationMetadata(rs);
         } else {
@@ -627,8 +655,11 @@ function ChatContent() {
         setLatestMetadata(null);
         setLatestRegulationMetadata(null);
         setLatestIsVagueSource(false);
-        setLatestRecurrenceCue(null);
       }
+
+      // Milestone E: recurrence cue must update independently of metadata
+      // (prevents stale/over-expanded cues when trigger_label is missing).
+      setLatestRecurrenceCue(recurrenceCue && !isVagueSource ? recurrenceCue : null);
       const now = new Date().toISOString();
       setMessages((prev) => [
         ...prev,
@@ -941,8 +972,8 @@ function ChatContent() {
             </p>
             <p className="text-sm text-slate-700 dark:text-slate-300">
               {uiLang === "zh"
-                ? latestRecurrenceCue.text_zh
-                : latestRecurrenceCue.text_en}
+                ? shortenCueText(latestRecurrenceCue.text_zh, uiLang, latestRecurrenceCue.confidence)
+                : shortenCueText(latestRecurrenceCue.text_en, uiLang, latestRecurrenceCue.confidence)}
             </p>
           </div>
         )}
