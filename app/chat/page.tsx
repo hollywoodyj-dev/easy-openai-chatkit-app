@@ -291,6 +291,9 @@ function ChatContent() {
   const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
   const [latestIsVagueSource, setLatestIsVagueSource] = useState(false);
   const [latestRecurrenceCue, setLatestRecurrenceCue] = useState<RecurrenceCue | null>(null);
+  // Prevent stale recurrence cues from flashing when multiple requests overlap
+  // (race conditions). We only apply recurrence-cue state from the latest request.
+  const recurrenceCueRequestIdRef = useRef(0);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const uiLang: "en" | "zh" = useMemo(() => {
@@ -592,6 +595,8 @@ function ChatContent() {
     // Milestone E parity protection: clear any previous recurrence cue
     // before we fetch the next turn so stale cue state cannot display
     // when the server returns `recurrence_cue: null`.
+    recurrenceCueRequestIdRef.current += 1;
+    const requestId = recurrenceCueRequestIdRef.current;
     setLatestRecurrenceCue(null);
     try {
       // Live-path debug for regulation cue behavior.
@@ -661,7 +666,9 @@ function ChatContent() {
 
       // Milestone E: recurrence cue must update independently of metadata
       // (prevents stale/over-expanded cues when trigger_label is missing).
-      setLatestRecurrenceCue(recurrenceCue && !isVagueSource ? recurrenceCue : null);
+      if (requestId === recurrenceCueRequestIdRef.current) {
+        setLatestRecurrenceCue(recurrenceCue && !isVagueSource ? recurrenceCue : null);
+      }
       const now = new Date().toISOString();
       setMessages((prev) => [
         ...prev,
