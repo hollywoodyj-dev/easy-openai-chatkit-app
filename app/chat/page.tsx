@@ -69,8 +69,9 @@ function shortenCueText(
   if (!raw) return "";
 
   // Milestone E non-competition safeguard:
-  // low-confidence must stay extremely light (single sentence).
-  if (confidence === "low") {
+  // Pattern cues must stay lightweight enough for one-pass reading.
+  // Even medium/high must usually remain a "tag-like" single sentence in UI.
+  if (confidence === "low" || confidence === "medium") {
     if (uiLang === "zh") {
       const m = raw.match(/^(.+?[。！？])\s*/);
       return (m?.[1] ?? raw).trim();
@@ -79,16 +80,13 @@ function shortenCueText(
     return (parts[0] ?? raw).trim();
   }
 
-  // Medium/high: keep at most 2 sentences.
+  // High: still keep it to one sentence to avoid expanding into a second reflection.
   if (uiLang === "zh") {
-    const parts = raw.split(/([。！？])/).filter(Boolean);
-    if (parts.length >= 4) {
-      return `${parts[0]}${parts[1]}${parts[2]}${parts[3]}`.trim();
-    }
-    return raw;
+    const m = raw.match(/^(.+?[。！？])\s*/);
+    return (m?.[1] ?? raw).trim();
   }
   const parts = raw.split(/(?<=[.!?])\s+/);
-  return parts.slice(0, 2).join(" ").trim() || raw;
+  return (parts[0] ?? raw).trim();
 }
 
 function formatLabel(value: string): string {
