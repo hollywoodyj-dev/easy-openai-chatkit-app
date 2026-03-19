@@ -52,6 +52,14 @@ type ReflectionMetadata = {
   insight_candidate: string;
 };
 
+type RecurrenceCue = {
+  pattern_key: string;
+  confidence: "low" | "medium" | "high";
+  confidence_score: number;
+  text_en: string;
+  text_zh: string;
+};
+
 function formatLabel(value: string): string {
   if (!value || value === "—" || value === "unknown" || value === "uncertain") return "—";
   return value
@@ -253,6 +261,7 @@ function ChatContent() {
   const [latestMetadata, setLatestMetadata] = useState<ReflectionMetadata | null>(null);
   const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
   const [latestIsVagueSource, setLatestIsVagueSource] = useState(false);
+  const [latestRecurrenceCue, setLatestRecurrenceCue] = useState<RecurrenceCue | null>(null);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const uiLang: "en" | "zh" = useMemo(() => {
@@ -398,6 +407,7 @@ function ChatContent() {
     setSessionId(null);
     setMessages([]);
     setLatestMetadata(null);
+    setLatestRecurrenceCue(null);
     setError(null);
     setSessionLoading(true);
     try {
@@ -419,6 +429,7 @@ function ChatContent() {
       setMobileConversationsOpen(false);
       setSessionLoading(true);
       setLatestMetadata(null);
+      setLatestRecurrenceCue(null);
       try {
         if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
         setSessionId(sid);
@@ -582,6 +593,7 @@ function ChatContent() {
       }
       const assistantMessage = (data.assistant_message as string) ?? "";
       const rs = data.reflection_state as ReflectionMetadata | null | undefined;
+      const recurrenceCue = (data.recurrence_cue ?? null) as RecurrenceCue | null;
       const isVagueSource = Boolean(data.debug_is_vague_source);
       const cueMeaningful =
         rs && typeof rs === "object" && !isVagueSource
@@ -603,6 +615,9 @@ function ChatContent() {
       if (rs && typeof rs === "object" && rs.trigger_label != null) {
         setLatestMetadata(rs);
         setLatestIsVagueSource(isVagueSource);
+        setLatestRecurrenceCue(
+          recurrenceCue && !isVagueSource ? recurrenceCue : null
+        );
         if (cueMeaningful) {
           setLatestRegulationMetadata(rs);
         } else {
@@ -612,6 +627,7 @@ function ChatContent() {
         setLatestMetadata(null);
         setLatestRegulationMetadata(null);
         setLatestIsVagueSource(false);
+        setLatestRecurrenceCue(null);
       }
       const now = new Date().toISOString();
       setMessages((prev) => [
@@ -915,6 +931,18 @@ function ChatContent() {
             </div>
           );
         })()}
+        {latestRecurrenceCue && !latestIsVagueSource && (
+          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-violet-50/60 dark:bg-violet-900/20">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
+              {uiLang === "zh" ? "重复模式提示" : "Pattern cue"}
+            </p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              {uiLang === "zh"
+                ? latestRecurrenceCue.text_zh
+                : latestRecurrenceCue.text_en}
+            </p>
+          </div>
+        )}
         {(() => {
           const shouldShowRegulationCue =
             !!latestRegulationMetadata &&

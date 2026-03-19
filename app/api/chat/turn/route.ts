@@ -81,6 +81,8 @@ type ContinuityPatternFamily =
   | "replay_for_mistakes"
   | "fallback_generic";
 
+type RecurrenceConfidence = "low" | "medium" | "high";
+
 function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
   const text = corePattern.trim().toLowerCase();
 
@@ -199,6 +201,68 @@ function continuityReminderFromFamily(
 function toContinuityReminderText(corePattern: string): string {
   const family = detectContinuityPatternFamily(corePattern);
   return continuityReminderFromFamily(family, corePattern);
+}
+
+function patternFamilyLabelEn(family: ContinuityPatternFamily): string {
+  switch (family) {
+    case "earned_value_after_effort":
+      return "self-worth pressure";
+    case "delayed_reply_means_i_did_something_wrong":
+      return "self-blame under uncertainty";
+    case "rest_must_be_earned":
+      return "rest needing to be earned";
+    case "constant_pressure_keep_up":
+      return "pressure to keep up";
+    case "replay_for_mistakes":
+      return "rechecking for mistakes";
+    case "fallback_generic":
+    default:
+      return "a similar tension";
+  }
+}
+
+function patternFamilyLabelZh(family: ContinuityPatternFamily): string {
+  switch (family) {
+    case "earned_value_after_effort":
+      return "自我价值压力";
+    case "delayed_reply_means_i_did_something_wrong":
+      return "不确定时的自责";
+    case "rest_must_be_earned":
+      return "休息需要先证明";
+    case "constant_pressure_keep_up":
+      return "必须一直跟上的压力";
+    case "replay_for_mistakes":
+      return "反复检查是否做错";
+    case "fallback_generic":
+    default:
+      return "相似的内在张力";
+  }
+}
+
+function recurrenceCueText(
+  family: ContinuityPatternFamily,
+  confidence: RecurrenceConfidence
+): { en: string; zh: string } {
+  const enLabel = patternFamilyLabelEn(family);
+  const zhLabel = patternFamilyLabelZh(family);
+  switch (confidence) {
+    case "high":
+      return {
+        en: `This pattern seems to be returning again around ${enLabel}.`,
+        zh: `这个模式这次可能又回来了，和“${zhLabel}”有关。`,
+      };
+    case "medium":
+      return {
+        en: `A similar pattern may be showing up again around ${enLabel}.`,
+        zh: `这里可能又出现了相似模式，和“${zhLabel}”有关。`,
+      };
+    case "low":
+    default:
+      return {
+        en: `There may be a faint repeat here around ${enLabel}.`,
+        zh: `这里可能有一点重复迹象，和“${zhLabel}”有关。`,
+      };
+  }
 }
 
 function sanitizeChineseOutputLeaks(text: string): string {
@@ -647,6 +711,15 @@ export async function POST(request: Request) {
         continuityKey: string;
       }
     | null = null;
+  let responseRecurrenceCue:
+    | {
+        patternKey: ContinuityPatternFamily;
+        confidence: RecurrenceConfidence;
+        confidenceScore: number;
+        textEn: string;
+        textZh: string;
+      }
+    | null = null;
 
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
@@ -876,6 +949,55 @@ export async function POST(request: Request) {
           isContinuityEligible,
           continuityKey: patternFamily,
         };
+
+        // Milestone E (minimal): one lightweight recurrence cue based on
+        // reusable pattern identity (family), not text similarity.
+        if (isContinuityEligible && patternFamily !== "fallback_generic") {
+          const anyPrismaRead = prisma as unknown as {
+            insight?: {
+              findMany: (args: {
+                where: {
+                  userId: string;
+                  status: string;
+                  isContinuityEligible: boolean;
+                  id?: { not: string };
+                };
+                orderBy: { createdAt: "asc" | "desc" };
+                take: number;
+                select: { corePattern: true };
+              }) => Promise<Array<{ corePattern: string }>>;
+            };
+          };
+          const recent = await anyPrismaRead.insight?.findMany({
+            where: {
+              userId,
+              status: "active",
+              isContinuityEligible: true,
+              id: { not: created.id },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 8,
+            select: { corePattern: true },
+          });
+          const sameFamilyCount =
+            recent?.filter(
+              (r) => detectContinuityPatternFamily(r.corePattern) === patternFamily
+            ).length ?? 0;
+          const confidence: RecurrenceConfidence =
+            sameFamilyCount >= 2 ? "high" : sameFamilyCount >= 1 ? "medium" : "low";
+          const confidenceScore = Math.min(
+            1,
+            confidence === "high" ? 0.9 : confidence === "medium" ? 0.65 : 0.35
+          );
+          const cue = recurrenceCueText(patternFamily, confidence);
+          responseRecurrenceCue = {
+            patternKey: patternFamily,
+            confidence,
+            confidenceScore,
+            textEn: cue.en,
+            textZh: cue.zh,
+          };
+        }
       }
     } catch (e) {
       console.warn("[chat/turn] Insight save failed", e);
@@ -947,6 +1069,15 @@ export async function POST(request: Request) {
         continuity_text: responseContinuityInsight.continuityText,
         created_at: responseContinuityInsight.createdAt.toISOString(),
         is_continuity_eligible: responseContinuityInsight.isContinuityEligible,
+      },
+    }),
+    ...(responseRecurrenceCue && {
+      recurrence_cue: {
+        pattern_key: responseRecurrenceCue.patternKey,
+        confidence: responseRecurrenceCue.confidence,
+        confidence_score: responseRecurrenceCue.confidenceScore,
+        text_en: responseRecurrenceCue.textEn,
+        text_zh: responseRecurrenceCue.textZh,
       },
     }),
     // Debug-only fields to help QA distinguish:
