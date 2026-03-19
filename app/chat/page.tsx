@@ -1030,7 +1030,7 @@ function ChatContent() {
                 : "You"
               : m.role === "assistant"
               ? uiLang === "zh"
-                ? "智波"
+                ? "玄微"
                 : "Wisewave"
               : m.role;
           const isUser = m.role === "user";
