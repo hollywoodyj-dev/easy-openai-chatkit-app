@@ -114,12 +114,14 @@ function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFa
     return "earned_value_after_effort";
   }
 
-  // Repeated "quick/brief reply => proof I did something wrong (before facts are known)".
-  // Keep this conservative: require both a reply-like token and a wrong/mistake/proof token.
+  // Repeated "short/quick reply => proof I did something wrong (before facts are known)".
+  // The extractor sometimes drops literal "reply/response" tokens into corePattern,
+  // so we allow classification based on timing/briefness words + wrong/proof tokens alone.
   if (
-    /(reply|response)/.test(text) &&
     /(delayed|late|slow|brief|short|quick|instant|immediate)/.test(text) &&
-    /(did something wrong|made a mistake|mistake|wrong|proof|must have|mustn't|should already|already know)/.test(text)
+    /(did something wrong|made a mistake|mistake|wrong|proof|must have|mustn't|should already|already know)/.test(
+      text
+    )
   ) {
     return "delayed_reply_means_i_did_something_wrong";
   }

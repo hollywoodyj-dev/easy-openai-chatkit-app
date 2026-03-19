@@ -34,8 +34,10 @@ function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFa
   }
 
   if (
-    /reply is delayed/.test(text) &&
-    /(did something wrong|prove (myself|yourself|themselves) again|must prove)/.test(text)
+    /(delayed|late|slow|brief|short|quick|instant|immediate)/.test(text) &&
+    /(did something wrong|made a mistake|mistake|wrong|proof|must have|mustn't|should already|already know)/.test(
+      text
+    )
   ) {
     return "delayed_reply_means_i_did_something_wrong";
   }
