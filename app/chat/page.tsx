@@ -297,6 +297,7 @@ function ChatContent() {
   // Prevent stale recurrence cues from flashing when multiple requests overlap
   // (race conditions). We only apply recurrence-cue state from the latest request.
   const recurrenceCueRequestIdRef = useRef(0);
+  const messageSeqRef = useRef(0);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const uiLang: "en" | "zh" = useMemo(() => {
@@ -676,9 +677,11 @@ function ChatContent() {
       }
 
       const nowTs = Date.now();
+      const seq = (messageSeqRef.current += 1);
       const now = new Date(nowTs).toISOString();
-      const userMsgId = `user-${nowTs}`;
-      const assistantMsgId = `assistant-${nowTs}`;
+      // Use monotonic sequence to avoid id collisions when turns are fast.
+      const userMsgId = `user-${nowTs}-${seq}`;
+      const assistantMsgId = `assistant-${nowTs}-${seq}`;
       setMessages((prev) => [
         ...prev,
         { id: userMsgId, role: "user", message: text, created_at: now },
