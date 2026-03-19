@@ -589,6 +589,10 @@ function ChatContent() {
     setInput("");
     setLoading(true);
     setError(null);
+    // Milestone E parity protection: clear any previous recurrence cue
+    // before we fetch the next turn so stale cue state cannot display
+    // when the server returns `recurrence_cue: null`.
+    setLatestRecurrenceCue(null);
     try {
       // Live-path debug for regulation cue behavior.
       // Helpful when inspecting weak follow-up turns like "I feel off".
