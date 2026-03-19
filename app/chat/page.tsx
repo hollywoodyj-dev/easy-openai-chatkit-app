@@ -453,8 +453,9 @@ function ChatContent() {
     return (data.checkpoints ?? []) as CheckpointRow[];
   }, [authHeaders]);
 
-  const fetchContinuity = useCallback(async (): Promise<ContinuityInsight | null> => {
-    const res = await fetch(CHAT_CONTINUITY_ENDPOINT, {
+  const fetchContinuity = useCallback(async (sid?: string | null): Promise<ContinuityInsight | null> => {
+    const query = sid ? `?session_id=${encodeURIComponent(sid)}` : "";
+    const res = await fetch(`${CHAT_CONTINUITY_ENDPOINT}${query}`, {
       credentials: "include",
       headers: authHeaders(),
     });
@@ -531,7 +532,7 @@ function ChatContent() {
     fetchCheckpoints(sessionId).then((list) => {
       if (!cancelled) setCheckpoints(list);
     });
-    fetchContinuity().then((insight) => {
+    fetchContinuity(sessionId).then((insight) => {
       if (cancelled) return;
       setContinuity(insight);
       setHadContinuityAtSessionStart(!!insight);
@@ -644,7 +645,7 @@ function ChatContent() {
           });
         } else {
           // Fallback: refresh continuity after each successful turn so eligible insights visibly resurface.
-          fetchContinuity().then((insight) => {
+          fetchContinuity(sessionId).then((insight) => {
             setContinuity(insight);
           });
         }

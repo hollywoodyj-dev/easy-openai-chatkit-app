@@ -61,11 +61,18 @@ function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFa
  */
 export async function GET(request: Request) {
   const { userId } = await resolveChatUserId(request);
+  const { searchParams } = new URL(request.url);
+  const sessionId = searchParams.get("session_id")?.trim() || null;
 
   const anyPrisma = prisma as unknown as {
     insight?: {
       findFirst: (args: {
-        where: { userId: string; status: string; isContinuityEligible?: boolean };
+        where: {
+          userId: string;
+          status: string;
+          isContinuityEligible?: boolean;
+          conversationId?: string | { not: string };
+        };
         orderBy: { lastSeenAt: "asc" | "desc" };
         select: {
           id: true;
@@ -96,7 +103,12 @@ export async function GET(request: Request) {
 
   const latest = await anyPrisma.insight
     .findFirst({
-      where: { userId, status: "active", isContinuityEligible: true },
+      where: {
+        userId,
+        status: "active",
+        isContinuityEligible: true,
+        ...(sessionId ? { conversationId: { not: sessionId } } : {}),
+      },
       orderBy: { lastSeenAt: "desc" },
       select: {
         id: true,
