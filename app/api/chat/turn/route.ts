@@ -114,9 +114,12 @@ function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFa
     return "earned_value_after_effort";
   }
 
+  // Repeated "quick/brief reply => proof I did something wrong (before facts are known)".
+  // Keep this conservative: require both a reply-like token and a wrong/mistake/proof token.
   if (
-    /reply is delayed/.test(text) &&
-    /(did something wrong|prove (myself|yourself|themselves) again|must prove)/.test(text)
+    /(reply|response)/.test(text) &&
+    /(delayed|late|slow|brief|short|quick|instant|immediate)/.test(text) &&
+    /(did something wrong|made a mistake|mistake|wrong|proof|must have|mustn't|should already|already know)/.test(text)
   ) {
     return "delayed_reply_means_i_did_something_wrong";
   }
@@ -852,6 +855,16 @@ export async function POST(request: Request) {
       }
     | null = null;
 
+  // Milestone E debug (for recurrence escalation debugging and Lumen Pass 2).
+  let debugRecurrencePatternFamily: ContinuityPatternFamily | null = null;
+  let debugRecurrencePatternId: PatternId | null = null;
+  let debugRecurrenceSameFamilyCount: number | null = null; // matches prior insights only (excludes current)
+  let debugRecurrenceAlignedInstanceCount: number | null = null; // includes current insight
+  let debugRecurrenceConfidenceRaw: RecurrenceConfidence | null = null;
+  let debugRecurrenceConfidenceResolved: RecurrenceConfidence | null = null;
+  let debugRecurrenceNewestAlignedIndex: number | null = null;
+  let debugRecurrenceCueEmitted: boolean = false;
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -1119,34 +1132,44 @@ export async function POST(request: Request) {
             }
           });
           const sameFamilyCount = matchPositions.length;
-          const newestAlignedIndex = matchPositions.length > 0 ? matchPositions[0] : null;
-          if (sameFamilyCount < 1) {
+          const newestAlignedIndex =
+            matchPositions.length > 0 ? matchPositions[0] : null;
+
+          debugRecurrencePatternFamily = patternFamily;
+          debugRecurrenceSameFamilyCount = sameFamilyCount;
+          debugRecurrenceNewestAlignedIndex = newestAlignedIndex;
+
+          // E2 proof rule expects "at least two instances" and confidence tiers
+          // based on aligned instances INCLUDING the current insight.
+          const alignedInstanceCount = sameFamilyCount + 1;
+          debugRecurrenceAlignedInstanceCount = alignedInstanceCount;
+
+          if (alignedInstanceCount < 2) {
             responseRecurrenceCue = null;
           } else {
             const patternId = mapContinuityFamilyToPatternId(patternFamily);
+            debugRecurrencePatternId = patternId;
 
-            // Milestone E: confidence mapping is PROVISIONAL until OctopusMind locks
-            // the recurrence proof rule. For now we tie it to repeat strength.
-            // sameFamilyCount: 1 => low (hidden unless signal is strong enough),
-            // 2 => medium, >=3 => high.
-            const confidence: RecurrenceConfidence =
-              sameFamilyCount >= 3
-                ? "high"
-                : sameFamilyCount === 2
-                  ? "medium"
-                  : "low";
+            // Provisional: alignedCount => medium/high.
+            // alignedInstanceCount 2 => medium, >=3 => high.
+            const confidenceRaw: RecurrenceConfidence =
+              alignedInstanceCount >= 3 ? "high" : "medium";
+            debugRecurrenceConfidenceRaw = confidenceRaw;
+
+            // Generic fallback policy: generic should remain fallback-only.
+            const resolvedConfidence: RecurrenceConfidence =
+              patternId === "generic" ? "low" : confidenceRaw;
+            debugRecurrenceConfidenceResolved = resolvedConfidence;
 
             // Confidence score is used only for QA/debug.
             const confidenceScore = Math.min(
               1,
-              confidence === "high" ? 0.9 : confidence === "medium" ? 0.65 : 0.35
+              resolvedConfidence === "high"
+                ? 0.9
+                : resolvedConfidence === "medium"
+                  ? 0.65
+                  : 0.35
             );
-
-            // Generic cue fallback policy: generic should not become a default preference.
-            // It is only used as a fallback and therefore always downgraded to low.
-            // (Templates for generic low are acceptable in the template set.)
-            const resolvedConfidence: RecurrenceConfidence =
-              patternId === "generic" ? "low" : confidence;
 
             // Template E guidance: hide low-confidence surfacing if the current signal is too weak.
             if (
@@ -1174,13 +1197,12 @@ export async function POST(request: Request) {
             responseRecurrenceCue = {
               patternKey: patternId,
               confidence: resolvedConfidence,
-              confidenceScore:
-                patternId === "generic"
-                  ? 0.35
-                  : confidenceScore,
+              confidenceScore,
               textEn: cue.en.replace(/\n/g, " ").trim(),
               textZh: cue.zh.replace(/\n/g, " ").trim(),
             };
+
+            debugRecurrenceCueEmitted = true;
           }
         }
       }
@@ -1280,6 +1302,14 @@ export async function POST(request: Request) {
     debug_is_very_short: debugIsVeryShort,
     debug_is_too_short_and_flat: debugIsTooShortAndFlat,
     debug_is_too_generic: debugIsTooGeneric,
+    debug_recurrence_pattern_family: debugRecurrencePatternFamily,
+    debug_recurrence_pattern_id: debugRecurrencePatternId,
+    debug_recurrence_same_family_count: debugRecurrenceSameFamilyCount,
+    debug_recurrence_aligned_instance_count: debugRecurrenceAlignedInstanceCount,
+    debug_recurrence_confidence_raw: debugRecurrenceConfidenceRaw,
+    debug_recurrence_confidence_resolved: debugRecurrenceConfidenceResolved,
+    debug_recurrence_newest_aligned_index: debugRecurrenceNewestAlignedIndex,
+    debug_recurrence_cue_emitted: debugRecurrenceCueEmitted,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
