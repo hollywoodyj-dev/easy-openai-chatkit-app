@@ -213,6 +213,9 @@ const CONTINUITY_REMINDER_ZH_MAP: Record<string, string> = {
 
 function continuityKeyToReminderTextZh(key?: string | null): string | null {
   if (!key) return null;
+  // Do not force a generic fallback line in ZH when family detection is uncertain.
+  // Returning null here lets the caller use the persisted reminder text instead.
+  if (key === "fallback_generic") return null;
   return CONTINUITY_REMINDER_ZH_MAP[key] ?? null;
 }
 
@@ -885,8 +888,11 @@ function ChatContent() {
         {(() => {
           if (!continuity) return null;
           if (uiLang === "zh") {
-            const zhText = continuityKeyToReminderTextZh(continuity.continuity_key);
-            if (!zhText) return null; // avoid English fallback leakage in ZH
+            const zhText =
+              continuityKeyToReminderTextZh(continuity.continuity_key) ??
+              continuity.continuity_text?.trim() ??
+              null;
+            if (!zhText) return null;
             return (
               <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
                 <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
