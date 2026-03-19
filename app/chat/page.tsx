@@ -931,7 +931,10 @@ function ChatContent() {
             </div>
           );
         })()}
-        {latestRecurrenceCue && !latestIsVagueSource && (
+        {latestRecurrenceCue &&
+          !latestIsVagueSource &&
+          !!latestMetadata &&
+          isMetadataMeaningful(latestMetadata) && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-violet-50/60 dark:bg-violet-900/20">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
               {uiLang === "zh" ? "重复模式提示" : "Pattern cue"}

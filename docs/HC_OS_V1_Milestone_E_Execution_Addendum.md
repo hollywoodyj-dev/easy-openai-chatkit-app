@@ -304,3 +304,44 @@
     - EN / ZH preserve equivalent tone and meaning
     - continuity cue adds value without overloading the reflection
 
+---
+
+## Milestone E — E1 Implementation Lock Status (Before OctopusMind Proof Rule)
+
+### 1. Confidence mapping is provisional
+
+- Current implementation uses a **temporary** recurrence boundary:
+  - `sameFamilyCount = 1` => `low`
+  - `sameFamilyCount = 2` => `medium`
+  - `sameFamilyCount >= 3` => `high`
+- This is acceptable as an execution step, but it is **not final** until OctopusMind locks the recurrence **proof rule**.
+
+### 2. Pattern-id coverage (current reachable set)
+
+Internal continuity family => Milestone E `pattern_id` currently reachable via the mapping:
+
+- `constant_pressure_keep_up` => `pressure_to_get_it_right` (covered)
+- `replay_for_mistakes` => `avoidance_under_uncertainty` (covered)
+- `delayed_reply_means_i_did_something_wrong` => `inner_conflict` (covered)
+- `earned_value_after_effort` => `fear_of_not_enough` (covered)
+- `rest_must_be_earned` => `self_worth_pressure` (covered)
+- `fallback_generic` => `generic` (covered fallback)
+
+Currently not covered by the reachable mapping (pattern-id templates exist but are not reachable yet):
+
+- `over_efforting` (not reachable in current mapping)
+
+### 3. Generic cue fallback policy
+
+- `generic` is treated as a **fallback**, not a default preference.
+- When `pattern_id === "generic"`, the cue is downgraded to `low` confidence in the current implementation.
+- Generic low/medium templates are allowed in the template set, but the system should prefer specific pattern identity cues when available.
+
+### 4. Cue weight vs main reflection (current QA expectation)
+
+- The pattern cue must remain a lightweight add-on.
+- Current UI gating requires:
+  - non-vague signal (`!latestIsVagueSource`)
+  - main reflection exists and is meaningful (`isMetadataMeaningful(latestMetadata)`)
+- This is to ensure the cue supports continuity rather than competing with the main reflection.
+

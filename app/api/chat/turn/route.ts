@@ -1119,6 +1119,10 @@ export async function POST(request: Request) {
           } else {
             const patternId = mapContinuityFamilyToPatternId(patternFamily);
 
+            // Milestone E: confidence mapping is PROVISIONAL until OctopusMind locks
+            // the recurrence proof rule. For now we tie it to repeat strength.
+            // sameFamilyCount: 1 => low (hidden unless signal is strong enough),
+            // 2 => medium, >=3 => high.
             const confidence: RecurrenceConfidence =
               sameFamilyCount >= 3
                 ? "high"
@@ -1132,9 +1136,15 @@ export async function POST(request: Request) {
               confidence === "high" ? 0.9 : confidence === "medium" ? 0.65 : 0.35
             );
 
+            // Generic cue fallback policy: generic should not become a default preference.
+            // It is only used as a fallback and therefore always downgraded to low.
+            // (Templates for generic low are acceptable in the template set.)
+            const resolvedConfidence: RecurrenceConfidence =
+              patternId === "generic" ? "low" : confidence;
+
             // Template E guidance: hide low-confidence surfacing if the current signal is too weak.
             if (
-              confidence === "low" &&
+              resolvedConfidence === "low" &&
               (isVeryShort || isTooGeneric || isSystemy || isTooShortAndFlat)
             ) {
               responseRecurrenceCue = null;
@@ -1143,14 +1153,17 @@ export async function POST(request: Request) {
 
             const cue = recurrenceCueTextFromTemplate(
               patternId,
-              confidence,
+              resolvedConfidence,
               `${userMsg.id}:${created.id}`
             );
 
             responseRecurrenceCue = {
               patternKey: patternId,
-              confidence,
-              confidenceScore,
+              confidence: resolvedConfidence,
+              confidenceScore:
+                patternId === "generic"
+                  ? 0.35
+                  : confidenceScore,
               textEn: cue.en.replace(/\n/g, " ").trim(),
               textZh: cue.zh.replace(/\n/g, " ").trim(),
             };
