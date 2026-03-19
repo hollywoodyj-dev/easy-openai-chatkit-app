@@ -29,6 +29,13 @@ function sanitizeReflection(text: string): string {
     .trim();
 }
 
+function sanitizeChineseOutputLeaks(text: string): string {
+  return text
+    .replace(/\bobeying\b/gi, "遵循")
+    .replace(/\bobey\b/gi, "遵循")
+    .replace(/\bobet\b/gi, "遵循");
+}
+
 /**
  * POST: Create a reflection checkpoint. Body: { session_id, user_reflection? }.
  * Returns { summary, checkpoint_id }.
@@ -125,6 +132,11 @@ Requirements:
 
 Return only the reflection text.`;
 
+  const wantsChinese = /[\u4E00-\u9FFF]/.test(`${recentText}\n${userReflection ?? ""}`);
+  const reflectionLanguageInstruction = wantsChinese
+    ? "\n\nLanguage rule: Respond in Chinese only. Do not include English words."
+    : "\n\nLanguage rule: Respond in English only. Do not include Chinese characters.";
+
   let summary: string;
 
   try {
@@ -138,7 +150,7 @@ Return only the reflection text.`;
         model,
         messages: [
           { role: "system", content: REFLECTION_SYSTEM_PROMPT },
-          { role: "user", content: userContent },
+          { role: "user", content: userContent + reflectionLanguageInstruction },
         ],
         max_completion_tokens: 140,
         temperature: 0.5,
@@ -164,6 +176,9 @@ Return only the reflection text.`;
     summary = sanitizeReflection(
       data.choices?.[0]?.message?.content?.trim() ?? ""
     );
+    if (wantsChinese && summary) {
+      summary = sanitizeChineseOutputLeaks(summary);
+    }
   } catch (e) {
     console.error("[chat/reflection] OpenAI request failed", e);
     return NextResponse.json(

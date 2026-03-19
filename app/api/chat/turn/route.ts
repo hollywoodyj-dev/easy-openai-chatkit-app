@@ -201,6 +201,13 @@ function toContinuityReminderText(corePattern: string): string {
   return continuityReminderFromFamily(family, corePattern);
 }
 
+function sanitizeChineseOutputLeaks(text: string): string {
+  return text
+    .replace(/\bobeying\b/gi, "遵循")
+    .replace(/\bobey\b/gi, "遵循")
+    .replace(/\bobet\b/gi, "遵循");
+}
+
 async function refreshConversationSummary(
   conversationId: string,
   apiKey: string,
@@ -538,6 +545,9 @@ export async function POST(request: Request) {
     };
     assistantContent =
       data.choices?.[0]?.message?.content?.trim() ?? "";
+    if (wantsChinese && assistantContent) {
+      assistantContent = sanitizeChineseOutputLeaks(assistantContent);
+    }
   } catch (e) {
     console.error("[chat/turn] OpenAI request failed", e);
     console.debug("[ticket7][chat/turn] generation_error", {
