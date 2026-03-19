@@ -259,6 +259,19 @@ function ChatContent() {
     return /[\u4E00-\u9FFF]/.test(lastUser.message) ? "zh" : "en";
   }, [messages]);
 
+  // Temporary internal visibility layer:
+  // - Keep visible by default for QA/debug efficiency (Milestone D).
+  // - Before publish, flip NEXT_PUBLIC_SHOW_WHAT_WAS_NOTICED_DEFAULT to "0"
+  //   (or gate behind a debug token / settings UI once redesigned).
+  const showWhatWasNoticedDefault =
+    (process.env.NEXT_PUBLIC_SHOW_WHAT_WAS_NOTICED_DEFAULT ?? "1") !== "0";
+  const showWhatWasNoticed = useMemo(() => {
+    const v = searchParams?.get("noticed")?.trim();
+    if (v === "1") return true;
+    if (v === "0") return false;
+    return showWhatWasNoticedDefault;
+  }, [searchParams, showWhatWasNoticedDefault]);
+
   const authHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
     if (token) {
@@ -965,7 +978,10 @@ function ChatContent() {
             </div>
           );
         })()}
-        {latestMetadata && isMetadataMeaningful(latestMetadata) && !latestIsVagueSource && (
+        {showWhatWasNoticed &&
+          latestMetadata &&
+          isMetadataMeaningful(latestMetadata) &&
+          !latestIsVagueSource && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/30">
             <button
               type="button"
