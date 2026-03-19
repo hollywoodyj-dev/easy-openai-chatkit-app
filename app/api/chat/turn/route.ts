@@ -202,10 +202,33 @@ function toContinuityReminderText(corePattern: string): string {
 }
 
 function sanitizeChineseOutputLeaks(text: string): string {
-  return text
-    .replace(/\bobeying\b/gi, "遵循")
-    .replace(/\bobey\b/gi, "遵循")
-    .replace(/\bobet\b/gi, "遵循");
+  // Narrow, explicit cleanup for common mixed-language leak words in ZH mode.
+  // Keep this list conservative to avoid over-rewriting intended user content.
+  const replacements: Array<[RegExp, string]> = [
+    [/\bobeying\b/gi, "遵循"],
+    [/\bobey\b/gi, "遵循"],
+    [/\bobet\b/gi, "遵循"],
+    [/\btrigger(?:_label)?\b/gi, "触发点"],
+    [/\bemotion(?:_label)?\b/gi, "情绪"],
+    [/\binterpretation(?:_label)?\b/gi, "解读"],
+    [/\bregulation(?:_label)?\b/gi, "调节"],
+    [/\bchoice(?:_label)?\b/gi, "下一步"],
+    [/\binsight(?:_candidate)?\b/gi, "洞见"],
+    [/\bpattern\b/gi, "模式"],
+    [/\bloop\b/gi, "循环"],
+    [/\bpressure\b/gi, "压力"],
+    [/\brule\b/gi, "规则"],
+  ];
+
+  let cleaned = text;
+  for (const [regex, value] of replacements) {
+    cleaned = cleaned.replace(regex, value);
+  }
+
+  return cleaned
+    .replace(/\b(?:Event|Feeling|Interpretation|Regulation|Next step|Insight)\s*:\s*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 async function refreshConversationSummary(
