@@ -291,6 +291,9 @@ function ChatContent() {
   const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
   const [latestIsVagueSource, setLatestIsVagueSource] = useState(false);
   const [latestRecurrenceCue, setLatestRecurrenceCue] = useState<RecurrenceCue | null>(null);
+  const [latestRecurrenceCueAssistantId, setLatestRecurrenceCueAssistantId] = useState<
+    string | null
+  >(null);
   // Prevent stale recurrence cues from flashing when multiple requests overlap
   // (race conditions). We only apply recurrence-cue state from the latest request.
   const recurrenceCueRequestIdRef = useRef(0);
@@ -301,6 +304,11 @@ function ChatContent() {
     const lastUser = [...messages].reverse().find((m) => m.role === "user");
     if (!lastUser) return "en";
     return /[\u4E00-\u9FFF]/.test(lastUser.message) ? "zh" : "en";
+  }, [messages]);
+
+  const lastAssistantId = useMemo(() => {
+    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+    return lastAssistant?.id ?? null;
   }, [messages]);
 
   // Temporary internal visibility layer:
@@ -440,6 +448,7 @@ function ChatContent() {
     setMessages([]);
     setLatestMetadata(null);
     setLatestRecurrenceCue(null);
+    setLatestRecurrenceCueAssistantId(null);
     setError(null);
     setSessionLoading(true);
     try {
@@ -462,6 +471,7 @@ function ChatContent() {
       setSessionLoading(true);
       setLatestMetadata(null);
       setLatestRecurrenceCue(null);
+      setLatestRecurrenceCueAssistantId(null);
       try {
         if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
         setSessionId(sid);
@@ -598,6 +608,7 @@ function ChatContent() {
     recurrenceCueRequestIdRef.current += 1;
     const requestId = recurrenceCueRequestIdRef.current;
     setLatestRecurrenceCue(null);
+    setLatestRecurrenceCueAssistantId(null);
     try {
       // Live-path debug for regulation cue behavior.
       // Helpful when inspecting weak follow-up turns like "I feel off".
@@ -664,17 +675,23 @@ function ChatContent() {
         setLatestIsVagueSource(false);
       }
 
-      // Milestone E: recurrence cue must update independently of metadata
-      // (prevents stale/over-expanded cues when trigger_label is missing).
-      if (requestId === recurrenceCueRequestIdRef.current) {
-        setLatestRecurrenceCue(recurrenceCue && !isVagueSource ? recurrenceCue : null);
-      }
-      const now = new Date().toISOString();
+      const nowTs = Date.now();
+      const now = new Date(nowTs).toISOString();
+      const userMsgId = `user-${nowTs}`;
+      const assistantMsgId = `assistant-${nowTs}`;
       setMessages((prev) => [
         ...prev,
-        { id: `user-${Date.now()}`, role: "user", message: text, created_at: now },
-        { id: `assistant-${Date.now()}`, role: "assistant", message: assistantMessage, created_at: now },
+        { id: userMsgId, role: "user", message: text, created_at: now },
+        { id: assistantMsgId, role: "assistant", message: assistantMessage, created_at: now },
       ]);
+      // Bind cue + assistant id after we know assistantMsgId.
+      // Update both together so there is no intermediate render window
+      // where stale cue state can appear.
+      if (requestId === recurrenceCueRequestIdRef.current) {
+        const nextCue = recurrenceCue && !isVagueSource ? recurrenceCue : null;
+        setLatestRecurrenceCue(nextCue);
+        setLatestRecurrenceCueAssistantId(nextCue ? assistantMsgId : null);
+      }
       refreshHistorySessions();
       // Continuity timing (Ibu memo): for first-time users, avoid showing "Last insight"
       // immediately on the same turn that creates the first continuity insight.
@@ -974,7 +991,9 @@ function ChatContent() {
         {latestRecurrenceCue &&
           !latestIsVagueSource &&
           !!latestMetadata &&
-          isMetadataMeaningful(latestMetadata) && (
+          isMetadataMeaningful(latestMetadata) &&
+          !!latestRecurrenceCueAssistantId &&
+          latestRecurrenceCueAssistantId === lastAssistantId && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-violet-50/60 dark:bg-violet-900/20">
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
               {uiLang === "zh" ? "重复模式提示" : "Pattern cue"}
