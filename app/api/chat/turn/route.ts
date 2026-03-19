@@ -1132,13 +1132,6 @@ export async function POST(request: Request) {
               confidence === "high" ? 0.9 : confidence === "medium" ? 0.65 : 0.35
             );
 
-            // Extra conservative rule for uncertain/identity-weak cases:
-            // if the pattern identity collapses to generic, only show for high confidence.
-            if (patternId === "generic" && confidence !== "high") {
-              responseRecurrenceCue = null;
-              return;
-            }
-
             // Template E guidance: hide low-confidence surfacing if the current signal is too weak.
             if (
               confidence === "low" &&
