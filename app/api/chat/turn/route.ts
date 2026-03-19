@@ -1095,8 +1095,8 @@ export async function POST(request: Request) {
                 };
                 orderBy: { createdAt: "asc" | "desc" };
                 take: number;
-                select: { corePattern: true };
-              }) => Promise<Array<{ corePattern: string }>>;
+                select: { corePattern: true; createdAt: true };
+              }) => Promise<Array<{ corePattern: string; createdAt: Date }>>;
             };
           };
           const recent = await anyPrismaRead.insight?.findMany({
@@ -1107,13 +1107,19 @@ export async function POST(request: Request) {
               id: { not: created.id },
             },
             orderBy: { createdAt: "desc" },
-            take: 8,
-            select: { corePattern: true },
+            // Milestone E (OctopusMind E2): lightweight working window.
+            // Prefer the most recent 3–5 meaningful insights over long history.
+            take: 5,
+            select: { corePattern: true, createdAt: true },
           });
-          const sameFamilyCount =
-            recent?.filter(
-              (r) => detectContinuityPatternFamily(r.corePattern) === patternFamily
-            ).length ?? 0;
+          const matchPositions: number[] = [];
+          (recent ?? []).forEach((r, idx) => {
+            if (detectContinuityPatternFamily(r.corePattern) === patternFamily) {
+              matchPositions.push(idx);
+            }
+          });
+          const sameFamilyCount = matchPositions.length;
+          const newestAlignedIndex = matchPositions.length > 0 ? matchPositions[0] : null;
           if (sameFamilyCount < 1) {
             responseRecurrenceCue = null;
           } else {
@@ -1145,7 +1151,15 @@ export async function POST(request: Request) {
             // Template E guidance: hide low-confidence surfacing if the current signal is too weak.
             if (
               resolvedConfidence === "low" &&
-              (isVeryShort || isTooGeneric || isSystemy || isTooShortAndFlat)
+              // OctopusMind E2: low confidence should default to no surfacing.
+              // We only allow a low cue when the recurrence is very close in the
+              // working window (i.e., the newest aligned prior insight appears in
+              // the top 2 of the window).
+              (isVeryShort ||
+                isTooGeneric ||
+                isSystemy ||
+                isTooShortAndFlat ||
+                (newestAlignedIndex != null && newestAlignedIndex > 1))
             ) {
               responseRecurrenceCue = null;
               return;

@@ -345,3 +345,61 @@ Currently not covered by the reachable mapping (pattern-id templates exist but a
   - main reflection exists and is meaningful (`isMetadataMeaningful(latestMetadata)`)
 - This is to ensure the cue supports continuity rather than competing with the main reflection.
 
+---
+
+## OctopusMind — E2 Recurrence Boundary & Proof Rule (Official)
+
+### Boundary definition (Milestone E scope)
+
+Milestone E is responsible only for making **one repeating inner pattern** visible in a way that is **light, credible, and non-intrusive**.
+
+Milestone E does **not** provide:
+full history productization
+broad pattern mapping
+deep psychological interpretation
+analytics-style expansion
+long-term memory redesign
+
+Therefore, Milestone E recurrence is defined as:
+“Does the system have enough reason to believe multiple recent reflections point to the same reusable inner structure, and is that continuity worth surfacing in a light way?”
+
+Included limits:
+- recurrence must point to **structure**, not wording
+- surfacing is **optional**, not automatic
+- recurrence is **milestone-scoped** (fixed, small, QA-able pattern identity baseline)
+- trust outranks coverage (fewer patterns, more credible)
+
+### Proof rule (Milestone E “recurrence proved” = surfacing is allowed)
+
+Recurrence proof for Milestone E is valid only if all four conditions below hold:
+
+1. **Multi-instance condition**
+   - at least **two recent meaningful insights** exist (not one reflection repeating itself)
+2. **Shared-pattern condition**
+   - those insights map to the **same minimal pattern identity**
+3. **Credible-surfacing condition**
+   - continuity wording is brief, grounded, non-diagnostic, non-absolute, readable in one pass
+4. **Non-intrusion condition**
+   - user experience feels like “helping me notice a pattern”, not “the system defining me”
+
+If any condition fails: recurrence proof does not hold, and the system must prefer **no-surface**.
+
+### Confidence / threshold rule
+
+Confidence is graded with a proof-oriented model:
+- Low confidence: default to **no surfacing**, or show only a very weak cue if absolutely needed
+- Medium confidence: soft surfacing is allowed when identity alignment is reasonably clear
+- High confidence: recurrence can be stated more directly while still staying non-definitive and non-therapeutic
+
+### Working time-window rule (lightweight)
+
+Default working window is the **most recent 3–5 meaningful insights** (not long-history modeling).
+Closeness in time increases credibility; larger gaps reduce it unless additional evidence exists.
+
+### No-surface rule (core protection)
+
+Default to silence when:
+- pattern identity is unclear or unstable
+- similarity depends mainly on text overlap/wording
+- the evidence is weak enough that surfacing would feel intrusive or over-analytic
+
