@@ -351,6 +351,8 @@ Additional Milestone D rules:
   - the slice feels like a coherent product, not a partially working prototype
 - UI clarity check:
   - “What was noticed” (collapsible) remains unobtrusive by default and does not appear for weak/vague control
+- UI chrome localization (non-blocking polish):
+  - in ZH mode, the collapsed “What was noticed” label and transcript prefixes should not remain in English
 
 3. Parity check rule
 - EN/Chinese parity passes when:
