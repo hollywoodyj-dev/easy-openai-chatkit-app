@@ -964,7 +964,7 @@ function ChatContent() {
               onClick={() => setMetadataExpanded((v) => !v)}
               className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1"
             >
-              What was noticed
+              {uiLang === "zh" ? "你注意到了什么" : "What was noticed"}
               <span className="text-[10px]">{metadataExpanded ? "▼" : "▶"}</span>
             </button>
             {metadataExpanded && (
@@ -1024,7 +1024,15 @@ function ChatContent() {
         )}
         {messages.map((m) => {
           const label =
-            m.role === "user" ? "You" : m.role === "assistant" ? "Wisewave" : m.role;
+            m.role === "user"
+              ? uiLang === "zh"
+                ? "你"
+                : "You"
+              : m.role === "assistant"
+              ? uiLang === "zh"
+                ? "智波"
+                : "Wisewave"
+              : m.role;
           const isUser = m.role === "user";
           return (
             <div
