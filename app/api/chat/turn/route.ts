@@ -83,6 +83,15 @@ type ContinuityPatternFamily =
 
 type RecurrenceConfidence = "low" | "medium" | "high";
 
+type PatternId =
+  | "pressure_to_get_it_right"
+  | "fear_of_not_enough"
+  | "over_efforting"
+  | "avoidance_under_uncertainty"
+  | "inner_conflict"
+  | "self_worth_pressure"
+  | "generic";
+
 function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
   const text = corePattern.trim().toLowerCase();
 
@@ -203,66 +212,188 @@ function toContinuityReminderText(corePattern: string): string {
   return continuityReminderFromFamily(family, corePattern);
 }
 
-function patternFamilyLabelEn(family: ContinuityPatternFamily): string {
+function mapContinuityFamilyToPatternId(
+  family: ContinuityPatternFamily
+): PatternId {
   switch (family) {
-    case "earned_value_after_effort":
-      return "self-worth pressure";
-    case "delayed_reply_means_i_did_something_wrong":
-      return "self-blame under uncertainty";
-    case "rest_must_be_earned":
-      return "rest needing to be earned";
     case "constant_pressure_keep_up":
-      return "pressure to keep up";
+      return "pressure_to_get_it_right";
     case "replay_for_mistakes":
-      return "rechecking for mistakes";
+      return "avoidance_under_uncertainty";
+    case "delayed_reply_means_i_did_something_wrong":
+      return "inner_conflict";
+    case "earned_value_after_effort":
+      return "fear_of_not_enough";
+    case "rest_must_be_earned":
+      return "self_worth_pressure";
     case "fallback_generic":
     default:
-      return "a similar tension";
+      return "generic";
   }
 }
 
-function patternFamilyLabelZh(family: ContinuityPatternFamily): string {
-  switch (family) {
-    case "earned_value_after_effort":
-      return "自我价值压力";
-    case "delayed_reply_means_i_did_something_wrong":
-      return "不确定时的自责";
-    case "rest_must_be_earned":
-      return "休息需要先证明";
-    case "constant_pressure_keep_up":
-      return "必须一直跟上的压力";
-    case "replay_for_mistakes":
-      return "反复检查是否做错";
-    case "fallback_generic":
-    default:
-      return "相似的内在张力";
+function stableHashInt(input: string): number {
+  // Simple deterministic hash for stable template variant selection.
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
+  return Math.abs(h);
 }
 
-function recurrenceCueText(
-  family: ContinuityPatternFamily,
-  confidence: RecurrenceConfidence
+const GENERIC_TEMPLATES: Record<
+  RecurrenceConfidence,
+  { en: string[]; zh: string[] }
+> = {
+  low: {
+    en: [
+      "Something similar may be showing up again here.",
+      "This may be close to something that has come up before.",
+      "There may be a familiar thread here.",
+      "A similar tension may be present again.",
+    ],
+    zh: [
+      "这里可能又出现了一点相似的东西。",
+      "这似乎和之前出现过的某种感受有些接近。",
+      "这里可能有一条熟悉的线索。",
+      "这里也许又带出了一种相似的张力。",
+    ],
+  },
+  medium: {
+    en: [
+      "A similar pattern seems to be returning here.",
+      "This feels close to something that has appeared before.",
+      "There may be a repeating thread here.",
+      "A familiar tension seems to be surfacing again.",
+    ],
+    zh: [
+      "这里似乎又出现了一个相似的模式。",
+      "这感觉和之前出现过的某种状态很接近。",
+      "这里可能有一条正在重复出现的线索。",
+      "一种熟悉的张力似乎又浮现出来了。",
+    ],
+  },
+  high: {
+    en: [
+      "This has come up before in a similar way.",
+      "A familiar pattern seems to be resurfacing here.",
+      "This looks like a recurring inner pressure.",
+      "Something that has shown up before seems to be here again.",
+    ],
+    zh: [
+      "这和之前出现过的情况有些相似。",
+      "一个熟悉的模式似乎又浮现出来了。",
+      "这看起来像是一种反复出现的内在压力。",
+      "某种之前出现过的东西，似乎又回来了。",
+    ],
+  },
+};
+
+const PATTERN_TEMPLATES: Record<
+  Exclude<PatternId, "generic">,
+  Record<RecurrenceConfidence, { en: string; zh: string }>
+> = {
+  pressure_to_get_it_right: {
+    low: {
+      en: "There may be a familiar pressure here around getting it right.\nSomething similar may be showing up here around trying to do this the right way.",
+      zh: "这里可能又出现了一种想把事情做对的熟悉压力。\n这里似乎又带出了一点“想把它做好、做对”的感觉。",
+    },
+    medium: {
+      en: "A similar pressure seems to be returning here around getting it right.\nThis feels close to a repeating pattern of needing to get this right.",
+      zh: "这里似乎又出现了一种相似的压力，像是想把事情做对。\n这感觉像是在重复出现一种“需要把它做对”的模式。",
+    },
+    high: {
+      en: "This has come up before as a pressure to get it right.\nA familiar pattern seems to be resurfacing here around needing to do this correctly.",
+      zh: "这之前也曾以“想把事情做对”的压力出现过。\n一个熟悉的模式似乎又回来了，像是需要把这件事做好、做对。",
+    },
+  },
+  fear_of_not_enough: {
+    low: {
+      en: "There may be a familiar worry here around not being enough.\nSomething close to “not enough” may be present again here.",
+      zh: "这里可能又出现了一种“自己不够”的熟悉担心。\n这里似乎又带出了一点“不够好 / 不够”的感觉。",
+    },
+    medium: {
+      en: "A similar pattern seems to be returning here around not being enough.\nThis feels close to a repeating tension around whether you are enough.",
+      zh: "这里似乎又出现了一种“自己不够”的相似模式。\n这感觉像是在重复出现一种关于“我够不够”的张力。",
+    },
+    high: {
+      en: "This has come up before as a pressure around not being enough.\nA familiar pattern seems to be resurfacing here around “not enough.”",
+      zh: "这之前也曾以“自己不够”的压力出现过。\n一个熟悉的模式似乎又回来了，围绕着“我是不是不够”。",
+    },
+  },
+  over_efforting: {
+    low: {
+      en: "There may be a familiar push here to try harder than needed.\nSomething similar may be showing up here around pushing through.",
+      zh: "这里可能又出现了一种熟悉的“再更用力一点”的推动感。\n这里似乎又带出了一点想硬撑过去的感觉。",
+    },
+    medium: {
+      en: "A similar pattern seems to be returning here around over-trying.\nThis feels close to a repeating pressure to keep pushing.",
+      zh: "这里似乎又出现了一种相似的模式，像是在过度用力。\n这感觉像是在重复出现一种“继续往前硬推”的压力。",
+    },
+    high: {
+      en: "This has come up before as a pattern of pushing too hard.\nA familiar pattern seems to be resurfacing here around over-efforting.",
+      zh: "这之前也曾以“过度用力”的模式出现过。\n一个熟悉的模式似乎又回来了，像是在太用力地推动自己。",
+    },
+  },
+  avoidance_under_uncertainty: {
+    low: {
+      en: "There may be a familiar hesitation here when things feel uncertain.\nSomething similar may be showing up here around uncertainty.",
+      zh: "当事情变得不确定时，这里可能又出现了一种熟悉的迟疑。\n这里似乎又带出了一点面对不确定时的相似反应。",
+    },
+    medium: {
+      en: "A similar pattern seems to be returning here around uncertainty and hesitation.\nThis feels close to a repeating tension around not knowing what comes next.",
+      zh: "这里似乎又出现了一种和不确定、迟疑有关的相似模式。\n这感觉像是在重复出现一种面对未知时的张力。",
+    },
+    high: {
+      en: "This has come up before as a pattern around uncertainty and pulling back.\nA familiar pattern seems to be resurfacing here when things feel unclear.",
+      zh: "这之前也曾以面对不确定时想退回去的模式出现过。\n当事情变得不清楚时，一个熟悉的模式似乎又浮现出来了。",
+    },
+  },
+  inner_conflict: {
+    low: {
+      en: "There may be a familiar split here between two pulls.\nSomething similar may be showing up here as an inner conflict.",
+      zh: "这里可能又出现了一种熟悉的拉扯感。\n这里似乎又带出了一点内在冲突的感觉。",
+    },
+    medium: {
+      en: "A similar inner conflict seems to be returning here.\nThis feels close to a repeating split between two different pulls.",
+      zh: "这里似乎又出现了一种相似的内在拉扯。\n这感觉像是在重复出现一种两股力量之间的分裂感。",
+    },
+    high: {
+      en: "This has come up before as a pattern of inner conflict.\nA familiar inner split seems to be resurfacing here.",
+      zh: "这之前也曾以内在冲突的模式出现过。\n一种熟悉的内在拉扯似乎又浮现出来了。",
+    },
+  },
+  self_worth_pressure: {
+    low: {
+      en: "There may be a familiar pressure here around needing to prove your value.\nSomething similar may be showing up here around worth.",
+      zh: "这里可能又出现了一种熟悉的压力，像是需要证明自己的价值。\n这里似乎又带出了一点和价值感有关的相似压力。",
+    },
+    medium: {
+      en: "A similar pattern seems to be returning here around needing to prove your worth.\nThis feels close to a repeating pressure around value and self-worth.",
+      zh: "这里似乎又出现了一种相似的模式，像是需要证明自己的价值。\n这感觉像是在重复出现一种和价值感、自我价值有关的压力。",
+    },
+    high: {
+      en: "This has come up before as a pressure to prove your worth.\nA familiar self-worth pressure seems to be resurfacing here.",
+      zh: "这之前也曾以“需要证明自己价值”的压力出现过。\n一种熟悉的自我价值压力似乎又回来了。",
+    },
+  },
+};
+
+function recurrenceCueTextFromTemplate(
+  patternId: PatternId,
+  confidence: RecurrenceConfidence,
+  seed: string
 ): { en: string; zh: string } {
-  const enLabel = patternFamilyLabelEn(family);
-  const zhLabel = patternFamilyLabelZh(family);
-  switch (confidence) {
-    case "high":
-      return {
-        en: `This pattern seems to be returning again around ${enLabel}.`,
-        zh: `这个模式这次可能又回来了，和“${zhLabel}”有关。`,
-      };
-    case "medium":
-      return {
-        en: `A similar pattern may be showing up again around ${enLabel}.`,
-        zh: `这里可能又出现了相似模式，和“${zhLabel}”有关。`,
-      };
-    case "low":
-    default:
-      return {
-        en: `There may be a faint repeat here around ${enLabel}.`,
-        zh: `这里可能有一点重复迹象，和“${zhLabel}”有关。`,
-      };
+  if (patternId === "generic") {
+    const enVariants = GENERIC_TEMPLATES[confidence].en;
+    const zhVariants = GENERIC_TEMPLATES[confidence].zh;
+    const idx = stableHashInt(seed) % Math.min(enVariants.length, zhVariants.length);
+    return { en: enVariants[idx] ?? enVariants[0], zh: zhVariants[idx] ?? zhVariants[0] };
   }
+
+  const t = PATTERN_TEMPLATES[patternId];
+  return t[confidence];
 }
 
 function sanitizeChineseOutputLeaks(text: string): string {
@@ -713,7 +844,7 @@ export async function POST(request: Request) {
     | null = null;
   let responseRecurrenceCue:
     | {
-        patternKey: ContinuityPatternFamily;
+        patternKey: PatternId;
         confidence: RecurrenceConfidence;
         confidenceScore: number;
         textEn: string;
@@ -951,8 +1082,8 @@ export async function POST(request: Request) {
         };
 
         // Milestone E (minimal): one lightweight recurrence cue based on
-        // reusable pattern identity (family), not text similarity.
-        if (isContinuityEligible && patternFamily !== "fallback_generic") {
+        // reusable pattern identity (mapped), not text similarity.
+        if (isContinuityEligible) {
           const anyPrismaRead = prisma as unknown as {
             insight?: {
               findMany: (args: {
@@ -983,20 +1114,54 @@ export async function POST(request: Request) {
             recent?.filter(
               (r) => detectContinuityPatternFamily(r.corePattern) === patternFamily
             ).length ?? 0;
-          const confidence: RecurrenceConfidence =
-            sameFamilyCount >= 2 ? "high" : sameFamilyCount >= 1 ? "medium" : "low";
-          const confidenceScore = Math.min(
-            1,
-            confidence === "high" ? 0.9 : confidence === "medium" ? 0.65 : 0.35
-          );
-          const cue = recurrenceCueText(patternFamily, confidence);
-          responseRecurrenceCue = {
-            patternKey: patternFamily,
-            confidence,
-            confidenceScore,
-            textEn: cue.en,
-            textZh: cue.zh,
-          };
+          if (sameFamilyCount < 1) {
+            responseRecurrenceCue = null;
+          } else {
+            const patternId = mapContinuityFamilyToPatternId(patternFamily);
+
+            const confidence: RecurrenceConfidence =
+              sameFamilyCount >= 3
+                ? "high"
+                : sameFamilyCount === 2
+                  ? "medium"
+                  : "low";
+
+            // Confidence score is used only for QA/debug.
+            const confidenceScore = Math.min(
+              1,
+              confidence === "high" ? 0.9 : confidence === "medium" ? 0.65 : 0.35
+            );
+
+            // Extra conservative rule for uncertain/identity-weak cases:
+            // if the pattern identity collapses to generic, only show for high confidence.
+            if (patternId === "generic" && confidence !== "high") {
+              responseRecurrenceCue = null;
+              return;
+            }
+
+            // Template E guidance: hide low-confidence surfacing if the current signal is too weak.
+            if (
+              confidence === "low" &&
+              (isVeryShort || isTooGeneric || isSystemy || isTooShortAndFlat)
+            ) {
+              responseRecurrenceCue = null;
+              return;
+            }
+
+            const cue = recurrenceCueTextFromTemplate(
+              patternId,
+              confidence,
+              `${userMsg.id}:${created.id}`
+            );
+
+            responseRecurrenceCue = {
+              patternKey: patternId,
+              confidence,
+              confidenceScore,
+              textEn: cue.en.replace(/\n/g, " ").trim(),
+              textZh: cue.zh.replace(/\n/g, " ").trim(),
+            };
+          }
         }
       }
     } catch (e) {
