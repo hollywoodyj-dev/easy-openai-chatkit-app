@@ -244,6 +244,7 @@ function ChatContent() {
   const listRef = useRef<HTMLDivElement>(null);
   const [thinkingDots, setThinkingDots] = useState(0);
   const [continuity, setContinuity] = useState<ContinuityInsight | null>(null);
+  const [hadContinuityAtSessionStart, setHadContinuityAtSessionStart] = useState(false);
   const [feedbackDraft, setFeedbackDraft] = useState("");
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [latestMetadata, setLatestMetadata] = useState<ReflectionMetadata | null>(null);
@@ -510,6 +511,7 @@ function ChatContent() {
     if (!sessionId) {
       setCheckpoints([]);
       setContinuity(null);
+      setHadContinuityAtSessionStart(false);
       return;
     }
     let cancelled = false;
@@ -517,7 +519,9 @@ function ChatContent() {
       if (!cancelled) setCheckpoints(list);
     });
     fetchContinuity().then((insight) => {
-      if (!cancelled) setContinuity(insight);
+      if (cancelled) return;
+      setContinuity(insight);
+      setHadContinuityAtSessionStart(!!insight);
     });
     return () => { cancelled = true; };
   }, [sessionId, fetchCheckpoints, fetchContinuity]);
@@ -610,23 +614,27 @@ function ChatContent() {
         { id: `assistant-${Date.now()}`, role: "assistant", message: assistantMessage, created_at: now },
       ]);
       refreshHistorySessions();
-      // Update continuity immediately when this turn created an eligible insight.
-      if (
-        continuityFromTurn &&
-        (continuityFromTurn.is_continuity_eligible ?? true)
-      ) {
-        setContinuity({
-          id: continuityFromTurn.id,
-          core_pattern: continuityFromTurn.core_pattern,
-          continuity_text: continuityFromTurn.continuity_text,
-          continuity_key: continuityFromTurn.continuity_key,
-          created_at: continuityFromTurn.created_at,
-        });
-      } else {
-        // Fallback: refresh continuity after each successful turn so eligible insights visibly resurface.
-        fetchContinuity().then((insight) => {
-          setContinuity(insight);
-        });
+      // Continuity timing (Ibu memo): for first-time users, avoid showing "Last insight"
+      // immediately on the same turn that creates the first continuity insight.
+      // If continuity existed at session start, we keep same-session resurfacing behavior.
+      if (hadContinuityAtSessionStart) {
+        if (
+          continuityFromTurn &&
+          (continuityFromTurn.is_continuity_eligible ?? true)
+        ) {
+          setContinuity({
+            id: continuityFromTurn.id,
+            core_pattern: continuityFromTurn.core_pattern,
+            continuity_text: continuityFromTurn.continuity_text,
+            continuity_key: continuityFromTurn.continuity_key,
+            created_at: continuityFromTurn.created_at,
+          });
+        } else {
+          // Fallback: refresh continuity after each successful turn so eligible insights visibly resurface.
+          fetchContinuity().then((insight) => {
+            setContinuity(insight);
+          });
+        }
       }
       // Clear feedback draft after a successful send, so feedback remains opt-in per turn.
       setFeedbackDraft("");
@@ -1014,7 +1022,9 @@ function ChatContent() {
         >
         {messages.length === 0 && (
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Send a message below. Each turn is saved via the backend.
+            {uiLang === "zh"
+              ? "从这里继续，我们会帮你保留这段对话，方便下次接着聊。"
+              : "Continue here. This conversation is saved so you can pick up later."}
           </p>
         )}
         {messages.length === 1 && messages[0]?.role === "user" && !loading && (
@@ -1093,14 +1103,21 @@ function ChatContent() {
               {feedbackVisible ? "Hide feedback about last suggestion" : "Add feedback about what happened after the last suggestion"}
             </button>
             {feedbackVisible && (
-              <textarea
-                value={feedbackDraft}
-                onChange={(e) => setFeedbackDraft(e.target.value)}
-                placeholder="Optional: how did the last suggestion or regulation cue land for you?"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 resize-none"
-                rows={2}
-                disabled={loading}
-              />
+              <>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {uiLang === "zh"
+                    ? "这段反馈会在你下一次发送消息时一起提交。"
+                    : "This feedback will be sent with your next message."}
+                </p>
+                <textarea
+                  value={feedbackDraft}
+                  onChange={(e) => setFeedbackDraft(e.target.value)}
+                  placeholder="Optional: how did the last suggestion or regulation cue land for you?"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 resize-none"
+                  rows={2}
+                  disabled={loading}
+                />
+              </>
             )}
           </div>
         </form>

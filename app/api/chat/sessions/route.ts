@@ -30,20 +30,27 @@ export async function GET(request: Request) {
     },
   });
 
-  const sessions = conversations.map((c) => {
-    const firstUser = c.messages[0]?.message?.trim();
-    const topic =
-      firstUser && firstUser.length > 0
-        ? firstUser.length <= TOPIC_MAX_LENGTH
-          ? firstUser
-          : firstUser.slice(0, TOPIC_MAX_LENGTH) + "…"
-        : "New conversation";
-    return {
-      id: c.id,
-      created_at: c.createdAt.toISOString(),
-      topic,
-    };
-  });
+  // Product behavior: avoid showing multiple "empty" conversations to a brand-new user.
+  // Keep at most one empty conversation (the most recent), and always include any conversation
+  // that has at least one user message.
+  const sessions = conversations
+    .flatMap((c, idx) => {
+      const firstUser = c.messages[0]?.message?.trim() || "";
+      const hasUserMessage = firstUser.length > 0;
+      if (!hasUserMessage && idx !== 0) return [];
+      const topic =
+        hasUserMessage
+          ? firstUser.length <= TOPIC_MAX_LENGTH
+            ? firstUser
+            : firstUser.slice(0, TOPIC_MAX_LENGTH) + "…"
+          : "New conversation";
+      return [{
+        id: c.id,
+        created_at: c.createdAt.toISOString(),
+        topic,
+      }];
+    })
+    ;
 
   return NextResponse.json({ sessions });
 }
