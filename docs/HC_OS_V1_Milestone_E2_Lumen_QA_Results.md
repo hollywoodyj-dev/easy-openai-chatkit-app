@@ -52,42 +52,96 @@ On an **earlier attempt**, the second user message was **semantically close** to
 
 ---
 
-## Pass 2 — Persistence phase gates (local)
+## Pass 2 — Persistence phase gates
+
+### Local (first run)
 
 | Field | Value |
 |--------|--------|
-| **Result** | **Revise / partial pass** |
+| **Result** | **Revise / partial** (superseded by hosted retest below) |
 
-### What passed — Case A (full gates)
+- **Case A:** Pass — three substantive turns → `persistence` at count 3, `persistence_downgraded: false`.
+- **Case B (first attempt):** Third line **`Still not earned yet.`** → `fallback_generic`, count **1** — family broke before downgrade logic could run.
 
-Fresh session, three substantive same-family turns (`rest_must_be_earned` path):
+### Hosted — `https://www.wisewave.io` (API path, Case B retest)
 
-- Turn 1: `recurrence_cue: null`, `debug_recurrence_aligned_instance_count: 1`
-- Turn 2: `phase: "recurrence"`, count **2**
-- Turn 3: `phase: "persistence"`, count **3**, `debug_recurrence_e2_persistence_downgraded: false`
+| Field | Value |
+|--------|--------|
+| **Result** | **Pass** (Lumen / Tree) |
 
-**Conclusion:** Persistence fires when count + present-relevance gates are clearly satisfied; wording shifts recurrence → ongoing presence.
+**Turn 1** — first strong rest-earned message  
 
-### What did not yet prove — Case B (downgrade path)
+- `recurrence_cue`: **null**  
+- `debug_recurrence_aligned_instance_count`: **1**  
+- `continuity_key`: **`rest_must_be_earned`**  
+- `is_continuity_eligible`: **true**
 
-**Intended:** Aligned count **≥ 3** but third user message short enough that **persistence** is **downgraded** to **recurrence** (`debug_recurrence_e2_persistence_downgraded: true`).
+**Turn 2** — second aligned same-family message  
 
-**Attempted third user line:** `Still not earned yet.`
+- `recurrence_cue.phase`: **`recurrence`**  
+- `debug_recurrence_aligned_instance_count`: **2**  
+- `debug_recurrence_e2_phase`: **`recurrence`**  
+- `continuity_key`: **`rest_must_be_earned`**
 
-**Observed:** `recurrence_cue: null`, `debug_recurrence_aligned_instance_count: 1`, `continuity_key: "fallback_generic"`, `debug_recurrence_e2_persistence_downgraded: false`.
+**Turn 3** — user message **`Still need to earn rest.`**  
 
-**Interpretation:** The third turn **dropped out of the same family** in classification (extractor/core_pattern + detector), so the substrate never reached **count 3** for that turn — **persistence-downgrade logic was not exercised**.
+- `recurrence_cue`: **null**  
+- `debug_recurrence_aligned_instance_count`: **3**  
+- `debug_recurrence_e2_phase`: **`recurrence`**  
+- `debug_recurrence_e2_persistence_downgraded`: **true**  
+- `continuity_key`: **`rest_must_be_earned`**  
+- `is_continuity_eligible`: **true**  
+- `debug_insight_core_pattern`: *"The user tends to feel they must earn rest before allowing a break or relaxation."*
 
-### Nova / docs follow-up
+**Conclusion (Lumen):** Same family through turn 3; count reaches **3**; system **does not** promote to **persistence** on thin/short present input; downgrade is legible in debug (`persistence_downgraded: true`, phase intent **recurrence**). **Silence** on the short turn reads as **restraint**, not failure — acceptable E2 success per Wisewave.
 
-- QA plan **Pass 2 Case B** updated with **scripted short lines** that keep **earn + rest** (or break/relax) in user text under 48 chars.
-- Extraction prompt nudge: preserve explicit **rest/break/relax** in `insight_candidate` when the user continues a rest-as-earned theme.
-- Detector: narrow **`not earned` + recovery noun** rule in `lib/wisewave-continuity-family.ts`.
-
-### Lumen retest (exact next action)
-
-Re-run Case B with a third message such as **`Still need to earn rest.`** (or another line from the QA plan list). Expect **`debug_recurrence_aligned_instance_count: 3`**, **`debug_recurrence_e2_persistence_downgraded: true`**, **`recurrence_cue.phase: "recurrence"`**. If not, paste **`debug_insight_core_pattern`** for Nova.
+**Nova technical note (for future tuning):** Turn 3 user text is **&lt; 56** chars and follows the same `pattern_key` as turn 2, so **`debug_recurrence_e2_suppressed_repeat`** may also be **true** (anti-repeat heuristic). That can layer **silence** on top of **persistence downgrade**. A future scripted case that needs a **visible** recurrence cue on the downgrade turn would require a third line **≥ 56** chars (to skip anti-repeat) while still failing persistence relevance gates — tighter scripting; **not** required for current Pass 2 sign-off.
 
 ---
 
-*Append Pass 3+ results below as Lumen completes them.*
+## Pass 3 — Anti-repetition + recovery (hosted `wisewave.io`)
+
+| Field | Value |
+|--------|--------|
+| **Result** | **Pass** (after scripted retest; see partial note below) |
+
+### First run — partial / revise
+
+**What passed:** After a short low-value turn, a **longer substantive** same-family follow-up **recovered** surfacing (e.g. turn 2 → recurrence at count 2; turn 4 → **persistence** at count 3) — no permanent lockout.
+
+**What did not prove cleanly:** Short follow-up **`ok`** produced `recurrence_cue: null` but **`debug_recurrence_e2_suppressed_repeat: false`** — insight fell to brief / non-eligible fallback (`continuity_key: fallback_generic`, `is_continuity_eligible: false`, core_pattern *too brief to identify*). **Silence was correct** at product level, but the **anti-repeat branch** was not exercised.
+
+**Lumen / Tree:** No Nova code change required before rerun — **test-message** issue, not demonstrated logic failure.
+
+### Rerun — anti-repeat branch proof
+
+**Turn 2:** Recurrence cue surfaced — `phase: "recurrence"`, `debug_recurrence_aligned_instance_count: 2`.
+
+**Turn 3** — short same-family follow-up (under 56 chars, **not** empty vague churn):
+
+- User message: **`still feels like I need to earn rest`**
+
+**Observed:**
+
+- `recurrence_cue`: **null**
+- `debug_recurrence_aligned_instance_count`: **3**
+- `debug_recurrence_e2_phase`: **`recurrence`**
+- **`debug_recurrence_e2_suppressed_repeat`: true**
+- `debug_recurrence_e2_persistence_downgraded`: **true**
+- `continuity_key`: **`rest_must_be_earned`**
+- `is_continuity_eligible`: **true**
+
+**Meaning:** Same family preserved; count advanced; cue suppressed for short same-pattern churn; suppression **explicit in debug**, not accidental brief-input fallback.
+
+**Turn 4:** Longer substantive same-family follow-up — recovery succeeded: `recurrence_cue.phase: "persistence"`, `debug_recurrence_aligned_instance_count: 4`.
+
+### Lumen / Tree conclusion
+
+- Short same-pattern churn does **not** mechanically restate the cue; **`suppressed_repeat: true`** when scripted correctly.
+- Later substantive follow-up restores surfacing (**persistence** at count 4 in this run).
+
+**Passes 1–3:** Pass (hosted where noted).
+
+---
+
+*Append Pass 4+ results below as Lumen completes them.*

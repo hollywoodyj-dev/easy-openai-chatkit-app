@@ -91,17 +91,20 @@
 **Steps**
 
 1. Obtain a turn with a **non-null** `recurrence_cue` (note `pattern_key`).
-2. Immediately send a follow-up **under 56 characters** that does not add much new content (e.g. `ok`, `yeah`, `好的`, `嗯`).
-3. **Expect:** **`recurrence_cue: null`**, **`debug_recurrence_e2_suppressed_repeat: true`** (when prior assistant carried that pattern in metadata).
+2. Send a follow-up **under 56 characters** that is **low-value / churn** but **still same-family** enough to stay **continuity-eligible** — **not** bare **`ok`**, **`嗯`**, or other lines that collapse to *too brief / fallback_generic* (those prove **silence** but **`debug_recurrence_e2_suppressed_repeat` stays false**). **Hosted-proven examples:**
+   - `still feels like I need to earn rest`
+   - `yeah, still need to earn rest`
+   - `still not allowed to rest yet`
+3. **Expect:** **`recurrence_cue: null`**, **`debug_recurrence_e2_suppressed_repeat: true`** (prior assistant carried same `pattern_key` in metadata).
 4. Send a **longer**, substantive follow-up (same thread) that adds new detail.
-5. **Expect:** Cue may return **if** proof/value-add rules still hold; not mechanically blocked forever by one short message (verify at least one recovery scenario if possible).
+5. **Expect:** Cue returns when proof/value-add rules hold (e.g. **persistence** at next count tier on hosted run — not permanently blocked).
 
 **Pass criteria**
 
-- Short churn does not restate the pattern cue mechanically.
-- Longer follow-up can re-enable surfacing when appropriate (no permanent lockout in normal use).
+- Short **same-pattern** churn does not mechanically restate the cue; **`suppressed_repeat`** is **true** when the anti-repeat branch is exercised (scripted short same-family line).
+- Longer follow-up can re-enable surfacing (recovery after churn).
 
-**Fail → Nova:** Cue repeats on `ok`; repeat flag never clears when it should.
+**Fail → Nova:** Cue repeats on scripted churn; **`suppressed_repeat`** stays **false** when using the proven short same-family lines above (then file a Nova ticket with API JSON).
 
 ---
 
@@ -111,11 +114,46 @@
 
 **Note:** **7-day / 10-day** rules are **provisional** — QA validates **behavior exists**, not final calendar values.
 
-**Steps**
+Pass 4 is **time-based**, unlike Passes 1–3. You need **aligned prior insights** whose **newest aligned prior** is **older than the provisional stale limit** (~7 days in code), while the **substrate window** still includes them (~10 days).
 
-1. If you can simulate **aged insights** (test DB backdate, or wait — optional): aligned prior **older than provisional stale threshold**.
-2. **Expect:** **`debug_recurrence_e2_suppressed_stale_window: true`** and **`recurrence_cue: null`** when decay applies.
-3. If you **cannot** time-travel data, **document as N/A** and rely on code review + spot-check `debug_recurrence_e2_newest_aligned_age_ms` on hosted over time.
+### Three ways to get evidence (Lumen / Tree)
+
+| Option | What it is | Pros | Cons |
+|--------|------------|------|------|
+| **A — Natural aged data on hosted** | DB already has a session with 2–3 same-family insights from **8+ days ago** | Real E2E hosted test; no tooling | Hard to find; anonymous sessions hard to recover |
+| **B — Safe backdate (Nova script)** | Backdate **`Insight.createdAt` / `lastSeenAt`** for **one** `conversationId` on **local or staging** (or hosted **only** with ops approval) | Fast, deterministic; just-over / just-under threshold | Must **not** run casually on prod user data |
+| **C — Known QA session** | Someone documents a hosted `session_id` / account with old aligned history | No DB surgery | Rare unless intentionally preserved |
+
+### Nova-provided tool (Option B)
+
+Repo script: **`scripts/e2-qa-backdate-conversation-insights.cjs`**
+
+- **Scope:** Only rows in **`Insight`** with the given **`conversation_id`** (optional **`--user-id=`** narrows further).
+- **Dry run:** always start with **`--dry-run`** to list matching insights.
+- **Write guard:** set env **`E2_QA_BACKDATE_CONFIRM=BACKDATE_INSIGHTS_QA`** for non–dry-run (prevents accidents).
+- **Default `days-ago=8`** → exceeds provisional **7-day** stale threshold. Use **`--days-ago=6`** for a **negative control** (stale flag should **not** fire if everything else aligns).
+
+```bash
+# List what would change (local/staging DB from .env)
+node scripts/e2-qa-backdate-conversation-insights.cjs --conversation-id=YOUR_SESSION_CUID --dry-run
+
+# Apply (after ops approval on the target DB)
+set E2_QA_BACKDATE_CONFIRM=BACKDATE_INSIGHTS_QA
+node scripts/e2-qa-backdate-conversation-insights.cjs --conversation-id=YOUR_SESSION_CUID --days-ago=8
+```
+
+On **Windows PowerShell:** `$env:E2_QA_BACKDATE_CONFIRM="BACKDATE_INSIGHTS_QA"` then run the same `node ...` line.
+
+**Workflow:** (1) Build 2+ aligned same-family insights in a **QA** chat session; copy **`session_id`** from the app/network as `conversationId`. (2) Backdate. (3) Send a **new** same-family user message; inspect turn JSON for **`debug_recurrence_e2_suppressed_stale_window`** and **`debug_recurrence_e2_newest_aligned_age_ms`**.
+
+**npm:** `npm run e2:qa-backdate-insights -- --conversation-id=... --dry-run` (see `package.json`).
+
+### Pass 4 steps (after substrate exists)
+
+1. Ensure **at least two** prior **continuity-eligible** insights in the **same family** exist for the user, with the **newest aligned prior** older than the **provisional stale threshold** (natural age **or** script).
+2. Send a **fresh** same-family substantive message (new insight can be current / recent).
+3. **Expect:** **`debug_recurrence_e2_suppressed_stale_window: true`** and **`recurrence_cue: null`** when decay applies (aligned count logic may still run; stale gate suppresses cue).
+4. If no aged data and **no approved** backdate on the target DB: mark **Pass 4 N/A** and cite **code review** + **`debug_recurrence_e2_newest_aligned_age_ms`** on live turns over time.
 
 **Pass criteria**
 
@@ -210,7 +248,11 @@ Structured outcomes are recorded in **`docs/HC_OS_V1_Milestone_E2_Lumen_QA_Resul
 
 **Pass 1 (local):** Pass — see results file for evidence and the **borderline same-family / fallback_generic** watch item + Nova mitigation notes.
 
-**Pass 2 (local):** Revise / partial — Case A pass; Case B pending scripted short same-family third line (see results file + Pass 2 Case B script above).
+**Pass 2:** **Pass** (hosted `wisewave.io`, API path) — Case A (local + hosted): recurrence → persistence when full gates pass; **Case B:** third line `Still need to earn rest.` → same family, count 3, `debug_recurrence_e2_persistence_downgraded: true`, no persistence promotion; see **`docs/HC_OS_V1_Milestone_E2_Lumen_QA_Results.md`** for evidence.
+
+**Pass 3:** **Pass** (hosted `wisewave.io`) — recovery after churn; anti-repeat proven with short same-family line **`still feels like I need to earn rest`** → `debug_recurrence_e2_suppressed_repeat: true`, then longer follow-up → **persistence** at count 4. First attempt with **`ok`** was partial (silence without repeat flag); see results file.
+
+**Next:** **Pass 4** (stale window / decay) per plan.
 
 ---
 
