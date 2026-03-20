@@ -114,6 +114,26 @@ Final Turn 6 outcome (still did not hit E3-owned suppression):
 
 Conclusion: Pass 2 remains **partial pass / revise**. This is a test-construction miss (alignment drift), not a confirmed code failure.
 
+### Additional hosted retest (mid-bucket present relevance still renders)
+
+Hosted session: `cmmz4f4ba000jl04fufcwk2i`
+
+What stayed stable (non-A families):
+- Turn 3 → `constant_pressure_keep_up`
+- Turn 4 → `replay_for_mistakes`
+- Turn 5 → `delayed_reply_means_i_did_something_wrong`
+
+Turn 6 outcome (wanted: E3-owned `low_present_relevance` suppression):
+- `recurrence_cue`: **present**
+- `continuity_key`: `"rest_must_be_earned"`
+- `debug_recurrence_aligned_instance_count`: **3**
+- `debug_recurrence_e3_prof_threshold_passed`: **true**
+- `debug_recurrence_e3_present_relevance`: **0.6**
+- `debug_recurrence_e3_suppressed_reason`: **null**
+
+Interpretation:
+- the run reached the E3 evaluation but did not land in the low present-relevance bucket expected to trigger `debug_recurrence_e3_suppressed_reason: "low_present_relevance"`.
+
 ### Additional hosted retest (still not clearable)
 
 Hosted session: `cmmz415l300ol504p4kejdcf`
