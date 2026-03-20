@@ -67,8 +67,13 @@
 1. From Pass 1 substrate (or rebuild with **three** substantive same-family turns so `debug_recurrence_aligned_instance_count >= 3`).
 2. **Case A — full gates:** Third (or later) message is **≥ ~48 characters**, not vague, aligned prior still **recent** in window (`debug_recurrence_e2_persistence_downgraded: false`).
    - **Expect:** `recurrence_cue.phase === "persistence"` and user-visible text reads as **ongoing presence** (“still seems / 似乎还在”), not a repeat of the exact same “returning” line as turn 2.
-3. **Case B — downgraded:** Same **≥3** aligned count but send a **short** substantive line **under 48 chars** (still on-topic, not vague), or scenario where newest aligned index is **not** in top two (if you can construct it with insights spread in window).
-   - **Expect:** Either **`recurrence`** phase or justified **null** cue; **`debug_recurrence_e2_persistence_downgraded: true`** when count would allow persistence but copy stays recurrence.
+3. **Case B — downgraded (same session, same family, then short third user line):** After Case A you already have **two** aligned `rest_must_be_earned` (or your chosen family) insights. Send a **third user message** that is **&lt; 48 characters** (`message.trim().length`) so **present-relevance** can block **persistence**, **but** the line must still force the extractor to keep the **same family** in `insight_candidate`.
+   - **Do not use** ultra-compressed lines like **`Still not earned yet.`** alone — they often produce `continuity_key: "fallback_generic"` and **`debug_recurrence_aligned_instance_count: 1`** on that turn (family broke before persistence gates run).
+   - **Use** explicit same-family anchors in the **user** text, e.g. **both** **earn** and **rest** (or **break** / **relax**), still under 48 chars, e.g.:
+     - `Still need to earn rest.` (24 chars)
+     - `I must earn rest tonight.` (25 chars)
+     - `Need to earn my rest still.` (28 chars)
+   - **Expect:** `debug_recurrence_aligned_instance_count: 3`, `continuity_key` still **`rest_must_be_earned`** (or your family), **`debug_recurrence_e2_persistence_downgraded: true`**, and **`recurrence_cue.phase: "recurrence"`** (not `persistence`). If you get `fallback_generic` or count &lt; 3, capture **`debug_insight_core_pattern`** and retry with a slightly longer line that still stays &lt; 48 chars.
 
 **Pass criteria**
 
@@ -196,6 +201,16 @@ For each pass:
 - **Do not** broaden scope into new pattern families or history features.
 - **Do** file revisions against **specific gates** (phase, stale, repeat, parity, replace) with API evidence.
 - Retest **only** failed passes after Nova patch unless regression risk is declared.
+
+---
+
+## Results log (executed passes)
+
+Structured outcomes are recorded in **`docs/HC_OS_V1_Milestone_E2_Lumen_QA_Results.md`**.
+
+**Pass 1 (local):** Pass — see results file for evidence and the **borderline same-family / fallback_generic** watch item + Nova mitigation notes.
+
+**Pass 2 (local):** Revise / partial — Case A pass; Case B pending scripted short same-family third line (see results file + Pass 2 Case B script above).
 
 ---
 

@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { extractReflectionState } from "@/lib/wisewave-extract";
 import { CHAT_SYSTEM_PROMPT as WISEWAVE_CHAT_PROMPT } from "@/lib/wisewave-prompts";
+import {
+  type ContinuityPatternFamily,
+  detectContinuityPatternFamily,
+} from "@/lib/wisewave-continuity-family";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -90,14 +94,6 @@ function sentence(s: string): string {
   return trimmed ? trimmed + "." : trimmed;
 }
 
-type ContinuityPatternFamily =
-  | "earned_value_after_effort"
-  | "delayed_reply_means_i_did_something_wrong"
-  | "rest_must_be_earned"
-  | "constant_pressure_keep_up"
-  | "replay_for_mistakes"
-  | "fallback_generic";
-
 type RecurrenceConfidence = "low" | "medium" | "high";
 
 type PatternId =
@@ -108,63 +104,6 @@ type PatternId =
   | "inner_conflict"
   | "self_worth_pressure"
   | "generic";
-
-function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
-  const text = corePattern.trim().toLowerCase();
-
-  // Rest-specific earnedness patterns (e.g. "rest is undeserved", "deserve to rest", "more effort").
-  // Put this before the "prove worth" rules so this family doesn't collapse to fallback_generic.
-  if (
-    /rest/.test(text) &&
-    /(prove|proof|deserve|undeserved|not enough|more effort)/.test(text)
-  ) {
-    return "rest_must_be_earned";
-  }
-
-  if (
-    /even after .*the user tends to interpret their (worth|value) as still needing to be earned/.test(
-      text
-    ) ||
-    /prove (myself|yourself|themselves|your worth)/.test(text) ||
-    /earn(ed)? (my|their|your) place/.test(text)
-  ) {
-    return "earned_value_after_effort";
-  }
-
-  // Repeated "short/quick reply => proof I did something wrong (before facts are known)".
-  // The extractor sometimes drops literal "reply/response" tokens into corePattern,
-  // so we allow classification based on timing/briefness words + wrong/proof tokens alone.
-  if (
-    /(delayed|late|slow|brief|short|quick|instant|immediate)/.test(text) &&
-    /(did something wrong|made a mistake|mistake|wrong|proof|must have|mustn't|should already|already know)/.test(
-      text
-    )
-  ) {
-    return "delayed_reply_means_i_did_something_wrong";
-  }
-
-  if (/rest.*earned/.test(text) || /pause.*before feeling finished/.test(text)) {
-    return "rest_must_be_earned";
-  }
-
-  if (
-    /constant pressure/.test(text) ||
-    /must always keep up/.test(text) ||
-    /always perform/.test(text)
-  ) {
-    return "constant_pressure_keep_up";
-  }
-
-  if (
-    /replay/.test(text) ||
-    /did something wrong/.test(text) ||
-    /searching for mistakes|missteps/.test(text)
-  ) {
-    return "replay_for_mistakes";
-  }
-
-  return "fallback_generic";
-}
 
 function rewriteEarnedValueAfterEffort(corePattern: string): string {
   const normalized = corePattern.trim().replace(/\s+/g, " ");

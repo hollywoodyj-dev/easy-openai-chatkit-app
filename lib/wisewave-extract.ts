@@ -21,6 +21,7 @@ Given a user's reflection message (and optional conversation summary), output a 
 - choice_label: one small conscious alternative (e.g. wait_before_responding, one_small_step, check_facts_first)
 - insight_candidate: one short durable insight sentence (e.g. "When silence appears, the user tends to interpret it as personal rejection.")
   - insight_candidate must be written in English regardless of the input language (English canonical internal meaning)
+  - Continuity downstream: when the user is clearly continuing a theme about rest, breaks, deserving to stop, or proving worth before relaxing, keep explicit **rest** and/or **break/relax** (or **sleep/downtime**) wording in insight_candidate—not only vague pronouns like "it"—so short follow-ups stay classifiable as the same durable pattern.
 
 Rules:
 - Output only valid JSON. No markdown, no code fence, no extra text.
