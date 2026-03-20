@@ -234,3 +234,61 @@ Pass 5 now proves both:
 - debug instrumentation: the system explicitly recognizes **A → B** surfaced identity replacement
 
 **Lumen / Tree conclusion:** Pass 5 = **Pass**
+
+---
+
+## Pass 6 — EN/ZH functional parity (hosted `wisewave.io`)
+
+**Result:** **Pass**
+
+### Key result
+
+Chinese path matches the English arc:
+- first strong ZH turn: no cue
+- second aligned ZH turn: `recurrence`
+- short same-family ZH follow-up: suppressed (`recurrence_cue: null`, repeat suppression true)
+- longer substantive ZH follow-up: cue returns at the next tier (`persistence`)
+
+### Hosted evidence
+
+- Hosted session: `cmyhesnd000l704hggj7nv8`
+
+**Pattern A (rest-earned)**
+
+- Turn 1:
+  - `recurrence_cue`: `null`
+  - `debug_recurrence_aligned_instance_count`: `1`
+  - `continuity_key`: `"rest_must_be_earned"`
+
+- Turn 2:
+  - `recurrence_cue.phase`: `"recurrence"`
+  - `pattern_key`: `"self_worth_pressure"`
+  - `debug_recurrence_aligned_instance_count`: `2`
+  - `debug_recurrence_e2_phase`: `"recurrence"`
+
+**Short same-family ZH follow-up (suppressed)**
+
+- Turn 3:
+  - `recurrence_cue`: `null`
+  - `debug_recurrence_aligned_instance_count`: `3`
+  - `debug_recurrence_e2_phase`: `"recurrence"`
+  - `debug_recurrence_e2_persistence_downgraded`: `true`
+  - `debug_recurrence_e2_suppressed_repeat`: `true`
+
+**Longer substantive ZH recovery (re-enabled)**
+
+- Turn 4:
+  - `recurrence_cue.phase`: `"persistence"`
+  - `pattern_key`: `"self_worth_pressure"`
+  - `debug_recurrence_aligned_instance_count`: `4`
+  - `debug_recurrence_e2_phase`: `"persistence"`
+  - `debug_recurrence_e2_persistence_downgraded`: `false`
+  - `debug_recurrence_e2_suppressed_repeat`: `false`
+
+### Note on `text_zh`
+
+PowerShell may render `text_zh` as mojibake due to terminal encoding. Phase/gating/debug fields and classification behavior matched the intended parity arc, so this is not treated as a product-level localization failure by itself.
+
+### Lumen / Tree conclusion
+
+**Pass 6 = Pass**
