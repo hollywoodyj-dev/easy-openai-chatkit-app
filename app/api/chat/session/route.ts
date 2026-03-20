@@ -11,9 +11,23 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: Request) {
   const { userId, sessionCookie } = await resolveChatUserId(request);
-  const conversation = await prisma.conversation.create({
-    data: { userId },
-  });
+  let conversation;
+  try {
+    conversation = await prisma.conversation.create({
+      data: { userId },
+    });
+  } catch (e) {
+    console.error("[api/chat/session] prisma.conversation.create failed", e);
+    // This typically means hosted environment can't reach the DB host/port.
+    return NextResponse.json(
+      {
+        error: "db_unreachable",
+        message:
+          "Database connection failed while creating a chat session. Try again in a moment or check hosted DATABASE_URL/network.",
+      },
+      { status: 503 }
+    );
+  }
   const res = NextResponse.json({ session_id: conversation.id });
   if (sessionCookie) {
     res.headers.append("Set-Cookie", sessionCookie);
