@@ -1329,34 +1329,50 @@ export async function POST(request: Request) {
                 let suppressRepeat = false;
                 if (assistantMsgId) {
                   try {
-                    const prevAsst = await prisma.message.findFirst({
+                    // Anti-drift & replace-not-accumulate debug:
+                    // We want the *last emitted* recurrence-pattern identity, not just the
+                    // immediately previous assistant turn (which may have `recurrence_cue: null`
+                    // and therefore no metadata.wisewave_recurrence payload).
+                    const recentAssts = await prisma.message.findMany({
                       where: {
                         conversationId: sessionId,
                         role: "assistant",
                         id: { not: assistantMsgId },
                       },
                       orderBy: { createdAt: "desc" },
+                      take: 8,
                       select: { metadata: true },
                     });
-                    const pm = prevAsst?.metadata;
-                    const wr =
-                      pm &&
-                      typeof pm === "object" &&
-                      !Array.isArray(pm) &&
-                      "wisewave_recurrence" in pm
-                        ? (pm as { wisewave_recurrence?: { pattern_key?: string } })
-                            .wisewave_recurrence
-                        : undefined;
+
+                    let prevPatternKey: string | null = null;
+                    for (const a of recentAssts) {
+                      const pm = a?.metadata;
+                      const wr =
+                        pm &&
+                        typeof pm === "object" &&
+                        !Array.isArray(pm) &&
+                        "wisewave_recurrence" in pm
+                          ? (pm as {
+                              wisewave_recurrence?: { pattern_key?: string };
+                            }).wisewave_recurrence
+                          : undefined;
+                      if (typeof wr?.pattern_key === "string" && wr.pattern_key.length > 0) {
+                        prevPatternKey = wr.pattern_key;
+                        break;
+                      }
+                    }
+
                     if (
-                      typeof wr?.pattern_key === "string" &&
-                      wr.pattern_key.length > 0 &&
-                      wr.pattern_key !== patternId
+                      prevPatternKey != null &&
+                      prevPatternKey.length > 0 &&
+                      prevPatternKey !== patternId
                     ) {
                       debugRecurrenceE2ActivePatternReplaced = true;
                     }
-                    // Heuristic only: short follow-up + same pattern → silence (not the core persistence rule).
+
+                    // Heuristic only: short follow-up + same prior recurrence identity → silence.
                     if (
-                      wr?.pattern_key === patternId &&
+                      prevPatternKey === patternId &&
                       userTrimLen < E2_ANTI_REPEAT_MIN_USER_CHARS
                     ) {
                       suppressRepeat = true;
