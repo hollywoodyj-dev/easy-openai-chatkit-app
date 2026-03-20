@@ -57,3 +57,39 @@ And E3 did not leak into the `continuity_insight` / “Last insight” logic at 
 
 **Pass 1 = Pass**
 
+---
+
+## Pass 2 — Legibility gain + suppression debug legibility (hosted)
+
+**Result:** Partial pass / revise
+
+**Hosted session:** `cmmz3jw9f000jo04qol6ds3t`
+
+### What passed
+
+1. **Clear legibility gain render**
+   - recurrence_cue.text_en: “The pressure to prove your worth may still be present here.”
+   - E3 debug (render branch):
+     - `debug_recurrence_e3_legibility_state: "light"`
+     - `debug_recurrence_e3_present_relevance: 0.85`
+     - `debug_recurrence_e3_clarity_gain: 0.65`
+     - `debug_recurrence_e3_added_weight_risk: 0.15`
+     - `debug_recurrence_e3_proof_threshold_passed: true`
+
+### What did not fully pass
+
+2. **Null-cue suppression reason not debug-legible**
+   - Follow-up message: `still feels like I need to earn rest`
+   - Observed:
+     - `recurrence_cue: null`
+     - aligned count reached 3
+     - all E3 debug fields were **null**, including:
+       - `debug_recurrence_e3_suppressed_reason`
+
+### Open clarification needed (Nova)
+
+For null cues, we need to clarify whether:
+- `debug_recurrence_e3_suppressed_reason` is emitted only when E3 gating actually runs (i.e., not when cue is suppressed by upstream anti-repeat / other E2 branches), or
+- E3 should emit a suppressed reason for additional upstream suppressions too.
+
+

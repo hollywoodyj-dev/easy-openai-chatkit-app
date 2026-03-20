@@ -151,6 +151,7 @@ Also verify `continuity_insight` / “Last insight” strip is unchanged by E3.
 Pass 2 — Legibility gain
 Verify cue appears when it genuinely makes continuity easier to recognize.
 Confirm `legibility_state` matches debug, and that null cues include a `debug_recurrence_e3_suppressed_reason` when E3 gating suppresses the cue.
+If `recurrence_cue` is null and all `debug_recurrence_e3_*` fields are null (including `debug_recurrence_e3_suppressed_reason`), then E3 gating did not run; treat this as **upstream suppression** (E2/anti-repeat/other gates) rather than an E3 suppression-reason failure.
 Pass 3 — Anti-heaviness
 Verify improved clarity does not make the product feel heavier than E2.
 Pass 4 — Reflection-first
