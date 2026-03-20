@@ -96,6 +96,8 @@ function sentence(s: string): string {
 
 type RecurrenceConfidence = "low" | "medium" | "high";
 
+type LegibilityState = "light" | "clear";
+
 type PatternId =
   | "pressure_to_get_it_right"
   | "fear_of_not_enough"
@@ -104,6 +106,207 @@ type PatternId =
   | "inner_conflict"
   | "self_worth_pressure"
   | "generic";
+
+/**
+ * Milestone E / E3 cue wording templates.
+ * E3 changes the cue language quality without changing UI surface or Last insight strip.
+ */
+const E3_GENERIC_TEMPLATES: Record<
+  LegibilityState,
+  { en: string[]; zh: string[] }
+> = {
+  light: {
+    en: [
+      "This still seems close to a familiar pattern.",
+      "A similar thread still seems to be present here.",
+      "Something familiar may still be active here.",
+      "This may still be carrying some of the same pressure.",
+    ],
+    zh: [
+      "这似乎仍然和一个熟悉的模式很接近。",
+      "这里似乎仍然带着一条相似的线索。",
+      "某种熟悉的东西可能还在这里。",
+      "这可能仍然承载着某种相似的压力。",
+    ],
+  },
+  clear: {
+    en: [
+      "This still feels connected to something that has been recurring.",
+      "A familiar pattern still seems to be active here.",
+      "This still seems to be part of a familiar thread.",
+      "The same underlying tension may still be present here.",
+    ],
+    zh: [
+      "这似乎仍然和之前反复出现的某种东西有关。",
+      "一个熟悉的模式似乎还在这里。",
+      "这似乎仍然属于一条熟悉的线索。",
+      "同一种底层张力可能仍然在这里。",
+    ],
+  },
+};
+
+const E3_PATTERN_TEMPLATES: Record<
+  Exclude<PatternId, "generic">,
+  Record<LegibilityState, { en: string[]; zh: string[] }>
+> = {
+  pressure_to_get_it_right: {
+    light: {
+      en: [
+        "The pressure to get it right may still be present here.",
+        "This still seems close to that familiar pressure around doing it correctly.",
+      ],
+      zh: [
+        "那种想把事情做对的压力，可能还在这里。",
+        "这似乎仍然很接近那种熟悉的“想把它做对”的压力。",
+      ],
+    },
+    clear: {
+      en: [
+        "This still feels connected to that recurring pressure around doing it the right way.",
+        "A familiar pressure to get it right still seems to be active here.",
+      ],
+      zh: [
+        "这似乎仍然和那种反复出现的“需要把它做对”的压力连在一起。",
+        "一种熟悉的“想把事情做对”的压力似乎还在这里。",
+      ],
+    },
+  },
+  fear_of_not_enough: {
+    light: {
+      en: [
+        "This still seems close to that familiar sense of not being enough.",
+        "The pressure around \"not enough\" may still be present here.",
+      ],
+      zh: [
+        "这似乎仍然和那种“自己不够”的熟悉感觉很接近。",
+        "那种围绕着“不够”的压力，可能还在这里。",
+      ],
+    },
+    clear: {
+      en: [
+        "This still feels connected to that recurring tension around whether you are enough.",
+        "A familiar \"not enough\" pressure still seems to be active here.",
+      ],
+      zh: [
+        "这似乎仍然和那种反复出现的“我够不够”的张力连在一起。",
+        "一种熟悉的“不够”的压力似乎还在这里。",
+      ],
+    },
+  },
+  over_efforting: {
+    light: {
+      en: [
+        "The push to keep trying harder may still be active here.",
+        "This still feels close to that familiar pressure to push through.",
+      ],
+      zh: [
+        "那种继续逼自己更用力的推动感，可能还在这里。",
+        "这似乎仍然很接近那种熟悉的“继续硬撑过去”的压力。",
+      ],
+    },
+    clear: {
+      en: [
+        "This still feels connected to that recurring pressure to keep pushing harder.",
+        "A familiar push to keep forcing things still seems to be present here.",
+      ],
+      zh: [
+        "这似乎仍然和那种反复出现的“继续更用力一点”的压力连在一起。",
+        "一种熟悉的、想继续硬推的力量似乎还在这里。",
+      ],
+    },
+  },
+  avoidance_under_uncertainty: {
+    light: {
+      en: [
+        "This still seems close to that familiar hesitation around uncertainty.",
+        "The uncertainty here may still be pulling toward the same pattern.",
+      ],
+      zh: [
+        "这似乎仍然和面对不确定时的熟悉迟疑很接近。",
+        "这里的不确定感，可能仍然把它带向同一种模式。",
+      ],
+    },
+    clear: {
+      en: [
+        "This still feels connected to that recurring pull to hold back when things are unclear.",
+        "A familiar hesitation around uncertainty still seems to be active here.",
+      ],
+      zh: [
+        "这似乎仍然和那种反复出现的“当事情不清楚时想退回去”的拉力连在一起。",
+        "一种面对不确定时的熟悉迟疑似乎还在这里。",
+      ],
+    },
+  },
+  inner_conflict: {
+    light: {
+      en: [
+        "A similar inner pull still seems to be present here.",
+        "This still feels close to that familiar inner split.",
+      ],
+      zh: [
+        "一种相似的内在拉扯似乎还在这里。",
+        "这似乎仍然很接近那种熟悉的内在分裂感。",
+      ],
+    },
+    clear: {
+      en: [
+        "This still feels connected to that recurring split between different pulls.",
+        "A familiar inner conflict still seems to be active here.",
+      ],
+      zh: [
+        "这似乎仍然和那种反复出现的“两股力量之间的拉扯”连在一起。",
+        "一种熟悉的内在冲突似乎还在这里。",
+      ],
+    },
+  },
+  self_worth_pressure: {
+    light: {
+      en: [
+        "The pressure to prove your worth may still be present here.",
+        "This still feels close to that familiar self-worth pressure.",
+      ],
+      zh: [
+        "那种需要证明自己价值的压力，可能还在这里。",
+        "这似乎仍然很接近那种熟悉的自我价值压力。",
+      ],
+    },
+    clear: {
+      en: [
+        "This still feels connected to that recurring pressure to prove your value.",
+        "A familiar self-worth pressure still seems to be active here.",
+      ],
+      zh: [
+        "这似乎仍然和那种反复出现的“需要证明自己价值”的压力连在一起。",
+        "一种熟悉的自我价值压力似乎还在这里。",
+      ],
+    },
+  },
+};
+
+function e3CueTextFromTemplate(
+  patternId: PatternId,
+  legibilityState: LegibilityState,
+  seed: string
+): { en: string; zh: string } {
+  if (patternId === "generic") {
+    const enVariants = E3_GENERIC_TEMPLATES[legibilityState].en;
+    const zhVariants = E3_GENERIC_TEMPLATES[legibilityState].zh;
+    const idx = stableHashInt(seed) % enVariants.length;
+    return {
+      en: enVariants[idx] ?? enVariants[0],
+      zh: zhVariants[idx] ?? zhVariants[0],
+    };
+  }
+
+  const t = E3_PATTERN_TEMPLATES[patternId];
+  const enVariants = t[legibilityState].en;
+  const zhVariants = t[legibilityState].zh;
+  const idx = stableHashInt(seed) % enVariants.length;
+  return {
+    en: enVariants[idx] ?? enVariants[0],
+    zh: zhVariants[idx] ?? zhVariants[0],
+  };
+}
 
 function rewriteEarnedValueAfterEffort(corePattern: string): string {
   const normalized = corePattern.trim().replace(/\s+/g, " ");
@@ -970,6 +1173,18 @@ export async function POST(request: Request) {
   /** True when visible pattern identity differs from previous assistant metadata (replace, not accumulate). */
   let debugRecurrenceE2ActivePatternReplaced: boolean = false;
 
+  // Milestone E3 debug: legibility-state gating (light vs clear) for recurrence_cue only.
+  let debugRecurrenceE3LegibilityState: LegibilityState | null = null;
+  let debugRecurrenceE3PresentRelevance: number | null = null;
+  let debugRecurrenceE3ClarityGain: number | null = null;
+  let debugRecurrenceE3AddedWeightRisk: number | null = null;
+  let debugRecurrenceE3ProofThresholdPassed: boolean | null = null;
+  let debugRecurrenceE3SuppressedReason:
+    | null
+    | "low_present_relevance"
+    | "low_clarity_gain"
+    | "added_weight_too_high" = null;
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -1384,52 +1599,108 @@ export async function POST(request: Request) {
                 }
 
                 if (!suppressRepeat) {
-                  const cue = recurrenceCueTextFromTemplate(
-                    patternId,
-                    resolvedConfidence,
-                    `${userMsg.id}:${created.id}`,
-                    phase
-                  );
+                  // E3 legibility gate + light/clear wording.
+                  // Boundary: E3 ONLY changes recurrence_cue text/rendering (not continuity_insight / Last insight strip).
 
-                  responseRecurrenceCue = {
-                    patternKey: patternId,
-                    confidence: resolvedConfidence,
-                    confidenceScore,
-                    textEn: cue.en.replace(/\n/g, " ").trim(),
-                    textZh: cue.zh.replace(/\n/g, " ").trim(),
-                    phase,
-                  };
+                  // Proof threshold for E3 (derived from current E2 recurrence conditions).
+                  debugRecurrenceE3ProofThresholdPassed = true;
 
-                  debugRecurrenceCueEmitted = true;
+                  const presentRelevance =
+                    newestAlignedIndex == null
+                      ? 0
+                      : newestAlignedIndex <= 1
+                        ? 0.85
+                        : newestAlignedIndex === 2
+                          ? 0.6
+                          : 0.3;
 
-                  if (assistantMsgId) {
-                    try {
-                      const row = await prisma.message.findUnique({
-                        where: { id: assistantMsgId },
-                        select: { metadata: true },
-                      });
-                      const prevMeta =
-                        row?.metadata &&
-                        typeof row.metadata === "object" &&
-                        !Array.isArray(row.metadata)
-                          ? (row.metadata as Record<string, unknown>)
-                          : {};
-                      await prisma.message.update({
-                        where: { id: assistantMsgId },
-                        data: {
-                          metadata: {
-                            ...prevMeta,
-                            wisewave_recurrence: {
-                              pattern_key: patternId,
-                              aligned_instance_count: alignedInstanceCount,
-                              confidence: resolvedConfidence,
-                              phase,
+                  const baseClarityGain =
+                    resolvedConfidence === "high"
+                      ? 0.85
+                      : resolvedConfidence === "medium"
+                        ? 0.65
+                        : 0.4;
+
+                  const clarityGain =
+                    phase === "persistence"
+                      ? Math.max(baseClarityGain, 0.75)
+                      : baseClarityGain;
+
+                  // Keep added weight low since UI is already one-sentence + secondary placement.
+                  const addedWeightRisk = clarityGain >= 0.72 ? 0.25 : 0.15;
+
+                  debugRecurrenceE3PresentRelevance = presentRelevance;
+                  debugRecurrenceE3ClarityGain = clarityGain;
+                  debugRecurrenceE3AddedWeightRisk = addedWeightRisk;
+
+                  const minPresentRelevanceToRender = 0.55;
+                  const minClarityGainToRender = 0.5;
+                  const maxAddedWeightRisk = 0.35;
+
+                  if (presentRelevance < minPresentRelevanceToRender) {
+                    debugRecurrenceE3SuppressedReason = "low_present_relevance";
+                    responseRecurrenceCue = null;
+                  } else if (clarityGain < minClarityGainToRender) {
+                    debugRecurrenceE3SuppressedReason = "low_clarity_gain";
+                    responseRecurrenceCue = null;
+                  } else if (addedWeightRisk > maxAddedWeightRisk) {
+                    debugRecurrenceE3SuppressedReason = "added_weight_too_high";
+                    responseRecurrenceCue = null;
+                  } else {
+                    const legibilityState: LegibilityState =
+                      clarityGain >= 0.72 ? "clear" : "light";
+                    debugRecurrenceE3LegibilityState = legibilityState;
+
+                    const cue = e3CueTextFromTemplate(
+                      patternId,
+                      legibilityState,
+                      `${userMsg.id}:${created.id}:${legibilityState}`
+                    );
+
+                    responseRecurrenceCue = {
+                      patternKey: patternId,
+                      confidence: resolvedConfidence,
+                      confidenceScore,
+                      textEn: cue.en.replace(/\n/g, " ").trim(),
+                      textZh: cue.zh.replace(/\n/g, " ").trim(),
+                      phase,
+                    };
+
+                    debugRecurrenceCueEmitted = true;
+
+                    // Persist recurrence identity for anti-repeat checks.
+                    if (assistantMsgId) {
+                      try {
+                        const row = await prisma.message.findUnique({
+                          where: { id: assistantMsgId },
+                          select: { metadata: true },
+                        });
+                        const prevMeta =
+                          row?.metadata &&
+                          typeof row.metadata === "object" &&
+                          !Array.isArray(row.metadata)
+                            ? (row.metadata as Record<string, unknown>)
+                            : {};
+                        await prisma.message.update({
+                          where: { id: assistantMsgId },
+                          data: {
+                            metadata: {
+                              ...prevMeta,
+                              wisewave_recurrence: {
+                                pattern_key: patternId,
+                                aligned_instance_count: alignedInstanceCount,
+                                confidence: resolvedConfidence,
+                                phase,
+                              },
                             },
                           },
-                        },
-                      });
-                    } catch (e) {
-                      console.warn("[chat/turn] recurrence metadata update failed", e);
+                        });
+                      } catch (e) {
+                        console.warn(
+                          "[chat/turn] recurrence metadata update failed",
+                          e
+                        );
+                      }
                     }
                   }
                 }
@@ -1549,6 +1820,12 @@ export async function POST(request: Request) {
     debug_recurrence_e2_newest_aligned_age_ms: debugRecurrenceE2NewestAlignedAgeMs,
     debug_recurrence_e2_persistence_downgraded: debugRecurrenceE2PersistenceDowngraded,
     debug_recurrence_e2_active_pattern_replaced: debugRecurrenceE2ActivePatternReplaced,
+    debug_recurrence_e3_legibility_state: debugRecurrenceE3LegibilityState,
+    debug_recurrence_e3_present_relevance: debugRecurrenceE3PresentRelevance,
+    debug_recurrence_e3_clarity_gain: debugRecurrenceE3ClarityGain,
+    debug_recurrence_e3_added_weight_risk: debugRecurrenceE3AddedWeightRisk,
+    debug_recurrence_e3_proof_threshold_passed: debugRecurrenceE3ProofThresholdPassed,
+    debug_recurrence_e3_suppressed_reason: debugRecurrenceE3SuppressedReason,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
