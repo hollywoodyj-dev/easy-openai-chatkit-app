@@ -144,4 +144,43 @@ On an **earlier attempt**, the second user message was **semantically close** to
 
 ---
 
-*Append Pass 4+ results below as Lumen completes them.*
+## Pass 4 — Stale window + decay (hosted `wisewave.io`)
+
+| Field | Value |
+|--------|--------|
+| **Result** | **Pass** |
+| **Environment** | Hosted target: `https://www.wisewave.io` |
+
+### Evidence (single cookie-backed QA session)
+
+- Session: `cmyglgt200jo04leduowyn`
+- Seed substrate: same-family `rest_must_be_earned` with 2 aligned prior insights
+- Backdate script: scoped write updated **2** insights in that conversation
+
+### Final stale-check turn
+
+User message (fresh same-family):
+- `It is happening again tonight. Even now, rest still feels like something I should not allow unless I do more first.`
+
+Observed:
+- `recurrence_cue`: **null**
+- `continuity_key`: **`rest_must_be_earned`**
+- `is_continuity_eligible`: **true**
+- `debug_recurrence_aligned_instance_count`: **3**
+- `debug_recurrence_e2_suppressed_stale_window`: **true**
+- `debug_recurrence_e2_newest_aligned_age_ms`: **691210318**
+- `debug_recurrence_e2_phase` (if shown): consistent with stale suppression
+- `debug_is_vague_source`: **false**
+
+### Meaning / conclusion
+
+Aligned count still reaches **3**, but the newest aligned prior is old enough to cross the provisional stale limit, so the system:
+- keeps structural alignment (count logic still advances)
+- applies stale-window decay correctly (cue suppressed)
+- does not fall back due to vagueness (debug shows non-vague source)
+
+**Lumen / Tree conclusion:** Pass 4 = **Pass**
+
+---
+
+*Append Pass 5+ results below as Lumen completes them.*
