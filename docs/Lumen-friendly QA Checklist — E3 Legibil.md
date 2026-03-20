@@ -2,6 +2,9 @@ Lumen-friendly QA Checklist — E3 Legibility Rendering
 Product: Wisewave V1 /chat
 Scope: E3 continuity legibility rendering
 Primary question: Does continuity become clearer without becoming heavier?
+Scope boundary (must hold):
+- E3 applies to `recurrence_cue` / pattern cue only.
+- E3 must NOT change `continuity_insight` / “Last insight” strip behavior.
 Out of scope: history UI, analytics, memory expansion, new pattern taxonomies, therapy-style interpretation
 1. Core acceptance lens
 Lumen should judge E3 by five questions:
@@ -143,9 +146,11 @@ more awkward or less readable
 than the other
 10. Suggested pass structure
 Pass 1 — Gate integrity
-Verify cue stays hidden when proof/gates are not satisfied.
+Verify cue stays hidden when E3 proof/gates are not satisfied.
+Also verify `continuity_insight` / “Last insight” strip is unchanged by E3.
 Pass 2 — Legibility gain
 Verify cue appears when it genuinely makes continuity easier to recognize.
+Confirm `legibility_state` matches debug, and that null cues include a `debug_recurrence_e3_suppressed_reason` when E3 gating suppresses the cue.
 Pass 3 — Anti-heaviness
 Verify improved clarity does not make the product feel heavier than E2.
 Pass 4 — Reflection-first
@@ -168,6 +173,13 @@ API evidence
 continuity state present: yes / no
 proof threshold passed: yes / no
 legibility state: light / clear / none
+E3 debug evidence (recurrence_cue only)
+debug_recurrence_e3_legibility_state: light / clear / null
+debug_recurrence_e3_present_relevance: number | null
+debug_recurrence_e3_clarity_gain: number | null
+debug_recurrence_e3_added_weight_risk: number | null
+debug_recurrence_e3_proof_threshold_passed: boolean | null
+debug_recurrence_e3_suppressed_reason: string | null
 render reason
 present relevance
 clarity gain
