@@ -12,6 +12,23 @@ const DEFAULT_CHAT_MODEL = "gpt-5.4";
 const RECENT_MESSAGES_COUNT = 8;
 const SUMMARY_TRIGGER_EVERY = 10;
 
+/**
+ * Milestone E2 — numeric tuning below is PROVISIONAL (Wisewave / OctopusMind).
+ * Acceptable for QA; not the final locked persistence-boundary rule until Tree governance says so.
+ */
+const E2_RECURRENCE_MAX_INSIGHT_AGE_MS = 10 * 24 * 60 * 60 * 1000; // provisional substrate window
+/** Provisional stale decay: silence when newest aligned prior exceeds this age. */
+const E2_NEWEST_ALIGNED_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * Conservative anti-repeat heuristic only (not the core definition of persistence).
+ * Same pattern_key + very short follow-up → suppress cue to avoid mechanical repetition.
+ */
+const E2_ANTI_REPEAT_MIN_USER_CHARS = 56;
+/** Count threshold that may qualify for persistence wording — must pass relevance gates below. */
+const E2_PERSISTENCE_ALIGNED_THRESHOLD = 3;
+/** Minimum user message length to allow persistence-phase copy (present relevance / value-add). */
+const E2_PERSISTENCE_MIN_USER_CHARS = 48;
+
 const SUMMARY_SYSTEM_PROMPT = `You summarize conversations for memory.
 The conversation summary must remain factual, concise, and non-therapeutic.
 
@@ -385,11 +402,148 @@ const PATTERN_TEMPLATES: Record<
   },
 };
 
+/** Milestone E2 (Wisewave persistence bar): “still present / gentle recognition”, not “returning again”. */
+const GENERIC_PERSISTENCE_TEMPLATES: Record<
+  RecurrenceConfidence,
+  { en: string[]; zh: string[] }
+> = {
+  low: {
+    en: ["This may still be close to something familiar here."],
+    zh: ["这里也许仍然和某种熟悉的东西很接近。"],
+  },
+  medium: {
+    en: [
+      "This still seems close to a familiar pattern.",
+      "A similar thread still seems to be present here.",
+      "Something familiar seems to still be active here.",
+    ],
+    zh: [
+      "这似乎仍然和一个熟悉的模式很接近。",
+      "这里似乎仍然带着一条相似的线索。",
+      "某种熟悉的东西似乎还在这里。",
+    ],
+  },
+  high: {
+    en: [
+      "A familiar pattern still seems present in what you are describing.",
+      "This still feels connected to an earlier repeating pressure.",
+    ],
+    zh: [
+      "你所描述的里面，似乎仍然有一种熟悉的模式在场。",
+      "这仍然和之前那种反复出现的压力有连结。",
+    ],
+  },
+};
+
+const PERSISTENCE_PATTERN_TEMPLATES: Record<
+  Exclude<PatternId, "generic">,
+  Record<RecurrenceConfidence, { en: string; zh: string }>
+> = {
+  pressure_to_get_it_right: {
+    low: {
+      en: "Some of that familiar pressure around getting it right may still be here.",
+      zh: "那种想把事情做对的熟悉压力，也许还在这里。",
+    },
+    medium: {
+      en: "The pressure to get it right still seems to be active here.",
+      zh: "那种想把事情做对的压力，似乎还在这里。",
+    },
+    high: {
+      en: "That familiar pressure to do this correctly still seems to be showing up.",
+      zh: "那种想把这件事做对的熟悉压力，似乎还在出现。",
+    },
+  },
+  fear_of_not_enough: {
+    low: {
+      en: "Something close to “not enough” may still be present here.",
+      zh: "这里也许仍然有一点“不够”的感觉。",
+    },
+    medium: {
+      en: "This still seems close to that familiar sense of not being enough.",
+      zh: "这似乎仍然和那种“自己不够”的熟悉感觉很接近。",
+    },
+    high: {
+      en: "The “not enough” pressure may still be active in this moment.",
+      zh: "那种“不够”的压力，在这一刻似乎还在。",
+    },
+  },
+  over_efforting: {
+    low: {
+      en: "A familiar push to keep trying harder may still be in the mix.",
+      zh: "那种想再更用力一点的熟悉推动感，也许还在。",
+    },
+    medium: {
+      en: "The push to keep trying harder may still be active here.",
+      zh: "那种继续逼自己更用力的推动感，似乎还在这里。",
+    },
+    high: {
+      en: "That over-efforting pull still seems close to the surface here.",
+      zh: "那种过度用力的拉扯，似乎仍然很接近表面。",
+    },
+  },
+  avoidance_under_uncertainty: {
+    low: {
+      en: "Some familiar hesitation around uncertainty may still be here.",
+      zh: "面对不确定时的那种熟悉迟疑，也许还在这里。",
+    },
+    medium: {
+      en: "This still seems close to that familiar hesitation around uncertainty.",
+      zh: "这似乎仍然和面对不确定时的熟悉迟疑很接近。",
+    },
+    high: {
+      en: "Uncertainty here may still be pulling toward that same familiar pattern.",
+      zh: "这里的不确定感，也许仍然被带向同一种熟悉的模式。",
+    },
+  },
+  inner_conflict: {
+    low: {
+      en: "A familiar inner split may still be present here.",
+      zh: "那种熟悉的内在分裂感，也许还在这里。",
+    },
+    medium: {
+      en: "A similar inner pull still seems to be present here.",
+      zh: "一种相似的内在拉扯似乎还在这里。",
+    },
+    high: {
+      en: "That familiar inner conflict still seems close to what you are describing.",
+      zh: "那种熟悉的内在冲突，似乎仍然很接近你所说的。",
+    },
+  },
+  self_worth_pressure: {
+    low: {
+      en: "Some familiar pressure around worth may still be active here.",
+      zh: "和价值感有关的那种熟悉压力，也许还在这里。",
+    },
+    medium: {
+      en: "The pressure to prove your worth may still be present here.",
+      zh: "那种需要证明自己价值的压力，似乎还在这里。",
+    },
+    high: {
+      en: "That familiar self-worth pressure still seems to be showing up.",
+      zh: "那种熟悉的自我价值压力，似乎还在出现。",
+    },
+  },
+};
+
+type RecurrenceCuePhase = "recurrence" | "persistence";
+
 function recurrenceCueTextFromTemplate(
   patternId: PatternId,
   confidence: RecurrenceConfidence,
-  seed: string
+  seed: string,
+  phase: RecurrenceCuePhase
 ): { en: string; zh: string } {
+  if (phase === "persistence") {
+    if (patternId === "generic") {
+      const enVariants = GENERIC_PERSISTENCE_TEMPLATES[confidence].en;
+      const zhVariants = GENERIC_PERSISTENCE_TEMPLATES[confidence].zh;
+      const idx = stableHashInt(seed + ":p") % Math.min(enVariants.length, zhVariants.length);
+      return { en: enVariants[idx] ?? enVariants[0], zh: zhVariants[idx] ?? zhVariants[0] };
+    }
+    const t = PERSISTENCE_PATTERN_TEMPLATES[patternId];
+    return t[confidence];
+  }
+
   if (patternId === "generic") {
     const enVariants = GENERIC_TEMPLATES[confidence].en;
     const zhVariants = GENERIC_TEMPLATES[confidence].zh;
@@ -854,6 +1008,7 @@ export async function POST(request: Request) {
         confidenceScore: number;
         textEn: string;
         textZh: string;
+        phase: RecurrenceCuePhase;
       }
     | null = null;
 
@@ -866,6 +1021,15 @@ export async function POST(request: Request) {
   let debugRecurrenceConfidenceResolved: RecurrenceConfidence | null = null;
   let debugRecurrenceNewestAlignedIndex: number | null = null;
   let debugRecurrenceCueEmitted: boolean = false;
+  // Milestone E2 debug (persistence boundary / decay / anti-repetition).
+  let debugRecurrenceE2Phase: RecurrenceCuePhase | null = null;
+  let debugRecurrenceE2SuppressedStaleWindow: boolean = false;
+  let debugRecurrenceE2SuppressedRepeat: boolean = false;
+  let debugRecurrenceE2NewestAlignedAgeMs: number | null = null;
+  /** True when count would allow persistence but copy stays on recurrence (relevance / repetition risk). */
+  let debugRecurrenceE2PersistenceDowngraded: boolean = false;
+  /** True when visible pattern identity differs from previous assistant metadata (replace, not accumulate). */
+  let debugRecurrenceE2ActivePatternReplaced: boolean = false;
 
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
@@ -1114,7 +1278,7 @@ export async function POST(request: Request) {
               }) => Promise<Array<{ corePattern: string; createdAt: Date }>>;
             };
           };
-          const recent = await anyPrismaRead.insight?.findMany({
+          const recentFetched = await anyPrismaRead.insight?.findMany({
             where: {
               userId,
               status: "active",
@@ -1122,13 +1286,17 @@ export async function POST(request: Request) {
               id: { not: created.id },
             },
             orderBy: { createdAt: "desc" },
-            // Milestone E (OctopusMind E2): lightweight working window.
-            // Prefer the most recent 3–5 meaningful insights over long history.
+            // Milestone E2: small rolling window (substrate, not archive).
             take: 5,
             select: { corePattern: true, createdAt: true },
           });
+          const windowStart = Date.now() - E2_RECURRENCE_MAX_INSIGHT_AGE_MS;
+          const recent = (recentFetched ?? []).filter(
+            (r) => r.createdAt.getTime() >= windowStart
+          );
+
           const matchPositions: number[] = [];
-          (recent ?? []).forEach((r, idx) => {
+          recent.forEach((r, idx) => {
             if (detectContinuityPatternFamily(r.corePattern) === patternFamily) {
               matchPositions.push(idx);
             }
@@ -1136,13 +1304,21 @@ export async function POST(request: Request) {
           const sameFamilyCount = matchPositions.length;
           const newestAlignedIndex =
             matchPositions.length > 0 ? matchPositions[0] : null;
+          const newestAlignedRow =
+            newestAlignedIndex != null ? recent[newestAlignedIndex] : null;
+          const newestAlignedAgeMs =
+            newestAlignedRow != null
+              ? Date.now() - newestAlignedRow.createdAt.getTime()
+              : null;
+          if (newestAlignedAgeMs != null) {
+            debugRecurrenceE2NewestAlignedAgeMs = newestAlignedAgeMs;
+          }
 
           debugRecurrencePatternFamily = patternFamily;
           debugRecurrenceSameFamilyCount = sameFamilyCount;
           debugRecurrenceNewestAlignedIndex = newestAlignedIndex;
 
-          // E2 proof rule expects "at least two instances" and confidence tiers
-          // based on aligned instances INCLUDING the current insight.
+          // E2 proof rule: aligned instances INCLUDING the current insight.
           const alignedInstanceCount = sameFamilyCount + 1;
           debugRecurrenceAlignedInstanceCount = alignedInstanceCount;
 
@@ -1152,59 +1328,158 @@ export async function POST(request: Request) {
             const patternId = mapContinuityFamilyToPatternId(patternFamily);
             debugRecurrencePatternId = patternId;
 
-            // Provisional: alignedCount => medium/high.
-            // alignedInstanceCount 2 => medium, >=3 => high.
-            const confidenceRaw: RecurrenceConfidence =
-              alignedInstanceCount >= 3 ? "high" : "medium";
-            debugRecurrenceConfidenceRaw = confidenceRaw;
-
-            // Generic fallback policy: generic should remain fallback-only.
-            const resolvedConfidence: RecurrenceConfidence =
-              patternId === "generic" ? "low" : confidenceRaw;
-            debugRecurrenceConfidenceResolved = resolvedConfidence;
-
-            // Confidence score is used only for QA/debug.
-            const confidenceScore = Math.min(
-              1,
-              resolvedConfidence === "high"
-                ? 0.9
-                : resolvedConfidence === "medium"
-                  ? 0.65
-                  : 0.35
-            );
-
-            // Template E guidance: hide low-confidence surfacing if the current signal is too weak.
+            // E2 decay: long-gap similarity should not surface (quiet disappearance).
             if (
-              resolvedConfidence === "low" &&
-              // OctopusMind E2: low confidence should default to no surfacing.
-              // We only allow a low cue when the recurrence is very close in the
-              // working window (i.e., the newest aligned prior insight appears in
-              // the top 2 of the window).
-              (isVeryShort ||
-                isTooGeneric ||
-                isSystemy ||
-                isTooShortAndFlat ||
-                (newestAlignedIndex != null && newestAlignedIndex > 1))
+              newestAlignedAgeMs != null &&
+              newestAlignedAgeMs > E2_NEWEST_ALIGNED_MAX_AGE_MS
             ) {
+              debugRecurrenceE2SuppressedStaleWindow = true;
               responseRecurrenceCue = null;
-              return;
+            } else {
+              // Provisional: alignedCount => medium/high.
+              const confidenceRaw: RecurrenceConfidence =
+                alignedInstanceCount >= 3 ? "high" : "medium";
+              debugRecurrenceConfidenceRaw = confidenceRaw;
+
+              const resolvedConfidence: RecurrenceConfidence =
+                patternId === "generic" ? "low" : confidenceRaw;
+              debugRecurrenceConfidenceResolved = resolvedConfidence;
+
+              const confidenceScore = Math.min(
+                1,
+                resolvedConfidence === "high"
+                  ? 0.9
+                  : resolvedConfidence === "medium"
+                    ? 0.65
+                    : 0.35
+              );
+
+              // E2: low confidence defaults to no surfacing unless very tight window + signal.
+              const suppressLowConfidence =
+                resolvedConfidence === "low" &&
+                (isVeryShort ||
+                  isTooGeneric ||
+                  isSystemy ||
+                  isTooShortAndFlat ||
+                  (newestAlignedIndex != null && newestAlignedIndex > 1));
+
+              if (!suppressLowConfidence) {
+                // E2 replace-not-accumulate: only one active visible pattern identity per turn.
+                // If this turn maps to a different pattern_key than the last surfaced cue, we replace
+                // metadata entirely — never stack multiple continuity patterns in one surface.
+
+                // Persistence phase is NOT count-only (Wisewave): require present relevance + low
+                // repetition risk, not just alignedInstanceCount >= threshold.
+                const userTrimLen = message.trim().length;
+                const persistenceCountOk =
+                  alignedInstanceCount >= E2_PERSISTENCE_ALIGNED_THRESHOLD;
+                const persistenceRelevanceOk =
+                  !isVagueSource &&
+                  userTrimLen >= E2_PERSISTENCE_MIN_USER_CHARS &&
+                  newestAlignedIndex != null &&
+                  newestAlignedIndex <= 1;
+                if (persistenceCountOk && !persistenceRelevanceOk) {
+                  debugRecurrenceE2PersistenceDowngraded = true;
+                }
+                const phase: RecurrenceCuePhase =
+                  persistenceCountOk && persistenceRelevanceOk
+                    ? "persistence"
+                    : "recurrence";
+                debugRecurrenceE2Phase = phase;
+
+                let suppressRepeat = false;
+                if (assistantMsgId) {
+                  try {
+                    const prevAsst = await prisma.message.findFirst({
+                      where: {
+                        conversationId: sessionId,
+                        role: "assistant",
+                        id: { not: assistantMsgId },
+                      },
+                      orderBy: { createdAt: "desc" },
+                      select: { metadata: true },
+                    });
+                    const pm = prevAsst?.metadata;
+                    const wr =
+                      pm &&
+                      typeof pm === "object" &&
+                      !Array.isArray(pm) &&
+                      "wisewave_recurrence" in pm
+                        ? (pm as { wisewave_recurrence?: { pattern_key?: string } })
+                            .wisewave_recurrence
+                        : undefined;
+                    if (
+                      typeof wr?.pattern_key === "string" &&
+                      wr.pattern_key.length > 0 &&
+                      wr.pattern_key !== patternId
+                    ) {
+                      debugRecurrenceE2ActivePatternReplaced = true;
+                    }
+                    // Heuristic only: short follow-up + same pattern → silence (not the core persistence rule).
+                    if (
+                      wr?.pattern_key === patternId &&
+                      userTrimLen < E2_ANTI_REPEAT_MIN_USER_CHARS
+                    ) {
+                      suppressRepeat = true;
+                      debugRecurrenceE2SuppressedRepeat = true;
+                    }
+                  } catch {
+                    /* non-fatal */
+                  }
+                }
+
+                if (!suppressRepeat) {
+                  const cue = recurrenceCueTextFromTemplate(
+                    patternId,
+                    resolvedConfidence,
+                    `${userMsg.id}:${created.id}`,
+                    phase
+                  );
+
+                  responseRecurrenceCue = {
+                    patternKey: patternId,
+                    confidence: resolvedConfidence,
+                    confidenceScore,
+                    textEn: cue.en.replace(/\n/g, " ").trim(),
+                    textZh: cue.zh.replace(/\n/g, " ").trim(),
+                    phase,
+                  };
+
+                  debugRecurrenceCueEmitted = true;
+
+                  if (assistantMsgId) {
+                    try {
+                      const row = await prisma.message.findUnique({
+                        where: { id: assistantMsgId },
+                        select: { metadata: true },
+                      });
+                      const prevMeta =
+                        row?.metadata &&
+                        typeof row.metadata === "object" &&
+                        !Array.isArray(row.metadata)
+                          ? (row.metadata as Record<string, unknown>)
+                          : {};
+                      await prisma.message.update({
+                        where: { id: assistantMsgId },
+                        data: {
+                          metadata: {
+                            ...prevMeta,
+                            wisewave_recurrence: {
+                              pattern_key: patternId,
+                              aligned_instance_count: alignedInstanceCount,
+                              confidence: resolvedConfidence,
+                              phase,
+                            },
+                          },
+                        },
+                      });
+                    } catch (e) {
+                      console.warn("[chat/turn] recurrence metadata update failed", e);
+                    }
+                  }
+                }
+              }
             }
-
-            const cue = recurrenceCueTextFromTemplate(
-              patternId,
-              resolvedConfidence,
-              `${userMsg.id}:${created.id}`
-            );
-
-            responseRecurrenceCue = {
-              patternKey: patternId,
-              confidence: resolvedConfidence,
-              confidenceScore,
-              textEn: cue.en.replace(/\n/g, " ").trim(),
-              textZh: cue.zh.replace(/\n/g, " ").trim(),
-            };
-
-            debugRecurrenceCueEmitted = true;
           }
         }
       }
@@ -1287,6 +1562,7 @@ export async function POST(request: Request) {
         confidence_score: responseRecurrenceCue.confidenceScore,
         text_en: responseRecurrenceCue.textEn,
         text_zh: responseRecurrenceCue.textZh,
+        phase: responseRecurrenceCue.phase,
       },
     }),
     // Debug-only fields to help QA distinguish:
@@ -1312,6 +1588,12 @@ export async function POST(request: Request) {
     debug_recurrence_confidence_resolved: debugRecurrenceConfidenceResolved,
     debug_recurrence_newest_aligned_index: debugRecurrenceNewestAlignedIndex,
     debug_recurrence_cue_emitted: debugRecurrenceCueEmitted,
+    debug_recurrence_e2_phase: debugRecurrenceE2Phase,
+    debug_recurrence_e2_suppressed_stale_window: debugRecurrenceE2SuppressedStaleWindow,
+    debug_recurrence_e2_suppressed_repeat: debugRecurrenceE2SuppressedRepeat,
+    debug_recurrence_e2_newest_aligned_age_ms: debugRecurrenceE2NewestAlignedAgeMs,
+    debug_recurrence_e2_persistence_downgraded: debugRecurrenceE2PersistenceDowngraded,
+    debug_recurrence_e2_active_pattern_replaced: debugRecurrenceE2ActivePatternReplaced,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

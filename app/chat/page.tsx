@@ -58,6 +58,8 @@ type RecurrenceCue = {
   confidence_score: number;
   text_en: string;
   text_zh: string;
+  /** Milestone E2: first recurrence vs ongoing legibility wording */
+  phase?: "recurrence" | "persistence";
 };
 
 function shortenCueText(

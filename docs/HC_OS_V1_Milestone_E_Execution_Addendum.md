@@ -403,3 +403,43 @@ Default to silence when:
 - similarity depends mainly on text overlap/wording
 - the evidence is weak enough that surfacing would feel intrusive or over-analytic
 
+---
+
+## Milestone E2 — Nova implementation (in progress)
+
+Aligned with `docs/HC_OS_V1_Milestone_E_E2_Document_1_Addendum_to_Milestone_E_E2_Minimal_Persistent_Pattern_Continuity.md`.
+
+### Wisewave review (E2 QA) — accepted, not yet boundary-locked
+
+**Directionally strong — accepted for E2 QA.** Before full boundary lock:
+
+1. **Provisional numeric tuning** — The **10-day** substrate filter and **7-day** newest-aligned stale rule are **implementation tuning only**, not the final OctopusMind persistence-boundary lock. Code and docs label them as provisional.
+2. **Persistence phase is not count-only** — `alignedInstanceCount >= 3` is only a **necessary** trigger; **persistence** copy also requires **present relevance** (non-vague source, user message length ≥ provisional minimum, newest aligned prior in the top two of the working window). Otherwise phase stays **`recurrence`** even at 3+ instances (`debug_recurrence_e2_persistence_downgraded`).
+3. **Short-text anti-repeat is a heuristic** — **&lt;56 chars** + same `pattern_key` as previous assistant metadata suppresses the cue; this is a **conservative shortcut**, not the core definition of persistence or value-add.
+4. **Replace, not accumulate** — Only **one** active visible pattern identity per continuity cue. When this turn’s `pattern_key` **differs** from the previous assistant’s `wisewave_recurrence.pattern_key`, metadata is **replaced** (no parallel stacking). Flag: `debug_recurrence_e2_active_pattern_replaced`.
+5. **Silence is an E2 success state** — Founder demo should prove **recurrence → persistence (when gates pass) → silence** when value-add weakens (stale window, anti-repeat heuristic, low confidence, etc.), not “longer persistence at all costs.”
+
+### Shipped in `/api/chat/turn` (E2 slice)
+
+- **Substrate window (provisional)**: Prior eligible insights filtered to **10-day** rolling age before same-family matching (still `take: 5`).
+- **Credibility decay (provisional)**: Newest aligned prior **>7 days** → no cue (`debug_recurrence_e2_suppressed_stale_window`).
+- **Persistence vs recurrence**: **`recurrence_cue.phase`** is **`persistence`** only when **count ≥ 3** and **relevance gates** pass (not vague source, user message ≥ **48** chars provisional, `newestAlignedIndex ≤ 1`); otherwise **`recurrence`** at 2+ instances or downgraded from 3+.
+- **Anti-repetition (heuristic)**: Previous assistant same `pattern_key` + user message **&lt;56 chars** → suppress (`debug_recurrence_e2_suppressed_repeat`).
+- **Assistant metadata**: On emit, **`wisewave_recurrence`** is **written in full** (replaces prior fields for that key) — **replace-not-accumulate**.
+- **Bugfix**: Erroneous early `return` in low-confidence branch removed.
+
+### Debug fields (QA)
+
+- `debug_recurrence_e2_phase`
+- `debug_recurrence_e2_suppressed_stale_window`
+- `debug_recurrence_e2_suppressed_repeat`
+- `debug_recurrence_e2_newest_aligned_age_ms`
+- `debug_recurrence_e2_persistence_downgraded`
+- `debug_recurrence_e2_active_pattern_replaced`
+
+### Lumen follow-up
+
+- Full step-by-step plan: **`docs/HC_OS_V1_Milestone_E2_Lumen_QA_Plan.md`** (Passes 1–7, debug fields, reporting format).
+- **Demo path**: Prove **recurrence → persistence (when gates pass) → silence** when value-add weakens (short follow-up, stale window, downgraded phase).
+- EN/ZH parity on persistence templates when persistence phase actually fires.
+
