@@ -187,29 +187,50 @@ Aligned count still reaches **3**, but the newest aligned prior is old enough to
 
 ## Pass 5 — Replace-not-accumulate (hosted `wisewave.io`)
 
-**Result:** **Partial pass / revise**
+**Result:** **Pass**
 
-### What passed (product-level)
+### Key result
 
-- Pattern A cue and later Pattern B cue surface cleanly when the active family switches.
-- No visible stacking of old+new cues in the UI; only one active visible cue per assistant turn.
-- New dominant family can take over without lingering A on the surfaced cue.
+The replacement flag finally flips **true** on the **A → B surfaced transition**, after the Nova instrumentation fix.
 
-### What did not fully prove (debug instrumentation)
+### Hosted evidence
 
-- Even when the surfaced cue identity changed A → B, `debug_recurrence_e2_active_pattern_replaced` stayed **false** on:
-  - the B recurrence turn
-  - the B persistence turn
+- Hosted session: `cmygzex4001ih04vp01v293`
 
-### Nova hypothesis
+**Pattern A (rest-earned)**
 
-- The replacement debug flag was computed from the immediately previous assistant’s metadata.
-- If there is a cue-null middle turn between cue-bearing turns, the immediately previous assistant may not have `metadata.wisewave_recurrence`, so the debug flag can fail even while the UI behavior is correct.
+- Turn 1:
+  - `continuity_key`: `"rest_must_be_earned"`
+  - `recurrence_cue`: null
+- Turn 2:
+  - surfaced cue:
+    - `pattern_key`: `"self_worth_pressure"`
+    - `phase`: `"recurrence"`
+    - `debug_recurrence_e2_active_pattern_replaced`: **false**
 
-### Nova follow-up
+**Shift to Pattern B**
 
-- Update `/api/chat/turn` to derive the “previous surfaced recurrence identity” by scanning back for the most recent emitted `wisewave_recurrence.pattern_key` across prior assistant rows (not just the immediate previous assistant row).
+- Turn 3:
+  - new family established:
+    - `continuity_key`: `"delayed_reply_means_i_did_something_wrong"`
+  - `recurrence_cue`: null
+- Turn 4:
+  - surfaced cue:
+    - `pattern_key`: `"inner_conflict"`
+    - `phase`: `"recurrence"`
+    - `debug_recurrence_e2_active_pattern_replaced`: **true** (the missing proof)
 
-### Lumen / Tree next retest request
+**Follow-up B persistence**
 
-- After the instrumentation fix is deployed, rerun Pass 5 and confirm that `debug_recurrence_e2_active_pattern_replaced` becomes **true** when the surfaced cue identity switches A → B.
+- Turn 5:
+  - `pattern_key`: `"inner_conflict"`
+  - `phase`: `"persistence"`
+  - replacement flag returned to **false** (expected: no longer an identity switch)
+
+### Meaning / conclusion
+
+Pass 5 now proves both:
+- product behavior: one active visible cue at a time, no stacking
+- debug instrumentation: the system explicitly recognizes **A → B** surfaced identity replacement
+
+**Lumen / Tree conclusion:** Pass 5 = **Pass**
