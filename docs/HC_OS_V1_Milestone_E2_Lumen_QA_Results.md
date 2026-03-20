@@ -292,3 +292,42 @@ PowerShell may render `text_zh` as mojibake due to terminal encoding. Phase/gati
 ### Lumen / Tree conclusion
 
 **Pass 6 = Pass**
+
+---
+
+## Pass 7 — Founder demo acceptance (hosted `wisewave.io`)
+
+**Result:** **Pass**
+
+### Founder demo story check
+
+**Pass**
+- Reflection-first: recurrence/persistence cue remains a lightweight add-on, never the primary value.
+- Recurrence earned: first qualifying insight shows `recurrence_cue: null`, second aligned insight surfaces `recurrence`, later earned evidence gates `persistence`.
+- Persistence optional, not automatic: persistence never escalates purely by count; it is gated by present relevance/value-add and anti-repeat/silence rules.
+- Silence is success: short/churn, stale decay, and downgrade conditions produce `recurrence_cue: null` as restraint (not failure).
+
+### Founder-readability assessment
+
+**Pass**
+- The full arc is explainable without defensive narration:
+  - first insight: no recurrence claim
+  - second aligned insight: light recurrence
+  - later substantive turn: persistence only when earned
+  - short/stale/low-value beat: silence
+
+### Continuity-layer vs tracking-tool
+
+**Pass**
+- Observed behavior does not read like history management, tracking, analytics, or authority escalation.
+
+### EN / ZH demo context
+
+**Pass (functional baseline)**
+- EN and ZH follow the same functional gating and phase sequence.
+- Note: terminal capture may show `text_zh` as mojibake; debug/gating/phase behavior matched the intended parity arc.
+- If Tree needs Chinese founder demo quality, verify the rendered UI text in-browser (not just terminal output).
+
+### Lumen / Tree conclusion
+
+**Pass 7 = Pass**
