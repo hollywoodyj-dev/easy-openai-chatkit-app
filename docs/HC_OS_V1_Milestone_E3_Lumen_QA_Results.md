@@ -92,4 +92,42 @@ For null cues, we need to clarify whether:
 - `debug_recurrence_e3_suppressed_reason` is emitted only when E3 gating actually runs (i.e., not when cue is suppressed by upstream anti-repeat / other E2 branches), or
 - E3 should emit a suppressed reason for additional upstream suppressions too.
 
+---
+
+## Pass 3 — Legibility gain without added heaviness (hosted)
+
+**Result:** Pass
+
+**Hosted session:** `cmmz3m1dj000l404b9ggi0yl`
+
+### Evidence
+
+**Turn 2 — recurrence render**
+- `recurrence_cue.text_en`: “This still feels close to that familiar self-worth pressure.”
+- `debug_recurrence_e3_legibility_state`: `light`
+- `debug_recurrence_e3_present_relevance`: `0.85`
+- `debug_recurrence_e3_clarity_gain`: `0.65`
+- `debug_recurrence_e3_added_weight_risk`: `0.15`
+- `debug_recurrence_e3_proof_threshold_passed`: `true`
+
+**Turn 3 — persistence render**
+- `recurrence_cue.text_en`: “A familiar self-worth pressure still seems to be active here.”
+- `debug_recurrence_e3_legibility_state`: `clear`
+- `debug_recurrence_e3_present_relevance`: `0.85`
+- `debug_recurrence_e3_clarity_gain`: `0.85`
+- `debug_recurrence_e3_added_weight_risk`: `0.25`
+- `debug_recurrence_e3_proof_threshold_passed`: `true`
+
+### Why this passes
+
+The cue:
+- is clearer than E2
+- remains short and one-pass readable
+- stays lighter than the main reflection
+- does not drift into explanation-heavy or authority-heavy language
+
+### Lumen / Tree conclusion
+
+**Pass 3 = Pass**
+
 
