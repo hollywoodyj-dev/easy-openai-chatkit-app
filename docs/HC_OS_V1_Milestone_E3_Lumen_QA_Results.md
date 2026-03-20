@@ -94,6 +94,28 @@ For null cues, we need to clarify whether:
 
 ### Additional hosted retest (still not clearable)
 
+Hosted session: `cmmz4a7qc000l204p6s4bj29`
+
+Goal: force low present relevance while preserving recurrence eligibility via a 6-turn A/B/C/D/A sequence.
+
+Intended: A → A → B → C → D → A
+
+Observed continuity drift:
+- Turn 4: `continuity_key: "fallback_generic"`
+  - `debug_insight_core_pattern`: "When uncertainty appears, the user tends to avoid starting because mistakes feel like they will create more pressure."
+- Turn 5: unexpectedly returned to `continuity_key: "rest_must_be_earned"`
+  - visible cue already rendered
+
+Final Turn 6 outcome (still did not hit E3-owned suppression):
+- `recurrence_cue` still rendered
+- `debug_recurrence_e3_prof_threshold_passed: true`
+- `debug_recurrence_e3_present_relevance: 0.85`
+- `debug_recurrence_e3_suppressed_reason: null`
+
+Conclusion: Pass 2 remains **partial pass / revise**. This is a test-construction miss (alignment drift), not a confirmed code failure.
+
+### Additional hosted retest (still not clearable)
+
 Hosted session: `cmmz415l300ol504p4kejdcf`
 
 Attempt goal: find an **E3-owned suppression** case (cue null, but E3 gating runs and should explain via `debug_recurrence_e3_suppressed_reason`).
