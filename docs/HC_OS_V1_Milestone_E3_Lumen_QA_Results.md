@@ -92,6 +92,23 @@ For null cues, we need to clarify whether:
 - `debug_recurrence_e3_suppressed_reason` is emitted only when E3 gating actually runs (i.e., not when cue is suppressed by upstream anti-repeat / other E2 branches), or
 - E3 should emit a suppressed reason for additional upstream suppressions too.
 
+### Additional hosted retest (still not clearable)
+
+Hosted session: `cmmz415l300ol504p4kejdcf`
+
+Attempt goal: find an **E3-owned suppression** case (cue null, but E3 gating runs and should explain via `debug_recurrence_e3_suppressed_reason`).
+
+Observed:
+- Turn 2: recurrence render (E3 render debug present)
+- Turn 3: message  
+  `I can already see the same thread pretty clearly here, so saying more about it might not add much right now.`
+  - `recurrence_cue: null`
+  - all `debug_recurrence_e3_*` fields still **null**
+  - `debug_recurrence_aligned_instance_count: 1`
+
+Interpretation:
+- this turn appears to have **fallen out of the aligned recurrence path** (so E3 gating likely did not run), rather than proving an E3 suppression branch.
+
 ---
 
 ## Pass 3 — Legibility gain without added heaviness (hosted)
@@ -129,5 +146,84 @@ The cue:
 ### Lumen / Tree conclusion
 
 **Pass 3 = Pass**
+
+---
+
+## Pass 4 — Reflection-first + cue stays secondary (hosted)
+
+**Result:** Pass
+
+**Hosted session:** `cmmz3rdny000jj04m1lwbara`
+
+### What I checked
+- Compared the **assistant reflection** vs the **E3 recurrence cue** for competition.
+
+### Result
+- Reflection remains clearly primary.
+- Cue stays secondary (shorter, less interpretive, supports reflection rather than becoming a second analysis).
+
+### Debug sanity
+- recurrence: `legibility_state="light"`, `clarity_gain=0.65`, `added_weight_risk=0.15`
+- persistence: `legibility_state="clear"`, `clarity_gain=0.85`, `added_weight_risk=0.25`
+
+### Lumen / Tree conclusion
+**Pass 4 = Pass**
+
+---
+
+## Pass 5 — Anti-repetition (hosted)
+
+**Result:** Pass
+
+**Hosted session:** `cmmz3tr8x0008l104hvcsx6wo`
+
+### What I checked
+- E3 should not “solve legibility” by showing the cue mechanically more often.
+- Silence should win when continuity adds little new value.
+
+### Evidence (summary)
+- Turn 2: recurrence cue shown (E3 render, legibility state present)
+- Turn 3: short same-pattern follow-up → `recurrence_cue: null`, E3 debug null; upstream anti-repeat/silence behavior wins
+- Turn 4: stronger substantive follow-up → cue returns (persistence)
+- Turn 5: weak repetitive follow-up → `recurrence_cue: null` (no mechanical repeat)
+
+### Lumen / Tree conclusion
+**Pass 5 = Pass**
+
+---
+
+## Pass 6 — EN / ZH parity (hosted)
+
+**Result:** Pass
+
+**Hosted session:** `cmmz3vazu000l704z8fpmx0g`
+
+### Evidence (Chinese arc)
+- Turn 1: `recurrence_cue: null`, aligned count 1
+- Turn 2: recurrence cue with E3 debug present (`legibility_state="light"`, `present_relevance=0.85`, `clarity_gain=0.65`, `added_weight_risk=0.15`)
+- Turn 3: short same-family follow-up → `recurrence_cue: null`, E3 debug null, consistent with upstream suppression
+- Turn 4: longer substantive recovery → persistence cue with E3 debug present (`legibility_state="clear"`, etc.)
+
+### Note on `text_zh`
+Shell output may show mojibake; tone/phase/debug behavior matched the intended parity arc.
+
+### Lumen / Tree conclusion
+**Pass 6 = Pass**
+
+---
+
+## Pass 7 — Founder-readability acceptance (hosted)
+
+**Result:** Pass
+
+### Founder-readability verdict
+- E3 is easier to understand than E2.
+- Cue stays secondary and support-like.
+- Silence feels like restraint, not failure.
+- Demo remains continuity-layer, not memory/tracking/authority layer.
+- EN/ZH follow the same functional arc (baseline parity).
+
+### Lumen / Tree conclusion
+**Pass 7 = Pass**
 
 
