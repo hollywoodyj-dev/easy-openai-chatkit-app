@@ -3,6 +3,8 @@
 **Owner:** Lumen  
 **Scope:** **`embodiment_cue`** only — optional, invitation-style **grounded next response** layered **after** a visible **pattern cue** (`recurrence_cue`). Does **not** re-audit Milestone E unless F surfaces a regression.
 
+**Lumen QA outcome:** **Closed** — Passes 1–7 recorded (Pass 6 with watchpoint). **Overall judgment:** Milestone F **passed** with non-blocking quality watchpoints; **recommend marking Milestone F complete** for execution tracking. Formal ledger, evidence, and closure recommendation: **`docs/HC_OS_V1_Milestone_F_Lumen_QA_Results.md`**.
+
 **Shipped implementation (Nova F1/F2):**
 
 - API: `POST /api/chat/turn` may return `embodiment_cue` when `recurrence_cue` is non-null (unless `MILESTONE_F_EMBODIMENT=0` on server). Successful responses may include **`assistant_message_id`** (persisted row id).
