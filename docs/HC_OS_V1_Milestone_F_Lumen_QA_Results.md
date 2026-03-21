@@ -1,9 +1,9 @@
 # HC_OS_V1 Milestone F — Lumen QA Results
 
 ## Status
-- Overall status: **Pass 1 in progress**
-- Current pass: **Pass 1 — gating & API integrity (desk pass + awaiting live evidence)**
-- Closure state: **Not yet determined**
+- Overall status: **Pass 1 completed**
+- Current pass: **Pass 2 — optionality & anti-coaching**
+- Closure state: **Pass 1 passed; overall milestone not yet determined**
 
 ---
 
@@ -11,7 +11,7 @@
 
 | Pass | Goal | Status | Verdict |
 |---|---|---|---|
-| Pass 1 | Gating & API integrity | In progress | Pending |
+| Pass 1 | Gating & API integrity | Complete | **Pass** |
 | Pass 2 | Optionality & anti-coaching | Not started | Pending |
 | Pass 3 | Anti-pressure & silence | Not started | Pending |
 | Pass 4 | Reflection-first hierarchy (UI) | Not started | Pending |
@@ -22,6 +22,8 @@
 ---
 
 ## Pass 1 — Gating & API integrity
+
+**Result:** Pass
 
 ### Desk-pass read
 
@@ -95,33 +97,69 @@ This is now treated as a direct Pass 2 acceptance check.
 
 ---
 
-## What still needs live product evidence from Chino
+## Live product evidence captured
 
-I cannot honestly complete Pass 1 from docs alone. The following still require actual app/API evidence:
+### Pass 1P — Deployment smoke
+- Successful turn response included:
+  - `debug_embodiment_f_build_marker: "milestone_f_v1"`
+  - `debug_embodiment_f_milestone_enabled: true`
+- This confirms the tested environment included the correct Milestone F instrumentation and enabled path.
+- Earlier missing-embodiment evidence from before this marker should be treated as pre-deploy / wrong-build evidence rather than a true Pass 1B failure.
 
-1. **A no-recurrence turn**
-   - Need one real turn where `recurrence_cue` is null
-   - Need to verify `embodiment_cue` is absent/null
+### Pass 1A — No recurrence → no embodiment
+- No-recurrence turn showed:
+  - `debug_recurrence_cue_emitted: false`
+  - no `recurrence_cue`
+  - no `embodiment_cue`
+  - `debug_embodiment_f_outcome: "skipped_no_recurrence"`
+- This confirms Milestone F is correctly subordinate to recurrence and does not emit an orphan optional-response cue.
 
-2. **A recurrence-bearing turn**
-   - Need one real turn where `recurrence_cue` is present
-   - Need to verify `embodiment_cue` is present and structurally correct
+### Pass 1B — Recurrence present → embodiment present
+- Recurrence-bearing turn showed:
+  - `recurrence_cue` present
+  - `embodiment_cue` present
+  - `debug_embodiment_f_outcome: "emitted"`
+  - `debug_embodiment_f_milestone_enabled: true`
+- Emitted embodiment payload was structurally correct:
+  - `pattern_key: "inner_conflict"`
+  - `response_state: "clear"`
+  - `text_en` present
+  - `text_zh` present
 
-3. **One debug snapshot**
-   - Need actual response/debug fields for:
-     - `debug_embodiment_f_response_state`
-     - `debug_embodiment_f_used_ultra_short`
-     - `debug_embodiment_f_suppressed_reason` if available
+### Pass 1C — Debug alignment plausible
+- Debug fields aligned cleanly with the emitted cue:
+  - `debug_embodiment_f_response_state: "clear"`
+  - emitted `response_state: "clear"`
+  - `debug_embodiment_f_used_ultra_short: false`
+  - `debug_embodiment_f_suppressed_reason: null`
+- This is sufficient to treat the current F debug layer as usable for later passes.
 
-Without those, Pass 1 remains **desk-pass coherent but not yet product-proven**.
+---
+
+## Pass 1 verdict
+
+**Pass 1 passed.**
+
+### Formal judgment
+Milestone F gating and API integrity are now product-proven in the tested environment:
+- the correct F build is deployed,
+- the milestone is enabled,
+- embodiment does not appear without recurrence,
+- embodiment does appear when recurrence is emitted,
+- and debug output is coherent enough for further QA.
+
+### Carry-forward note
+The next meaningful QA risk is no longer deployment/gating ambiguity. It is now **product meaning**:
+- optionality
+- anti-coaching
+- decline-friction
+- reflection-first hierarchy
+- pressure reduction rather than pressure increase
 
 ---
 
 ## Preliminary QA position
 
-Milestone F preparation is coherent enough to begin live QA.
+Milestone F has cleared its first real product gate.
 
-Pass 1 is **not blocked by plan ambiguity**.
-It is blocked only by the normal next step: **capturing actual F API/UI evidence**.
-
-The current expectation is that Pass 1 should be straightforward to clear once live evidence is available, because the binding rule and implementation scope are unusually clean for a first-slice milestone.
+Pass 1 confirms that the feature exists in the correct build, is wired to the intended recurrence proof layer, and is testable in a trustworthy way for the remaining passes.

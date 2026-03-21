@@ -20,6 +20,8 @@ type MessageRow = {
   role: string;
   message: string;
   created_at: string;
+  /** Server persistence (wisewave_*); used to rehydrate Pattern / Optional response strips after reload. */
+  metadata?: unknown;
 };
 
 type SessionItem = {
@@ -97,6 +99,69 @@ function shortenCueText(
   }
   const parts = raw.split(/(?<=[.!?])\s+/);
   return (parts[0] ?? raw).trim();
+}
+
+/** Mirror server assistant metadata so live turns and GET /messages agree (refresh-safe). */
+function buildStripMetadataFromTurnResponse(
+  data: Record<string, unknown>
+): Record<string, unknown> | undefined {
+  const out: Record<string, unknown> = {};
+  const rs = data.reflection_state;
+  if (rs && typeof rs === "object" && rs !== null && "trigger_label" in rs) {
+    out.wisewave_reflection_state = rs;
+    out.wisewave_is_vague_source = Boolean(data.debug_is_vague_source);
+  }
+  const rc = data.recurrence_cue;
+  if (
+    rc &&
+    typeof rc === "object" &&
+    rc !== null &&
+    typeof (rc as { text_en?: unknown }).text_en === "string" &&
+    typeof (rc as { text_zh?: unknown }).text_zh === "string"
+  ) {
+    const r = rc as {
+      pattern_key: string;
+      confidence: string;
+      confidence_score?: number;
+      text_en: string;
+      text_zh: string;
+      phase?: string;
+    };
+    out.wisewave_recurrence = {
+      pattern_key: r.pattern_key,
+      confidence: r.confidence,
+      confidence_score:
+        typeof r.confidence_score === "number" ? r.confidence_score : undefined,
+      text_en: r.text_en,
+      text_zh: r.text_zh,
+      phase: r.phase,
+    };
+  }
+  const ec = data.embodiment_cue;
+  if (
+    ec &&
+    typeof ec === "object" &&
+    ec !== null &&
+    typeof (ec as { text_en?: unknown }).text_en === "string" &&
+    typeof (ec as { text_zh?: unknown }).text_zh === "string" &&
+    typeof (ec as { pattern_key?: unknown }).pattern_key === "string" &&
+    ((ec as { response_state?: unknown }).response_state === "light" ||
+      (ec as { response_state?: unknown }).response_state === "clear")
+  ) {
+    const e = ec as {
+      pattern_key: string;
+      response_state: "light" | "clear";
+      text_en: string;
+      text_zh: string;
+    };
+    out.wisewave_embodiment = {
+      pattern_key: e.pattern_key,
+      response_state: e.response_state,
+      text_en: e.text_en,
+      text_zh: e.text_zh,
+    };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 /** Milestone F: allow up to two short sentences; keep tertiary layer visually light. */
@@ -184,6 +249,124 @@ function isRegulationCueMeaningful(m: ReflectionMetadata): boolean {
   if (!meaningfulEmotion || emotionIsVague) return false;
 
   return true;
+}
+
+/** Restore header strips from the last assistant row (after refresh or session switch). */
+function hydrateStripStateFromMessages(
+  messages: MessageRow[],
+  ops: {
+    setLatestMetadata: (v: ReflectionMetadata | null) => void;
+    setLatestIsVagueSource: (v: boolean) => void;
+    setLatestRegulationMetadata: (v: ReflectionMetadata | null) => void;
+    setLatestRecurrenceCue: (v: RecurrenceCue | null) => void;
+    setLatestRecurrenceCueAssistantId: (v: string | null) => void;
+    setLatestEmbodimentCue: (v: EmbodimentCue | null) => void;
+    setLatestEmbodimentCueAssistantId: (v: string | null) => void;
+  }
+): void {
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  if (!lastAssistant) {
+    ops.setLatestMetadata(null);
+    ops.setLatestIsVagueSource(false);
+    ops.setLatestRegulationMetadata(null);
+    ops.setLatestRecurrenceCue(null);
+    ops.setLatestRecurrenceCueAssistantId(null);
+    ops.setLatestEmbodimentCue(null);
+    ops.setLatestEmbodimentCueAssistantId(null);
+    return;
+  }
+  const raw = lastAssistant.metadata;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    ops.setLatestMetadata(null);
+    ops.setLatestIsVagueSource(false);
+    ops.setLatestRegulationMetadata(null);
+    ops.setLatestRecurrenceCue(null);
+    ops.setLatestRecurrenceCueAssistantId(null);
+    ops.setLatestEmbodimentCue(null);
+    ops.setLatestEmbodimentCueAssistantId(null);
+    return;
+  }
+  const meta = raw as Record<string, unknown>;
+
+  const reflection = meta.wisewave_reflection_state;
+  if (
+    reflection &&
+    typeof reflection === "object" &&
+    reflection !== null &&
+    "trigger_label" in reflection
+  ) {
+    const rs = reflection as ReflectionMetadata;
+    ops.setLatestMetadata(rs);
+    const vague = Boolean(meta.wisewave_is_vague_source);
+    ops.setLatestIsVagueSource(vague);
+    const cueMeaningful =
+      rs && typeof rs === "object" && !vague ? isRegulationCueMeaningful(rs) : false;
+    ops.setLatestRegulationMetadata(cueMeaningful ? rs : null);
+  } else {
+    ops.setLatestMetadata(null);
+    ops.setLatestIsVagueSource(false);
+    ops.setLatestRegulationMetadata(null);
+  }
+
+  const wr = meta.wisewave_recurrence;
+  if (wr && typeof wr === "object" && wr !== null && !Array.isArray(wr)) {
+    const w = wr as Record<string, unknown>;
+    const textEn = w.text_en;
+    const textZh = w.text_zh;
+    const patternKey = w.pattern_key;
+    const conf = w.confidence;
+    if (
+      typeof textEn === "string" &&
+      typeof textZh === "string" &&
+      typeof patternKey === "string" &&
+      (conf === "low" || conf === "medium" || conf === "high")
+    ) {
+      ops.setLatestRecurrenceCue({
+        pattern_key: patternKey,
+        confidence: conf,
+        confidence_score:
+          typeof w.confidence_score === "number" ? w.confidence_score : 0.5,
+        text_en: textEn,
+        text_zh: textZh,
+        phase:
+          w.phase === "persistence" || w.phase === "recurrence"
+            ? w.phase
+            : undefined,
+      });
+      ops.setLatestRecurrenceCueAssistantId(lastAssistant.id);
+    } else {
+      ops.setLatestRecurrenceCue(null);
+      ops.setLatestRecurrenceCueAssistantId(null);
+    }
+  } else {
+    ops.setLatestRecurrenceCue(null);
+    ops.setLatestRecurrenceCueAssistantId(null);
+  }
+
+  const we = meta.wisewave_embodiment;
+  if (we && typeof we === "object" && we !== null && !Array.isArray(we)) {
+    const w = we as Record<string, unknown>;
+    if (
+      typeof w.text_en === "string" &&
+      typeof w.text_zh === "string" &&
+      typeof w.pattern_key === "string" &&
+      (w.response_state === "light" || w.response_state === "clear")
+    ) {
+      ops.setLatestEmbodimentCue({
+        pattern_key: w.pattern_key,
+        response_state: w.response_state,
+        text_en: w.text_en,
+        text_zh: w.text_zh,
+      });
+      ops.setLatestEmbodimentCueAssistantId(lastAssistant.id);
+    } else {
+      ops.setLatestEmbodimentCue(null);
+      ops.setLatestEmbodimentCueAssistantId(null);
+    }
+  } else {
+    ops.setLatestEmbodimentCue(null);
+    ops.setLatestEmbodimentCueAssistantId(null);
+  }
 }
 
 const REGULATION_CUE_MAP: Record<string, string> = {
@@ -337,6 +520,20 @@ function ChatContent() {
   const lastAssistantId = useMemo(() => {
     const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
     return lastAssistant?.id ?? null;
+  }, [messages]);
+
+  // Rehydrate Pattern / Optional response / regulation-related state from persisted assistant metadata
+  // (fixes refresh and session switch; live turns also attach metadata on the assistant row).
+  useEffect(() => {
+    hydrateStripStateFromMessages(messages, {
+      setLatestMetadata,
+      setLatestIsVagueSource,
+      setLatestRegulationMetadata,
+      setLatestRecurrenceCue,
+      setLatestRecurrenceCueAssistantId,
+      setLatestEmbodimentCue,
+      setLatestEmbodimentCueAssistantId,
+    });
   }, [messages]);
 
   // Temporary internal visibility layer:
@@ -682,7 +879,10 @@ function ChatContent() {
         embodimentCueRaw &&
         typeof embodimentCueRaw === "object" &&
         typeof embodimentCueRaw.text_en === "string" &&
-        typeof embodimentCueRaw.text_zh === "string"
+        typeof embodimentCueRaw.text_zh === "string" &&
+        typeof embodimentCueRaw.pattern_key === "string" &&
+        (embodimentCueRaw.response_state === "light" ||
+          embodimentCueRaw.response_state === "clear")
           ? embodimentCueRaw
           : null;
       const isVagueSource = Boolean(data.debug_is_vague_source);
@@ -722,13 +922,27 @@ function ChatContent() {
       const now = new Date(nowTs).toISOString();
       // Use monotonic sequence to avoid id collisions when turns are fast.
       const userMsgId = `user-${nowTs}-${seq}`;
-      const assistantMsgId = `assistant-${nowTs}-${seq}`;
+      const serverAssistantIdRaw = (data as { assistant_message_id?: unknown })
+        .assistant_message_id;
+      const assistantMsgId =
+        typeof serverAssistantIdRaw === "string" && serverAssistantIdRaw.length > 0
+          ? serverAssistantIdRaw
+          : `assistant-${nowTs}-${seq}`;
+      const stripMeta = buildStripMetadataFromTurnResponse(
+        data as Record<string, unknown>
+      );
       setMessages((prev) => [
         ...prev,
         { id: userMsgId, role: "user", message: text, created_at: now },
-        { id: assistantMsgId, role: "assistant", message: assistantMessage, created_at: now },
+        {
+          id: assistantMsgId,
+          role: "assistant",
+          message: assistantMessage,
+          created_at: now,
+          ...(stripMeta ? { metadata: stripMeta } : {}),
+        },
       ]);
-      // Bind cue + assistant id after we know assistantMsgId.
+      // Bind cue + assistant id after we know assistantMsgId (DB id when server returns it).
       // Update both together so there is no intermediate render window
       // where stale cue state can appear.
       if (requestId === recurrenceCueRequestIdRef.current) {
@@ -760,7 +974,15 @@ function ChatContent() {
     } finally {
       setLoading(false);
     }
-  }, [input, sessionId, loading, authHeaders, refreshHistorySessions]);
+  }, [
+    input,
+    sessionId,
+    loading,
+    authHeaders,
+    refreshHistorySessions,
+    hadContinuityAtSessionStart,
+    fetchContinuity,
+  ]);
 
   if (sessionLoading) {
     return (
@@ -1061,11 +1283,11 @@ function ChatContent() {
           latestEmbodimentCueAssistantId === lastAssistantId &&
           !!latestRecurrenceCue &&
           latestRecurrenceCueAssistantId === lastAssistantId && (
-          <div className="px-4 py-1.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/25">
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-500 mb-0.5">
+          <div className="px-4 py-1.5 border-b border-slate-200 dark:border-slate-800 border-l-2 border-l-teal-500/70 dark:border-l-teal-400/60 bg-teal-50/50 dark:bg-teal-950/25">
+            <p className="text-[11px] font-medium text-teal-800/90 dark:text-teal-200/90 mb-0.5">
               {uiLang === "zh" ? "可选回应提示" : "Optional response"}
             </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">
               {uiLang === "zh"
                 ? shortenEmbodimentText(latestEmbodimentCue.text_zh, uiLang)
                 : shortenEmbodimentText(latestEmbodimentCue.text_en, uiLang)}

@@ -5,8 +5,9 @@
 
 **Shipped implementation (Nova F1/F2):**
 
-- API: `POST /api/chat/turn` may return `embodiment_cue` when `recurrence_cue` is non-null (unless `MILESTONE_F_EMBODIMENT=0` on server).
-- UI: `/chat` — **“Optional response”** / **“可选回应提示”** below **Pattern cue**, smaller typography.
+- API: `POST /api/chat/turn` may return `embodiment_cue` when `recurrence_cue` is non-null (unless `MILESTONE_F_EMBODIMENT=0` on server). Successful responses may include **`assistant_message_id`** (persisted row id).
+- Persistence: Assistant `metadata` may include `wisewave_recurrence` (with cue text), `wisewave_embodiment`, `wisewave_reflection_state`, and `wisewave_is_vague_source` so **`GET /api/chat/messages` can rehydrate** header strips after **refresh** or **session switch**.
+- UI: `/chat` — **“Optional response”** / **“可选回应提示”** **directly below** **Pattern cue** (then Regulation cue / Next step / What was noticed). Strip uses a light **teal** left accent for visibility vs pattern cue.
 
 **Reference docs (judgment lenses):**
 
@@ -93,6 +94,7 @@ On **any** successful `POST /api/chat/turn` response:
 | 2c | Compare to **main reflection** | Reflection still feels like the **main event**; F does not steal the emotional center |
 | 2d | Quick “decline” test | User can read reflection only and ignore strip **without** feeling non-compliant |
 | 2e | **Decline-friction check** | The cue feels **easier to ignore than to obey**; reading it does not create subtle pressure to comply, improve, or "respond correctly" |
+| 2f | **Refresh / reload** (same session, after a turn that emitted pattern + embodiment) | After full page reload, **Pattern cue** and **Optional response** still appear in the same order **if** the last assistant row was written with current server persistence (pre-deploy history may lack metadata) |
 
 **Fail if:** coaching, therapy, motivation, or performance-optimization vibe (see Wisewave **bad examples** list), **or** if the embodiment cue feels harder to decline than to receive.
 

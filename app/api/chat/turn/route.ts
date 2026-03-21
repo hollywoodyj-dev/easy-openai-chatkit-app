@@ -1714,6 +1714,9 @@ export async function POST(request: Request) {
                                 aligned_instance_count: alignedInstanceCount,
                                 confidence: resolvedConfidence,
                                 phase,
+                                text_en: responseRecurrenceCue.textEn,
+                                text_zh: responseRecurrenceCue.textZh,
+                                confidence_score: responseRecurrenceCue.confidenceScore,
                               },
                             },
                           },
@@ -1825,8 +1828,47 @@ export async function POST(request: Request) {
     debugEmbodimentFOutcome = "emitted";
   }
 
+  // Persist reflection + embodiment on assistant metadata so /chat can rehydrate strips after reload.
+  if (assistantMsgId && (reflectionState || responseEmbodimentCue)) {
+    try {
+      const row = await prisma.message.findUnique({
+        where: { id: assistantMsgId },
+        select: { metadata: true },
+      });
+      const prevMeta =
+        row?.metadata &&
+        typeof row.metadata === "object" &&
+        !Array.isArray(row.metadata)
+          ? (row.metadata as Record<string, unknown>)
+          : {};
+      const merged: Record<string, unknown> = { ...prevMeta };
+      if (reflectionState) {
+        merged.wisewave_reflection_state = reflectionState;
+        merged.wisewave_is_vague_source = debugIsVagueSource === true;
+      }
+      if (responseEmbodimentCue) {
+        merged.wisewave_embodiment = {
+          pattern_key: responseEmbodimentCue.patternKey,
+          response_state: responseEmbodimentCue.responseState,
+          text_en: responseEmbodimentCue.textEn,
+          text_zh: responseEmbodimentCue.textZh,
+        };
+      }
+      await prisma.message.update({
+        where: { id: assistantMsgId },
+        data: { metadata: merged as object },
+      });
+    } catch (e) {
+      console.warn(
+        "[chat/turn] assistant metadata merge (reflection/embodiment) failed",
+        e
+      );
+    }
+  }
+
   const res = NextResponse.json({
     assistant_message: assistantContent,
+    ...(assistantMsgId ? { assistant_message_id: assistantMsgId } : {}),
     ...(reflectionState && { reflection_state: reflectionState }),
     ...(responseContinuityInsight && {
       continuity_insight: {
