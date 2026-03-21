@@ -7,6 +7,10 @@ import {
   type ContinuityPatternFamily,
   detectContinuityPatternFamily,
 } from "@/lib/wisewave-continuity-family";
+import {
+  embodimentCueTexts,
+  type EmbodimentPatternKey,
+} from "@/lib/wisewave-milestone-f-embodiment";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -1185,6 +1189,25 @@ export async function POST(request: Request) {
     | "low_clarity_gain"
     | "added_weight_too_high" = null;
 
+  // Milestone F: optional embodiment cue (tertiary; only when recurrence_cue is emitted).
+  let responseEmbodimentCue: {
+    patternKey: PatternId;
+    responseState: LegibilityState;
+    textEn: string;
+    textZh: string;
+  } | null = null;
+  let debugEmbodimentFSuppressedReason: string | null = null;
+  let debugEmbodimentFResponseState: LegibilityState | null = null;
+  let debugEmbodimentFUsedUltraShort: boolean | null = null;
+  /** QA: proves this deploy includes Milestone F turn instrumentation. */
+  const debugEmbodimentFBuildMarker = "milestone_f_v1";
+  let debugEmbodimentFOutcome:
+    | "skipped_no_recurrence"
+    | "skipped_milestone_disabled"
+    | "skipped_no_e3_legibility"
+    | "emitted" = "skipped_no_recurrence";
+  let debugEmbodimentFMilestoneEnabled = process.env.MILESTONE_F_EMBODIMENT !== "0";
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -1768,6 +1791,40 @@ export async function POST(request: Request) {
     }
   }
 
+  // Milestone F1: embodiment bridge — only when recurrence cue is present (proof of legible repetition).
+  const milestoneFEmbodimentOff = process.env.MILESTONE_F_EMBODIMENT === "0";
+  debugEmbodimentFMilestoneEnabled = !milestoneFEmbodimentOff;
+
+  if (!responseRecurrenceCue) {
+    debugEmbodimentFOutcome = "skipped_no_recurrence";
+  } else if (milestoneFEmbodimentOff) {
+    debugEmbodimentFSuppressedReason = "milestone_f_disabled";
+    debugEmbodimentFOutcome = "skipped_milestone_disabled";
+  } else if (!debugRecurrenceE3LegibilityState) {
+    debugEmbodimentFSuppressedReason = "no_e3_legibility_state";
+    debugEmbodimentFOutcome = "skipped_no_e3_legibility";
+  } else {
+    const responseState = debugRecurrenceE3LegibilityState;
+    const useUltraShort =
+      responseRecurrenceCue.confidence === "low" ||
+      message.trim().length < 40;
+    const texts = embodimentCueTexts({
+      patternKey: responseRecurrenceCue.patternKey as EmbodimentPatternKey,
+      responseState,
+      variantSeed: `${userMsg.id}:${debugInsightId ?? "na"}:femb:${responseRecurrenceCue.patternKey}:${responseState}`,
+      useUltraShort,
+    });
+    responseEmbodimentCue = {
+      patternKey: responseRecurrenceCue.patternKey,
+      responseState,
+      textEn: texts.en.replace(/\n/g, " ").trim(),
+      textZh: texts.zh.replace(/\n/g, " ").trim(),
+    };
+    debugEmbodimentFResponseState = responseState;
+    debugEmbodimentFUsedUltraShort = useUltraShort;
+    debugEmbodimentFOutcome = "emitted";
+  }
+
   const res = NextResponse.json({
     assistant_message: assistantContent,
     ...(reflectionState && { reflection_state: reflectionState }),
@@ -1789,6 +1846,14 @@ export async function POST(request: Request) {
         text_en: responseRecurrenceCue.textEn,
         text_zh: responseRecurrenceCue.textZh,
         phase: responseRecurrenceCue.phase,
+      },
+    }),
+    ...(responseEmbodimentCue && {
+      embodiment_cue: {
+        pattern_key: responseEmbodimentCue.patternKey,
+        response_state: responseEmbodimentCue.responseState,
+        text_en: responseEmbodimentCue.textEn,
+        text_zh: responseEmbodimentCue.textZh,
       },
     }),
     // Debug-only fields to help QA distinguish:
@@ -1826,6 +1891,12 @@ export async function POST(request: Request) {
     debug_recurrence_e3_added_weight_risk: debugRecurrenceE3AddedWeightRisk,
     debug_recurrence_e3_proof_threshold_passed: debugRecurrenceE3ProofThresholdPassed,
     debug_recurrence_e3_suppressed_reason: debugRecurrenceE3SuppressedReason,
+    debug_embodiment_f_build_marker: debugEmbodimentFBuildMarker,
+    debug_embodiment_f_milestone_enabled: debugEmbodimentFMilestoneEnabled,
+    debug_embodiment_f_outcome: debugEmbodimentFOutcome,
+    debug_embodiment_f_suppressed_reason: debugEmbodimentFSuppressedReason,
+    debug_embodiment_f_response_state: debugEmbodimentFResponseState,
+    debug_embodiment_f_used_ultra_short: debugEmbodimentFUsedUltraShort,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

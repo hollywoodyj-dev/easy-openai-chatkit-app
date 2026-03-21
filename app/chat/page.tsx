@@ -62,6 +62,14 @@ type RecurrenceCue = {
   phase?: "recurrence" | "persistence";
 };
 
+/** Milestone F: optional grounded response opening (tertiary to recurrence_cue). */
+type EmbodimentCue = {
+  pattern_key: string;
+  response_state: "light" | "clear";
+  text_en: string;
+  text_zh: string;
+};
+
 function shortenCueText(
   text: string,
   uiLang: "en" | "zh",
@@ -89,6 +97,20 @@ function shortenCueText(
   }
   const parts = raw.split(/(?<=[.!?])\s+/);
   return (parts[0] ?? raw).trim();
+}
+
+/** Milestone F: allow up to two short sentences; keep tertiary layer visually light. */
+function shortenEmbodimentText(text: string, uiLang: "en" | "zh"): string {
+  const raw = (text || "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  if (uiLang === "zh") {
+    const parts = raw.split(/(?<=[。！？])\s*/).filter(Boolean);
+    if (parts.length <= 2) return raw;
+    return `${parts[0] ?? ""}${parts[1] ?? ""}`.trim();
+  }
+  const parts = raw.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if (parts.length <= 2) return raw;
+  return `${parts[0] ?? ""} ${parts[1] ?? ""}`.trim();
 }
 
 function formatLabel(value: string): string {
@@ -296,8 +318,11 @@ function ChatContent() {
   const [latestRecurrenceCueAssistantId, setLatestRecurrenceCueAssistantId] = useState<
     string | null
   >(null);
-  // Prevent stale recurrence cues from flashing when multiple requests overlap
-  // (race conditions). We only apply recurrence-cue state from the latest request.
+  const [latestEmbodimentCue, setLatestEmbodimentCue] = useState<EmbodimentCue | null>(null);
+  const [latestEmbodimentCueAssistantId, setLatestEmbodimentCueAssistantId] = useState<
+    string | null
+  >(null);
+  // Prevent stale recurrence / embodiment cues from flashing when multiple requests overlap.
   const recurrenceCueRequestIdRef = useRef(0);
   const messageSeqRef = useRef(0);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
@@ -452,6 +477,8 @@ function ChatContent() {
     setLatestMetadata(null);
     setLatestRecurrenceCue(null);
     setLatestRecurrenceCueAssistantId(null);
+    setLatestEmbodimentCue(null);
+    setLatestEmbodimentCueAssistantId(null);
     setError(null);
     setSessionLoading(true);
     try {
@@ -475,6 +502,8 @@ function ChatContent() {
       setLatestMetadata(null);
       setLatestRecurrenceCue(null);
       setLatestRecurrenceCueAssistantId(null);
+      setLatestEmbodimentCue(null);
+      setLatestEmbodimentCueAssistantId(null);
       try {
         if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
         setSessionId(sid);
@@ -612,6 +641,8 @@ function ChatContent() {
     const requestId = recurrenceCueRequestIdRef.current;
     setLatestRecurrenceCue(null);
     setLatestRecurrenceCueAssistantId(null);
+    setLatestEmbodimentCue(null);
+    setLatestEmbodimentCueAssistantId(null);
     try {
       // Live-path debug for regulation cue behavior.
       // Helpful when inspecting weak follow-up turns like "I feel off".
@@ -646,6 +677,14 @@ function ChatContent() {
       const assistantMessage = (data.assistant_message as string) ?? "";
       const rs = data.reflection_state as ReflectionMetadata | null | undefined;
       const recurrenceCue = (data.recurrence_cue ?? null) as RecurrenceCue | null;
+      const embodimentCueRaw = data.embodiment_cue as EmbodimentCue | null | undefined;
+      const embodimentCue =
+        embodimentCueRaw &&
+        typeof embodimentCueRaw === "object" &&
+        typeof embodimentCueRaw.text_en === "string" &&
+        typeof embodimentCueRaw.text_zh === "string"
+          ? embodimentCueRaw
+          : null;
       const isVagueSource = Boolean(data.debug_is_vague_source);
       const cueMeaningful =
         rs && typeof rs === "object" && !isVagueSource
@@ -696,6 +735,10 @@ function ChatContent() {
         const nextCue = recurrenceCue && !isVagueSource ? recurrenceCue : null;
         setLatestRecurrenceCue(nextCue);
         setLatestRecurrenceCueAssistantId(nextCue ? assistantMsgId : null);
+        const nextEmb =
+          nextCue && embodimentCue && !isVagueSource ? embodimentCue : null;
+        setLatestEmbodimentCue(nextEmb);
+        setLatestEmbodimentCueAssistantId(nextEmb ? assistantMsgId : null);
       }
       refreshHistorySessions();
       // Continuity timing (Ibu memo): for first-time users, avoid showing "Last insight"
@@ -1007,6 +1050,25 @@ function ChatContent() {
               {uiLang === "zh"
                 ? shortenCueText(latestRecurrenceCue.text_zh, uiLang, latestRecurrenceCue.confidence)
                 : shortenCueText(latestRecurrenceCue.text_en, uiLang, latestRecurrenceCue.confidence)}
+            </p>
+          </div>
+        )}
+        {latestEmbodimentCue &&
+          !latestIsVagueSource &&
+          !!latestMetadata &&
+          isMetadataMeaningful(latestMetadata) &&
+          !!latestEmbodimentCueAssistantId &&
+          latestEmbodimentCueAssistantId === lastAssistantId &&
+          !!latestRecurrenceCue &&
+          latestRecurrenceCueAssistantId === lastAssistantId && (
+          <div className="px-4 py-1.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/25">
+            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-500 mb-0.5">
+              {uiLang === "zh" ? "可选回应提示" : "Optional response"}
+            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-snug">
+              {uiLang === "zh"
+                ? shortenEmbodimentText(latestEmbodimentCue.text_zh, uiLang)
+                : shortenEmbodimentText(latestEmbodimentCue.text_en, uiLang)}
             </p>
           </div>
         )}

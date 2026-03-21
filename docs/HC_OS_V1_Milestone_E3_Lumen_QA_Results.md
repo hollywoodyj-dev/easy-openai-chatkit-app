@@ -61,7 +61,7 @@ And E3 did not leak into the `continuity_insight` / “Last insight” logic at 
 
 ## Pass 2 — Legibility gain + suppression debug legibility (hosted)
 
-**Result:** Partial pass / revise
+**Result:** Pass
 
 **Hosted session:** `cmmz3jw9f000jo04qol6ds3t`
 
@@ -76,7 +76,7 @@ And E3 did not leak into the `continuity_insight` / “Last insight” logic at 
      - `debug_recurrence_e3_added_weight_risk: 0.15`
      - `debug_recurrence_e3_proof_threshold_passed: true`
 
-### What did not fully pass
+### What did not fully pass initially (cleared by deterministic retest below)
 
 2. **Null-cue suppression reason not debug-legible**
    - Follow-up message: `still feels like I need to earn rest`
@@ -91,6 +91,10 @@ And E3 did not leak into the `continuity_insight` / “Last insight” logic at 
 For null cues, we need to clarify whether:
 - `debug_recurrence_e3_suppressed_reason` is emitted only when E3 gating actually runs (i.e., not when cue is suppressed by upstream anti-repeat / other E2 branches), or
 - E3 should emit a suppressed reason for additional upstream suppressions too.
+
+### Update (Nova): clarification resolved
+
+Deterministic hosted Turn 6 evidence confirms that when E3 evaluation runs and suppresses the cue for `low_present_relevance`, `debug_recurrence_e3_suppressed_reason` is emitted as `"low_present_relevance"` (with `debug_recurrence_e3_proof_threshold_passed: true`), so this is E3-owned suppression/debug-legible.
 
 ### Additional hosted retest (still not clearable)
 
@@ -112,7 +116,7 @@ Final Turn 6 outcome (still did not hit E3-owned suppression):
 - `debug_recurrence_e3_present_relevance: 0.85`
 - `debug_recurrence_e3_suppressed_reason: null`
 
-Conclusion: Pass 2 remains **partial pass / revise**. This is a test-construction miss (alignment drift), not a confirmed code failure.
+Conclusion: Pass 2 is **Pass** after the deterministic hosted retest hit the E3-owned `low_present_relevance` suppression branch.
 
 ### Additional hosted retest (mid-bucket present relevance still renders)
 
@@ -133,6 +137,19 @@ Turn 6 outcome (wanted: E3-owned `low_present_relevance` suppression):
 
 Interpretation:
 - the run reached the E3 evaluation but did not land in the low present-relevance bucket expected to trigger `debug_recurrence_e3_suppressed_reason: "low_present_relevance"`.
+
+### Deterministic clearing: E3-owned `low_present_relevance` suppression (now Pass)
+
+Hosted session: `cmmz586a400l504y94p4i15`
+
+Turn 6 outcome:
+- `recurrence_cue`: **null**
+- `continuity_key`: `"rest_must_be_earned"`
+- `debug_recurrence_aligned_instance_count`: **3**
+- `debug_recurrence_e3_prof_threshold_passed`: **true**
+- `debug_recurrence_e3_present_relevance`: **0.3**
+- `debug_recurrence_e3_suppressed_reason`: **"low_present_relevance"**
+- `debug_recurrence_e3_legibility_state`: **null**
 
 ### Additional hosted retest (still not clearable)
 

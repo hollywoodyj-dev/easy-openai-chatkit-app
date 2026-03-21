@@ -1,0 +1,311 @@
+{
+  "milestone": "F",
+  "feature": "minimal_embodiment_bridge",
+  "version": "v1",
+  "design_rules": {
+    "purpose": "Allow one visible repeated pattern to support one grounded, optional next response without turning the product into coaching, instruction, or behavior management.",
+    "core_rule": "One repeated pattern may support one grounded next response only when that response reduces pressure rather than increases it.",
+    "governing_principle": "Invitation-first, not instruction-first.",
+    "tone": [
+      "calm",
+      "light",
+      "grounded",
+      "optional",
+      "non_authoritative",
+      "reflection_supportive",
+      "low_pressure"
+    ],
+    "length_rule": {
+      "default": "1 sentence",
+      "max": "2 short sentences"
+    },
+    "parity_rule": "EN/ZH should preserve equivalent optionality, groundedness, lightness, and autonomy feel rather than literal wording.",
+    "reflection_first_rule": "Main reflection remains primary. Continuity remains secondary. Embodiment cue is tertiary support only.",
+    "silence_rule": "If the next response would feel heavier than helpful, do not render."
+  },
+  "governance_rules": {
+    "binding_rule": "A response cue may appear only when it can be legibly justified by the current repeated pattern and current turn, and only when it preserves autonomy.",
+    "autonomy_rule": "The system may support responding but may not take ownership of response.",
+    "anti_coaching_rule": "Milestone F must not convert awareness into self-improvement obligation, coaching flow, or behavior management.",
+    "drift_conditions": [
+      "response cue feels harder to ignore than to receive",
+      "response language becomes more directive than reflective",
+      "product begins to read as what-should-I-do-next-first rather than reflection-first",
+      "response surface grows faster than user-legible value"
+    ],
+    "governance_effect": "When drift is present, response-layer expansion must be paused and the cue must be reduced, removed, or refused."
+  },
+  "response_states": {
+    "light": {
+      "label": "light_opening",
+      "rule": "Use when one small grounded opening is enough and anything stronger would add pressure."
+    },
+    "clear": {
+      "label": "clear_opening",
+      "rule": "Use when one grounded next response is clearly helpful, still optional, and still lighter than the reflection."
+    }
+  },
+  "generic_templates": {
+    "light": {
+      "en": [
+        "You may not need to answer this pressure immediately.",
+        "It may be enough to notice the urge before following it.",
+        "You may not have to solve this feeling right away.",
+        "Maybe this can be met with one breath less urgency."
+      ],
+      "zh": [
+        "也许这一次，不急着立刻回应这股压力。",
+        "也许先看见这股冲动，而不马上顺着它走，就已经够了。",
+        "也许你不需要立刻把这种感觉解决掉。",
+        "也许这一刻，可以少一点急着处理它的压力。"
+      ]
+    },
+    "clear": {
+      "en": [
+        "It may help to pause before turning this into self-blame.",
+        "You may be able to let this stay uncertain for one moment longer.",
+        "It may be enough, just here, not to obey the pressure immediately.",
+        "Maybe the next step is simply not to move as fast as the pressure wants."
+      ],
+      "zh": [
+        "也许先暂停一下，不急着把它变成自责。",
+        "也许可以先让这份不确定多停留一会儿。",
+        "也许此刻，只是不马上顺着这股压力走，就已经不一样了。",
+        "也许下一步只是不要跟着这股压力那么快地走。"
+      ]
+    }
+  },
+  "pattern_templates": {
+    "pressure_to_get_it_right": {
+      "display_name": {
+        "en": "pressure to get it right",
+        "zh": "想把事情做对的压力"
+      },
+      "light": {
+        "en": [
+          "You may not need to get this right immediately.",
+          "It may help to let the pressure ease before answering it."
+        ],
+        "zh": [
+          "也许你不需要立刻把这件事做对。",
+          "也许先让这股压力松一点，再回应它，会更轻一些。"
+        ]
+      },
+      "clear": {
+        "en": [
+          "Maybe this can be met by pausing before trying to fix it perfectly.",
+          "It may be enough, here, not to let \"doing it right\" decide the whole next move."
+        ],
+        "zh": [
+          "也许这一次，可以先暂停一下，而不急着把它修到完美。",
+          "也许此刻，不让“要把它做对”决定你的整个下一步，就已经够了。"
+        ]
+      }
+    },
+    "fear_of_not_enough": {
+      "display_name": {
+        "en": "fear of not enough",
+        "zh": "自己不够的担心"
+      },
+      "light": {
+        "en": [
+          "You may not need to answer the feeling of \"not enough\" right away.",
+          "It may help to notice the pressure before agreeing with it."
+        ],
+        "zh": [
+          "也许你不需要立刻回应那种“自己不够”的感觉。",
+          "也许先看见这股压力，而不马上认同它，会更轻一点。"
+        ]
+      },
+      "clear": {
+        "en": [
+          "Maybe this can be met by not treating \"not enough\" as a fact right away.",
+          "It may be enough to let that doubt be present without building the next move around it."
+        ],
+        "zh": [
+          "也许这一次，可以先不要立刻把“不够”当成事实。",
+          "也许只让这份怀疑存在，而不围着它安排下一步，就已经够了。"
+        ]
+      }
+    },
+    "over_efforting": {
+      "display_name": {
+        "en": "over-efforting",
+        "zh": "过度用力"
+      },
+      "light": {
+        "en": [
+          "You may not need to push harder in this moment.",
+          "It may help to notice the push before joining it."
+        ],
+        "zh": [
+          "也许这一刻，你不需要再更用力一点。",
+          "也许先看见这股推着你往前的力量，而不马上跟上它。"
+        ]
+      },
+      "clear": {
+        "en": [
+          "Maybe this can be met by easing the push instead of increasing it.",
+          "It may be enough not to let urgency decide your whole response."
+        ],
+        "zh": [
+          "也许这一次，可以少一点用力，而不是继续加码。",
+          "也许只是不让急迫感决定你的整个回应，就已经够了。"
+        ]
+      }
+    },
+    "avoidance_under_uncertainty": {
+      "display_name": {
+        "en": "avoidance under uncertainty",
+        "zh": "面对不确定时的退缩"
+      },
+      "light": {
+        "en": [
+          "You may not need to close this uncertainty immediately.",
+          "It may help to stay with the uncertainty one moment longer."
+        ],
+        "zh": [
+          "也许你不需要立刻把这份不确定结束掉。",
+          "也许可以先和这份不确定多待一会儿。"
+        ]
+      },
+      "clear": {
+        "en": [
+          "Maybe this can be met by not pulling back quite so quickly.",
+          "It may be enough to let uncertainty stay without deciding against yourself right away."
+        ],
+        "zh": [
+          "也许这一次，可以先不要那么快退回去。",
+          "也许只让不确定存在，而不急着对自己下结论，就已经够了。"
+        ]
+      }
+    },
+    "inner_conflict": {
+      "display_name": {
+        "en": "inner conflict",
+        "zh": "内在拉扯"
+      },
+      "light": {
+        "en": [
+          "You may not need to resolve both pulls immediately.",
+          "It may help to notice the conflict before choosing a side."
+        ],
+        "zh": [
+          "也许你不需要立刻把这两股拉扯解决掉。",
+          "也许先看见这份冲突，而不急着站到某一边。"
+        ]
+      },
+      "clear": {
+        "en": [
+          "Maybe this can be met by giving both pulls a little more space first.",
+          "It may be enough not to force clarity before it is ready."
+        ],
+        "zh": [
+          "也许这一次，可以先让两股拉扯都多一点空间。",
+          "也许只是不急着逼自己立刻清楚，就已经够了。"
+        ]
+      }
+    },
+    "self_worth_pressure": {
+      "display_name": {
+        "en": "self-worth pressure",
+        "zh": "自我价值压力"
+      },
+      "light": {
+        "en": [
+          "You may not need to prove your value in this moment.",
+          "It may help to notice the pressure to prove before following it."
+        ],
+        "zh": [
+          "也许这一刻，你不需要证明自己的价值。",
+          "也许先看见那股想证明自己的压力，而不马上顺着它走。"
+        ]
+      },
+      "clear": {
+        "en": [
+          "Maybe this can be met by not making worth the thing you solve first.",
+          "It may be enough to let your value stay unproven for this moment."
+        ],
+        "zh": [
+          "也许这一次，可以先不把“证明价值”当成最先要解决的事。",
+          "也许只让自己的价值在这一刻先不用被证明，就已经够了。"
+        ]
+      }
+    }
+  },
+  "ultra_short_templates": {
+    "en": [
+      "You may not need to answer this immediately.",
+      "It may be enough to pause first.",
+      "Maybe this does not need to be followed right away."
+    ],
+    "zh": [
+      "也许你不需要立刻回应它。",
+      "也许先暂停一下，就已经够了。",
+      "也许这一次，不用马上顺着它走。"
+    ]
+  },
+  "show_hide_rules": {
+    "show_only_if": [
+      "one repeated pattern is already visible enough",
+      "the next response is grounded in the current turn",
+      "the cue remains optional and low-pressure",
+      "the cue reduces pressure rather than increases it",
+      "reflection remains primary"
+    ],
+    "hide_if": [
+      "response would feel heavier than helpful",
+      "response would sound instructional or coaching-like",
+      "response is generic advice not grounded in the visible pattern",
+      "main reflection already gives enough support without an added response cue",
+      "rendering would make the product feel like a workflow or action system",
+      "drift conditions are present"
+    ],
+    "strong_rule": "Visibility of a repeated pattern does not guarantee a response cue."
+  },
+  "anti_pressure_rules": {
+    "do_not": [
+      "turn the cue into a should/need instruction",
+      "imply performance, growth obligation, or self-improvement pressure",
+      "make the cue harder to ignore than to receive",
+      "let the cue feel like the beginning of a workflow"
+    ],
+    "preferred_behaviors": [
+      "prefer one small opening over a stronger intervention",
+      "prefer optional language over directive language",
+      "prefer silence over pressure",
+      "keep response cue visibly smaller than reflection"
+    ]
+  },
+  "implementation_shape": {
+    "required_fields": [
+      "pattern_id",
+      "response_state",
+      "display_lang",
+      "template_variant"
+    ],
+    "optional_fields": [
+      "present_relevance_score",
+      "pressure_reduction_score",
+      "autonomy_risk",
+      "context_phrase"
+    ],
+    "render_policy": {
+      "if_repeated_pattern_not_clear_enough": "do_not_render",
+      "if_response_increases_pressure": "do_not_render",
+      "if_response_feels_like_coaching": "do_not_render",
+      "if_reflection_first_rule_would_break": "do_not_render",
+      "if_grounded_optional_response_adds_value": "render_light_or_clear_template"
+    }
+  },
+  "qa_checks": [
+    "one repeated pattern can support one grounded next response",
+    "response feels optional rather than imposed",
+    "response remains minimal rather than becoming a behavior layer",
+    "reflection remains primary",
+    "product does not read as coaching, tasking, or action management",
+    "EN/ZH preserve equivalent optionality, tone, and low-pressure feel",
+    "visible response remains proof-justified and autonomy-preserving"
+  ],
+  "final_rule": "The best Milestone F response cue should feel like a small opening the user can accept or ignore freely, not the start of a system telling them what to do."
+}

@@ -443,3 +443,44 @@ Aligned with `docs/HC_OS_V1_Milestone_E_E2_Document_1_Addendum_to_Milestone_E_E2
 - **Demo path**: Prove **recurrence → persistence (when gates pass) → silence** when value-add weakens (short follow-up, stale window, downgraded phase).
 - EN/ZH parity on persistence templates when persistence phase actually fires.
 
+---
+
+## Milestone E3 — User-facing continuity legibility (closure note)
+
+Aligned with `docs/HC_OS_V1_Milestone_E_E3_Addendum_User_Facing_Continuity_Legibility.md` and `docs/E3 Governance Control Note.md`.
+
+- **Scope boundary**: E3 applies to **`recurrence_cue` only** (not `continuity_insight` / Last insight strip).
+- **Lumen QA**: **`docs/HC_OS_V1_Milestone_E3_Lumen_QA_Results.md`** — Passes 1–7 recorded **Pass** (including deterministic Pass 2 `low_present_relevance` suppression evidence).
+- **Nova**: E3 legibility gating + debug fields live in **`/api/chat/turn`**; no new continuity UI surface required for E3.
+
+---
+
+## Milestone E4 — Minimal consciousness layer proof (closure, not expansion)
+
+**Official addendum:** `docs/HC_OS_V1_Milestone_E_E4_Addendum_Minimal_Consciousness_Layer_Proof.md`
+
+**Wisewave final quality bar (E4 closure lens):** `docs/HC_OS_V1_Milestone_E_E4_Wisewave_Final_Continuity_Layer_Quality_Bar.md`
+
+**OctopusMind closure mandate (structural integrity authority):** `docs/HC_OS_V1_Milestone_E_E4_OctopusMind_Closure_Mandate.md`
+
+E4 is the **milestone-closure proof** that E1 + E2 + E3 read as **one bounded continuity layer**: emergence, light legibility, quiet decay, reflection-first, trust-preserving — **without** new memory depth, new UI, or new pattern classes.
+
+### Nova (implementation)
+
+- **Proof spec (machine-readable):** `docs/HC_OS_V1_Milestone_E_E4_Proof_Spec_v1.json`
+- **Nova E4 response (`output_shape_for_nova`):** `docs/HC_OS_V1_Milestone_E_E4_Nova_Task_Response.md`
+- **Default stance**: **no new build** unless Lumen / governance finds a **coherence or boundedness gap** in live behavior.
+- **Deliverables**: founder-demo alignment, doc cross-links, and any **surgical** fixes if proof fails (still within E4 “smallest valid proof” rule).
+
+### Lumen / Tree
+
+- **E4 QA plan for Lumen:** `docs/HC_OS_V1_Milestone_E4_Lumen_QA_Plan.md`
+- Run E4 as an **end-to-end acceptance** pass (demo + EN/ZH + decay/silence + reflection-primary), using existing product behavior as the subject of proof — not as a feature backlog.
+
+---
+
+## Successor: Milestone F (Minimal Embodiment Bridge)
+
+Execution discipline and prep order: **`docs/HC_OS_V1_Milestone_F_Execution_Addendum.md`**  
+Full addendum: **`docs/HC_OS_V1_Milestone_F_Addendum_Minimal_Embodiment_Bridge.md`**
+

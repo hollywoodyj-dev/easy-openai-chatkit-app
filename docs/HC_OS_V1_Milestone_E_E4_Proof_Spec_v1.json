@@ -1,0 +1,71 @@
+{
+  "milestone": "E4",
+  "feature": "minimal_consciousness_layer_proof",
+  "version": "v1",
+  "purpose": "Verify that E1 + E2 + E3 now behave coherently as one bounded, trustworthy continuity layer.",
+  "design_rules": {
+    "core_rule": "E4 is a closure-proof step, not a feature-expansion step.",
+    "judgment_rule": "Judge whole-layer coherence, not feature count.",
+    "reflection_first_rule": "Main reflection must remain primary throughout.",
+    "boundedness_rule": "Continuity must remain light, restrained, and non-memory-first.",
+    "silence_rule": "Silence remains a valid success state when support or value-add is weak."
+  },
+  "proof_targets": {
+    "emergence": true,
+    "persistence": true,
+    "legibility": true,
+    "quiet_decay": true,
+    "reflection_first": true,
+    "trust_preserving": true,
+    "bounded_layer_coherence": true,
+    "en_zh_parity": true
+  },
+  "acceptance_statement": "The system can help one repeated inner pattern become visible, remain legible, become clearer, and fade appropriately without becoming heavy, intrusive, or memory-first.",
+  "required_checks": [
+    "one repeated inner pattern can emerge credibly",
+    "that pattern can remain legible lightly across time",
+    "that pattern can become clearer without becoming heavier",
+    "that pattern can decay quietly when support weakens",
+    "reflection remains primary throughout",
+    "the product still reads as a continuity layer, not a history/tracking/memory-first layer",
+    "EN/ZH baseline compatibility still holds",
+    "E1 + E2 + E3 behave coherently as one bounded layer"
+  ],
+  "not_allowed": [
+    "new memory features",
+    "new UI surfaces",
+    "more persistence depth",
+    "new pattern classes",
+    "history tooling",
+    "analytics tooling",
+    "awareness map",
+    "embodiment loop",
+    "recommendation behavior"
+  ],
+  "founder_demo_requirements": [
+    "show emergence",
+    "show persistence",
+    "show clearer legibility",
+    "show quiet decay",
+    "show reflection-first structure",
+    "show boundedness and trust"
+  ],
+  "governance_checks": [
+    "proof before retention",
+    "legibility before carry-forward",
+    "memory subordinate to explanation",
+    "no hidden accumulation driving visible behavior",
+    "no last-minute scope creep"
+  ],
+  "output_shape_for_nova": {
+    "task": "E4 implementation coherence and founder-demo support",
+    "owner": "Nova",
+    "must_return": [
+      "whole-layer implementation coherence summary",
+      "founder demo support plan",
+      "evidence that no hidden feature creep was introduced",
+      "known risks or ambiguities",
+      "next action"
+    ]
+  }
+}
