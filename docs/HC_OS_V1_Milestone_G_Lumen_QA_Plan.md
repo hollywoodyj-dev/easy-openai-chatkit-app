@@ -5,7 +5,7 @@
 
 **Does not:** require a full re-audit of Milestone E/F mechanics unless G surfaces a **regression** (use Pass 8 as a sniff).
 
-**Lumen QA outcome:** _TBD_ — record passes and closure judgment in **`docs/HC_OS_V1_Milestone_G_Lumen_QA_Results.md`** when runs complete.
+**Lumen QA outcome:** **Closed** — passes 0P–8 and §11 judgment recorded in **`docs/HC_OS_V1_Milestone_G_Lumen_QA_Results.md`** (recommend marking Milestone G complete with non-blocking watchpoints).
 
 **Closure standard (Wisewave):** Addendum **§11** is the **formal acceptance gate**. Milestone G is **complete** only if **all seven** §11 conditions are satisfied. **G0 shipped ≠ Milestone G complete** (G0 is implementation prep; closure is §11 judgment).
 

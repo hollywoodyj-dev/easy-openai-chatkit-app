@@ -1,11 +1,11 @@
 # HC_OS_V1 Milestone G — Lumen QA Results
 
 ## Status
-- Overall status: **G0 implementation slice shipped; QA write-up in progress**
-- Current pass: **Result consolidation pending**
-- Closure state: **Milestone G not yet claimed complete in this file**
+- Overall status: **All planned Milestone G QA passes completed**
+- Current pass: **All planned G QA passes complete**
+- Closure state: **Pass 0P passed; Pass 1 passed with evidence note; Pass 2 passed; Pass 3 passed; Pass 4 passed with watchpoint; Pass 5 passed; Pass 6 passed with watchpoint; Pass 7 passed with watchpoint; Pass 8 passed**
 
-**Formal acceptance gate (Wisewave):** Addendum **`docs/HC_OS_V1_Milestone_G_Addendum_Minimal_Integration_Everyday_Usefulness.md` §11** — all **seven** conditions must be satisfied to treat Milestone G as **complete**. **G0 shipped ≠ Milestone G complete.**
+**Formal acceptance gate (Wisewave):** Addendum **`docs/HC_OS_V1_Milestone_G_Addendum_Minimal_Integration_Everyday_Usefulness.md` §11** — all **seven** conditions must be satisfied to treat Milestone G as **complete**. **G0** names the shipped **code slice**; **§11 all green** authorizes **milestone** closure (this file now records that judgment below).
 
 ---
 
@@ -13,8 +13,8 @@
 
 | Pass | Goal | Status | Verdict |
 |---|---|---|---|
-| Pass 0P | Deployment smoke | Pending formal record | Pending |
-| Pass 1 | G API / kill-switch integrity | Kill-switch **1b** recorded (see below); 1a/1c restore optional | **Pass** (1b) |
+| Pass 0P | Deployment smoke | Complete | **Pass** |
+| Pass 1 | G API / kill-switch integrity | Complete with evidence note | **Pass with evidence note** |
 | Pass 2 | Coherence (one loop, not three layers) | Complete | **Pass** |
 | Pass 3 | Ordinary life moments | Complete | **Pass** |
 | Pass 4 | Anti-expansion & anti-presence | Complete | **Pass with watchpoint** |
@@ -22,6 +22,21 @@
 | Pass 6 | Founder demo (integration story) | Complete | **Pass with watchpoint** |
 | Pass 7 | EN / ZH baseline parity | Complete | **Pass with watchpoint** |
 | Pass 8 | Regression sniff (Milestone E/F) | Complete | **Pass** |
+
+---
+
+## Pass 0P — Deployment smoke
+
+**Result:** Pass
+
+### Live deployment proof
+A normal successful turn response in the active environment included:
+- `debug_milestone_g_build_marker: "milestone_g_v1"`
+- `debug_milestone_g_integration_enabled: true`
+- `debug_milestone_g_system_appendix_applied: true`
+
+### Formal judgment
+This is sufficient to confirm the correct Milestone G build is deployed and the integration appendix is active in the tested environment.
 
 ---
 
@@ -69,7 +84,25 @@ Example stdout (2025-02-08):
 ### Pass 1a / 1c
 
 - **1a** (default G on): align with **Pass 0P** — `debug_milestone_g_system_appendix_applied: true` when integration enabled and system prompt path runs.
-- **1c** (restore G on): after removing `=0`, restart server; appendix and `*_applied: true` return.
+- **1c** (restore G on): live-host restore proof was captured. After removing `=0`, restarting the server, and sending a normal turn, the response again showed:
+  - `debug_milestone_g_integration_enabled: true`
+  - `debug_milestone_g_system_appendix_applied: true`
+  - `debug_milestone_g_build_marker: "milestone_g_v1"`
+
+### Pass 1 verdict
+
+**Pass 1 passed with evidence note.**
+
+### Formal judgment
+Milestone G kill-switch behavior is now sufficiently proven for milestone QA:
+- live G-on proof exists,
+- live G-off proof exists,
+- live restore-to-G-on proof exists,
+- and Nova also supplied matching contract/script proof for the same booleans.
+
+Evidence note:
+- the kill-switch proof is now strong enough for milestone closure rigor,
+- but the file still records that part of Nova’s supporting evidence came from contract/script validation in addition to the live-host turn snapshots.
 
 ---
 
@@ -246,24 +279,17 @@ Milestone G has **not** introduced an obvious regression into the underlying Mil
 
 ## Current QA position
 
-From the evidence reviewed so far, Milestone G is reading in the intended direction:
+Milestone G QA is now effectively complete.
+
+The shipped code is still correctly described as **G0**, the first minimal implementation slice — but that slice has now been tested far enough against the addendum that milestone-level judgment is warranted.
+
+Current evidence supports the intended Milestone G direction:
 - more coherent
 - still light
+- usable in ordinary moments
 - not drifting into coaching / management / utility product behavior
-
-But this file should be read carefully:
-- what is shipped in code today is **G0**, the first minimal implementation slice,
-- **not** automatic proof that the whole milestone is complete.
-
-Milestone G closure still depends on the **§11 acceptance gate** in the addendum:
-- one coherent loop
-- ordinary-life usability
-- reflection-first / lightness preserved
-- silence / restraint preserved
-- EN / ZH baseline compatibility
-- narrow scope maintained
-
-So this results file is currently a **QA-in-progress record**, not a milestone-complete declaration.
+- still reflection-first
+- still restraint-preserving
 
 ---
 
@@ -277,17 +303,52 @@ So this results file is currently a **QA-in-progress record**, not a milestone-c
 | 4. Everyday usefulness does not require broader product expansion | **Pass with watchpoint** | Pass 4: no visible utility/productivity expansion, but system-presence drift should remain watched |
 | 5. Silence and restraint still function as success states | **Pass** | Pass 5 + Pass 8: quieter states remain valid; loop quiets down when support weakens |
 | 6. EN / ZH baseline compatibility still holds | **Pass with watchpoint** | Pass 7: function holds; Chinese reflection tone remains somewhat heavier than English |
-| 7. Scope remained narrow | **Pending cross-check** | Needs final Tree / scope-truthfulness confirmation that G0 stayed within the addendum boundary |
+| 7. Scope remained narrow | **Pass** | Tree confirmed at the G0 slice level that scope remained narrow, with no utility / management / productivity / action-architecture expansion evidenced |
 
 ---
 
-## Next recommended step
+## Overall Milestone G closure judgment
 
-The results file is now substantially backfilled, but one thing still prevents an honest closure claim:
+### Summary
+All planned Milestone G QA passes are now complete:
+- **Pass 0P:** Deployment smoke — **Pass**
+- **Pass 1:** G API / kill-switch integrity — **Pass with evidence note**
+- **Pass 2:** Coherence (one loop, not three layers) — **Pass**
+- **Pass 3:** Ordinary life moments — **Pass**
+- **Pass 4:** Anti-expansion & anti-presence — **Pass with watchpoint**
+- **Pass 5:** Reflection-first & silence / restraint — **Pass**
+- **Pass 6:** Founder demo (integration story) — **Pass with watchpoint**
+- **Pass 7:** EN / ZH baseline parity — **Pass with watchpoint**
+- **Pass 8:** Regression sniff (Milestone E/F) — **Pass**
 
-- **§11 #7 (scope remained narrow)** should still be explicitly cross-checked with Tree / milestone-truthfulness review before marking G complete.
-- **Pass 0P** (deployment smoke) may still be explicitly recorded; **Pass 1b** kill-switch is now evidenced above (contract + JSON fragment + `scripts/milestone-g-kill-switch-proof.cjs`). **1a/1c** remain quick host checks if desired.
+### §11 acceptance gate judgment
+All seven §11 conditions are **satisfied for milestone closure** (conditions **4** and **6** carry **non-blocking watchpoints** documented in the table above):
+1. one coherent loop — **Pass**
+2. usable in ordinary day-to-day situations — **Pass**
+3. product remains light and reflection-first — **Pass**
+4. everyday usefulness does not require broader product expansion — **Pass with watchpoint**
+5. silence and restraint still function as success states — **Pass**
+6. EN / ZH baseline compatibility still holds — **Pass with watchpoint**
+7. scope remained narrow — **Pass**
 
-In other words:
-- **G0 shipped** is true,
-- **Milestone G complete** is still not something this file should claim yet.
+### Final judgment
+**Milestone G can be treated as passed, with non-blocking quality watchpoints.**
+
+### Why Milestone G can close
+Current evidence supports the intended Milestone G claim:
+- reflection, continuity, and minimal embodiment now read as one coherent loop,
+- that loop is usable in ordinary day-to-day moments,
+- the product remains light and reflection-first,
+- usefulness has not been purchased by broader utility / management expansion,
+- silence and restraint still function as success states,
+- English and Chinese preserve the same essential integration function,
+- and Milestone G does not regress the underlying E/F substrate.
+
+### Non-blocking watchpoints
+- G should continue to be watched for subtle system-presence drift because “everyday usefulness” is especially vulnerable to becoming over-present.
+- Founder-demo selection should favor the cleanest coherent arc rather than the heaviest middle continuation turns.
+- Chinese reflection tone remains somewhat heavier / more explanatory than English.
+- Pass 1 is fully sufficient for closure rigor, but the file still notes that part of the supporting proof came from contract/script validation in addition to live-host replay.
+
+### Closure recommendation
+**Recommend marking Milestone G complete** while carrying forward the above watchpoints as tuning items rather than closure blockers.
