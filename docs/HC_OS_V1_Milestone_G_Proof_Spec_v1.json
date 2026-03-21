@@ -1,0 +1,194 @@
+{
+  "milestone": "G",
+  "feature": "minimal_integration_everyday_usefulness",
+  "version": "v1",
+  "design_rules": {
+    "purpose": "Make reflection, continuity, and minimal embodiment feel like one coherent, everyday-usable support loop without widening the product into a utility, coaching, or self-management system.",
+    "core_rule": "Everyday usefulness must come from better integration, not from adding more system presence.",
+    "governing_principle": "Coherence-first, not utility-expansion-first.",
+    "tone": [
+      "calm",
+      "light",
+      "grounded",
+      "reflection_first",
+      "continuity_supported",
+      "optionally_embodied",
+      "non_authoritative",
+      "low_pressure"
+    ],
+    "length_rule": {
+      "default": "keep each layer brief",
+      "max": "no added mass beyond current reflection + continuity + minimal embodiment structure"
+    },
+    "parity_rule": "EN/ZH should preserve equivalent everyday usability, tone, restraint, and reflection-first feel rather than literal wording.",
+    "silence_rule": "If integration does not add present user value, do not increase visible system behavior."
+  },
+  "governance_rules": {
+    "binding_rule": "Milestone G may improve usability only when that improvement is achieved through coherence, timing, readability, or integration quality rather than added product mass.",
+    "reflection_first_rule": "Reflection remains primary. Continuity remains secondary. Minimal embodiment remains tertiary and optional.",
+    "anti_expansion_rule": "Do not widen Milestone G into utility support, action systems, task support, or daily scaffolding.",
+    "drift_conditions": [
+      "the product feels more system-present in order to feel more useful",
+      "everyday usefulness depends on extra layers rather than better coherence",
+      "the loop feels more managerial, more instructive, or more utility-like",
+      "integration is achieved by stacking more product surface rather than reducing friction"
+    ],
+    "governance_effect": "When drift is present, integration changes must be reduced, removed, or refused until usefulness is again achieved through coherence rather than expansion."
+  },
+  "integration_states": {
+    "coherent": {
+      "label": "coherent_loop",
+      "rule": "Use when reflection, continuity, and minimal embodiment read naturally as one support arc."
+    },
+    "not_coherent": {
+      "label": "layered_but_not_integrated",
+      "rule": "Use when the parts technically exist but still feel stitched together or too system-visible."
+    }
+  },
+  "everyday_usefulness_rules": {
+    "valid_when": [
+      "the loop works in ordinary life moments, not just ideal deep-reflection turns",
+      "the support still feels natural and easy to receive",
+      "the user can sense help without feeling managed",
+      "the product is easier to live with, not more elaborate to use"
+    ],
+    "invalid_when": [
+      "the system feels more useful only because it is doing more",
+      "the loop reads like a guidance workflow",
+      "the user must process more product structure to get the value",
+      "the support arc creates more presence than clarity"
+    ]
+  },
+  "good_examples": [
+    {
+      "name": "good_integrated_arc_en",
+      "reflection": "It sounds like the short reply quickly became pressure inside you.",
+      "continuity": "This still seems close to a familiar self-worth pressure.",
+      "embodiment": "It may help to notice the pressure before agreeing with it.",
+      "why_good": [
+        "reflection remains primary",
+        "continuity clarifies the thread",
+        "embodiment stays optional and small",
+        "the whole turn reads as one support arc"
+      ]
+    },
+    {
+      "name": "good_integrated_arc_zh",
+      "reflection": "看起来，对方一句简短回应，很快就在你心里变成了一股压力。",
+      "continuity": "这似乎仍然和一种熟悉的自我价值压力很接近。",
+      "embodiment": "也许先看见这股压力，而不马上认同它，就已经够了。",
+      "why_good": [
+        "reflection remains primary",
+        "continuity clarifies the thread",
+        "embodiment stays optional and small",
+        "the whole turn reads as one support arc"
+      ]
+    }
+  ],
+  "bad_examples": [
+    {
+      "name": "utility_drift",
+      "text": "Here is how to handle this situation.",
+      "why_bad": [
+        "shifts from inner support to utility/problem-solving",
+        "makes the product feel managerial"
+      ]
+    },
+    {
+      "name": "self_improvement_drift",
+      "text": "This is a chance to practice a healthier response.",
+      "why_bad": [
+        "introduces performance pressure",
+        "turns support into self-improvement framing"
+      ]
+    },
+    {
+      "name": "system_presence_drift",
+      "text": "The system is helping you work with this recurring pattern.",
+      "why_bad": [
+        "makes the system too visible",
+        "increases product presence rather than usability"
+      ]
+    },
+    {
+      "name": "directive_drift",
+      "text": "Pause now and do not follow this urge.",
+      "why_bad": [
+        "breaks autonomy",
+        "turns embodiment into instruction"
+      ]
+    }
+  ],
+  "show_hide_rules": {
+    "show_only_if": [
+      "reflection, continuity, and embodiment together reduce friction rather than add structure",
+      "the turn feels more naturally usable in an ordinary moment",
+      "the product remains reflection-first",
+      "no added management or coaching feel is introduced"
+    ],
+    "hide_or_do_not_change_if": [
+      "integration gain is only coming from more visible product surface",
+      "the turn becomes heavier or more layered",
+      "the cue stack feels more present than useful",
+      "the product begins to read like a utility or management layer",
+      "drift conditions are present"
+    ],
+    "strong_rule": "Do not change the product just to make it appear more useful; change only when the loop becomes genuinely more coherent and easier to receive."
+  },
+  "anti_presence_rules": {
+    "do_not": [
+      "add new visible panels or sections",
+      "increase system narration to explain the loop",
+      "make continuity or embodiment more central than reflection",
+      "introduce workflow-like sequencing",
+      "solve coherence by adding UI mass"
+    ],
+    "preferred_behaviors": [
+      "improve readability before adding components",
+      "improve timing before adding structure",
+      "improve phrasing before adding surface",
+      "prefer quieter coherence over louder usefulness"
+    ]
+  },
+  "implementation_shape": {
+    "required_fields": [
+      "integration_state",
+      "reflection_first_intact",
+      "continuity_secondary_intact",
+      "embodiment_tertiary_intact",
+      "display_lang"
+    ],
+    "optional_fields": [
+      "coherence_gain_score",
+      "system_presence_risk",
+      "utility_drift_risk",
+      "ordinary_moment_usable",
+      "context_phrase"
+    ],
+    "render_policy": {
+      "if_coherence_gain_is_low": "do_not_expand_or_add",
+      "if_system_presence_risk_is_high": "do_not_expand_or_add",
+      "if_utility_drift_risk_is_high": "do_not_expand_or_add",
+      "if_reflection_first_rule_breaks": "do_not_expand_or_add",
+      "if_loop_becomes_more_coherent_without_more_mass": "allow_minimal_adjustment"
+    }
+  },
+  "qa_checks": [
+    "reflection, continuity, and minimal embodiment now feel like one support loop",
+    "the product is usable in ordinary day-to-day moments",
+    "the product is not heavier than Milestone F",
+    "reflection remains primary",
+    "silence and restraint remain valid success states",
+    "the product does not read as utility, coaching, or management layer",
+    "EN/ZH preserve equivalent everyday usability and tone"
+  ],
+  "founder_demo_requirements": [
+    "show an ordinary life moment",
+    "show reflection landing clearly",
+    "show continuity clarifying a familiar thread",
+    "show minimal embodiment remaining optional",
+    "show the whole loop reading as one support arc",
+    "show no expansion into utility or management feel"
+  ],
+  "final_rule": "The best Milestone G implementation should make the HC-OS loop easier to live with, not more elaborate to use."
+}

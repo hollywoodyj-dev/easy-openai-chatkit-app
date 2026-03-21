@@ -11,6 +11,11 @@ import {
   embodimentCueTexts,
   type EmbodimentPatternKey,
 } from "@/lib/wisewave-milestone-f-embodiment";
+import {
+  isMilestoneGIntegrationEnabled,
+  milestoneGBuildMarker,
+  milestoneGSystemAppendix,
+} from "@/lib/wisewave-milestone-g-integration";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -988,6 +993,8 @@ export async function POST(request: Request) {
   const languageInstruction = wantsChinese
     ? "\n\nLanguage rule: Respond in Chinese only. Do not include English words."
     : "\n\nLanguage rule: Respond in English only. Do not include Chinese characters.";
+  /** Milestone G: whether integration appendix was appended to the system message (QA). */
+  let debugMilestoneGSystemAppendixApplied = false;
   const recent = allMessages.slice(-RECENT_MESSAGES_COUNT);
   const openaiMessages: { role: "user" | "assistant" | "system"; content: string }[] = recent.map(
     (m) => ({
@@ -1023,10 +1030,17 @@ export async function POST(request: Request) {
       reflectionState && reflectionState.insight_candidate.trim()
         ? `\n\nLatest reflection state (for this user message):\n- trigger_label: ${reflectionState.trigger_label}\n- emotion_label: ${reflectionState.emotion_label}\n- interpretation_label: ${reflectionState.interpretation_label}\n- regulation_label: ${reflectionState.regulation_label}\n- choice_label: ${reflectionState.choice_label}\n- insight_candidate: ${reflectionState.insight_candidate}`
         : "";
+    const milestoneGAppendix = milestoneGSystemAppendix();
+    debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
     openaiMessagesForApi.push({
       role: "system",
       content:
-        systemPrompt + continuationHint + summaryBlock + reflectionBlock + languageInstruction,
+        systemPrompt +
+        continuationHint +
+        summaryBlock +
+        reflectionBlock +
+        milestoneGAppendix +
+        languageInstruction,
     });
   }
   openaiMessagesForApi.push(...openaiMessages);
@@ -1939,6 +1953,9 @@ export async function POST(request: Request) {
     debug_embodiment_f_suppressed_reason: debugEmbodimentFSuppressedReason,
     debug_embodiment_f_response_state: debugEmbodimentFResponseState,
     debug_embodiment_f_used_ultra_short: debugEmbodimentFUsedUltraShort,
+    debug_milestone_g_integration_enabled: isMilestoneGIntegrationEnabled(),
+    debug_milestone_g_system_appendix_applied: debugMilestoneGSystemAppendixApplied,
+    debug_milestone_g_build_marker: milestoneGBuildMarker(),
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

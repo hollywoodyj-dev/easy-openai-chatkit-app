@@ -54,3 +54,16 @@ E4 closed a **bounded continuity layer** (pattern visibility, legibility, decay)
 | OctopusMind | **`docs/HC_OS_V1_Milestone_F_OctopusMind_Embodiment_Boundary.md`** (done) |
 | Nova | **`docs/HC_OS_V1_Milestone_F_Nova_Implementation_Path.md`** (draft) |
 | Lumen | **`docs/HC_OS_V1_Milestone_F_Lumen_QA_Plan.md`** |
+
+---
+
+## Successor: Milestone G (Minimal Integration / Everyday Usefulness)
+
+**Canonical addendum:** **`docs/HC_OS_V1_Milestone_G_Addendum_Minimal_Integration_Everyday_Usefulness.md`**
+
+**Wisewave — everyday usefulness quality bar (Done):** **`docs/HC_OS_V1_Milestone_G_Wisewave_Everyday_Usefulness_Quality_Bar.md`**  
+**OctopusMind — integration boundary (Done):** **`docs/HC_OS_V1_Milestone_G_OctopusMind_Integration_Boundary.md`**  
+**Nova — implementation path (draft):** **`docs/HC_OS_V1_Milestone_G_Nova_Implementation_Path.md`**  
+**Proof spec (v1):** **`docs/HC_OS_V1_Milestone_G_Proof_Spec_v1.json`**
+
+Milestone G is an **integration proof** step (reflection + continuity + minimal embodiment as one coherent, everyday-usable loop), **not** utility expansion. Execution addendum for G may be added when Tree opens the stream.

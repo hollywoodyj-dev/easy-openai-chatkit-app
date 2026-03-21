@@ -1228,6 +1228,14 @@ function ChatContent() {
           </button>
         </div>
         )}
+        {/* Milestone G: semantic grouping for continuity + pattern + embodiment (display:contents = no layout mass). */}
+        <div
+          role="group"
+          aria-label={
+            uiLang === "zh" ? "本回合的支持提示（连续性、模式、可选回应）" : "Support cues for this turn"
+          }
+          className="contents"
+        >
         {(() => {
           if (!continuity) return null;
           if (uiLang === "zh") {
@@ -1293,6 +1301,7 @@ function ChatContent() {
             </p>
           </div>
         )}
+        </div>
         {(() => {
           const shouldShowRegulationCue =
             !!latestRegulationMetadata &&
