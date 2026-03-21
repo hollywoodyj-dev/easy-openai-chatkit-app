@@ -4,6 +4,8 @@
 **Status:** **G0 shipped** — coherence-first system appendix + QA debug markers + zero-layout a11y grouping (see below). Further G work stays inside proof spec / OctopusMind boundary.  
 **Governs:** `docs/HC_OS_V1_Milestone_G_Addendum_Minimal_Integration_Everyday_Usefulness.md`, Wisewave everyday usefulness quality bar, OctopusMind integration boundary, **`docs/HC_OS_V1_Milestone_G_Proof_Spec_v1.json`**
 
+> **Wisewave (closure):** **G0 shipped is not Milestone G complete.** Formal completion uses addendum **§11** (all seven conditions) — see Lumen QA results + Tree. Nova ships slices; Lumen/Tree gate closure.
+
 ---
 
 ## G0 implementation (code)
@@ -48,4 +50,5 @@ OctopusMind **shared control rule** (Nova + Lumen): see **`docs/HC_OS_V1_Milesto
 
 - `docs/HC_OS_V1_Milestone_G_Wisewave_Everyday_Usefulness_Quality_Bar.md`  
 - `docs/HC_OS_V1_Milestone_G_OctopusMind_Integration_Boundary.md`  
+- `docs/HC_OS_V1_Milestone_G_Lumen_QA_Plan.md`  
 - `docs/HC_OS_V1_Milestone_F_Execution_Addendum.md` (Successor: Milestone G)  

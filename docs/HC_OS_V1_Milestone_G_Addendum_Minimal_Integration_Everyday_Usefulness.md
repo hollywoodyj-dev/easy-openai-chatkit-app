@@ -27,7 +27,8 @@ Its purpose is **to prove** that:
 - **Wisewave — everyday usefulness quality bar (Done):** `docs/HC_OS_V1_Milestone_G_Wisewave_Everyday_Usefulness_Quality_Bar.md`  
 - **OctopusMind — integration boundary (Done):** `docs/HC_OS_V1_Milestone_G_OctopusMind_Integration_Boundary.md`  
 - **Nova — implementation path (draft):** `docs/HC_OS_V1_Milestone_G_Nova_Implementation_Path.md`  
-- **Proof spec (machine-readable, v1):** `docs/HC_OS_V1_Milestone_G_Proof_Spec_v1.json`
+- **Proof spec (machine-readable, v1):** `docs/HC_OS_V1_Milestone_G_Proof_Spec_v1.json`  
+- **Lumen QA plan:** `docs/HC_OS_V1_Milestone_G_Lumen_QA_Plan.md`
 
 **Nova G0 (minimal code):** system-prompt integration appendix + turn debug fields + `/chat` `role="group"` (`display: contents`) for continuity/pattern/embodiment strips — see **`docs/HC_OS_V1_Milestone_G_Nova_Implementation_Path.md`**. Env: **`MILESTONE_G_INTEGRATION=0`** disables the appendix.
 
@@ -255,6 +256,22 @@ Milestone G should be marked **complete** only if **all** of the following are t
 7. **Scope** remained narrow.  
 
 If these are not all true, G should **not** be treated as complete.
+
+### Wisewave — formal closure standard (recorded)
+
+**Wisewave approves §11 as the formal Milestone G acceptance gate.** Use §11 as the **milestone closure standard** for execution tracking and Lumen results.
+
+**All seven §11 conditions must be satisfied** to treat Milestone G as complete:
+
+1. Reflection, continuity, and minimal embodiment feel like **one coherent loop**.  
+2. The loop is **usable** in ordinary day-to-day situations.  
+3. The product remains **light** and **reflection-first**.  
+4. Everyday usefulness does **not** require broader product expansion.  
+5. **Silence** and **restraint** still function as success states.  
+6. **EN / ZH** baseline compatibility still holds.  
+7. **Scope** remained narrow.  
+
+**Do not treat Nova G0 shipped as equivalent to Milestone G complete.** G0 is a **minimal implementation slice**; closure requires §11 proof (typically via Lumen QA + Tree), not code merge alone.
 
 ---
 
