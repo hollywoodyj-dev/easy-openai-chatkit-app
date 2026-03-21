@@ -7,7 +7,7 @@
 
 - API: `POST /api/chat/turn` may return `embodiment_cue` when `recurrence_cue` is non-null (unless `MILESTONE_F_EMBODIMENT=0` on server). Successful responses may include **`assistant_message_id`** (persisted row id).
 - Persistence: Assistant `metadata` may include `wisewave_recurrence` (with cue text), `wisewave_embodiment`, `wisewave_reflection_state`, and `wisewave_is_vague_source` so **`GET /api/chat/messages` can rehydrate** header strips after **refresh** or **session switch**.
-- UI: `/chat` — **“Optional response”** / **“可选回应提示”** **directly below** **Pattern cue** (then Regulation cue / Next step / What was noticed). Strip uses a light **teal** left accent for visibility vs pattern cue.
+- UI: `/chat` — **“Optional response”** / **“可选回应提示”** **directly below** **Pattern cue** (then Regulation cue / Next step / What was noticed). Strip uses a light **teal** left accent for visibility vs pattern cue. **Pattern / Optional response** visibility follows **`recurrence_cue` + `debug_is_vague_source`** alignment with the server, **not** `isMetadataMeaningful` (weak reflection labels no longer suppress strips when the API emitted recurrence).
 
 **Reference docs (judgment lenses):**
 

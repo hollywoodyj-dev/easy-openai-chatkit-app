@@ -1258,10 +1258,11 @@ function ChatContent() {
             </div>
           );
         })()}
+        {/* Pattern / embodiment: trust server recurrence + vague-source gate. Do not require
+            isMetadataMeaningful — weak reflection labels are common when continuity is still true,
+            and hiding strips here caused API-emitted recurrence_cue to never render. */}
         {latestRecurrenceCue &&
           !latestIsVagueSource &&
-          !!latestMetadata &&
-          isMetadataMeaningful(latestMetadata) &&
           !!latestRecurrenceCueAssistantId &&
           latestRecurrenceCueAssistantId === lastAssistantId && (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-violet-50/60 dark:bg-violet-900/20">
@@ -1277,8 +1278,6 @@ function ChatContent() {
         )}
         {latestEmbodimentCue &&
           !latestIsVagueSource &&
-          !!latestMetadata &&
-          isMetadataMeaningful(latestMetadata) &&
           !!latestEmbodimentCueAssistantId &&
           latestEmbodimentCueAssistantId === lastAssistantId &&
           !!latestRecurrenceCue &&
