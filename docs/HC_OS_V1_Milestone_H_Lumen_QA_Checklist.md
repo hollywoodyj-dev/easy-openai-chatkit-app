@@ -65,7 +65,7 @@ For every test turn, answer:
 Confirm Milestone H instrumentation is present before content judgment.
 
 ### Checklist
-- [ ] `debug_milestone_h_build_marker === "milestone_h_v1"`
+- [ ] `debug_milestone_h_build_marker === "milestone_h_v2"` (or note legacy **`milestone_h_v1`** deploy)
 - [ ] `debug_milestone_h_light_mode_build_marker === "milestone_h_light_mode_v1"` (Wisewave Light Mode v2 — main reflection appendix)
 - [ ] When `ENABLE_H_CUE` is on: `debug_milestone_h_light_mode_appendix_applied === true` (confirms **Light Mode** is applied to generation, not docs-only)
 - [ ] `debug_milestone_h_enabled` returns expected boolean

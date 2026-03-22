@@ -13,7 +13,8 @@ import {
  * Default-off: set ENABLE_H_CUE=true or ENABLE_H_CUE=1 to render.
  */
 
-const BUILD_MARKER = "milestone_h_v1";
+/** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
+const BUILD_MARKER = "milestone_h_v2";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -156,17 +157,20 @@ function isH1MildSubstrateSuppressed(userMessage: string, insight: string): bool
   if (len >= 100) return false;
 
   const userHasStructure =
-    /\b(because|although|whenever|every time|pattern|always|never|except|but then|ends up|keeps happening)\b/i.test(
+    /\b(because|although|whenever|every time|always|never|except|but then|ends up|keeps happening)\b/i.test(
       t
-    ) || /(因为|虽然|每次|总是|从不|可是|但是)/.test(t);
+    ) ||
+    /\b(pattern|loop)\s+(of|where|when)\b/i.test(t) ||
+    /(因为|虽然|每次|总是|从不|可是|但是)/.test(t);
 
   if (userHasStructure) return false;
 
+  // IMPORTANT: Do not use raw insight length or generic LLM words (uncertainty, reaction, pattern, pull…)
+  // — hosted insights are almost always long and contain those tokens, which bypassed this gate entirely (Lumen re-QA).
   const insightDurable =
-    ins.length >= 96 ||
-    /(inner rule|pressure|loop|demand|pattern|prove|enough|conflict|torn|both|pull|uncertainty|stuck|split|habit|reaction)/i.test(
+    /(inner rule|torn between|conflict between|split between|both (pulls|sides|ways)|two (strong )?pulls|pull(s|ing)? in (two|different|opposite)|stuck in (a |the )?loop|pattern of (avoiding|shutting|rushing|reacting when)|prove (yourself|i deserve|that i)|never (quite )?good enough|pressure to (perform|prove|keep up)|keep up (the )?appearance|performance (trap|treadmill|pressure))/i.test(
       ins
-    );
+    ) || /(矛盾|拉扯|兩股|两股).{0,16}(拉|扯)/.test(ins);
 
   if (insightDurable) return false;
 
@@ -174,7 +178,11 @@ function isH1MildSubstrateSuppressed(userMessage: string, insight: string): bool
     /\boverwhelmed\b/.test(t) ||
     /\b(slightly|a bit|kind of|little bit)\s+(uneasy|tense|anxious|nervous|worried)\b/.test(t) ||
     /\bbit tense\b|\ba little tense\b|\bkind of tense\b/.test(t) ||
+    /\bfeel(ing)?\s+(a\s+)?(little\s+)?(bit\s+)?(uneasy|tense|anxious|nervous|worried)\b/.test(t) ||
+    /\bi'?m\s+(just\s+)?(a\s+)?(little\s+)?(bit\s+)?(uneasy|tense|anxious|worried|nervous)\b/.test(t) ||
     /\b(worried|afraid)\s+i\s+might\b/.test(t) ||
+    /\b(worried|afraid)\s+(that\s+)?i\s+(will|could|would)\b/.test(t) ||
+    /\b(worried|nervous)\s+about\s+(failing|messing|screwing)\b/.test(t) ||
     /\bdon'?t trust myself\b/.test(t) ||
     /\bdon'?t really trust myself\b/.test(t) ||
     /\bdon'?t trust\b[^.!?]{0,36}\bsometimes\b/.test(t) ||

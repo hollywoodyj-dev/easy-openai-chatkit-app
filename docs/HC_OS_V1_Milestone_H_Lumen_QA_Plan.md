@@ -13,7 +13,7 @@
 
 - **Server:** `POST /api/chat/turn` — optional **`awareness_cue`** `{ kind, text_en, text_zh }` when selection + gates pass (`lib/wisewave-milestone-h-micro-awareness.ts`).  
 - **Kill switch:** **`ENABLE_H_CUE`** = **`true`** or **`1`** enables **Light Mode** main-reflection appendix + H cue path; **unset or any other value = off** (default-off).  
-- **API debug (QA):** `debug_milestone_h_enabled`, `debug_milestone_h_build_marker` (`milestone_h_v1`), `debug_milestone_h_outcome` (`emitted` | `suppressed` | skipped), `debug_milestone_h_suppressed_reason`, `debug_milestone_h_kind`. Suppression reasons include **`recurrence_overlap_e`**, **`recurrence_overlap_e_structural`**, **`minimal_affect_low_signal`** (flat hedge / thin affect), **`h1_mild_reflective_insufficient`** (mild/generic reflective only — H1 follow-up), plus **`utilitarian_or_factual`** for task/help/summarize-style asks. **H3** only when **user text** shows uncertainty — not **`emotion_label` alone**.  
+- **API debug (QA):** `debug_milestone_h_enabled`, `debug_milestone_h_build_marker` (**`milestone_h_v2`** current; `milestone_h_v1` legacy), `debug_milestone_h_outcome` (`emitted` | `suppressed` | skipped), `debug_milestone_h_suppressed_reason`, `debug_milestone_h_kind`. **Hosted QA:** if marker is still **`v1`**, deployment does not include latest H gates. Suppression reasons include **`recurrence_overlap_e`**, **`recurrence_overlap_e_structural`**, **`minimal_affect_low_signal`**, **`h1_mild_reflective_insufficient`**, plus **`utilitarian_or_factual`**. **H3** only when **user text** shows uncertainty — not **`emotion_label` alone**.  
 - **Persistence (UI rehydrate only):** assistant `metadata.wisewave_micro_awareness` — **not** a separate H state machine; same pattern as recurrence/embodiment strips.  
 - **UI:** `/chat` — **Awareness** / **轻量觉察** strip (amber), **after** continuity + pattern + optional response grouping; language follows last user message (EN/ZH baseline). **Stabilization (H-UI-1 / H-UI-2):** when Awareness is visible for that assistant turn, **Regulation cue** and **“What was noticed”** are **hidden** by default to reduce stack weight; use **`?noticed=1`** to force “What was noticed” for QA.  
 - **Conflict rule (implemented):** If Milestone **E** **`recurrence_cue`** is emitted on the same turn, **H is suppressed** (`recurrence_overlap_e`). If **E2** proves aligned recurrence (**`debug_recurrence_aligned_instance_count` ≥ 2**) but the strip is **withheld** (E3 legibility, anti-repeat, stale window, low-confidence path, etc.), **H is still suppressed** (`recurrence_overlap_e_structural`).  
@@ -287,7 +287,7 @@ pass_5_light_mode:
 user_messages_summary:
 e_recurrence_on_this_turn: yes | no
 api_snapshot:
-  debug_milestone_h_build_marker: milestone_h_v1 | absent
+  debug_milestone_h_build_marker: milestone_h_v2 | milestone_h_v1 | absent
   debug_milestone_h_enabled: true | false
   debug_milestone_h_outcome: emitted | suppressed | skipped_*
   debug_milestone_h_suppressed_reason: <string | null>

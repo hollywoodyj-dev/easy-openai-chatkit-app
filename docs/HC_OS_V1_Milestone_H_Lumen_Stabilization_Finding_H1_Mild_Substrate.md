@@ -20,11 +20,13 @@ Stabilization test: *does removing H make the turn **clearly** worse?* — often
 
 **File:** `lib/wisewave-milestone-h-micro-awareness.ts`
 
+**Build marker:** `debug_milestone_h_build_marker` = **`milestone_h_v2`** — use this on **hosted** to confirm the deploy includes H-engine changes ( **`v1`** = older build).
+
 When selected kind is **H1**, emit **only if** not caught by **`isH1MildSubstrateSuppressed()`**:
 
-- **Bypass** if user message **≥ 100** chars, or has **structural** cues (because, whenever, pattern, always, …), or **ZH** structural fragments.  
-- **Bypass** if **insight** is **long (≥ 96)** or contains **durable** pattern language (pressure, loop, conflict, torn, …).  
-- Otherwise, if user text matches **mild discomfort** families (overwhelmed, slightly uneasy, bit tense, worried I might, don’t trust myself / sometimes, mild “feel off”…), **suppress** with **`h1_mild_reflective_insufficient`**.
+- **Bypass** if user message **≥ 100** chars, or has **structural** cues (because, whenever, **pattern of** / **loop where**, always, …), or **ZH** structural fragments.  
+- **Bypass** if **insight** matches **high-precision** durable phrases only (e.g. torn between, inner rule, split between, stuck in a loop, pattern of avoiding…). **Not** raw insight length and **not** loose tokens like “uncertainty” / “reaction” / lone “pattern” — those appeared in almost every model insight and **disabled** this gate on hosted (re-QA 2026).  
+- Otherwise, if user text matches **mild discomfort** families (overwhelmed, slightly uneasy, feel a bit tense, worried I might/will, don’t trust myself / sometimes, mild “feel off”…), **suppress** with **`h1_mild_reflective_insufficient`**.
 
 **H4 / H5 / H3** unchanged by this gate (only **H1**).
 
