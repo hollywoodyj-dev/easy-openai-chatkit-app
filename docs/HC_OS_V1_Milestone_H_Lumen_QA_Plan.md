@@ -28,6 +28,7 @@
 - `docs/HC_OS_V1_Milestone_H_Failure_Case_Library_Top_10_Drift_Scenarios.md` — drift containment  
 - **`docs/HC_OS_V1_Milestone_H_Wisewave_Reflection_Style_v2_Light_Mode.md`** — **Pass 5** revision: main reflection **Light Mode** (notice, not conclude) so H can be validated **whole-turn**  
 - `AGENTS.md` — Milestone H governance summary  
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — **Post–closure stabilization** drift QA (Wisewave-strengthened draft): five axes, removal test, whole-turn evaluation; use during **H stabilization**, not as a substitute for this plan’s passes.
 
 **Product rule (all passes):**
 
@@ -142,6 +143,8 @@ On **any** successful `POST /api/chat/turn` with **`ENABLE_H_CUE` enabled**:
 **Fail if:** cue feels **instructive**, **therapeutic**, or **analytic** (addendum **§11.4**).
 
 **Note:** If Pass 4 passes on the **H line** but the **whole turn** still feels too heavy, the blocker is usually **main reflection authorial weight** — addressed in **Pass 5** via **Wisewave Light Mode v2** (not by tuning H alone).
+
+**Closure note (2026-03-22):** Original Pass 4 was correctly marked **revise** because whole-turn heaviness contaminated cue evaluation. After Wisewave **Reflection Style v2 / Light Mode** was deployed, Pass 4 was **re-run under the revised cue-only scope** and can be treated as **closed / pass with watchpoint**. Whole-turn judgment now belongs primarily to **Pass 5**.
 
 ---
 

@@ -106,6 +106,8 @@ Tree runs **only** these **four** streams:
 | **Output** | pass / revise / remove; exact failure cases; **removal-first** recommendation |
 | **Done when** | Majority of cases: H is **helpful** **or** **correctly absent** |
 
+**Operational checklist (draft, Wisewave-strengthened):** **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — five drift axes, removal test, whole-turn evaluation, strict output format, escalation.
+
 ---
 
 ## 4. Tree execution loop
@@ -183,4 +185,5 @@ If H ever becomes **visible as a feature**, Tree must treat it as **regression**
 
 - **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — soft pass, Wisewave checklist, “forget H exists.”  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — Lumen closure record.  
-- **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — Gate 1 boundaries and H/E conflict.
+- **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — Gate 1 boundaries and H/E conflict.  
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — Lumen Stream 4 drift QA (removal-first).

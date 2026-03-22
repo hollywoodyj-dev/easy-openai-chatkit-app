@@ -283,3 +283,5 @@ Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I*
 **Wisewave:** **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — controlled exception vs ambient, stabilization checklist, “when H is truly passed.”
 
 **OctopusMind (Gate 1, Lumen-aligned tightening):** **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — insertion/suppression boundaries, confidence discipline, anti-drift, proof logic, H/E conflict, kill-switch, and the five “OctopusMind must answer” lines.
+
+**Lumen — drift detection (stabilization, draft by Wisewave):** **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — guidance / interpretive / authority / weight / duplication axes; removal test; whole-turn evaluation; strict verdict format; EN/ZH parity drift.

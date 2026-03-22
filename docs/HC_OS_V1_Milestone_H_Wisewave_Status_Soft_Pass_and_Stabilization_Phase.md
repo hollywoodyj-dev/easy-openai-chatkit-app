@@ -131,6 +131,7 @@ Something **rare** happened here:
 ## Related documents
 
 - **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — Tree owner; four streams; metrics; daily loop; exit / Milestone I gate.  
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — Lumen drift QA (Wisewave-strengthened draft); removal-first; five axes.  
 - `docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`  
 - `docs/HC_OS_V1_Milestone_H_Failure_Case_Library_Top_10_Drift_Scenarios.md`  
 - `docs/HC_OS_V1_Milestone_H_Wisewave_Reflection_Style_v2_Light_Mode.md`  
