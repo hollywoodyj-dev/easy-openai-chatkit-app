@@ -8,6 +8,8 @@
 
 **Nova / repo:** This file is the **authoritative Lumen closure record** for Milestone H QA; **`AGENTS.md`** points here for product status.
 
+**2026-03-23:** **Lumen QA round closure** — core passes and stabilization re-QA verified on hosted/browser; see § *Lumen QA round closure*; ongoing **drift monitoring** (not open milestone-test debt for verified items).
+
 ---
 
 ## Executive summary
@@ -302,6 +304,55 @@ A 30-scenario live QA stabilization pack was run against hosted turns using:
 - `docs/HC_OS_V1_Milestone_H_Lumen_Live_QA_Scenario_Pack_Summary.md`
 - `docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`
 - `docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`
+
+### Re-QA closure note — Batch 2 containment fix confirmed
+Nova shipped a containment fix for the Batch 2 leakage pattern (task/help/utilitarian detection, minimal-affect low-signal detection, and narrower H3 routing). Lumen re-checked scenarios **12, 13, 16, and 19** on hosted.
+
+**Confirmed results:**
+- Scenario 12 (`I don’t feel anything in particular.`) → `minimal_affect_low_signal`, no H
+- Scenario 13 (`I guess it’s okay.`) → `minimal_affect_low_signal`, no H
+- Scenario 16 (`Can you summarize this article for me?`) → `utilitarian_or_factual`, no H
+- Scenario 19 (`I need help writing an email.`) → `utilitarian_or_factual`, no H
+
+**Conclusion:** the targeted Batch 2 stabilization issue is now **closed on re-QA**.
+
+### Re-QA closure note — H1 mild-substrate suppression (v2) confirmed
+Nova later shipped `milestone_h_v2` to address the remaining H1 mild-substrate permissiveness issue. Lumen verified hosted was serving `debug_milestone_h_build_marker: "milestone_h_v2"` and re-ran scenarios **1, 21, 23, 27, and 28**.
+
+**Confirmed results:**
+- Scenario 1 (`I feel overwhelmed with everything I need to do lately.`) → `h1_mild_reflective_insufficient`, no H
+- Scenario 21 (`I feel slightly uneasy but can’t explain why.`) → `h1_mild_reflective_insufficient`, no H
+- Scenario 23 (`I’m a bit tense today.`) → `h1_mild_reflective_insufficient`, no H
+- Scenario 27 (`I’m worried I might fail.`) → `h1_mild_reflective_insufficient`, no H
+- Scenario 28 (`I don’t trust myself sometimes.`) → `h1_mild_reflective_insufficient`, no H
+
+**Conclusion:** the remaining H1 mild-substrate stabilization issue is now **closed on re-QA in milestone_h_v2**.
+
+### Browser re-check closure note — H-UI-2 verified
+Nova later shipped **H-UI-2** so that `What was noticed` is hidden by default when **Awareness** is visible, while preserving QA overrides.
+
+Lumen verified browser behavior on live `/chat`:
+- default `/chat` → **Awareness + main reply** (`What was noticed` hidden)
+- `/chat?noticed=1` → **Awareness + What was noticed + main reply**
+- `/chat?noticed=0` → **Awareness + main reply**
+
+**Conclusion:** H-UI-2 is **working as intended** and the earlier browser-side stack-weight issue is materially reduced under the default H turn UI.
+
+---
+
+## Lumen QA round closure — 2026-03-23
+
+**Milestone H QA is complete for this round** in the following sense:
+
+| Area | Status |
+|------|--------|
+| **Core passes (1–9)** | **Closed** — pass board and findings recorded above; hosted baseline 2026-03-22 + parity fix. |
+| **Stabilization re-QA** | **Verified on hosted / browser** — Batch 2 containment, **`milestone_h_v2`** H1 mild substrate, **H-UI-2** stack composition (see closure notes in this addendum). |
+| **Results documentation** | **Updated** in this file for steward / Tree / Nova handoff. |
+
+**Posture going forward:** **ongoing drift monitoring** (Lumen Drift Detection Checklist, Tree stabilization execution loop, removal-first spot checks) — **not** open-ended unresolved **milestone test debt** for the items verified above.
+
+**Not the same as hard milestone closure:** Formal **H → CLOSED** and **Milestone I preparation** still belong to **Tree’s exit gate** in **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`**. This section means **targeted Lumen QA work for the shipped stabilization fixes is done**; Tree may still run calendar / founder gates before signing hard close.
 
 ---
 
