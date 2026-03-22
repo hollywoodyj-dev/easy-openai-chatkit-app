@@ -276,8 +276,10 @@ Milestone H should only be treated as healthy **while all of the following remai
 
 ## Next phase (Tree / Wisewave)
 
-Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I** until stabilization gates are met.
+Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I** until Tree’s stabilization **exit gate** is met.
 
-**See:** **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — Wisewave framing (controlled exception vs ambient), stabilization checklist, and “when H is truly passed.”
+**Tree (ACTIVE — execution):** **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — principles, four streams, metrics, daily loop, escalation, exit criteria, Milestone I preparation gate.
+
+**Wisewave:** **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — controlled exception vs ambient, stabilization checklist, “when H is truly passed.”
 
 **OctopusMind (Gate 1, Lumen-aligned tightening):** **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — insertion/suppression boundaries, confidence discipline, anti-drift, proof logic, H/E conflict, kill-switch, and the five “OctopusMind must answer” lines.

@@ -67,3 +67,7 @@
 ## 2026-02-08 — OctopusMind: Lumen closure doctrine (Milestone H Gate 1)
 
 - **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — Tightened insertion/suppression, confidence, anti-drift, proof, H/E conflict, kill-switch, Q&A table; linked from two-gate doc, **`AGENTS.md`**, Lumen results.
+
+## 2026-02-08 — Tree: Milestone H stabilization plan (execution)
+
+- **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — Owner Tree, ACTIVE, no expansion; streams 1–4 (Wisewave / OctopusMind / Nova / Lumen); metrics; loop; escalation; exit → H closed / Milestone I prep. Linked from Wisewave stabilization doc, **`AGENTS.md`**, Lumen results.
