@@ -69,18 +69,77 @@ function isVagueUserMessage(message: string): boolean {
   return VAGUE_SOURCE_SNIPPETS.some((p) => sourceLower.includes(p));
 }
 
+/**
+ * Detects first-person reflective intent for **English, Chinese, and mixed** input.
+ *
+ * **Important:** `\b` word boundaries in JS do **not** work around CJK characters
+ * (they only bracket `[A-Za-z0-9_]`). A regex like `\b(我觉得)\b` will **not** match
+ * typical Chinese sentences, which caused false `utilitarian_or_factual` suppression
+ * on valid ZH reflective turns (Lumen Pass 7).
+ */
+export function hasReflectiveFirstPersonAnchor(message: string): boolean {
+  const t = message.trim();
+  if (!t) return false;
+
+  const hasCjk = /[\u4E00-\u9FFF]/.test(t);
+
+  if (hasCjk) {
+    // Chinese: 我 as clause-initial subject, or common reflective openers (no \b)
+    if (/^我/.test(t)) return true;
+    if (/^自己(也|在|总|会|想|要)/.test(t)) return true;
+    if (
+      /(我觉得|我感到|我想|我总|我的|我自己|我有一部分|另一部分|只要我|只要我一|我总觉得|我就觉得|我总会|我一慢|我慢下来)/.test(t)
+    )
+      return true;
+    // 我… after sentence break (mid-message first person)
+    if (/[，。！？、][\s]*我[^。！？]{0,24}(觉得|感到|想|总|会|有|在|也|只|能|的|一)/.test(t)) return true;
+  }
+
+  const lower = t.toLowerCase();
+  if (
+    /\b(i|i'm|i am|my|me|we|i've|i feel|i felt|i keep|i still|i can't|i cannot|i'm trying)\b/i.test(
+      lower
+    )
+  )
+    return true;
+
+  // Mixed / explicit ZH phrases in otherwise Latin text
+  if (/我觉得|我感到|我想|我的/.test(t)) return true;
+
+  return false;
+}
+
 function looksUtilitarianOrFactual(message: string): boolean {
   const t = message.trim();
   if (t.length < 8) return true;
-  const lower = t.toLowerCase();
+
+  // Reflective first-person (ZH/EN) first — avoids false positives on 怎么… when 我/我觉得 follows
+  if (hasReflectiveFirstPersonAnchor(t)) {
+    // Still block obvious English homework / lookup patterns
+    if (/^(what|when|where|who|which|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\b/i.test(t))
+      return true;
+    if (/^(define|explain|translate|calculate|list|give me)\b/i.test(t)) return true;
+    if (/^\d+[\s\+\-*\/=]/.test(t)) return true;
+    if (/^(http|https):\/\//i.test(t)) return true;
+    return false;
+  }
+
+  // Obvious non-reflective asks
   if (/^(what|when|where|who|which|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\b/i.test(t))
     return true;
   if (/^(define|explain|translate|calculate|list|give me)\b/i.test(t)) return true;
   if (/^\d+[\s\+\-*\/=]/.test(t)) return true;
   if (/^(http|https):\/\//i.test(t)) return true;
-  // No first-person reflective anchor
-  if (t.length < 40 && !/\b(i|i'm|i am|my|me|we|i've|i feel|i felt|我觉得|我感到|我想|我的)\b/i.test(lower))
+
+  // Chinese informational openers (e.g. 什么是…, 怎么办理…) — no reflective anchor matched above
+  const trim = t.trim();
+  if (/[\u4E00-\u9FFF]/.test(trim) && /^(什么|怎么|如何|为什么|哪里|哪个|哪個|是否)/.test(trim)) {
     return true;
+  }
+
+  // Short message without reflective anchor → likely ping / fragment
+  if (t.length < 40) return true;
+
   return false;
 }
 
