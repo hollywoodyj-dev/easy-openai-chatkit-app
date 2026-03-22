@@ -42,3 +42,11 @@
 - **`lib/wisewave-milestone-h-micro-awareness.ts`** — Gate 1+2 selection, EN/ZH templates (H1/H3/H4/H5; H2 pattern-bridge not in v1 minimal path). Default-off: **`ENABLE_H_CUE=true`** or **`1`** in env.
 - **`app/api/chat/turn/route.ts`** — After embodiment: `awareness_cue` JSON + `wisewave_micro_awareness` on assistant metadata; suppressed when Milestone E **`recurrence_cue`** emitted (H/E conflict); consecutive-turn suppression via prior assistant metadata; debug: `debug_milestone_h_*`.
 - **`app/chat/page.tsx`** — “Awareness” / “轻量觉察” strip (amber), rehydrate from metadata.
+
+## 2026-02-08 — Wisewave Reflection Style v2 (Light Mode) for Lumen Pass 5
+
+- **`docs/HC_OS_V1_Milestone_H_Wisewave_Reflection_Style_v2_Light_Mode.md`** — Main reflection **notice, not conclude**; reduces authorial weight so H can be judged whole-turn; operational notes for Nova (compare ±H) and Lumen (full response lighter than Pass 4; valid if H removed). **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Plan.md`** Pass 5 updated (5A–5D).
+
+## 2026-02-08 — Light Mode implemented in turn API
+
+- **`lib/wisewave-milestone-h-light-mode.ts`** — `milestoneHLightModeSystemAppendix()` appended to system message when **`ENABLE_H_CUE`** is on (same flag as H cue). Debug: `debug_milestone_h_light_mode_appendix_applied`, `debug_milestone_h_light_mode_build_marker`.

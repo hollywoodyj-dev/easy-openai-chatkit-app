@@ -22,6 +22,10 @@ import {
   milestoneHBuildMarker,
   type MicroAwarenessKind,
 } from "@/lib/wisewave-milestone-h-micro-awareness";
+import {
+  milestoneHLightModeBuildMarker,
+  milestoneHLightModeSystemAppendix,
+} from "@/lib/wisewave-milestone-h-light-mode";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -1001,6 +1005,8 @@ export async function POST(request: Request) {
     : "\n\nLanguage rule: Respond in English only. Do not include Chinese characters.";
   /** Milestone G: whether integration appendix was appended to the system message (QA). */
   let debugMilestoneGSystemAppendixApplied = false;
+  /** Milestone H Wisewave Light Mode v2: whether main-reflection appendix was appended (QA / Lumen Pass 5). */
+  let debugMilestoneHLightModeAppendixApplied = false;
   const recent = allMessages.slice(-RECENT_MESSAGES_COUNT);
   const openaiMessages: { role: "user" | "assistant" | "system"; content: string }[] = recent.map(
     (m) => ({
@@ -1038,6 +1044,8 @@ export async function POST(request: Request) {
         : "";
     const milestoneGAppendix = milestoneGSystemAppendix();
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
+    const milestoneHLightAppendix = milestoneHLightModeSystemAppendix();
+    debugMilestoneHLightModeAppendixApplied = milestoneHLightAppendix.length > 0;
     openaiMessagesForApi.push({
       role: "system",
       content:
@@ -1046,6 +1054,7 @@ export async function POST(request: Request) {
         summaryBlock +
         reflectionBlock +
         milestoneGAppendix +
+        milestoneHLightAppendix +
         languageInstruction,
     });
   }
@@ -2043,6 +2052,8 @@ export async function POST(request: Request) {
     debug_milestone_g_build_marker: milestoneGBuildMarker(),
     debug_milestone_h_enabled: debugMilestoneHEnabled,
     debug_milestone_h_build_marker: milestoneHBuildMarker(),
+    debug_milestone_h_light_mode_appendix_applied: debugMilestoneHLightModeAppendixApplied,
+    debug_milestone_h_light_mode_build_marker: milestoneHLightModeBuildMarker(),
     debug_milestone_h_outcome: debugMilestoneHOutcome,
     debug_milestone_h_suppressed_reason: debugMilestoneHSuppressedReason,
     debug_milestone_h_kind: responseAwarenessCue?.kind ?? null,

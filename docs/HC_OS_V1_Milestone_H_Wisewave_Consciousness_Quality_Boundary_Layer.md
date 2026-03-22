@@ -200,3 +200,5 @@ Wisewave’s Milestone H tasks are:
 ## Related (Gate 2 in stack)
 
 OctopusMind’s **two-gate doctrine** places Wisewave as **experiential veto** (Gate 2), not co-owner of insertion logic: **`docs/HC_OS_V1_Milestone_H_OctopusMind_Two_Gate_Structural_Experiential_Doctrine.md`**.
+
+**Main reflection voice (Pass 5):** **`docs/HC_OS_V1_Milestone_H_Wisewave_Reflection_Style_v2_Light_Mode.md`** — Light Mode so the **whole turn** stays light enough to validate H honestly (*notice, not conclude*).
