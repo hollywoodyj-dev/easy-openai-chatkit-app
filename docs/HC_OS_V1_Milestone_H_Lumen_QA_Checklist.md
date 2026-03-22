@@ -52,6 +52,7 @@ For every test turn, answer:
 - `debug_milestone_h_suppressed_reason`
 - `debug_milestone_h_kind`
 - `recurrence_cue` present: yes / no
+- `debug_recurrence_aligned_instance_count` (for **Pass 2**: E2 structural overlap without visible `recurrence_cue`)
 - `awareness_cue` present: yes / no
 
 ---
@@ -111,17 +112,20 @@ Verify `ENABLE_H_CUE` cleanly turns H on/off.
 ## Pass 2 — H / E conflict rule
 
 ### Objective
-Verify H suppresses whenever E recurrence is present.
+Verify H suppresses whenever **E recurrence is present** — including **structural** recurrence (E2 aligned count ≥ 2) **even when** the recurrence strip is **withheld** (E3 / repeat / stale / etc.).
 
 ### Checklist
 - [ ] Constructed turn where `recurrence_cue` emits
 - [ ] `awareness_cue` absent on same turn
-- [ ] Suppression reason indicates E overlap
-- [ ] Constructed turn with strong reflection but no recurrence
-- [ ] H and E never appear together
+- [ ] Suppression reason is **`recurrence_overlap_e`**
+- [ ] Constructed turn where `recurrence_cue` is **absent** but `debug_recurrence_aligned_instance_count` **≥ 2**
+- [ ] `awareness_cue` absent on that turn; suppression reason is **`recurrence_overlap_e_structural`**
+- [ ] Constructed turn with strong reflection but **no** recurrence strip and **no** structural overlap (aligned &lt; 2 or null) — H may or may not emit; never with recurrence strip
+- [ ] H and E recurrence strip never appear together
 
 ### Instant fail trigger
 - [ ] `recurrence_cue` and `awareness_cue` both present
+- [ ] Structural recurrence (aligned ≥ 2, no cue) but `awareness_cue` present
 
 ### Verdict
 - [ ] Pass
@@ -359,6 +363,7 @@ enable_h_cue:
 language:
 user_message_summary:
 recurrence_cue_present:
+debug_recurrence_aligned_instance_count:
 awareness_cue_present:
 debug_milestone_h_build_marker:
 debug_milestone_h_enabled:

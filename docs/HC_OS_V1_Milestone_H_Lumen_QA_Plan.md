@@ -16,7 +16,7 @@
 - **API debug (QA):** `debug_milestone_h_enabled`, `debug_milestone_h_build_marker` (`milestone_h_v1`), `debug_milestone_h_outcome` (`emitted` | `suppressed` | skipped), `debug_milestone_h_suppressed_reason`, `debug_milestone_h_kind`. Suppression reasons include **`recurrence_overlap_e`** (recurrence strip emitted) and **`recurrence_overlap_e_structural`** (E2 aligned count ≥2 but strip withheld by E3/repeat/stale/low-confidence — H still suppressed).  
 - **Persistence (UI rehydrate only):** assistant `metadata.wisewave_micro_awareness` — **not** a separate H state machine; same pattern as recurrence/embodiment strips.  
 - **UI:** `/chat` — **Awareness** / **轻量觉察** strip (amber), **after** continuity + pattern + optional response grouping; language follows last user message (EN/ZH baseline).  
-- **Conflict rule (implemented):** If Milestone **E** **`recurrence_cue`** is emitted on the same turn, **H is suppressed** (H/E overlap).  
+- **Conflict rule (implemented):** If Milestone **E** **`recurrence_cue`** is emitted on the same turn, **H is suppressed** (`recurrence_overlap_e`). If **E2** proves aligned recurrence (**`debug_recurrence_aligned_instance_count` ≥ 2**) but the strip is **withheld** (E3 legibility, anti-repeat, stale window, low-confidence path, etc.), **H is still suppressed** (`recurrence_overlap_e_structural`).  
 - **Consecutive-turn:** If prior assistant message had `wisewave_micro_awareness`, **H suppressed** on next turn.  
 - **H2 pattern-to-moment bridge:** **Not** in current minimal engine (H1 / H3 / H4 / H5 only) — see **Pass 6 note**.
 
@@ -67,7 +67,7 @@ Map to addendum **§11.2** questions + **§16** acceptance list:
 2. **`ENABLE_H_CUE`:** Set to **`true`** or **`1`** on the **server** (local `.env.local` or **Vercel** project env for hosted QA). Enables **Wisewave Light Mode v2** on the main reflection **and** the awareness cue. Without this, both stay **off** — do not score content passes. Confirm **`debug_milestone_h_light_mode_appendix_applied`** for Pass 5.  
 3. **`MILESTONE_F_EMBODIMENT` / `MILESTONE_G_INTEGRATION`:** As needed; H QA judges **interaction** with existing strips, not F/G closure.  
 4. **Session:** Hosted (preferred) or local; authenticated or anonymous per your matrix.  
-5. **Substrate:** Mix of turns that **do** and **do not** qualify for **E recurrence** — required to validate **H suppression when E fires**.
+5. **Substrate:** Mix of turns that **do** and **do not** qualify for **E recurrence** — required to validate **H suppression when E fires**. Include, if possible, at least one turn where **`recurrence_cue`** is **absent** but **`debug_recurrence_aligned_instance_count` ≥ 2** (structural recurrence without visible strip) to confirm **`recurrence_overlap_e_structural`**.
 
 ---
 
@@ -103,14 +103,15 @@ On **any** successful `POST /api/chat/turn` with **`ENABLE_H_CUE` enabled**:
 
 ### Pass 2 — H/E conflict (structural gate)
 
-**Goal:** Addendum **§9.2 conflict rule** — if E pattern cue fires, **H must not**.
+**Goal:** Addendum **§9.2 conflict rule** — if E pattern cue fires, **H must not**. **Stabilization tightening:** if **E2** already proved recurrence (aligned count ≥ 2) but the **strip is withheld**, **H must still not** appear.
 
 | Step | Action | Pass criteria |
 |------|--------|----------------|
-| 2a | Construct a turn where **`recurrence_cue`** is **emitted** (continuity + E conditions met) | **`awareness_cue`** **absent**; `debug_milestone_h_suppressed_reason` includes **`recurrence_overlap_e`** (or equivalent documented reason) |
-| 2b | Construct a turn with **strong reflection** but **no** `recurrence_cue` | H **may** emit — not required every time; if emitted, **no** recurrence on same response |
+| 2a | Construct a turn where **`recurrence_cue`** is **emitted** (continuity + E conditions met) | **`awareness_cue`** **absent**; `debug_milestone_h_suppressed_reason` is **`recurrence_overlap_e`** |
+| 2b | Construct a turn where **`recurrence_cue`** is **absent** but **`debug_recurrence_aligned_instance_count` ≥ 2** (e.g. E3 suppressed cue, anti-repeat, or stale-window path on a recurrence-qualified substrate) | **`awareness_cue`** **absent**; `debug_milestone_h_suppressed_reason` is **`recurrence_overlap_e_structural`** |
+| 2c | Construct a turn with **strong reflection** but **no** structural recurrence (aligned count **&lt; 2** or null) and **no** `recurrence_cue` | H **may** emit — not required every time; if emitted, **no** recurrence strip on same response |
 
-**Fail if:** `recurrence_cue` and `awareness_cue` both present on the same turn.
+**Fail if:** `recurrence_cue` and `awareness_cue` both present on the same turn **or** structural recurrence (2b) still shows **`awareness_cue`**.
 
 ---
 
@@ -234,7 +235,7 @@ Test **both**:
 **Minimum beats (compress if needed; capture JSON + screenshots):**
 
 1. **Normal reflective exchange** — main reply lands.  
-2. **Suppression** — factual or E-recurrence turn → **no** H (or correct reason in debug).  
+2. **Suppression** — factual turn, **E recurrence emitted**, or **structural E2 overlap** (2b) → **no** H; debug shows correct reason (`recurrence_overlap_e` / `recurrence_overlap_e_structural` / other).  
 3. **Light help** — one turn where H **helps** without dominating.  
 4. **Removal / weight** — one case where H **should not** appear or **removal** is better (document verdict).  
 5. **EN** example + **ZH** example.  
@@ -292,6 +293,7 @@ api_snapshot:
   debug_milestone_h_suppressed_reason: <string | null>
   debug_milestone_h_kind: H1 | H3 | H4 | H5 | null
   recurrence_cue_present: yes | no
+  debug_recurrence_aligned_instance_count: <number | null>  # Pass 2b: ≥2 without cue → expect structural H suppression
   awareness_cue_present: yes | no
 two_gate_read:
   structural_admissible: pass | fail | n/a
@@ -328,4 +330,5 @@ Maintain **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** after runs (mirror 
 - `docs/HC_OS_V1_Milestone_G_Lumen_QA_Plan.md` — pass-shape reference  
 - `docs/HC_OS_V1_Milestone_H_Wisewave_Reflection_Style_v2_Light_Mode.md` — **Pass 5** main-reflection Light Mode  
 - `docs/HC_OS_V1_Milestone_H_Failure_Case_Library_Top_10_Drift_Scenarios.md`  
+- `docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md` — post-closure drift QA (stabilization; not a substitute for passes 0P–9)  
 - `memory.md` / `AGENTS.md` — Nova implementation pointers  
