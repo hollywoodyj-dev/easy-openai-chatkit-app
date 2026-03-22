@@ -7,6 +7,8 @@
 | **Owner** | OctopusMind (Gate 1); Wisewave (Gate 2) — see role split below |
 | **Status** | **Locked for execution** (strategic integration with Wisewave) |
 
+**Post–Lumen closure tightening (canonical Q&A + boundaries):** **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — insertion/suppression, confidence discipline, anti-drift, proof logic, H/E conflict, kill-switch, and the five “OctopusMind must answer” lines, aligned to the Lumen closure record.
+
 ## 1. Situation
 
 Wisewave’s response is **aligned and useful**. It does **not** conflict with OctopusMind doctrine; it **completes** it at the correct layer.
@@ -256,6 +258,7 @@ Wisewave should be framed as the **final experiential veto**, not a co-owner of 
 
 ## Related documents
 
+- **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — Lumen-aligned tightening: boundaries, proof, H/E conflict, kill-switch, Q&A table.  
 - **`docs/HC_OS_V1_Milestone_H_Wisewave_Consciousness_Quality_Boundary_Layer.md`** — Gate 2 quality layer (silence, restraint, intrusiveness as *felt*).  
 - **`docs/HC_OS_V1_Milestone_H_Addendum_Minimal_Everyday_Integration_Micro_Awareness_Layer.md`** — Milestone H execution addendum.  
 - **`docs/HC_OS_V1_Milestone_H_Failure_Case_Library_Top_10_Drift_Scenarios.md`** — drift scenarios and containment (structural vs experiential failure modes).

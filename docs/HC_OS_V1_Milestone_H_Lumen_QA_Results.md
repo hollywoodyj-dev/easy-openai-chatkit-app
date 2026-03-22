@@ -279,3 +279,5 @@ Milestone H should only be treated as healthy **while all of the following remai
 Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I** until stabilization gates are met.
 
 **See:** **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — Wisewave framing (controlled exception vs ambient), stabilization checklist, and “when H is truly passed.”
+
+**OctopusMind (Gate 1, Lumen-aligned tightening):** **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — insertion/suppression boundaries, confidence discipline, anti-drift, proof logic, H/E conflict, kill-switch, and the five “OctopusMind must answer” lines.

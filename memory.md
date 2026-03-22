@@ -63,3 +63,7 @@
 ## 2026-03-22 — Wisewave: H soft pass + stabilization phase
 
 - **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — Not fully passed; validated + usable; **no Milestone I** until Tree completes stabilization checklist. **`AGENTS.md`** + Lumen results cross-link updated.
+
+## 2026-02-08 — OctopusMind: Lumen closure doctrine (Milestone H Gate 1)
+
+- **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — Tightened insertion/suppression, confidence, anti-drift, proof, H/E conflict, kill-switch, Q&A table; linked from two-gate doc, **`AGENTS.md`**, Lumen results.
