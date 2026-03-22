@@ -271,3 +271,11 @@ Milestone H should only be treated as healthy **while all of the following remai
 ## One-line conclusion
 
 > **Milestone H now works as a narrowly contained micro-awareness layer, provided the current suppression discipline and Light Mode restraint are preserved.**
+
+---
+
+## Next phase (Tree / Wisewave)
+
+Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I** until stabilization gates are met.
+
+**See:** **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — Wisewave framing (controlled exception vs ambient), stabilization checklist, and “when H is truly passed.”

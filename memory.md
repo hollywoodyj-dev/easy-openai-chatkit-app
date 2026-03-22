@@ -59,3 +59,7 @@
 ## 2026-03-22 — Lumen Milestone H QA closed
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — Verdict: **passable / provisionally acceptable with watchpoints** (hosted, Passes 1–9). Preserve suppress-first, Light Mode, H/E yield, EN/ZH parity. **`AGENTS.md`** updated to reference closure.
+
+## 2026-03-22 — Wisewave: H soft pass + stabilization phase
+
+- **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — Not fully passed; validated + usable; **no Milestone I** until Tree completes stabilization checklist. **`AGENTS.md`** + Lumen results cross-link updated.
