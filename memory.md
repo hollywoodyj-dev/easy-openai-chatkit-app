@@ -87,3 +87,7 @@
 ## 2026-02-08 — H-UI-2: hide “What was noticed” when Awareness on
 
 - Same stabilization doc. **`/chat`:** suppress **What was noticed** row when Awareness visible; **`?noticed=1`** overrides for QA.
+
+## 2026-02-08 — Lumen Batch 2: H3 / low-signal leakage (Nova gates)
+
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Batch2_H3_Leakage.md`**. **`lib/wisewave-milestone-h-micro-awareness.ts`:** task/help/summarize detection; **`minimal_affect_low_signal`**; H3 from user-text uncertainty only (not emotion_label alone).

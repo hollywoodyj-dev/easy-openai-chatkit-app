@@ -88,6 +88,7 @@ After H-UI-1, Lumen compared stacks: **Awareness + main** felt best; **Awareness
 
 ## Related
 
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Batch2_H3_Leakage.md`** — server-side H3 / low-signal admissibility (Batch 2)  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — weight / stack pressure  
 - **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — whole-turn lightness  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — formal QA record (append watchpoint if re-closing)

@@ -39,6 +39,8 @@ export type MilestoneHSuppressedReason =
   | "weak_evidence_insight"
   | "consecutive_turn"
   | "gate2_experiential_silence"
+  /** Lumen Batch 2 stabilization: flat hedge / minimal affect (“I guess it’s okay”) — not enough signal for H. */
+  | "minimal_affect_low_signal"
   | "emitted";
 
 export type MilestoneHOutcome =
@@ -69,6 +71,64 @@ const VAGUE_SOURCE_SNIPPETS = [
 function isVagueUserMessage(message: string): boolean {
   const sourceLower = message.trim().toLowerCase();
   return VAGUE_SOURCE_SNIPPETS.some((p) => sourceLower.includes(p));
+}
+
+/**
+ * Task / help / utilitarian asks that still contain “I” or “me” (false reflective anchor).
+ * Lumen Batch 2: H3 leaked on summarize / email-help turns — suppress H entirely.
+ */
+function looksTaskHelpOrUtilitarianRequest(message: string): boolean {
+  const t = message.trim();
+  const lower = t.toLowerCase();
+
+  if (
+    /^(can|could|would)\s+you\s+(please\s+)?(summarize|sum\s+up|help|write|draft|edit|explain|translate|review|proofread|create|list|fix|complete|rewrite|outline|polish|check|analyze|analyse)\b/i.test(
+      lower
+    )
+  ) {
+    return true;
+  }
+  if (/^(please|pls)\s+(summarize|sum\s+up|help|write|draft)\b/i.test(lower)) return true;
+  if (/\b(can|could)\s+you\s+(please\s+)?(summarize|sum\s+up|help\s+me|write|draft)\b/i.test(lower)) {
+    return true;
+  }
+  if (/^i need (help|you to|a hand)\b/i.test(lower)) return true;
+  if (/^i want (you to|help)\b/i.test(lower)) return true;
+  if (/help (me )?(to )?(write|draft|with (writing|an email|my email|the email))\b/i.test(lower)) {
+    return true;
+  }
+  if (/\b(write|draft|compose)\s+(an |the )?email\b/i.test(lower) && /\b(help|need|can you|could you)\b/i.test(lower)) {
+    return true;
+  }
+  if (/\bsummarize (this|the) (article|post|paper|text|document|email)\b/i.test(lower)) return true;
+
+  if (/帮我(写|总结|起草|改|翻译)/.test(t)) return true;
+  if (/(请|麻烦)(总结|帮我写|帮忙写)/.test(t)) return true;
+
+  return false;
+}
+
+/**
+ * Very thin affect / everyday hedge — not enough substrate for H (Lumen Batch 2).
+ */
+function isMinimalAffectOrFlatHedge(message: string): boolean {
+  const t = message.trim().toLowerCase();
+  if (t.length > 120) return false;
+
+  if (/\bi guess\b/.test(t)) return true;
+  if (/\bit\s*'?s okay\b/.test(t) || /\bits okay\b/.test(t)) return true;
+  if (/\bi suppose\b/.test(t) && t.length < 55) return true;
+
+  if (
+    /don'?t feel anything|nothing in particular|not feeling (much|anything)|feel nothing|feel numb|just numb/i.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  if (/\bi don'?t really feel\b/i.test(t)) return true;
+
+  return false;
 }
 
 /**
@@ -114,6 +174,8 @@ export function hasReflectiveFirstPersonAnchor(message: string): boolean {
 function looksUtilitarianOrFactual(message: string): boolean {
   const t = message.trim();
   if (t.length < 8) return true;
+
+  if (looksTaskHelpOrUtilitarianRequest(t)) return true;
 
   // Reflective first-person (ZH/EN) first — avoids false positives on 怎么… when 我/我觉得 follows
   if (hasReflectiveFirstPersonAnchor(t)) {
@@ -273,6 +335,10 @@ export function computeMicroAwarenessCue(params: {
     return { status: "suppressed", reason: "vague_source" };
   }
 
+  if (isMinimalAffectOrFlatHedge(userMessage)) {
+    return { status: "suppressed", reason: "minimal_affect_low_signal" };
+  }
+
   if (recurrenceCueEmitted) {
     return { status: "suppressed", reason: "recurrence_overlap_e" };
   }
@@ -316,8 +382,10 @@ export function computeMicroAwarenessCue(params: {
   ) {
     kind = "H5";
   } else if (
-    /\?|不确定|不知道|unsure|don't know|not sure|maybe|perhaps/i.test(userMessage) ||
-    /uncertain|unclear/i.test(reflectionState.emotion_label)
+    // H3 only from **user text** uncertainty — not emotion_label alone (Lumen Batch 2: H3 overreach).
+    /\?|不确定|不知道|说不清|说不准|拿不准|unsure|don'?t know|not sure|maybe\b|perhaps\b|no idea|who knows|纠结|犹豫|该不该/i.test(
+      userMessage
+    )
   ) {
     kind = "H3";
   } else {
