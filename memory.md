@@ -79,3 +79,7 @@
 ## 2026-02-08 — Milestone H: structural E overlap suppression (Nova)
 
 - When **`debug_recurrence_aligned_instance_count` ≥ 2** but **`recurrence_cue`** is null (E3 or other withhold), **`awareness_cue`** is still suppressed; QA reason **`recurrence_overlap_e_structural`**. Aligns E-wins / stack discipline under stabilization.
+
+## 2026-02-08 — Lumen: browser stack weight (Awareness + Regulation)
+
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`**. **`/chat`:** hide **Regulation cue** when **Awareness** strip visible same assistant turn (coaching + micro-awareness stack).

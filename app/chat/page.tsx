@@ -1410,10 +1410,18 @@ function ChatContent() {
         )}
         </div>
         {(() => {
+          // Milestone H stabilization (Lumen): regulation is coaching-like; do not stack with
+          // micro-awareness on the same turn — reduces visible "managed product" feel.
+          const awarenessVisibleForLastAssistant =
+            !!latestAwarenessCue &&
+            !latestIsVagueSource &&
+            !!latestAwarenessCueAssistantId &&
+            latestAwarenessCueAssistantId === lastAssistantId;
           const shouldShowRegulationCue =
             !!latestRegulationMetadata &&
             isRegulationCueMeaningful(latestRegulationMetadata) &&
-            !!regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang);
+            !!regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang) &&
+            !awarenessVisibleForLastAssistant;
           if (!shouldShowRegulationCue) return null;
           return (
           <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">

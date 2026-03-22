@@ -71,6 +71,8 @@ Lumen must check **all** responses against these **five** axes.
 | **Symptoms** | User needs to **re-read**; response feels **“processed”**; awareness cue **stands out** too much. |
 | **Expected** | **Readable in one pass**. |
 
+**Browser composition (`/chat`):** Evaluate the **full vertical stack**, not API fields alone — e.g. **Awareness** + **Regulation cue** + **What was noticed** + main reply. See **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`**. Nova: regulation strip is **suppressed when Awareness** is visible on the **same** assistant turn (stabilization follow-up).
+
 ### 2.5 Duplication drift
 
 | | |
@@ -224,6 +226,7 @@ Milestone H is **stable** **only if**:
 
 ## Related documents
 
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`** — Lumen watchpoint: browser stack weight; regulation vs awareness.  
 - **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — Stream 4 owner Lumen; metrics aligned (70–85% no H, removal-first).  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — formal H QA closure (soft pass).  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Plan.md`**, **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Checklist.md`** — pre-stabilization Lumen artifacts.  
