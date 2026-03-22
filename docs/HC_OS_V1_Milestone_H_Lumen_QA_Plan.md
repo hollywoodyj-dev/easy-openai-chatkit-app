@@ -13,7 +13,7 @@
 
 - **Server:** `POST /api/chat/turn` — optional **`awareness_cue`** `{ kind, text_en, text_zh }` when selection + gates pass (`lib/wisewave-milestone-h-micro-awareness.ts`).  
 - **Kill switch:** **`ENABLE_H_CUE`** = **`true`** or **`1`** enables **Light Mode** main-reflection appendix + H cue path; **unset or any other value = off** (default-off).  
-- **API debug (QA):** `debug_milestone_h_enabled`, `debug_milestone_h_build_marker` (`milestone_h_v1`), `debug_milestone_h_outcome` (`emitted` | `suppressed` | skipped), `debug_milestone_h_suppressed_reason`, `debug_milestone_h_kind`.  
+- **API debug (QA):** `debug_milestone_h_enabled`, `debug_milestone_h_build_marker` (`milestone_h_v1`), `debug_milestone_h_outcome` (`emitted` | `suppressed` | skipped), `debug_milestone_h_suppressed_reason`, `debug_milestone_h_kind`. Suppression reasons include **`recurrence_overlap_e`** (recurrence strip emitted) and **`recurrence_overlap_e_structural`** (E2 aligned count ≥2 but strip withheld by E3/repeat/stale/low-confidence — H still suppressed).  
 - **Persistence (UI rehydrate only):** assistant `metadata.wisewave_micro_awareness` — **not** a separate H state machine; same pattern as recurrence/embodiment strips.  
 - **UI:** `/chat` — **Awareness** / **轻量觉察** strip (amber), **after** continuity + pattern + optional response grouping; language follows last user message (EN/ZH baseline).  
 - **Conflict rule (implemented):** If Milestone **E** **`recurrence_cue`** is emitted on the same turn, **H is suppressed** (H/E overlap).  

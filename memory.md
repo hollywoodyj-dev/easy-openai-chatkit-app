@@ -75,3 +75,7 @@
 ## 2026-02-08 — Lumen: H drift detection checklist (stabilization, Wisewave draft)
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — Five drift axes (guidance, interpretive, authority, weight, duplication); removal test; frequency / whole-turn / EN-ZH; strict output; escalation. Linked from Tree plan Stream 4, Lumen results, QA plan references, **`AGENTS.md`**.
+
+## 2026-02-08 — Milestone H: structural E overlap suppression (Nova)
+
+- When **`debug_recurrence_aligned_instance_count` ≥ 2** but **`recurrence_cue`** is null (E3 or other withhold), **`awareness_cue`** is still suppressed; QA reason **`recurrence_overlap_e_structural`**. Aligns E-wins / stack discipline under stabilization.

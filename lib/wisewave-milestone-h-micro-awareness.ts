@@ -34,6 +34,8 @@ export type MilestoneHSuppressedReason =
   | "utilitarian_or_factual"
   | "vague_source"
   | "recurrence_overlap_e"
+  /** E2 proved aligned recurrence (≥2 instances) but recurrence strip withheld (E3, repeat, stale, low confidence, etc.) — H still yields to E. */
+  | "recurrence_overlap_e_structural"
   | "weak_evidence_insight"
   | "consecutive_turn"
   | "gate2_experiential_silence"
@@ -238,6 +240,12 @@ export function computeMicroAwarenessCue(params: {
   } | null;
   /** True if Milestone E recurrence_cue was emitted this turn */
   recurrenceCueEmitted: boolean;
+  /**
+   * Milestone E2 aligned instance count (includes current insight), when continuity path ran.
+   * When ≥2 but `recurrenceCueEmitted` is false, recurrence was proven structurally but the strip
+   * was withheld — suppress H anyway (stack / E-wins discipline; stabilization 2026-02).
+   */
+  recurrenceAlignedInstanceCount: number | null;
   /** Insight core pattern when saved (English); null if no insight */
   insightCorePattern: string | null;
   previousAssistantHadAwarenessCue: boolean;
@@ -267,6 +275,11 @@ export function computeMicroAwarenessCue(params: {
 
   if (recurrenceCueEmitted) {
     return { status: "suppressed", reason: "recurrence_overlap_e" };
+  }
+
+  const aligned = params.recurrenceAlignedInstanceCount;
+  if (aligned != null && aligned >= 2) {
+    return { status: "suppressed", reason: "recurrence_overlap_e_structural" };
   }
 
   if (!hasStrongInsightSignal(insight)) {

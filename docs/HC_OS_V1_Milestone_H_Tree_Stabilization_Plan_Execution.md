@@ -108,6 +108,8 @@ Tree runs **only** these **four** streams:
 
 **Operational checklist (draft, Wisewave-strengthened):** **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — five drift axes, removal test, whole-turn evaluation, strict output format, escalation.
 
+**Code (Nova):** H also suppresses when **E2 aligned instance count ≥ 2** but the recurrence strip is **withheld** (E3 / repeat / stale / etc.): `debug_milestone_h_suppressed_reason` = **`recurrence_overlap_e_structural`** (`lib/wisewave-milestone-h-micro-awareness.ts`).
+
 ---
 
 ## 4. Tree execution loop

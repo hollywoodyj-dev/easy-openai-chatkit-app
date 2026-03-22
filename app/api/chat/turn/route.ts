@@ -1902,6 +1902,7 @@ export async function POST(request: Request) {
       seed: `${userMsg.id}:${assistantMsgId}`,
       reflectionState,
       recurrenceCueEmitted: !!responseRecurrenceCue,
+      recurrenceAlignedInstanceCount: debugRecurrenceAlignedInstanceCount,
       insightCorePattern: insightCoreForH,
       previousAssistantHadAwarenessCue,
     });
