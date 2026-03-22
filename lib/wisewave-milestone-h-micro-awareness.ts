@@ -41,6 +41,8 @@ export type MilestoneHSuppressedReason =
   | "gate2_experiential_silence"
   /** Lumen Batch 2 stabilization: flat hedge / minimal affect (“I guess it’s okay”) — not enough signal for H. */
   | "minimal_affect_low_signal"
+  /** Lumen follow-up: H1 on mild/generic reflective only — insight not durable enough; prefer silence. */
+  | "h1_mild_reflective_insufficient"
   | "emitted";
 
 export type MilestoneHOutcome =
@@ -139,6 +141,47 @@ function isMinimalAffectOrFlatHedge(message: string): boolean {
   if (/\bno particular feeling\b|\bnot feeling anything particular\b/i.test(t)) return true;
 
   return false;
+}
+
+/**
+ * When kind would be **H1**, suppress if user text is **mild/generic discomfort** only and
+ * **insight** lacks durable pattern structure (Lumen stabilization follow-up: scenarios 1, 21, 23, 27, 28).
+ */
+function isH1MildSubstrateSuppressed(userMessage: string, insight: string): boolean {
+  const t = normalizeApostrophesForHeuristics(userMessage.trim().toLowerCase());
+  const ins = insight.trim().toLowerCase();
+  const len = t.length;
+
+  // Longer substrate: let H1 through for human/QA judgment
+  if (len >= 100) return false;
+
+  const userHasStructure =
+    /\b(because|although|whenever|every time|pattern|always|never|except|but then|ends up|keeps happening)\b/i.test(
+      t
+    ) || /(因为|虽然|每次|总是|从不|可是|但是)/.test(t);
+
+  if (userHasStructure) return false;
+
+  const insightDurable =
+    ins.length >= 96 ||
+    /(inner rule|pressure|loop|demand|pattern|prove|enough|conflict|torn|both|pull|uncertainty|stuck|split|habit|reaction)/i.test(
+      ins
+    );
+
+  if (insightDurable) return false;
+
+  const mild =
+    /\boverwhelmed\b/.test(t) ||
+    /\b(slightly|a bit|kind of|little bit)\s+(uneasy|tense|anxious|nervous|worried)\b/.test(t) ||
+    /\bbit tense\b|\ba little tense\b|\bkind of tense\b/.test(t) ||
+    /\b(worried|afraid)\s+i\s+might\b/.test(t) ||
+    /\bdon'?t trust myself\b/.test(t) ||
+    /\bdon'?t really trust myself\b/.test(t) ||
+    /\bdon'?t trust\b[^.!?]{0,36}\bsometimes\b/.test(t) ||
+    /\bsometimes\b[^.!?]{0,48}\bdon'?t trust\b/.test(t) ||
+    /\b(i feel|i'm feeling|i am feeling)\s+(kind of |a little |slightly )?(off|weird|strange|unsettled)\b/.test(t);
+
+  return mild;
 }
 
 /**
@@ -400,6 +443,10 @@ export function computeMicroAwarenessCue(params: {
     kind = "H3";
   } else {
     kind = "H1";
+  }
+
+  if (kind === "H1" && isH1MildSubstrateSuppressed(userMessage, insight)) {
+    return { status: "suppressed", reason: "h1_mild_reflective_insufficient" };
   }
 
   const pair = pickTemplate(kind, seed);

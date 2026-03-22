@@ -114,6 +114,8 @@ Tree runs **only** these **four** streams:
 
 **Engine (Nova — Lumen Batch 2):** **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Batch2_H3_Leakage.md`** — tighter task/help suppression, **`minimal_affect_low_signal`**, H3 from user text only (`lib/wisewave-milestone-h-micro-awareness.ts`).
 
+**Engine (Nova — H1 follow-up):** **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_H1_Mild_Substrate.md`** — **`h1_mild_reflective_insufficient`** when kind would be H1 on mild/generic discomfort without durable insight (`lib/wisewave-milestone-h-micro-awareness.ts`).
+
 ---
 
 ## 4. Tree execution loop

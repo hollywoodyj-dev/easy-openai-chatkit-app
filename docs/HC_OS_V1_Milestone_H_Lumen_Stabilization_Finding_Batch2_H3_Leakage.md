@@ -36,6 +36,7 @@ Review **H3** template copy so it cannot read as light advice when it does fire 
 
 ## Related
 
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_H1_Mild_Substrate.md`** — follow-up: H1 on mild/generic reflective turns  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — admissibility / removal test  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Plan.md`** — suppression matrix  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`** — UI stack (H-UI-1 / H-UI-2)

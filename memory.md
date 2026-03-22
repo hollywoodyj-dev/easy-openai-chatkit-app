@@ -95,3 +95,7 @@
 ## 2026-02-08 — Batch 2 follow-up: scenario 12 flat affect (apostrophe + in particular)
 
 - **`minimal_affect_low_signal`:** normalize **`’` / `‘`** to ASCII for heuristics; add **`feel … in particular`**, **`do not feel anything`**, **`dont`** typo path.
+
+## 2026-02-08 — Lumen follow-up: H1 mild / generic reflective substrate
+
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_H1_Mild_Substrate.md`**. **`h1_mild_reflective_insufficient`** when kind would be **H1** on mild discomfort text without durable insight; bypass for long user text / structure / strong insight.
