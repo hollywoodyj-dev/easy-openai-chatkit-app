@@ -72,6 +72,13 @@ type EmbodimentCue = {
   text_zh: string;
 };
 
+/** Milestone H: optional micro awareness line (quaternary; after pattern/optional response). */
+type AwarenessCue = {
+  kind: "H1" | "H3" | "H4" | "H5";
+  text_en: string;
+  text_zh: string;
+};
+
 function shortenCueText(
   text: string,
   uiLang: "en" | "zh",
@@ -160,6 +167,24 @@ function buildStripMetadataFromTurnResponse(
       text_en: e.text_en,
       text_zh: e.text_zh,
     };
+  }
+  const ac = data.awareness_cue;
+  if (
+    ac &&
+    typeof ac === "object" &&
+    ac !== null &&
+    typeof (ac as { text_en?: unknown }).text_en === "string" &&
+    typeof (ac as { text_zh?: unknown }).text_zh === "string" &&
+    typeof (ac as { kind?: unknown }).kind === "string"
+  ) {
+    const k = (ac as { kind: string }).kind;
+    if (k === "H1" || k === "H3" || k === "H4" || k === "H5") {
+      out.wisewave_micro_awareness = {
+        kind: k,
+        text_en: (ac as { text_en: string }).text_en,
+        text_zh: (ac as { text_zh: string }).text_zh,
+      };
+    }
   }
   return Object.keys(out).length > 0 ? out : undefined;
 }
@@ -262,6 +287,8 @@ function hydrateStripStateFromMessages(
     setLatestRecurrenceCueAssistantId: (v: string | null) => void;
     setLatestEmbodimentCue: (v: EmbodimentCue | null) => void;
     setLatestEmbodimentCueAssistantId: (v: string | null) => void;
+    setLatestAwarenessCue: (v: AwarenessCue | null) => void;
+    setLatestAwarenessCueAssistantId: (v: string | null) => void;
   }
 ): void {
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
@@ -273,6 +300,8 @@ function hydrateStripStateFromMessages(
     ops.setLatestRecurrenceCueAssistantId(null);
     ops.setLatestEmbodimentCue(null);
     ops.setLatestEmbodimentCueAssistantId(null);
+    ops.setLatestAwarenessCue(null);
+    ops.setLatestAwarenessCueAssistantId(null);
     return;
   }
   const raw = lastAssistant.metadata;
@@ -284,6 +313,8 @@ function hydrateStripStateFromMessages(
     ops.setLatestRecurrenceCueAssistantId(null);
     ops.setLatestEmbodimentCue(null);
     ops.setLatestEmbodimentCueAssistantId(null);
+    ops.setLatestAwarenessCue(null);
+    ops.setLatestAwarenessCueAssistantId(null);
     return;
   }
   const meta = raw as Record<string, unknown>;
@@ -366,6 +397,30 @@ function hydrateStripStateFromMessages(
   } else {
     ops.setLatestEmbodimentCue(null);
     ops.setLatestEmbodimentCueAssistantId(null);
+  }
+
+  const wm = meta.wisewave_micro_awareness;
+  if (wm && typeof wm === "object" && wm !== null && !Array.isArray(wm)) {
+    const w = wm as Record<string, unknown>;
+    const kind = w.kind;
+    if (
+      typeof w.text_en === "string" &&
+      typeof w.text_zh === "string" &&
+      (kind === "H1" || kind === "H3" || kind === "H4" || kind === "H5")
+    ) {
+      ops.setLatestAwarenessCue({
+        kind,
+        text_en: w.text_en,
+        text_zh: w.text_zh,
+      });
+      ops.setLatestAwarenessCueAssistantId(lastAssistant.id);
+    } else {
+      ops.setLatestAwarenessCue(null);
+      ops.setLatestAwarenessCueAssistantId(null);
+    }
+  } else {
+    ops.setLatestAwarenessCue(null);
+    ops.setLatestAwarenessCueAssistantId(null);
   }
 }
 
@@ -505,6 +560,10 @@ function ChatContent() {
   const [latestEmbodimentCueAssistantId, setLatestEmbodimentCueAssistantId] = useState<
     string | null
   >(null);
+  const [latestAwarenessCue, setLatestAwarenessCue] = useState<AwarenessCue | null>(null);
+  const [latestAwarenessCueAssistantId, setLatestAwarenessCueAssistantId] = useState<
+    string | null
+  >(null);
   // Prevent stale recurrence / embodiment cues from flashing when multiple requests overlap.
   const recurrenceCueRequestIdRef = useRef(0);
   const messageSeqRef = useRef(0);
@@ -533,6 +592,8 @@ function ChatContent() {
       setLatestRecurrenceCueAssistantId,
       setLatestEmbodimentCue,
       setLatestEmbodimentCueAssistantId,
+      setLatestAwarenessCue,
+      setLatestAwarenessCueAssistantId,
     });
   }, [messages]);
 
@@ -676,6 +737,8 @@ function ChatContent() {
     setLatestRecurrenceCueAssistantId(null);
     setLatestEmbodimentCue(null);
     setLatestEmbodimentCueAssistantId(null);
+    setLatestAwarenessCue(null);
+    setLatestAwarenessCueAssistantId(null);
     setError(null);
     setSessionLoading(true);
     try {
@@ -701,6 +764,8 @@ function ChatContent() {
       setLatestRecurrenceCueAssistantId(null);
       setLatestEmbodimentCue(null);
       setLatestEmbodimentCueAssistantId(null);
+      setLatestAwarenessCue(null);
+      setLatestAwarenessCueAssistantId(null);
       try {
         if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
         setSessionId(sid);
@@ -840,6 +905,8 @@ function ChatContent() {
     setLatestRecurrenceCueAssistantId(null);
     setLatestEmbodimentCue(null);
     setLatestEmbodimentCueAssistantId(null);
+    setLatestAwarenessCue(null);
+    setLatestAwarenessCueAssistantId(null);
     try {
       // Live-path debug for regulation cue behavior.
       // Helpful when inspecting weak follow-up turns like "I feel off".
@@ -884,6 +951,25 @@ function ChatContent() {
         (embodimentCueRaw.response_state === "light" ||
           embodimentCueRaw.response_state === "clear")
           ? embodimentCueRaw
+          : null;
+      const awarenessRaw = (data as Record<string, unknown>).awareness_cue;
+      const awarenessCue: AwarenessCue | null =
+        awarenessRaw &&
+        typeof awarenessRaw === "object" &&
+        awarenessRaw !== null &&
+        typeof (awarenessRaw as { text_en?: unknown }).text_en === "string" &&
+        typeof (awarenessRaw as { text_zh?: unknown }).text_zh === "string"
+          ? (() => {
+              const k = (awarenessRaw as { kind?: unknown }).kind;
+              if (k === "H1" || k === "H3" || k === "H4" || k === "H5") {
+                return {
+                  kind: k,
+                  text_en: (awarenessRaw as { text_en: string }).text_en,
+                  text_zh: (awarenessRaw as { text_zh: string }).text_zh,
+                };
+              }
+              return null;
+            })()
           : null;
       const isVagueSource = Boolean(data.debug_is_vague_source);
       const cueMeaningful =
@@ -953,6 +1039,10 @@ function ChatContent() {
           nextCue && embodimentCue && !isVagueSource ? embodimentCue : null;
         setLatestEmbodimentCue(nextEmb);
         setLatestEmbodimentCueAssistantId(nextEmb ? assistantMsgId : null);
+        const nextAware =
+          awarenessCue && !isVagueSource ? awarenessCue : null;
+        setLatestAwarenessCue(nextAware);
+        setLatestAwarenessCueAssistantId(nextAware ? assistantMsgId : null);
       }
       refreshHistorySessions();
       // Continuity timing (Ibu memo): for first-time users, avoid showing "Last insight"
@@ -1232,7 +1322,9 @@ function ChatContent() {
         <div
           role="group"
           aria-label={
-            uiLang === "zh" ? "本回合的支持提示（连续性、模式、可选回应）" : "Support cues for this turn"
+            uiLang === "zh"
+              ? "本回合的支持提示（连续性、模式、可选回应、轻量觉察）"
+              : "Support cues for this turn (continuity, pattern, optional response, awareness)"
           }
           className="contents"
         >
@@ -1298,6 +1390,21 @@ function ChatContent() {
               {uiLang === "zh"
                 ? shortenEmbodimentText(latestEmbodimentCue.text_zh, uiLang)
                 : shortenEmbodimentText(latestEmbodimentCue.text_en, uiLang)}
+            </p>
+          </div>
+        )}
+        {latestAwarenessCue &&
+          !latestIsVagueSource &&
+          !!latestAwarenessCueAssistantId &&
+          latestAwarenessCueAssistantId === lastAssistantId && (
+          <div className="px-4 py-1.5 border-b border-slate-200 dark:border-slate-800 border-l-2 border-l-amber-400/60 dark:border-l-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20">
+            <p className="text-[11px] font-medium text-amber-900/90 dark:text-amber-200/85 mb-0.5">
+              {uiLang === "zh" ? "轻量觉察" : "Awareness"}
+            </p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">
+              {uiLang === "zh"
+                ? shortenEmbodimentText(latestAwarenessCue.text_zh, uiLang)
+                : shortenEmbodimentText(latestAwarenessCue.text_en, uiLang)}
             </p>
           </div>
         )}

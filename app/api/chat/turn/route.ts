@@ -16,6 +16,12 @@ import {
   milestoneGBuildMarker,
   milestoneGSystemAppendix,
 } from "@/lib/wisewave-milestone-g-integration";
+import {
+  computeMicroAwarenessCue,
+  isMilestoneHCueEnabled,
+  milestoneHBuildMarker,
+  type MicroAwarenessKind,
+} from "@/lib/wisewave-milestone-h-micro-awareness";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -1222,6 +1228,16 @@ export async function POST(request: Request) {
     | "emitted" = "skipped_no_recurrence";
   let debugEmbodimentFMilestoneEnabled = process.env.MILESTONE_F_EMBODIMENT !== "0";
 
+  // Milestone H: optional single-line micro awareness (after E/F; suppressed if E recurrence emitted).
+  let responseAwarenessCue: {
+    kind: MicroAwarenessKind;
+    textEn: string;
+    textZh: string;
+  } | null = null;
+  let debugMilestoneHOutcome: string = "skipped_not_computed";
+  let debugMilestoneHSuppressedReason: string | null = null;
+  const debugMilestoneHEnabled = isMilestoneHCueEnabled();
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -1842,8 +1858,63 @@ export async function POST(request: Request) {
     debugEmbodimentFOutcome = "emitted";
   }
 
-  // Persist reflection + embodiment on assistant metadata so /chat can rehydrate strips after reload.
-  if (assistantMsgId && (reflectionState || responseEmbodimentCue)) {
+  // Milestone H: micro awareness cue — after reflection + E strips; suppressed when E recurrence emitted.
+  if (assistantMsgId) {
+    let previousAssistantHadAwarenessCue = false;
+    try {
+      const priorAssistant = await prisma.message.findFirst({
+        where: {
+          conversationId: sessionId,
+          role: "assistant",
+          NOT: { id: assistantMsgId },
+        },
+        orderBy: { createdAt: "desc" },
+        select: { metadata: true },
+      });
+      const pm = priorAssistant?.metadata;
+      if (pm && typeof pm === "object" && !Array.isArray(pm)) {
+        const w = (pm as Record<string, unknown>).wisewave_micro_awareness;
+        previousAssistantHadAwarenessCue =
+          w !== null &&
+          typeof w === "object" &&
+          !Array.isArray(w) &&
+          typeof (w as { kind?: unknown }).kind === "string";
+      }
+    } catch {
+      previousAssistantHadAwarenessCue = false;
+    }
+
+    const insightCoreForH =
+      debugInsightCorePattern ??
+      (reflectionState?.insight_candidate?.trim() || null);
+
+    const hResult = computeMicroAwarenessCue({
+      userMessage: message,
+      seed: `${userMsg.id}:${assistantMsgId}`,
+      reflectionState,
+      recurrenceCueEmitted: !!responseRecurrenceCue,
+      insightCorePattern: insightCoreForH,
+      previousAssistantHadAwarenessCue,
+    });
+
+    if (hResult.status === "emitted") {
+      responseAwarenessCue = {
+        kind: hResult.kind,
+        textEn: hResult.textEn,
+        textZh: hResult.textZh,
+      };
+      debugMilestoneHOutcome = "emitted";
+      debugMilestoneHSuppressedReason = null;
+    } else {
+      debugMilestoneHOutcome = "suppressed";
+      debugMilestoneHSuppressedReason = hResult.reason;
+    }
+  } else {
+    debugMilestoneHOutcome = "skipped_no_assistant_row";
+  }
+
+  // Persist reflection + embodiment (+ optional H) on assistant metadata so /chat can rehydrate strips after reload.
+  if (assistantMsgId && (reflectionState || responseEmbodimentCue || responseAwarenessCue)) {
     try {
       const row = await prisma.message.findUnique({
         where: { id: assistantMsgId },
@@ -1866,6 +1937,13 @@ export async function POST(request: Request) {
           response_state: responseEmbodimentCue.responseState,
           text_en: responseEmbodimentCue.textEn,
           text_zh: responseEmbodimentCue.textZh,
+        };
+      }
+      if (responseAwarenessCue) {
+        merged.wisewave_micro_awareness = {
+          kind: responseAwarenessCue.kind,
+          text_en: responseAwarenessCue.textEn,
+          text_zh: responseAwarenessCue.textZh,
         };
       }
       await prisma.message.update({
@@ -1912,6 +1990,13 @@ export async function POST(request: Request) {
         text_zh: responseEmbodimentCue.textZh,
       },
     }),
+    ...(responseAwarenessCue && {
+      awareness_cue: {
+        kind: responseAwarenessCue.kind,
+        text_en: responseAwarenessCue.textEn,
+        text_zh: responseAwarenessCue.textZh,
+      },
+    }),
     // Debug-only fields to help QA distinguish:
     // - whether this turn created an Insight row
     // - whether that row was continuity-eligible
@@ -1956,6 +2041,11 @@ export async function POST(request: Request) {
     debug_milestone_g_integration_enabled: isMilestoneGIntegrationEnabled(),
     debug_milestone_g_system_appendix_applied: debugMilestoneGSystemAppendixApplied,
     debug_milestone_g_build_marker: milestoneGBuildMarker(),
+    debug_milestone_h_enabled: debugMilestoneHEnabled,
+    debug_milestone_h_build_marker: milestoneHBuildMarker(),
+    debug_milestone_h_outcome: debugMilestoneHOutcome,
+    debug_milestone_h_suppressed_reason: debugMilestoneHSuppressedReason,
+    debug_milestone_h_kind: responseAwarenessCue?.kind ?? null,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
