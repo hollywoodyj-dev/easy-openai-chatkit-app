@@ -99,3 +99,7 @@
 ## 2026-02-08 — Lumen follow-up: H1 mild / generic reflective substrate
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_H1_Mild_Substrate.md`**. **`h1_mild_reflective_insufficient`** when kind would be **H1** on mild discomfort text without durable insight; bypass for long user text / structure / strong insight.
+
+## 2026-02-08 — H1 mild gate fix (hosted re-QA): insight bypass was too loose
+
+- **`milestone_h_v2`** build marker. Removed **insight length ≥ 96** and generic tokens (**uncertainty**, **reaction**, lone **pattern**) from H1-mild bypass — model insights always matched. **Insight bypass** now uses **high-precision phrases** only. Expanded **mild** user patterns (feel tense, worried I will, etc.).
