@@ -79,7 +79,7 @@ On **any** successful `POST /api/chat/turn` with **`ENABLE_H_CUE` enabled**:
 
 | Check | Pass criteria |
 |-------|----------------|
-| H build marker | `debug_milestone_h_build_marker === "milestone_h_v1"` **present** |
+| H build marker | `debug_milestone_h_build_marker === "milestone_h_v2"` **present** ( **`milestone_h_v1`** = deploy predates H1-mild + marker bump) |
 | Light Mode marker | `debug_milestone_h_light_mode_build_marker === "milestone_h_light_mode_v1"` **present** |
 | Light Mode applied | When `ENABLE_H_CUE` on: `debug_milestone_h_light_mode_appendix_applied === true` — confirms **Wisewave Reflection Style v2** is appended to the **system** message (main reflection layer), not documentation-only |
 | H enabled flag | `debug_milestone_h_enabled === true` when env is set |
