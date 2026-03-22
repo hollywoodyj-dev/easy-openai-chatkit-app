@@ -55,3 +55,7 @@
 
 - **Issue:** Chinese first-person reflective messages hit `utilitarian_or_factual` — JS `\b` does not border CJK, so old `\b(我觉得|…)\b` never matched.  
 - **Fix:** `hasReflectiveFirstPersonAnchor()` in `lib/wisewave-milestone-h-micro-awareness.ts` (exported); `looksUtilitarianOrFactual()` checks anchor **first**, then EN/ZH factual patterns; ZH informational openers only when no anchor. Lumen re-run Pass 7 matched EN/ZH.
+
+## 2026-03-22 — Lumen Milestone H QA closed
+
+- **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — Verdict: **passable / provisionally acceptable with watchpoints** (hosted, Passes 1–9). Preserve suppress-first, Light Mode, H/E yield, EN/ZH parity. **`AGENTS.md`** updated to reference closure.
