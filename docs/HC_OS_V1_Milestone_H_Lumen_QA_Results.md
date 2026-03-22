@@ -274,6 +274,37 @@ Milestone H should only be treated as healthy **while all of the following remai
 
 ---
 
+## Stabilization addendum — 2026-03-23 live QA scenario pack
+
+A 30-scenario live QA stabilization pack was run against hosted turns using:
+- Drift Detection Checklist
+- Removal Test
+- PASS / REVISE / REMOVE verdicting
+
+### Addendum conclusion
+
+> **Milestone H is viable, but current stabilization logic is still too permissive for H1/H3, while H4 is the strongest surviving lane and H5 is valid when the split is explicit.**
+
+### Main addendum findings
+- **H3 is the clearest stabilization problem**: it leaked into low-signal, utilitarian, and help-request turns where suppression should have won.
+- **H1 is still too permissive** on mild unease / mild tension / low-intensity reflective inputs where removal often made the response same or better.
+- **H4 is the healthiest lane** for pressure / proving / worth-threat structure.
+- **H5 remains valid** when the inner split is explicit and concrete.
+- The scenario pack supports a stricter stabilization posture: **narrow H, do not broaden H**.
+
+### Recommended stabilization direction
+- tighten **H3** eligibility significantly
+- tighten **H1** eligibility moderately
+- preserve **H4** as the narrow core lane
+- preserve **H5** as an explicit-split lane only
+
+### Related stabilization docs
+- `docs/HC_OS_V1_Milestone_H_Lumen_Live_QA_Scenario_Pack_Summary.md`
+- `docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`
+- `docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`
+
+---
+
 ## Next phase (Tree / Wisewave)
 
 Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I** until Tree’s stabilization **exit gate** is met.

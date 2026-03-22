@@ -112,6 +112,8 @@ Tree runs **only** these **four** streams:
 
 **UI (Nova — Lumen watchpoint):** **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`** — when **Awareness** is visible on a turn, **`/chat`** hides **Regulation cue** (H-UI-1) and **“What was noticed”** by default (H-UI-2); **`?noticed=1`** forces “What was noticed” for QA (`app/chat/page.tsx`).
 
+**Engine (Nova — Lumen Batch 2):** **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Batch2_H3_Leakage.md`** — tighter task/help suppression, **`minimal_affect_low_signal`**, H3 from user text only (`lib/wisewave-milestone-h-micro-awareness.ts`).
+
 ---
 
 ## 4. Tree execution loop
