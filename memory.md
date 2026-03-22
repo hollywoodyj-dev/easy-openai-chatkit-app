@@ -83,3 +83,7 @@
 ## 2026-02-08 — Lumen: browser stack weight (Awareness + Regulation)
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`**. **`/chat`:** hide **Regulation cue** when **Awareness** strip visible same assistant turn (coaching + micro-awareness stack).
+
+## 2026-02-08 — H-UI-2: hide “What was noticed” when Awareness on
+
+- Same stabilization doc. **`/chat`:** suppress **What was noticed** row when Awareness visible; **`?noticed=1`** overrides for QA.

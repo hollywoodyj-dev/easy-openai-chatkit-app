@@ -71,7 +71,7 @@ Lumen must check **all** responses against these **five** axes.
 | **Symptoms** | User needs to **re-read**; response feels **“processed”**; awareness cue **stands out** too much. |
 | **Expected** | **Readable in one pass**. |
 
-**Browser composition (`/chat`):** Evaluate the **full vertical stack**, not API fields alone — e.g. **Awareness** + **Regulation cue** + **What was noticed** + main reply. See **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`**. Nova: regulation strip is **suppressed when Awareness** is visible on the **same** assistant turn (stabilization follow-up).
+**Browser composition (`/chat`):** Evaluate the **full vertical stack**, not API fields alone — e.g. **Awareness** + **Regulation cue** + **What was noticed** + main reply. See **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`**. Nova (**H-UI-1 / H-UI-2**): when **Awareness** is visible for that turn, **Regulation cue** and **“What was noticed”** are **suppressed** by default; use **`?noticed=1`** to force “What was noticed” for QA.
 
 ### 2.5 Duplication drift
 

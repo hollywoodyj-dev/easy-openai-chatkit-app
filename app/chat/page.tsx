@@ -610,6 +610,31 @@ function ChatContent() {
     return showWhatWasNoticedDefault;
   }, [searchParams, showWhatWasNoticedDefault]);
 
+  /** Milestone H stabilization: Awareness strip is visible for the latest assistant message. */
+  const awarenessVisibleForLastAssistant = useMemo(
+    () =>
+      !!latestAwarenessCue &&
+      !latestIsVagueSource &&
+      !!latestAwarenessCueAssistantId &&
+      latestAwarenessCueAssistantId === lastAssistantId,
+    [
+      latestAwarenessCue,
+      latestIsVagueSource,
+      latestAwarenessCueAssistantId,
+      lastAssistantId,
+    ]
+  );
+
+  /**
+   * H-UI-2 (Lumen): hide "What was noticed" when Awareness is on — thinner stack than Awareness+noticed+main.
+   * Override: `?noticed=1` still shows the block (QA / power users).
+   */
+  const showWhatWasNoticedEffective = useMemo(() => {
+    if (!showWhatWasNoticed) return false;
+    if (!awarenessVisibleForLastAssistant) return true;
+    return searchParams?.get("noticed")?.trim() === "1";
+  }, [showWhatWasNoticed, awarenessVisibleForLastAssistant, searchParams]);
+
   const authHeaders = useCallback((): HeadersInit => {
     const headers: HeadersInit = { "Content-Type": "application/json" };
     if (token) {
@@ -1412,11 +1437,6 @@ function ChatContent() {
         {(() => {
           // Milestone H stabilization (Lumen): regulation is coaching-like; do not stack with
           // micro-awareness on the same turn — reduces visible "managed product" feel.
-          const awarenessVisibleForLastAssistant =
-            !!latestAwarenessCue &&
-            !latestIsVagueSource &&
-            !!latestAwarenessCueAssistantId &&
-            latestAwarenessCueAssistantId === lastAssistantId;
           const shouldShowRegulationCue =
             !!latestRegulationMetadata &&
             isRegulationCueMeaningful(latestRegulationMetadata) &&
@@ -1464,7 +1484,7 @@ function ChatContent() {
             </div>
           );
         })()}
-        {showWhatWasNoticed &&
+        {showWhatWasNoticedEffective &&
           latestMetadata &&
           isMetadataMeaningful(latestMetadata) &&
           !latestIsVagueSource && (

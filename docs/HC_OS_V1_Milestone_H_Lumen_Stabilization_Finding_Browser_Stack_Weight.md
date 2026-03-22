@@ -53,18 +53,36 @@ Issue scope: **browser-visible composition**.
 
 ## Nova response (implemented)
 
-**Regulation cue** is **hidden** when the **Awareness** strip is visible for the **same** assistant turn (`app/chat/page.tsx`). Rationale: avoid **coaching-like regulation** stacking with **micro-awareness** (Lumen recommendation; Milestone H stabilization).
+### H-UI-1 — Regulation + Awareness
 
-**Open for Wisewave / further QA**
+**Regulation cue** is **hidden** when the **Awareness** strip is visible for the **same** assistant turn (`app/chat/page.tsx`). Rationale: avoid **coaching-like regulation** stacking with **micro-awareness**.
 
-- Whether **Next step** / **What was noticed** defaults should also yield when Awareness is on (separate decision).  
-- Compare browser feel: main + H only vs main + H + regulation vs full stack.
+### H-UI-2 — “What was noticed” + Awareness (follow-up finding)
+
+After H-UI-1, Lumen compared stacks: **Awareness + main** felt best; **Awareness + What was noticed + main** still felt **more structured** than stabilization intent.
+
+**Implemented:** The **“What was noticed”** row is **suppressed** when Awareness is visible for that assistant turn — same effect as prior **`?noticed=0`** for those turns, without requiring a query param.
+
+**QA override:** **`?noticed=1`** still **forces** the “What was noticed” block **on** even when Awareness is showing (so Lumen can reproduce the heavier stack when needed).
+
+**Still open**
+
+- Whether **Next step** should also yield when Awareness is on (narrow composition).  
+- Wisewave / founder check on default **`NEXT_PUBLIC_SHOW_WHAT_WAS_NOTICED_DEFAULT`** for non–H turns (unchanged by H-UI-2).
+
+---
+
+## Stack quality ranking (Lumen, post H-UI-1 / H-UI-2)
+
+1. **Awareness + main reply** — target for H turns  
+2. ~~Awareness + What was noticed + main~~ — **avoided by default** when Awareness on (H-UI-2)  
+3. ~~Awareness + Regulation + What was noticed + main~~ — **too layered**; Regulation removed when Awareness on (H-UI-1)
 
 ---
 
 ## One-line conclusion
 
-> Stabilization risk: **not** only H in isolation, but **Awareness + Regulation (+ other strips)** making the turn feel **more managed** than Milestone H intends.
+> Stabilization risk: **not** only H in isolation, but **visible scaffolding** around it (**Regulation**, **What was noticed**) making the turn feel **more managed** than Milestone H intends — **addressed in `/chat`** by hiding those layers when Awareness is on (with a **`?noticed=1`** escape hatch).
 
 ---
 
