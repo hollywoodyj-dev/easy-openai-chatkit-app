@@ -20,7 +20,7 @@ Live QA Scenario Pack **Batch 2**: **H3** (and weak **H1**) appeared on turns wh
 
 1. **`looksTaskHelpOrUtilitarianRequest()`** — Early gate (with utilitarian path): **Can you summarize…**, **I need help…**, **help writing / draft email**, ZH **帮我写 / 总结**, etc. Fixes false “reflective” passes via **me** / **I** in task text.
 
-2. **`minimal_affect_low_signal`** — Suppresses flat hedges / thin affect: **I guess**, **it’s okay**, **don’t feel anything**, **nothing in particular**, etc. (Lumen scenarios 12–13 style.)
+2. **`minimal_affect_low_signal`** — Suppresses flat hedges / thin affect: **I guess**, **it’s okay**, **don’t feel anything**, **feel … in particular**, **nothing in particular**, etc. (Lumen scenarios 12–13 style.) **Typographic apostrophe (`’`)** is normalized so **don’t** patterns match smart-quoted input.
 
 3. **H3 selection** — **Removed `emotion_label` alone** as H3 trigger. **H3** only when **user message** carries explicit uncertainty / question cues (not inferred affect-only).
 

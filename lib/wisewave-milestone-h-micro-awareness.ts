@@ -108,25 +108,35 @@ function looksTaskHelpOrUtilitarianRequest(message: string): boolean {
   return false;
 }
 
+/** Normalize typographic apostrophes so flat-affect regexes match smart-quoted input. */
+function normalizeApostrophesForHeuristics(s: string): string {
+  return s.replace(/\u2019|\u2018/g, "'");
+}
+
 /**
  * Very thin affect / everyday hedge — not enough substrate for H (Lumen Batch 2).
+ * Scenario 12: "I don't feel anything in particular." — requires `'` or `’` normalization + explicit in-particular path.
  */
 function isMinimalAffectOrFlatHedge(message: string): boolean {
-  const t = message.trim().toLowerCase();
+  const t = normalizeApostrophesForHeuristics(message.trim().toLowerCase());
   if (t.length > 120) return false;
 
   if (/\bi guess\b/.test(t)) return true;
   if (/\bit\s*'?s okay\b/.test(t) || /\bits okay\b/.test(t)) return true;
   if (/\bi suppose\b/.test(t) && t.length < 55) return true;
 
+  // Flat / absent affect (EN): any apostrophe variant handled via normalizeApostrophesForHeuristics
   if (
-    /don'?t feel anything|nothing in particular|not feeling (much|anything)|feel nothing|feel numb|just numb/i.test(
+    /don'?t feel anything|dont feel anything|do not feel anything|nothing in particular|not feeling (much|anything)|feel nothing|feel numb|just numb/i.test(
       t
     )
   ) {
     return true;
   }
+  // "… feel … in particular" often = no clear feeling / flat signal (Lumen scenario 12)
+  if (/\bfeel\b[^.!?]{0,40}\bin particular\b/.test(t)) return true;
   if (/\bi don'?t really feel\b/i.test(t)) return true;
+  if (/\bno particular feeling\b|\bnot feeling anything particular\b/i.test(t)) return true;
 
   return false;
 }
