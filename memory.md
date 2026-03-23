@@ -107,3 +107,7 @@
 ## 2026-03-23 — Lumen: Milestone H QA round closure
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — Core passes closed; stabilization re-QA (Batch 2, `milestone_h_v2`, H-UI-2) verified hosted/browser; **ongoing drift monitoring** posture. **Not** Tree hard-close / Milestone I until exit gate. **`AGENTS.md`** updated.
+
+## 2026-03-23 — Wisewave: Milestone H observation log template
+
+- **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — Tree + Lumen; no-change 1–3d window; *forget H*; daily rollup; optional Notion/Nova logger noted. Linked from Tree plan, Wisewave soft-pass, drift checklist, Lumen results, **`AGENTS.md`**.
