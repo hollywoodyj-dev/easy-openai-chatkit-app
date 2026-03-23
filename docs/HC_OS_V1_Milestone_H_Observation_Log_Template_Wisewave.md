@@ -15,7 +15,7 @@
 
 **Only:** whether H stays **invisible** and **safe** over time.
 
-**Related:** **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** (metrics, exit gate) · **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** (drift axes) · **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** (closure / drift posture).
+**Related:** **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** (metrics, exit gate) · **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** (drift axes) · **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** (closure / drift posture) · **`docs/HC_OS_V1_Milestone_H_Nova_Observation_Queue_Tool.md`** (optional semi-automated queue + UI — does not replace judgment).
 
 ---
 

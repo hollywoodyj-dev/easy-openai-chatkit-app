@@ -36,6 +36,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Milestone H observation tool — local workspace store (see data/h-observation/README.md)
+/data/h-observation/queue.json
+/data/h-observation/snapshots.json
+/data/h-observation/reviews.json
+/data/h-observation/real-samples.json
+
 .vercel
 
 # Expo / React Native

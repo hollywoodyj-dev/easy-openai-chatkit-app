@@ -1,0 +1,12 @@
+{
+  "samples": [
+    {
+      "language": "en",
+      "conversationType": "reflective",
+      "signalStrength": "medium",
+      "fullInput": "Replace with anonymized user text from a real turn.",
+      "previewText": "First ~120 chars…",
+      "tags": ["anonymized"]
+    }
+  ]
+}
