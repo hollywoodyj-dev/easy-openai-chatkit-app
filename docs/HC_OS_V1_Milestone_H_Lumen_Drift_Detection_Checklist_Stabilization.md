@@ -226,6 +226,7 @@ Milestone H is **stable** **only if**:
 
 ## Related documents
 
+- **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — Tree + Lumen observation window (sampled entries, daily rollup, pin rule).  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Stabilization_Finding_Browser_Stack_Weight.md`** — Lumen watchpoint: browser stack weight; regulation vs awareness.  
 - **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — Stream 4 owner Lumen; metrics aligned (70–85% no H, removal-first).  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — formal H QA closure (soft pass).  

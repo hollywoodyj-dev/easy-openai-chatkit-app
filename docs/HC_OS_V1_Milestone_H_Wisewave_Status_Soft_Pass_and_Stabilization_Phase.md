@@ -130,6 +130,7 @@ Something **rare** happened here:
 
 ## Related documents
 
+- **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — passive observation mode; *is H forgettable?*; Lumen logs / Tree decides.  
 - **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — Tree owner; four streams; metrics; daily loop; exit / Milestone I gate.  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — Lumen drift QA (Wisewave-strengthened draft); removal-first; five axes.  
 - `docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`  

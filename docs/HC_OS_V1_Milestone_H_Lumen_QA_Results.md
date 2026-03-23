@@ -352,6 +352,8 @@ Lumen verified browser behavior on live `/chat`:
 
 **Posture going forward:** **ongoing drift monitoring** (Lumen Drift Detection Checklist, Tree stabilization execution loop, removal-first spot checks) — **not** open-ended unresolved **milestone test debt** for the items verified above.
 
+**Wisewave — observation mode (passive, 1–3 days min):** **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — per-entry log + daily summary; Tree decision / Lumen logging; *“Is H stable enough to be forgotten?”*; pin rule *if H is noticeable, it is not ready.*
+
 **Not the same as hard milestone closure:** Formal **H → CLOSED** and **Milestone I preparation** still belong to **Tree’s exit gate** in **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`**. This section means **targeted Lumen QA work for the shipped stabilization fixes is done**; Tree may still run calendar / founder gates before signing hard close.
 
 ---
@@ -367,3 +369,5 @@ Lumen QA = **soft pass**, not hard milestone closure. **Do not open Milestone I*
 **OctopusMind (Gate 1, Lumen-aligned tightening):** **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`** — insertion/suppression boundaries, confidence discipline, anti-drift, proof logic, H/E conflict, kill-switch, and the five “OctopusMind must answer” lines.
 
 **Lumen — drift detection (stabilization, draft by Wisewave):** **`docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`** — guidance / interpretive / authority / weight / duplication axes; removal test; whole-turn evaluation; strict verdict format; EN/ZH parity drift.
+
+**Observation log (Wisewave — no-change monitoring):** **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — complements drift checklist; 10–20 sampled entries/day; Tree close / continue / return decision block.
