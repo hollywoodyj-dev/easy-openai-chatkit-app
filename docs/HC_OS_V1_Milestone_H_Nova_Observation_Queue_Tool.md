@@ -20,13 +20,7 @@
 | Domain types, validation, metrics, scenario pack (30) | `lib/milestone-h-observation/` |
 | REST API | `/api/internal/h-observation/*` |
 | Minimal UI | `/internal/h-observation` (queue, case review, daily summary) |
-| Workspace JSON store | Local: `data/h-observation/` · Vercel: `/tmp/h-observation` (auto) · override: `H_OBSERVATION_DATA_DIR` |
-
-## Storage path
-
-- **`H_OBSERVATION_DATA_DIR`** — optional absolute path for JSON files.
-- If unset: **local** → `data/h-observation/`; **Vercel** (`VERCEL=1`) → `/tmp/h-observation`.
-- Other read-only hosts: set `H_OBSERVATION_DATA_DIR=/tmp/h-observation` (or any writable path).
+| Persistent store | Postgres via Prisma (stable across serverless instances) |
 
 ## Auth
 
@@ -63,7 +57,7 @@
 | **Queue generation** | Batch append is clean; no duplicate-ID surprises; errors surfaced in UI. |
 | **Placeholder vs real** | `sourceType` + `tags` / preview text make placeholders obvious when `real-samples.json` is empty. |
 | **Summary date** | Summary filters by **UTC calendar day** of `reviewedAt` — annoying if reviewers expect local midnight without noticing UTC. |
-| **Hosted persistence** | **Vercel:** filesystem under `/var/task` is read-only → store defaults to **`/tmp/h-observation`** (writable, **ephemeral**). Export often, or set **`H_OBSERVATION_DATA_DIR`** to a mounted volume. Local dev still uses **`data/h-observation/`**. See `data/h-observation/README.md`. |
+| **Hosted persistence** | Queue/snapshots/reviews are stored in Postgres via Prisma, so cases should not “disappear” between steps even if requests hit different serverless instances. |
 
 ## Real vs scenario sampling
 

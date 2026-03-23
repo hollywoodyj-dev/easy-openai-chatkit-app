@@ -14,7 +14,7 @@ export async function PUT(
 
   const { caseId } = await context.params;
   const decoded = decodeURIComponent(caseId);
-  if (!getQueueItem(decoded)) {
+  if (!(await getQueueItem(decoded))) {
     return NextResponse.json({ error: "Case not found" }, { status: 404 });
   }
 
@@ -32,6 +32,6 @@ export async function PUT(
     );
   }
 
-  setSnapshot(decoded, snapshot);
+  await setSnapshot(decoded, snapshot);
   return NextResponse.json({ ok: true, caseId: decoded });
 }

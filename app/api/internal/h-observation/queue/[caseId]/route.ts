@@ -33,7 +33,7 @@ export async function PATCH(
     );
   }
 
-  const ok = updateQueueItemStatus(decoded, reviewStatus);
+  const ok = await updateQueueItemStatus(decoded, reviewStatus);
   if (!ok) {
     return NextResponse.json({ error: "Case not found" }, { status: 404 });
   }

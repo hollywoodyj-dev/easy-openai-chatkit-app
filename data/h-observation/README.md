@@ -1,22 +1,15 @@
-# Milestone H — observation tool (local workspace store)
+# Milestone H — observation tool (real samples + DB-backed workflow)
 
-**Nova v1 — internal only.** JSON files here are the default “Airtable-style” working store (collaborative workflows can copy/export to Notion later).
+**Nova v1 — internal only.** Queued cases, snapshots, and review logs are stored in the app’s **Postgres** database (via Prisma) so they persist across serverless instances.
+
+The JSON files in this folder are mainly for **sampling inputs** (optional).
 
 | File | Purpose |
 |------|---------|
-| `queue.json` | Queued cases (auto-created) |
-| `snapshots.json` | Response + debug snapshots per `caseId` |
-| `reviews.json` | Submitted `ObservationReviewLog` entries |
-| `real-samples.json` | Anonymized real turns for sampling (optional) |
+| `real-samples.json` | Optional anonymized real turns for sampling |
 
 ## Setup
 
-1. Copy `real-samples.example.json` → `real-samples.json` and add anonymized rows (see schema in `lib/milestone-h-observation/storage.ts`).
+1. Copy `real-samples.example.json` → `real-samples.json` and add anonymized rows.
 2. Set `H_OBSERVATION_API_KEY` in production and paste the same value in the UI banner (browser localStorage).
 3. Open `/internal/h-observation/queue`.
-
-Committed **example** only; live `queue.json`, `reviews.json`, etc. are gitignored so they stay local/workspace.
-
-## Vercel / serverless
-
-The deploy root (`/var/task/...`) is **read-only**. The app auto-uses **`/tmp/h-observation`** when `VERCEL=1`. That storage is **ephemeral** (cold starts / time) — **export** reviews regularly, or set **`H_OBSERVATION_DATA_DIR`** to a writable mounted path if your host supports it.

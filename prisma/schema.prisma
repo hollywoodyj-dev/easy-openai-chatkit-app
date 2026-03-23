@@ -174,3 +174,57 @@ model AgentTaskArchive {
   @@unique([agentName, archiveDate])
   @@index([archiveDate])
 }
+
+/// Milestone H observation tool: queue + human review logs.
+/// Stored in Postgres so cases don't disappear across serverless instances.
+model HObservationQueueItem {
+  caseId           String   @id @map("case_id")
+  sourceType       String
+  language         String
+  conversationType String   @map("conversation_type")
+  signalStrength   String   @map("signal_strength")
+  previewText      String   @map("preview_text") @db.Text
+  fullInput        String   @map("full_input") @db.Text
+  createdAt        DateTime @map("created_at")
+  reviewStatus     String   @map("review_status")
+  tags             Json?    // e.g. ["mild_affect", "placeholder"]
+}
+
+model HObservationSnapshot {
+  caseId    String @id @map("case_id")
+  snapshot  Json   @db.Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model HObservationReviewLog {
+  caseId                     String   @id @map("case_id")
+  reviewer                   String
+  reviewedAt                 DateTime @map("reviewed_at")
+
+  hAppeared                  Boolean @map("h_appeared")
+  cueType                    String  @map("cue_type")
+  positionCorrect           Boolean @map("position_correct")
+
+  shouldHaveBeenSuppressed  String  @map("should_have_been_suppressed")
+  suppressionFlag            String  @map("suppression_flag")
+
+  guidanceDrift             Boolean @map("guidance_drift")
+  interpretiveDrift         Boolean @map("interpretive_drift")
+  authorityDrift           Boolean @map("authority_drift")
+  weightDrift              Boolean @map("weight_drift")
+  duplicationDrift         Boolean @map("duplication_drift")
+
+  removalResult             String @map("removal_result")
+  removalConclusion         String @map("removal_conclusion")
+
+  turnWeight                String @map("turn_weight")
+  hNoticeability            String @map("h_noticeability")
+
+  ePresent                  Boolean @map("e_present")
+  fPresent                  Boolean @map("f_present")
+  hCompetesWithEorF         Boolean @map("h_competes_with_e_or_f")
+
+  verdict                    String
+  reasonShort               String @map("reason_short") @db.Text
+  notesOptional             String? @map("notes_optional") @db.Text
+}

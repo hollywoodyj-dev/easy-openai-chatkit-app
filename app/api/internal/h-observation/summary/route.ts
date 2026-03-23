@@ -18,7 +18,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid date (use YYYY-MM-DD)" }, { status: 400 });
   }
 
-  const logs = listReviews().filter((r) => r.reviewedAt.startsWith(date));
+  const logs = (await listReviews()).filter((r) =>
+    r.reviewedAt.startsWith(date)
+  );
   const summary = buildDailySummary(date, logs);
   return NextResponse.json({ summary });
 }

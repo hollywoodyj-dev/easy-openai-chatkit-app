@@ -16,7 +16,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
-  let items = listQueueItems();
+  let items = await listQueueItems();
+  if (!status) {
+    items = items.filter((x) => x.reviewStatus === "queued" || x.reviewStatus === "in_review");
+  }
   if (status && ["queued", "in_review", "completed", "skipped"].includes(status)) {
     items = items.filter((x) => x.reviewStatus === status);
   }
@@ -53,7 +56,7 @@ export async function POST(request: Request) {
     includeScenarioCases: body.includeScenarioCases !== false,
     preferredTags: body.preferredTags,
   });
-  appendQueueItems(result.items);
+  await appendQueueItems(result.items);
 
   return NextResponse.json({
     runId: result.runId,

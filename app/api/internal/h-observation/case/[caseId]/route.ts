@@ -18,15 +18,15 @@ export async function GET(
 
   const { caseId } = await context.params;
   const decoded = decodeURIComponent(caseId);
-  const queueItem = getQueueItem(decoded);
+  const queueItem = await getQueueItem(decoded);
   if (!queueItem) {
     return NextResponse.json({ error: "Case not found" }, { status: 404 });
   }
 
   const c: ObservationReviewCase = {
     queueItem,
-    responseSnapshot: getSnapshot(decoded),
-    reviewLog: getReview(decoded),
+    responseSnapshot: await getSnapshot(decoded),
+    reviewLog: await getReview(decoded),
   };
   return NextResponse.json(c);
 }

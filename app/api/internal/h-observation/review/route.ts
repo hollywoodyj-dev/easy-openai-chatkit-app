@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
-  let logs = listReviews();
+  let logs = await listReviews();
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     logs = logs.filter((r) => r.reviewedAt.startsWith(date));
   }
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!getQueueItem(log.caseId)) {
+  if (!(await getQueueItem(log.caseId))) {
     return NextResponse.json(
       { error: "caseId not found in queue" },
       { status: 404 }
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
   }
 
-  appendReview(log);
-  updateQueueItemStatus(log.caseId, "completed");
+  await appendReview(log);
+  await updateQueueItemStatus(log.caseId, "completed");
   return NextResponse.json({ ok: true, caseId: log.caseId });
 }

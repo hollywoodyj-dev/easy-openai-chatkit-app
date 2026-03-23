@@ -20,6 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const result = runHourlyObservationCycleSync(new Date().toISOString(), targetCount);
+  const result = await runHourlyObservationCycleSync(
+    new Date().toISOString(),
+    targetCount
+  );
   return NextResponse.json(result);
 }

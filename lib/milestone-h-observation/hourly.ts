@@ -3,16 +3,18 @@ import { generateQueue } from "./queue-generate";
 import { appendQueueItems } from "./storage";
 
 export type QueueGeneratorDeps = {
-  appendItems: (items: import("./types").ObservationQueueItem[]) => void;
+  appendItems: (
+    items: import("./types").ObservationQueueItem[]
+  ) => Promise<void>;
 };
 
 /**
  * Hourly cycle: generate queue + persist. No auto-review, no milestone judgment.
  */
-export function runHourlyObservationCycleSync(
+export async function runHourlyObservationCycleSync(
   runAt: string = new Date().toISOString(),
   targetCount: number = 4
-): HourlyObservationRunResult {
+): Promise<HourlyObservationRunResult> {
   const result = generateQueue({
     runAt,
     targetCount,
@@ -23,7 +25,7 @@ export function runHourlyObservationCycleSync(
     targetFactualPct: 0.2,
   });
 
-  appendQueueItems(result.items);
+  await appendQueueItems(result.items);
 
   return {
     runId: result.runId,
