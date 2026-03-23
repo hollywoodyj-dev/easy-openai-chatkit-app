@@ -6,18 +6,36 @@ import type {
   ObservationReviewLog,
 } from "./types";
 
-const DATA_DIR = join(process.cwd(), "data", "h-observation");
+/**
+ * Writable directory for queue/reviews JSON.
+ * - Local dev: `data/h-observation` under cwd (gitignored files).
+ * - Vercel / read-only deploy root: defaults to `/tmp/h-observation` (ephemeral; export often).
+ * - Override anytime: `H_OBSERVATION_DATA_DIR`.
+ */
+export function getObservationDataDir(): string {
+  const fromEnv = process.env.H_OBSERVATION_DATA_DIR?.trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.VERCEL === "1") {
+    return join("/tmp", "h-observation");
+  }
+  return join(process.cwd(), "data", "h-observation");
+}
 
-const FILES = {
-  queue: join(DATA_DIR, "queue.json"),
-  snapshots: join(DATA_DIR, "snapshots.json"),
-  reviews: join(DATA_DIR, "reviews.json"),
-  realSamples: join(DATA_DIR, "real-samples.json"),
-} as const;
+function paths() {
+  const dir = getObservationDataDir();
+  return {
+    dir,
+    queue: join(dir, "queue.json"),
+    snapshots: join(dir, "snapshots.json"),
+    reviews: join(dir, "reviews.json"),
+    realSamples: join(dir, "real-samples.json"),
+  } as const;
+}
 
 function ensureDataDir(): void {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true });
+  const { dir } = paths();
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
   }
 }
 
@@ -37,11 +55,11 @@ function writeJson(path: string, data: unknown): void {
 }
 
 export function listQueueItems(): ObservationQueueItem[] {
-  return readJson<ObservationQueueItem[]>(FILES.queue, []);
+  return readJson<ObservationQueueItem[]>(paths().queue, []);
 }
 
 export function saveQueueItems(items: ObservationQueueItem[]): void {
-  writeJson(FILES.queue, items);
+  writeJson(paths().queue, items);
 }
 
 export function appendQueueItems(items: ObservationQueueItem[]): void {
@@ -78,7 +96,7 @@ type SnapshotsFile = Record<string, ObservationResponseSnapshot>;
 export function getSnapshot(
   caseId: string
 ): ObservationResponseSnapshot | undefined {
-  const all = readJson<SnapshotsFile>(FILES.snapshots, {});
+  const all = readJson<SnapshotsFile>(paths().snapshots, {});
   return all[caseId];
 }
 
@@ -86,19 +104,23 @@ export function setSnapshot(
   caseId: string,
   snapshot: ObservationResponseSnapshot
 ): void {
-  const all = readJson<SnapshotsFile>(FILES.snapshots, {});
+  const p = paths();
+  const all = readJson<SnapshotsFile>(p.snapshots, {});
   all[caseId] = snapshot;
-  writeJson(FILES.snapshots, all);
+  writeJson(p.snapshots, all);
 }
 
 export function listReviews(): ObservationReviewLog[] {
-  return readJson<ObservationReviewLog[]>(FILES.reviews, []);
+  return readJson<ObservationReviewLog[]>(paths().reviews, []);
 }
 
 export function appendReview(log: ObservationReviewLog): void {
-  const cur = listReviews().filter((r) => r.caseId !== log.caseId);
+  const p = paths();
+  const cur = readJson<ObservationReviewLog[]>(p.reviews, []).filter(
+    (r) => r.caseId !== log.caseId
+  );
   cur.push(log);
-  writeJson(FILES.reviews, cur);
+  writeJson(p.reviews, cur);
 }
 
 export function getReview(caseId: string): ObservationReviewLog | undefined {
@@ -117,9 +139,10 @@ export type RealSampleRow = {
 type RealSamplesFile = { samples: RealSampleRow[] };
 
 export function listRealSamples(): RealSampleRow[] {
-  return readJson<RealSamplesFile>(FILES.realSamples, { samples: [] }).samples;
+  return readJson<RealSamplesFile>(paths().realSamples, { samples: [] }).samples;
 }
 
-export function getStoragePaths(): typeof FILES {
-  return FILES;
+/** Resolved paths for debugging / docs */
+export function getStoragePaths(): ReturnType<typeof paths> {
+  return paths();
 }

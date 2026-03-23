@@ -16,3 +16,7 @@
 3. Open `/internal/h-observation/queue`.
 
 Committed **example** only; live `queue.json`, `reviews.json`, etc. are gitignored so they stay local/workspace.
+
+## Vercel / serverless
+
+The deploy root (`/var/task/...`) is **read-only**. The app auto-uses **`/tmp/h-observation`** when `VERCEL=1`. That storage is **ephemeral** (cold starts / time) — **export** reviews regularly, or set **`H_OBSERVATION_DATA_DIR`** to a writable mounted path if your host supports it.
