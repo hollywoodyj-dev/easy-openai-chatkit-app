@@ -39,6 +39,12 @@ const NOTICE: Noticeability[] = [
 ];
 const VERDICTS: Verdict[] = ["pass", "revise", "remove"];
 
+type ReducedSnapshotInput = {
+  fullResponseText: string;
+  mainReflection?: string;
+  awarenessCue?: string | null;
+};
+
 function defaultLog(caseId: string): ObservationReviewLog {
   const now = new Date();
   return {
@@ -65,6 +71,45 @@ function defaultLog(caseId: string): ObservationReviewLog {
     verdict: "pass",
     reasonShort: "",
     notesOptional: "",
+  };
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function extractReducedSnapshot(input: unknown): ReducedSnapshotInput {
+  const src =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
+
+  const fullResponseText =
+    asString(src.fullResponseText) ??
+    asString(src.full_response_text) ??
+    asString(src.response) ??
+    asString(src.assistantResponse) ??
+    asString(src.assistant_response) ??
+    asString(src.message) ??
+    asString(src.output_text) ??
+    "";
+
+  const mainReflection =
+    asString(src.mainReflection) ??
+    asString(src.main_reflection) ??
+    asString(src.reflection) ??
+    asString(src.mainReply) ??
+    asString(src.main_reply);
+
+  const awarenessCueRaw =
+    asString(src.awarenessCue) ??
+    asString(src.awareness_cue) ??
+    null;
+
+  return {
+    fullResponseText,
+    mainReflection,
+    awarenessCue: awarenessCueRaw,
   };
 }
 
@@ -116,6 +161,18 @@ export default function HObservationReviewPage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    setLog((prev) => {
+      if (!prev || prev.hAppeared) return prev;
+      return {
+        ...prev,
+        cueType: "none",
+        // Position semantics only apply when H appears.
+        positionCorrect: true,
+      };
+    });
+  }, [log?.hAppeared]);
+
   function patchLog<K extends keyof ObservationReviewLog>(
     key: K,
     value: ObservationReviewLog[K]
@@ -142,6 +199,22 @@ export default function HObservationReviewPage() {
     if (!res.ok) setError(await res.text());
     else await load();
     setBusy(false);
+  }
+
+  function reduceSnapshotJsonFromRawObject() {
+    setError(null);
+    try {
+      const parsed = JSON.parse(snapshotJson) as unknown;
+      const reduced = extractReducedSnapshot(parsed);
+      if (!reduced.fullResponseText) {
+        setError(
+          "Could not find fullResponseText in the raw object. Add it manually in reduced JSON."
+        );
+      }
+      setSnapshotJson(JSON.stringify(reduced, null, 2));
+    } catch {
+      setError("Snapshot JSON invalid");
+    }
   }
 
   async function submitReview(force?: boolean) {
@@ -179,6 +252,15 @@ export default function HObservationReviewPage() {
         <p className="text-sm text-neutral-500">Loading…</p>
       ) : (
         <div className="space-y-6 max-w-4xl">
+          <section className="rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
+            <p className="font-medium">First-run flow (recommended)</p>
+            <ol className="list-decimal pl-4 mt-1 space-y-0.5">
+              <li>Pick a <code>scenario</code> row first on Queue.</li>
+              <li>Run the raw input in <code>/chat</code>.</li>
+              <li>Paste a reduced snapshot JSON here.</li>
+              <li>Complete and submit the structured review log.</li>
+            </ol>
+          </section>
           <section>
             <h2 className="font-medium text-sm mb-1">Raw input</h2>
             <pre className="text-xs whitespace-pre-wrap rounded border border-neutral-300 dark:border-neutral-600 p-3 bg-neutral-50 dark:bg-neutral-900/50">
@@ -188,21 +270,39 @@ export default function HObservationReviewPage() {
 
           <section>
             <h2 className="font-medium text-sm mb-1">
-              Response snapshot (paste from /chat or API; JSON)
+              Response snapshot (reduced JSON, not full /chat response object)
             </h2>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">
+              Expected minimal shape:
+            </p>
+            <pre className="text-xs whitespace-pre-wrap rounded border border-neutral-300 dark:border-neutral-600 p-2 bg-neutral-50 dark:bg-neutral-900/50 mb-2">{`{
+  "fullResponseText": "...",
+  "mainReflection": "...",
+  "awarenessCue": null
+}`}</pre>
             <textarea
               className="w-full min-h-[160px] font-mono text-xs rounded border border-neutral-300 dark:border-neutral-600 p-2 bg-white dark:bg-neutral-900"
               value={snapshotJson}
               onChange={(e) => setSnapshotJson(e.target.value)}
             />
-            <button
-              type="button"
-              disabled={busy}
-              className="mt-2 rounded border border-neutral-400 px-3 py-1 text-sm dark:border-neutral-600"
-              onClick={saveSnapshot}
-            >
-              Save snapshot
-            </button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                className="rounded border border-neutral-400 px-3 py-1 text-sm dark:border-neutral-600"
+                onClick={saveSnapshot}
+              >
+                Save snapshot
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                className="rounded border border-blue-500 px-3 py-1 text-sm text-blue-700 dark:text-blue-300"
+                onClick={reduceSnapshotJsonFromRawObject}
+              >
+                Auto-extract reduced snapshot from raw object
+              </button>
+            </div>
             {data.responseSnapshot ? (
               <p className="text-xs text-neutral-500 mt-1">
                 debug H:{" "}
@@ -245,7 +345,14 @@ export default function HObservationReviewPage() {
                   <input
                     type="checkbox"
                     checked={log.hAppeared}
-                    onChange={(e) => patchLog("hAppeared", e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      patchLog("hAppeared", checked);
+                      if (!checked) {
+                        patchLog("cueType", "none");
+                        patchLog("positionCorrect", true);
+                      }
+                    }}
                   />
                   H appeared
                 </label>
@@ -269,11 +376,14 @@ export default function HObservationReviewPage() {
                   <input
                     type="checkbox"
                     checked={log.positionCorrect}
+                    disabled={!log.hAppeared}
                     onChange={(e) =>
                       patchLog("positionCorrect", e.target.checked)
                     }
                   />
-                  Position correct
+                  <span className={!log.hAppeared ? "text-neutral-400" : ""}>
+                    Position correct {!log.hAppeared ? "(N/A when H = No)" : ""}
+                  </span>
                 </label>
                 <label className="text-sm">
                   Should have been suppressed?

@@ -56,6 +56,9 @@ export default function HObservationQueuePage() {
   return (
     <>
       <ApiKeyBanner />
+      <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-3">
+        First pass tip: start with rows marked <span className="font-medium">Recommended first pass</span> (scenario + non-placeholder).
+      </p>
       <div className="flex flex-wrap gap-2 mb-4">
         <button
           type="button"
@@ -96,11 +99,16 @@ export default function HObservationQueuePage() {
                 <th className="py-2 pr-2">Signal</th>
                 <th className="py-2 pr-2">Preview</th>
                 <th className="py-2 pr-2">Status</th>
+                <th className="py-2 pr-2">Hint</th>
                 <th className="py-2 pr-2">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((row) => (
+              {items.map((row) => {
+                const isPlaceholder = (row.tags ?? []).includes("placeholder");
+                const recommendedFirstPass =
+                  row.sourceType === "scenario" && !isPlaceholder;
+                return (
                 <tr
                   key={row.caseId}
                   className="border-b border-neutral-200 dark:border-neutral-800 align-top"
@@ -116,6 +124,17 @@ export default function HObservationQueuePage() {
                     {row.previewText}
                   </td>
                   <td className="py-2 pr-2">{row.reviewStatus}</td>
+                  <td className="py-2 pr-2">
+                    {recommendedFirstPass ? (
+                      <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                        Recommended first pass
+                      </span>
+                    ) : isPlaceholder ? (
+                      <span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                        Placeholder sample
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="py-2 pr-2 whitespace-nowrap">
                     <Link
                       className="underline mr-2"
@@ -149,7 +168,8 @@ export default function HObservationQueuePage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
