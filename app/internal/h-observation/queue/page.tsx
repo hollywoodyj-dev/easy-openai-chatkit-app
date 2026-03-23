@@ -76,6 +76,30 @@ export default function HObservationQueuePage() {
         >
           Refresh
         </button>
+        <button
+          type="button"
+          disabled={busy}
+          className="rounded border border-neutral-400 px-3 py-1.5 text-sm dark:border-neutral-600"
+          onClick={async () => {
+            setLoading(true);
+            setError(null);
+            const res = await observationFetch(
+              "/api/internal/h-observation/queue?status=completed"
+            );
+            if (!res.ok) {
+              setError(await res.text());
+              setItems([]);
+            } else {
+              const data = (await res.json()) as {
+                items: ObservationQueueItem[];
+              };
+              setItems(data.items ?? []);
+            }
+            setLoading(false);
+          }}
+        >
+          Load completed
+        </button>
       </div>
       {error ? (
         <pre className="text-red-600 text-xs whitespace-pre-wrap mb-4">{error}</pre>
