@@ -48,6 +48,17 @@
 4. Daily summary — suppression ratio, removal distribution, drift counts, verdict counts.  
 5. Export — CSV / Markdown / JSON for Tree / archive.
 
+## Lumen — first-run QA watchpoints
+
+**Enough for first-run QA.** On pass, ops can move to **half-hour observation blocks** (same tool; tighter cadence than the spec’s hourly default).
+
+| Watch | Notes |
+|--------|--------|
+| **Queue generation** | Batch append is clean; no duplicate-ID surprises; errors surfaced in UI. |
+| **Placeholder vs real** | `sourceType` + `tags` / preview text make placeholders obvious when `real-samples.json` is empty. |
+| **Summary date** | Summary filters by **UTC calendar day** of `reviewedAt` — annoying if reviewers expect local midnight without noticing UTC. |
+| **Hosted persistence** | Default JSON under `data/h-observation/` is **instance-local** (e.g. Vercel serverless: not durable across deploys / may not match “one shared log” expectation). For sustained observation, plan export cadence or external / mounted store — see `data/h-observation/README.md`. |
+
 ## Real vs scenario sampling
 
 - **Scenarios:** fixed 30-pack in `lib/milestone-h-observation/scenario-pack-data.ts` (Lumen QA lineage).
