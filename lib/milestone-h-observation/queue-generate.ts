@@ -65,6 +65,27 @@ function realRowToItem(
   };
 }
 
+function isTrustedRealSample(row: RealSampleRow): boolean {
+  const tags = row.tags ?? [];
+  if (tags.includes("placeholder")) return false;
+
+  const full = (row.fullInput ?? "").trim().toLowerCase();
+  const preview = (row.previewText ?? "").trim().toLowerCase();
+
+  // Known placeholder/template patterns (example + generator fallback).
+  if (!full || full.length < 12) return false;
+  if (full.includes("placeholder slot")) return false;
+  if (full.includes("add anonymized turns")) return false;
+  if (full.includes("replace with anonymized")) return false;
+  if (full.startsWith("replace with")) return false;
+
+  if (preview.includes("first ~120 chars")) return false;
+  if (preview.includes("placeholder — ingest real conversation sample"))
+    return false;
+
+  return true;
+}
+
 function scenarioToItem(
   s: ScenarioTemplate,
   caseId: string,
@@ -127,7 +148,7 @@ export function generateQueue(
     nReal = target;
   }
 
-  const samples = shuffle(listRealSamples());
+  const trustedRealSamples = shuffle(listRealSamples()).filter(isTrustedRealSample);
   const items: ObservationQueueItem[] = [];
   let seq = 0;
 
@@ -137,28 +158,17 @@ export function generateQueue(
   };
 
   if (wantReal && nReal > 0) {
-    const picked: RealSampleRow[] = samples.slice(0, nReal);
-    while (picked.length < nReal) {
-      picked.push({
-        language: Math.random() < 0.75 ? "en" : "zh",
-        conversationType: pickWeightedConversationType(
-          reflectivePct,
-          mixedPct
-        ),
-        signalStrength: "medium",
-        fullInput:
-          "[Add anonymized turns to data/h-observation/real-samples.json — placeholder slot]",
-        previewText: "Placeholder — ingest real conversation sample",
-        tags: ["placeholder"],
-      });
-    }
-    for (const row of picked.slice(0, nReal)) {
+    const realCount = Math.min(nReal, trustedRealSamples.length);
+    for (const row of trustedRealSamples.slice(0, realCount)) {
       items.push(realRowToItem(row, nextId(), generatedAt));
     }
   }
 
   if (wantScenario && nScenario > 0) {
-    const scenarios = pickScenarios(nScenario, request.preferredTags);
+    // If we couldn't source enough trusted real samples, we fill the queue with scenarios.
+    const realAdded = items.filter((x) => x.sourceType === "real").length;
+    const scenarioCount = target - realAdded;
+    const scenarios = pickScenarios(scenarioCount, request.preferredTags);
     for (const s of scenarios) {
       items.push(scenarioToItem(s, nextId(), generatedAt));
     }
