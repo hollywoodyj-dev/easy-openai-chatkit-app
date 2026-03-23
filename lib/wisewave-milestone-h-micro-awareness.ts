@@ -26,6 +26,23 @@ export function milestoneHBuildMarker(): string {
   return BUILD_MARKER;
 }
 
+/** Strict stabilization linter (block/suppress only). Disabled by default for reversibility. */
+export function isMilestoneHStrictLinterEnabled(): boolean {
+  const v = process.env.ENABLE_H_LINTER_STRICT?.trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
+export type HLintStrength = 70 | 85 | 100;
+
+export function getHStrictLinterStrength(): HLintStrength {
+  const raw = process.env.H_LINTER_STRENGTH?.trim().toLowerCase();
+  const cleaned = raw?.replace("%", "");
+  const n = cleaned ? Number(cleaned) : NaN;
+  if (n === 85) return 85;
+  if (n === 100) return 100;
+  return 70;
+}
+
 export type MicroAwarenessKind = "H1" | "H3" | "H4" | "H5";
 
 export type MilestoneHSuppressedReason =
@@ -44,6 +61,12 @@ export type MilestoneHSuppressedReason =
   | "minimal_affect_low_signal"
   /** Lumen follow-up: H1 on mild/generic reflective only — insight not durable enough; prefer silence. */
   | "h1_mild_reflective_insufficient"
+  /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
+  | "wisewave_kill_list_blacklisted_text"
+  /** Structural error: more than one sentence detected in the emitted H cue. */
+  | "wisewave_kill_list_multi_sentence"
+  /** Wisewave linter: H too long (correlates with explanation/presence). */
+  | "wisewave_kill_list_too_long"
   | "emitted";
 
 export type MilestoneHOutcome =
@@ -347,6 +370,219 @@ function pickTemplate(kind: MicroAwarenessKind, seed: string): { en: string; zh:
   return { en: pool.en[i]!, zh: pool.zh[i]! };
 }
 
+function normalizeForKillList(text: string): string {
+  return text
+    .replace(/\u2019|\u2018/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function countSentenceEndings(text: string): number {
+  const t = text.trim();
+  const matches = t.match(/[.!?。！？]/g);
+  return matches ? matches.length : 0;
+}
+
+function countEnglishWords(textEn: string): number {
+  const t = textEn
+    .replace(/[.!?,;:()"'’“”]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!t) return 0;
+  return t.split(" ").filter(Boolean).length;
+}
+
+function countChineseChars(textZh: string): number {
+  // Keep only non-whitespace CJK characters for the threshold.
+  const t = textZh.replace(/\s+/g, "");
+  return t.replace(/[^\u4E00-\u9FFF]/g, "").length;
+}
+
+function hasWisewaveKillListBan(
+  textEn: string,
+  textZh: string,
+  strength: HLintStrength
+): boolean {
+  const en = normalizeForKillList(textEn.toLowerCase());
+  const zh = normalizeForKillList(textZh);
+
+  // Strength 70: only block the highest-drift / guaranteed overreach shapes.
+  const enDirective: RegExp[] = [
+    // Guidance / action suggests
+    /\byou may want to\b/i,
+    /\byou could try to\b/i,
+    /\bit might help to\b/i,
+    /\byou should\b/i,
+    /\btry to\b/i,
+    /\bconsider doing\b/i,
+
+    // Coaching tone (treat as guidance)
+    /let's take a step back/i,
+    /let's pause here/i,
+    /\bwhat if you\b/i,
+    /maybe start by/i,
+  ];
+  const zhDirective: RegExp[] = [
+    /你可以试试/i,
+    /你可以考虑/i,
+    /或许你可以/i,
+    /你需要/i,
+    /建议你/i,
+
+    /我们可以先/i,
+    /你可以先/i,
+    /不妨先/i,
+  ];
+
+  const enPremature: RegExp[] = [
+    /don'?t need to decide yet/i,
+    /\bthere'?s no need to\b/i,
+    /\bit'?s okay to just\b/i,
+    /\byou don'?t have to\b/i,
+    /\bthat's enough for now\b/i,
+    /\bjust noticing is enough\b/i,
+    /\bthat's all you need to do\b/i,
+  ];
+  const zhPremature: RegExp[] = [
+    /你不需要现在决定/i,
+    /没必要/i,
+    /你不用/i,
+    /可以不用这么/i,
+    /这样就够了/i,
+    /只要看到就好了/i,
+  ];
+
+  const enCausal: RegExp[] = [
+    /this is happening because/i,
+    /\bthe reason is\b/i,
+    /this comes from/i,
+    /this means that/i,
+  ];
+  const zhCausal: RegExp[] = [
+    /这是因为/i,
+    /原因是/i,
+    /这说明/i,
+    /本质是/i,
+  ];
+
+  const enIdentity: RegExp[] = [
+    /\byou are someone who\b/i,
+    /\bthis is your pattern\b/i,
+    /\byou tend to\b/i,
+    /\bthis shows that you\b/i,
+  ];
+  const zhIdentity: RegExp[] = [
+    /你是一个/i,
+    /这是你的模式/i,
+    /你总是/i,
+    /你其实是/i,
+  ];
+
+  const enTherapeuticSoft: RegExp[] = [
+    /\bit'?s okay\b/i,
+    /\byou'?re okay\b/i,
+    /\bthat's completely normal\b/i,
+    /\byou'?re not alone\b/i,
+  ];
+  const zhTherapeuticSoft: RegExp[] = [
+    /没关系/i,
+    /你很好/i,
+    /这是正常的/i,
+    /你不是一个人/i,
+  ];
+
+  const enAbstractJargon: RegExp[] = [
+    /\binner dynamic\b/i,
+    /\bemotional processing\b/i,
+    /\bunderlying mechanism\b/i,
+    /\bsubconscious pattern\b/i,
+  ];
+  const zhAbstractJargon: RegExp[] = [
+    /内在机制/i,
+    /情绪过程/i,
+    /潜意识模式/i,
+  ];
+
+  const enJustInstruction: RegExp[] = [
+    /\bjust\s+(notice|let|focus|stay with|focus on)\b/i,
+    /\bonly just\b/i,
+  ];
+  const zhJustInstruction: RegExp[] = [
+    /只是去看/i,
+    /就去感受/i,
+    /先只是/i,
+  ];
+
+  const enYouMayDirectional: RegExp[] = [
+    /\byou may not need to\b/i,
+    /\byou may be trying to\b/i,
+    /\byou may feel\b/i,
+  ];
+  const zhYouMayDirectional: RegExp[] = [
+    /你可能不需要/i,
+    /你可能正在/i,
+    /你可能会/i,
+  ];
+
+  const matches = (rs: RegExp[]) => rs.some((r) => r.test(en));
+  const matchesZh = (rs: RegExp[]) => rs.some((r) => r.test(zh));
+
+  // Always block at 70+:
+  if (
+    matches(enDirective) ||
+    matches(enPremature) ||
+    matches(enCausal) ||
+    matches(enIdentity) ||
+    matchesZh(zhDirective) ||
+    matchesZh(zhPremature) ||
+    matchesZh(zhCausal) ||
+    matchesZh(zhIdentity)
+  ) {
+    return true;
+  }
+
+  // Additional bans at 85+:
+  if (strength >= 85) {
+    if (
+      matches(enTherapeuticSoft) ||
+      matches(enAbstractJargon) ||
+      matches(enJustInstruction) ||
+      matches(enYouMayDirectional) ||
+      matchesZh(zhTherapeuticSoft) ||
+      matchesZh(zhAbstractJargon) ||
+      matchesZh(zhJustInstruction) ||
+      matchesZh(zhYouMayDirectional)
+    ) {
+      return true;
+    }
+  }
+
+  // 100% inherits 85% bans (plus any future additions).
+  return false;
+}
+
+function hasWisewaveKillListMultiSentence(textEn: string, textZh: string): boolean {
+  return countSentenceEndings(textEn) >= 2 || countSentenceEndings(textZh) >= 2;
+}
+
+function hasWisewaveTooLong(
+  textEn: string,
+  textZh: string,
+  strength: HLintStrength
+): boolean {
+  const enWords = countEnglishWords(textEn);
+  const zhChars = countChineseChars(textZh);
+
+  // Strict stabilization uses BLOCK threshold only:
+  // 70%: EN block 26, ZH block 40
+  // 85%: EN block 24, ZH block 38
+  // 100%: EN block 22, ZH block 34
+  const enBlock = strength === 70 ? 26 : strength === 85 ? 24 : 22;
+  const zhBlock = strength === 70 ? 40 : strength === 85 ? 38 : 34;
+
+  return enWords > enBlock || zhChars > zhBlock;
+}
+
 /**
  * Gate 1 (structural) + Gate 2 (experiential) + deterministic template pick.
  * H2 pattern-bridge omitted in v1 minimal path (high E/continuity duplication risk).
@@ -458,6 +694,28 @@ export function computeMicroAwarenessCue(params: {
   }
 
   const pair = pickTemplate(kind, seed);
+
+  // Strict stabilization linter: guardrail only (suppress; never generate new H).
+  if (isMilestoneHStrictLinterEnabled()) {
+    const strength = getHStrictLinterStrength();
+    // Wisewave Kill List hard containment: suppress H if banned phrases show up.
+    if (hasWisewaveKillListMultiSentence(pair.en, pair.zh)) {
+      return {
+        status: "suppressed",
+        reason: "wisewave_kill_list_multi_sentence",
+      };
+    }
+    if (hasWisewaveTooLong(pair.en, pair.zh, strength)) {
+      return { status: "suppressed", reason: "wisewave_kill_list_too_long" };
+    }
+    if (hasWisewaveKillListBan(pair.en, pair.zh, strength)) {
+      return {
+        status: "suppressed",
+        reason: "wisewave_kill_list_blacklisted_text",
+      };
+    }
+  }
+
   return {
     status: "emitted",
     kind,
