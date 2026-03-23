@@ -18,6 +18,7 @@ import type {
   TurnWeight,
   Noticeability,
   Verdict,
+  WouldCaseHaveFailedWithoutLinter,
 } from "@/lib/milestone-h-observation/types";
 
 const REVIEWERS: Reviewer[] = ["Lumen", "Tree", "Wisewave", "Other"];
@@ -38,6 +39,12 @@ const NOTICE: Noticeability[] = [
   "clearly_noticeable",
 ];
 const VERDICTS: Verdict[] = ["pass", "revise", "remove"];
+const WOULD_CASE_FAILED: WouldCaseHaveFailedWithoutLinter[] = [
+  "yes",
+  "likely",
+  "unclear",
+  "no",
+];
 
 type ReducedSnapshotInput = {
   fullResponseText: string;
@@ -68,6 +75,13 @@ function defaultLog(caseId: string): ObservationReviewLog {
     ePresent: false,
     fPresent: false,
     hCompetesWithEorF: false,
+
+    // Post-linter tracking (human-filled)
+    linterFired: false,
+    hSuppressedByLinter: false,
+    wouldCaseHaveFailedWithoutLinter: "unclear",
+    wasHExpectedHere: false,
+
     verdict: "pass",
     reasonShort: "",
     notesOptional: "",
@@ -414,6 +428,55 @@ export default function HObservationReviewPage() {
                     }
                   >
                     {SUPP_FLAG.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={log.linterFired}
+                    onChange={(e) => patchLog("linterFired", e.target.checked)}
+                  />
+                  Linter fired
+                </label>
+
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={log.hSuppressedByLinter}
+                    onChange={(e) =>
+                      patchLog("hSuppressedByLinter", e.target.checked)
+                    }
+                  />
+                  H suppressed by linter
+                </label>
+
+                <label className="text-sm flex items-center gap-2 sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={log.wasHExpectedHere}
+                    onChange={(e) => patchLog("wasHExpectedHere", e.target.checked)}
+                  />
+                  Was H expected here (baseline)
+                </label>
+
+                <label className="text-sm sm:col-span-2">
+                  Would case have failed without linter?
+                  <select
+                    className="mt-1 block w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1"
+                    value={log.wouldCaseHaveFailedWithoutLinter}
+                    onChange={(e) =>
+                      patchLog(
+                        "wouldCaseHaveFailedWithoutLinter",
+                        e.target.value as WouldCaseHaveFailedWithoutLinter
+                      )
+                    }
+                  >
+                    {WOULD_CASE_FAILED.map((r) => (
                       <option key={r} value={r}>
                         {r}
                       </option>

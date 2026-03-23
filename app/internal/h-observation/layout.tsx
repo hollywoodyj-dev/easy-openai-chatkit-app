@@ -16,7 +16,9 @@ export default function HObservationLayout({
         <p className="text-xs uppercase tracking-wide text-neutral-500">
           Internal — Milestone H observation support (Nova v1)
         </p>
-        <h1 className="text-xl font-semibold mt-1">H observation queue</h1>
+        <h1 className="text-xl font-semibold mt-1">
+          H observation queue — Post-Linter Observation v0.7 (70%)
+        </h1>
         <nav className="mt-3 flex flex-wrap gap-3 text-sm">
           <Link className="underline" href="/internal/h-observation/queue">
             Queue

@@ -224,6 +224,12 @@ model HObservationReviewLog {
   fPresent                  Boolean @map("f_present")
   hCompetesWithEorF         Boolean @map("h_competes_with_e_or_f")
 
+  // Post-linter tracking (Milestone H strict stabilization)
+  linterFired                Boolean @default(false) @map("linter_fired")
+  hSuppressedByLinter        Boolean @default(false) @map("h_suppressed_by_linter")
+  wouldCaseHaveFailedWithoutLinter String @default("unclear") @map("would_case_have_failed_without_linter")
+  wasHExpectedHere          Boolean @default(false) @map("was_h_expected_here")
+
   verdict                    String
   reasonShort               String @map("reason_short") @db.Text
   notesOptional             String? @map("notes_optional") @db.Text

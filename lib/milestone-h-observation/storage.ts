@@ -229,6 +229,12 @@ export async function listReviews(): Promise<ObservationReviewLog[]> {
     fPresent: r.fPresent,
     hCompetesWithEorF: r.hCompetesWithEorF,
 
+    linterFired: r.linterFired,
+    hSuppressedByLinter: r.hSuppressedByLinter,
+    wouldCaseHaveFailedWithoutLinter:
+      r.wouldCaseHaveFailedWithoutLinter as ObservationReviewLog["wouldCaseHaveFailedWithoutLinter"],
+    wasHExpectedHere: r.wasHExpectedHere,
+
     verdict: r.verdict as ObservationReviewLog["verdict"],
     reasonShort: r.reasonShort,
     notesOptional: r.notesOptional ?? undefined,
@@ -236,6 +242,12 @@ export async function listReviews(): Promise<ObservationReviewLog[]> {
 }
 
 export async function appendReview(log: ObservationReviewLog): Promise<void> {
+  const linterFired = log.linterFired ?? false;
+  const hSuppressedByLinter = log.hSuppressedByLinter ?? false;
+  const wouldCaseHaveFailedWithoutLinter =
+    log.wouldCaseHaveFailedWithoutLinter ?? "unclear";
+  const wasHExpectedHere = log.wasHExpectedHere ?? false;
+
   await prisma.hObservationReviewLog.upsert({
     where: { caseId: log.caseId },
     update: {
@@ -264,6 +276,11 @@ export async function appendReview(log: ObservationReviewLog): Promise<void> {
       ePresent: log.ePresent,
       fPresent: log.fPresent,
       hCompetesWithEorF: log.hCompetesWithEorF,
+
+      linterFired,
+      hSuppressedByLinter,
+      wouldCaseHaveFailedWithoutLinter,
+      wasHExpectedHere,
 
       verdict: log.verdict,
       reasonShort: log.reasonShort,
@@ -296,6 +313,11 @@ export async function appendReview(log: ObservationReviewLog): Promise<void> {
       ePresent: log.ePresent,
       fPresent: log.fPresent,
       hCompetesWithEorF: log.hCompetesWithEorF,
+
+      linterFired,
+      hSuppressedByLinter,
+      wouldCaseHaveFailedWithoutLinter,
+      wasHExpectedHere,
 
       verdict: log.verdict,
       reasonShort: log.reasonShort,
@@ -339,6 +361,12 @@ export async function getReview(
     ePresent: r.ePresent,
     fPresent: r.fPresent,
     hCompetesWithEorF: r.hCompetesWithEorF,
+
+    linterFired: r.linterFired,
+    hSuppressedByLinter: r.hSuppressedByLinter,
+    wouldCaseHaveFailedWithoutLinter:
+      r.wouldCaseHaveFailedWithoutLinter as ObservationReviewLog["wouldCaseHaveFailedWithoutLinter"],
+    wasHExpectedHere: r.wasHExpectedHere,
 
     verdict: r.verdict as ObservationReviewLog["verdict"],
     reasonShort: r.reasonShort,

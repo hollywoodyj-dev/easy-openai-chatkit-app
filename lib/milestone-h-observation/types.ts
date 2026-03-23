@@ -33,6 +33,12 @@ export type Verdict = "pass" | "revise" | "remove";
 
 export type Reviewer = "Lumen" | "Tree" | "Wisewave" | "Other";
 
+export type WouldCaseHaveFailedWithoutLinter =
+  | "yes"
+  | "likely"
+  | "unclear"
+  | "no";
+
 // ===== Queue item =====
 
 export interface ObservationQueueItem {
@@ -94,6 +100,12 @@ export interface ObservationReviewLog {
   ePresent: boolean;
   fPresent: boolean;
   hCompetesWithEorF: boolean;
+
+  // ===== Post-linter tracking (strict stabilization) =====
+  linterFired: boolean; // linter evaluated a candidate H this turn
+  hSuppressedByLinter: boolean; // H was suppressed because it matched linter containment
+  wouldCaseHaveFailedWithoutLinter: WouldCaseHaveFailedWithoutLinter;
+  wasHExpectedHere: boolean;
 
   verdict: Verdict;
   reasonShort: string;
