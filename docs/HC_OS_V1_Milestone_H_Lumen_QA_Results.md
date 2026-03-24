@@ -356,6 +356,14 @@ Lumen verified browser behavior on live `/chat`:
 
 **Not the same as hard milestone closure:** Formal **H → CLOSED** and **Milestone I preparation** still belong to **Tree’s exit gate** in **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`**. This section means **targeted Lumen QA work for the shipped stabilization fixes is done**; Tree may still run calendar / founder gates before signing hard close.
 
+### Addendum — Nova `milestone_h_v3` 7-case rerun (hosted)
+
+**Lumen (post-deploy):** Same 7-case batch on hosted; marker **`milestone_h_v3`** confirmed; Light Mode on; **encoding/apostrophe garbling cleared** on turn output; **`vague_source`** suppression still correct.
+
+**Scores:** v2 **4 PASS / 3 REVISE / 0 FAIL** → v3 **5 PASS / 2 REVISE / 0 FAIL**.
+
+**Verdict:** v3 counted as a **successful follow-up iteration**; H3 less repetitive (guilt/rest, everyday affect); H4 still strong. **Ongoing watchpoint:** H3 precision on **prove myself** and **replay** threads (uneven, not broken). Detail: **`docs/HC_OS_V1_Milestone_H_Lumen_7case_Followup_Nova_2026-02-08.md`** (closure section).
+
 ---
 
 ## Next phase (Tree / Wisewave)

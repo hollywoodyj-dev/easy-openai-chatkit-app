@@ -29,3 +29,29 @@
 - `app/api/chat/turn/route.ts` — assistant output normalize  
 - `lib/wisewave-extract.ts` — extracted fields normalize  
 - `app/api/chat/reflection/route.ts` — reflection summary normalize  
+
+---
+
+## Lumen v3 hosted rerun — closure (same 7-case batch)
+
+**After deploy:** Lumen re-ran the **same 7-case batch** on hosted.
+
+| Check | Result |
+|--------|--------|
+| **`debug_milestone_h_build_marker`** | **`milestone_h_v3`** ✓ |
+| **Light Mode** | Still on ✓ |
+| **Encoding / apostrophe garbling** | **Gone** on this rerun ✓ |
+| **Weak / ambiguous suppression** | Still correct (`vague_source`) ✓ |
+
+**Quality (verdict counts):**
+
+| Version | PASS | REVISE | FAIL |
+|---------|------|--------|------|
+| v2 | 4 | 3 | 0 |
+| v3 | 5 | 2 | 0 |
+
+**What improved (Lumen):** H3 less repetitive overall; guilt/rest and emotionally loaded everyday improved; encoding normalization working on hosted turn output; **H4 lane remains strong**.
+
+**Remaining watchpoint (not blocking):** H3 still slightly uneven on **prove myself** and **replay** conversations — not broken; not fully locked/sharp yet.
+
+**Lumen verdict:** **v3 is a real improvement**; **successful follow-up iteration**. Main remaining focus is **H3 precision**, not system stability.
