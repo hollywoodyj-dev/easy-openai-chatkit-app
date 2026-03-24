@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
+import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
 import { REFLECTION_SYSTEM_PROMPT } from "@/lib/wisewave-prompts";
 
 export const dynamic = "force-dynamic";
@@ -198,6 +199,9 @@ Return only the reflection text.`;
     summary = sanitizeReflection(
       data.choices?.[0]?.message?.content?.trim() ?? ""
     );
+    if (summary) {
+      summary = normalizeModelTextForStorage(summary);
+    }
     if (wantsChinese && summary) {
       summary = sanitizeChineseOutputLeaks(summary);
     }

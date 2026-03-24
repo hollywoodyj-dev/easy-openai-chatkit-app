@@ -104,6 +104,10 @@
 
 - **`milestone_h_v2`** build marker. Removed **insight length ≥ 96** and generic tokens (**uncertainty**, **reaction**, lone **pattern**) from H1-mild bypass — model insights always matched. **Insight bypass** now uses **high-precision phrases** only. Expanded **mild** user patterns (feel tense, worried I will, etc.).
 
+## 2026-02-08 — Lumen 7-case follow-up: H3 themes, H1 sharpness, encoding
+
+- **`milestone_h_v3`**: theme-specific **H3** pools (rest/guilt, reply anxiety, replay/ruminate, default); expanded **H1** templates; **ASCII** punctuation in fixed strings. **`lib/normalize-model-text.ts`** on assistant text, extraction fields, reflection summary. Doc: **`docs/HC_OS_V1_Milestone_H_Lumen_7case_Followup_Nova_2026-02-08.md`**.
+
 ## 2026-03-23 — Lumen: Milestone H QA round closure
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — Core passes closed; stabilization re-QA (Batch 2, `milestone_h_v2`, H-UI-2) verified hosted/browser; **ongoing drift monitoring** posture. **Not** Tree hard-close / Milestone I until exit gate. **`AGENTS.md`** updated.

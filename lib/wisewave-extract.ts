@@ -3,6 +3,8 @@
  * Used by /api/chat/turn before response generation. Failures are logged and return null.
  */
 
+import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
+
 export type ExtractedReflectionState = {
   trigger_label: string;
   emotion_label: string;
@@ -49,13 +51,30 @@ function parseExtractionOutput(raw: string): ExtractedReflectionState | null {
   }
   if (!parsed || typeof parsed !== "object") return null;
   const o = parsed as Record<string, unknown>;
+  const trigger_label =
+    typeof o.trigger_label === "string" ? o.trigger_label : DEFAULT_STATE.trigger_label;
+  const emotion_label =
+    typeof o.emotion_label === "string" ? o.emotion_label : DEFAULT_STATE.emotion_label;
+  const interpretation_label =
+    typeof o.interpretation_label === "string"
+      ? o.interpretation_label
+      : DEFAULT_STATE.interpretation_label;
+  const regulation_label =
+    typeof o.regulation_label === "string" ? o.regulation_label : DEFAULT_STATE.regulation_label;
+  const choice_label =
+    typeof o.choice_label === "string" ? o.choice_label : DEFAULT_STATE.choice_label;
+  const insight_candidate =
+    typeof o.insight_candidate === "string"
+      ? o.insight_candidate.trim()
+      : DEFAULT_STATE.insight_candidate;
+
   return {
-    trigger_label: typeof o.trigger_label === "string" ? o.trigger_label : DEFAULT_STATE.trigger_label,
-    emotion_label: typeof o.emotion_label === "string" ? o.emotion_label : DEFAULT_STATE.emotion_label,
-    interpretation_label: typeof o.interpretation_label === "string" ? o.interpretation_label : DEFAULT_STATE.interpretation_label,
-    regulation_label: typeof o.regulation_label === "string" ? o.regulation_label : DEFAULT_STATE.regulation_label,
-    choice_label: typeof o.choice_label === "string" ? o.choice_label : DEFAULT_STATE.choice_label,
-    insight_candidate: typeof o.insight_candidate === "string" ? o.insight_candidate.trim() : DEFAULT_STATE.insight_candidate,
+    trigger_label: normalizeModelTextForStorage(trigger_label),
+    emotion_label: normalizeModelTextForStorage(emotion_label),
+    interpretation_label: normalizeModelTextForStorage(interpretation_label),
+    regulation_label: normalizeModelTextForStorage(regulation_label),
+    choice_label: normalizeModelTextForStorage(choice_label),
+    insight_candidate: normalizeModelTextForStorage(insight_candidate),
   };
 }
 

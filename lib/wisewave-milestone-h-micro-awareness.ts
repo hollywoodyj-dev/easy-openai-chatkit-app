@@ -14,7 +14,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v2";
+const BUILD_MARKER = "milestone_h_v3";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -309,29 +309,126 @@ function hashPick(seed: string, modulo: number): number {
   return modulo > 0 ? h % modulo : 0;
 }
 
-/** H1 — generic micro awareness */
+/** H1 — generic micro awareness (ASCII punctuation; slightly sharper than v2, same gates). */
 const H1_TEMPLATES = {
   en: [
     "Something here might be worth noticing — without needing it to be named yet.",
-    "A little space might be here to notice what’s present, without fixing it.",
+    "A little space might be here to notice what is present, without fixing it.",
+    "What sits under the words might matter before the narrative settles.",
+    "The undertone here might be clearer than any quick label would allow.",
+    "Something specific in how this lands might ask for attention before it is explained away.",
   ],
   zh: [
     "这里或许有值得留意的地方，还不必急着把它说清楚。",
     "此刻也许有一点空间，去留意正在发生什么，而不必马上整理它。",
+    "事情背后可能还有一层，还不必急着把它命名。",
+    "语气之下或许有更要紧的东西，不必马上贴标签。",
+    "这段话里真正在用力的地方，也许值得先停一下再整理。",
   ],
 };
 
-/** H3 — pause-opening */
-const H3_TEMPLATES = {
-  en: [
-    "There can be a little room here, without deciding what comes next.",
-    "A pause might be enough; nothing else has to be decided right now.",
+/** H3 theme buckets — case-specific wording (Lumen 7-case follow-up); same suppression rules. */
+type H3ThemeKey = "default" | "rest_guilt" | "reply_anxiety" | "replay_ruminate";
+
+const H3_THEME_PAIRS: Record<H3ThemeKey, Array<{ en: string; zh: string }>> = {
+  default: [
+    {
+      en: "There can be a little room here, without deciding what comes next.",
+      zh: "这里可以有一点空间，不必马上决定下一步。",
+    },
+    {
+      en: "A pause might be enough; nothing else has to be decided right now.",
+      zh: "有时候停一下就够了，不必立刻把事情想完。",
+    },
+    {
+      en: "Not knowing the next move might be tolerable to sit with for a moment here.",
+      zh: "就算还不知道下一步，也可以先在这里停一小会儿。",
+    },
+    {
+      en: "Ambiguity about what follows might not need tightening in this exact moment.",
+      zh: "接下来会怎样还不清楚时，此刻也许不必急着把它收紧。",
+    },
   ],
-  zh: [
-    "这里可以有一点空间，不必马上决定下一步。",
-    "有时候停一下就够了，不必立刻把事情想完。",
+  rest_guilt: [
+    {
+      en: "Whatever guilt sits next to resting might be noticeable here, without forcing a verdict about it.",
+      zh: "想休息又带着愧疚的那股拉扯，也许可以先被看见，而不必马上判对错。",
+    },
+    {
+      en: "The tension around slowing or stopping might have room to be seen, not resolved on the spot.",
+      zh: "慢下来或停下来的那份紧绷，也许可以先被看见，而不必当场解开。",
+    },
+    {
+      en: "The split between needing a break and feeling you have not earned it might sit here quietly.",
+      zh: "需要喘息却又觉得不配停下来的矛盾，也许可以先轻轻停在这里。",
+    },
+  ],
+  reply_anxiety: [
+    {
+      en: "The wait for a reply might carry its own weight here, separate from what the silence means.",
+      zh: "等待回复的这段时间本身，也许有它自己的分量，还不必急着定义沉默。",
+    },
+    {
+      en: "The gap after you reached out might be worth noticing on its own, before naming what it proves.",
+      zh: "发出消息之后的那段空档，也许值得先被留意，而不必马上说明它证明了什么。",
+    },
+    {
+      en: "Uncertainty about whether you were seen might deserve a softer hold than a full story.",
+      zh: "不确定对方有没有看见你的那份悬着，也许可以用更轻的方式托住，而不必立刻编成结论。",
+    },
+  ],
+  replay_ruminate: [
+    {
+      en: "A loop replaying the same scene might be visible as motion here, without needing a new conclusion.",
+      zh: "同一段画面在脑子里重播时，那种来回也许可以先被看见，而不必马上得出新结论。",
+    },
+    {
+      en: "Going over it again can leave space to notice the replay itself, not only the details inside it.",
+      zh: "反复想同一件事时，也许可以留一点空隙去留意重播本身，而不只是里面的细节。",
+    },
+    {
+      en: "When the mind returns to the same beat, the return might be noticeable before the content is settled.",
+      zh: "心思又回到同一条线时，那种折返也许可以先被看见，而不必先把内容想清楚。",
+    },
   ],
 };
+
+function detectH3ThemeKey(userMessage: string): H3ThemeKey {
+  const t = normalizeApostrophesForHeuristics(userMessage.toLowerCase());
+  const raw = userMessage;
+  if (
+    /\b(replay|ruminate|ruminating|over and over|same (thing|conversation|scenario)|spiral|on repeat|stuck (on|thinking)|keep (going over|rehashing))\b/i.test(
+      t
+    ) ||
+    /反复|重播|循环|一直想|重复|没完没了|重想/.test(raw)
+  ) {
+    return "replay_ruminate";
+  }
+  if (
+    /\b(no reply|didn'?t reply|won'?t reply|ghost(ed|ing)?|left on read|read receipt|waiting (for (a |the )?)?(reply|text|message))\b/i.test(
+      t
+    ) ||
+    /不回|已读|消息|等着|不回复|没回/.test(raw)
+  ) {
+    return "reply_anxiety";
+  }
+  if (
+    /\b(rest|resting|rested|sleep|sleeping|slept|nap|guilty|guilt|lazy|don'?t deserve|shouldn'?t be (resting|relaxing)|lying down|downtime)\b/i.test(
+      t
+    ) ||
+    /休息|睡|愧疚|内疚|懒散|不该休息|不配休息/.test(raw)
+  ) {
+    return "rest_guilt";
+  }
+  return "default";
+}
+
+function pickH3Template(seed: string, userMessage: string): { en: string; zh: string } {
+  const theme = detectH3ThemeKey(userMessage);
+  const pool = H3_THEME_PAIRS[theme];
+  const i = hashPick(`${seed}:H3:${theme}`, pool.length);
+  return pool[i]!;
+}
 
 /** H4 — over-effort softening */
 const H4_TEMPLATES = {
@@ -357,15 +454,20 @@ const H5_TEMPLATES = {
   ],
 };
 
-function pickTemplate(kind: MicroAwarenessKind, seed: string): { en: string; zh: string } {
+function pickTemplate(
+  kind: MicroAwarenessKind,
+  seed: string,
+  userMessage: string
+): { en: string; zh: string } {
+  if (kind === "H3") {
+    return pickH3Template(seed, userMessage);
+  }
   const pool =
     kind === "H1"
       ? H1_TEMPLATES
-      : kind === "H3"
-        ? H3_TEMPLATES
-        : kind === "H4"
-          ? H4_TEMPLATES
-          : H5_TEMPLATES;
+      : kind === "H4"
+        ? H4_TEMPLATES
+        : H5_TEMPLATES;
   const i = hashPick(`${seed}:${kind}`, pool.en.length);
   return { en: pool.en[i]!, zh: pool.zh[i]! };
 }
@@ -693,7 +795,7 @@ export function computeMicroAwarenessCue(params: {
     return { status: "suppressed", reason: "h1_mild_reflective_insufficient" };
   }
 
-  const pair = pickTemplate(kind, seed);
+  const pair = pickTemplate(kind, seed, userMessage);
 
   // Strict stabilization linter: guardrail only (suppress; never generate new H).
   if (isMilestoneHStrictLinterEnabled()) {

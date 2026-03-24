@@ -26,6 +26,7 @@ import {
   milestoneHLightModeBuildMarker,
   milestoneHLightModeSystemAppendix,
 } from "@/lib/wisewave-milestone-h-light-mode";
+import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -1097,6 +1098,9 @@ export async function POST(request: Request) {
     };
     assistantContent =
       data.choices?.[0]?.message?.content?.trim() ?? "";
+    if (assistantContent) {
+      assistantContent = normalizeModelTextForStorage(assistantContent);
+    }
     if (wantsChinese && assistantContent) {
       assistantContent = sanitizeChineseOutputLeaks(assistantContent);
     }
