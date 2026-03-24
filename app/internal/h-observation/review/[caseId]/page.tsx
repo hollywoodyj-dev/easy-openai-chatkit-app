@@ -139,6 +139,8 @@ export default function HObservationReviewPage() {
   const [snapshotJson, setSnapshotJson] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [draftPreview, setDraftPreview] = useState("");
+  const [draftFull, setDraftFull] = useState("");
 
   const load = useCallback(async () => {
     if (!caseId) return;
@@ -153,6 +155,8 @@ export default function HObservationReviewPage() {
     }
     const c = (await res.json()) as ObservationReviewCase;
     setData(c);
+    setDraftPreview(c.queueItem.previewText);
+    setDraftFull(c.queueItem.fullInput ?? c.queueItem.previewText);
     setLog(c.reviewLog ?? defaultLog(caseId));
     setSnapshotJson(
       c.responseSnapshot
@@ -216,6 +220,25 @@ export default function HObservationReviewPage() {
       return false;
     }
     return true;
+  }
+
+  async function savePromptDrafts() {
+    if (!caseId || !data) return;
+    setBusy(true);
+    setError(null);
+    const res = await observationFetch(
+      `/api/internal/h-observation/queue/${encodeURIComponent(caseId)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          previewText: draftPreview,
+          fullInput: draftFull,
+        }),
+      }
+    );
+    if (!res.ok) setError(await res.text());
+    else await load();
+    setBusy(false);
   }
 
   async function saveSnapshot() {
@@ -295,6 +318,82 @@ export default function HObservationReviewPage() {
         <p className="text-sm text-neutral-500">Loading…</p>
       ) : (
         <div className="space-y-6 max-w-4xl">
+          {(data.queueItem.benchmarkSet ||
+            data.queueItem.sourceType === "benchmark") && (
+            <section className="rounded border border-violet-300 bg-violet-50 p-3 text-xs text-violet-950 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-100">
+              <p className="font-semibold">Benchmark / exact QA row</p>
+              <dl className="mt-1 grid gap-1 sm:grid-cols-2">
+                {data.queueItem.benchmarkSet ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      benchmarkSet
+                    </dt>
+                    <dd className="font-mono">{data.queueItem.benchmarkSet}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.benchmarkCaseId ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      benchmarkCaseId
+                    </dt>
+                    <dd className="font-mono">{data.queueItem.benchmarkCaseId}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.benchmarkLayer ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      benchmarkLayer
+                    </dt>
+                    <dd className="font-mono">{data.queueItem.benchmarkLayer}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.observationMilestone ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      milestone
+                    </dt>
+                    <dd className="font-mono">{data.queueItem.observationMilestone}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.suiteName ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      suiteName
+                    </dt>
+                    <dd>{data.queueItem.suiteName}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.runLabel ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      runLabel
+                    </dt>
+                    <dd>{data.queueItem.runLabel}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.runAt ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      runAt
+                    </dt>
+                    <dd className="font-mono">{data.queueItem.runAt}</dd>
+                  </>
+                ) : null}
+                {data.queueItem.runOwner ? (
+                  <>
+                    <dt className="text-violet-800/80 dark:text-violet-200/80">
+                      owner
+                    </dt>
+                    <dd>{data.queueItem.runOwner}</dd>
+                  </>
+                ) : null}
+              </dl>
+              <p className="mt-2 text-violet-900/90 dark:text-violet-100/90">
+                The text below is the <strong>exact</strong> queue payload for this case
+                (no generator substitution).
+              </p>
+            </section>
+          )}
           <section className="rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100">
             <p className="font-medium">First-run flow (recommended)</p>
             <ol className="list-decimal pl-4 mt-1 space-y-0.5">
@@ -310,10 +409,48 @@ export default function HObservationReviewPage() {
             </ol>
           </section>
           <section>
-            <h2 className="font-medium text-sm mb-1">Raw input</h2>
-            <pre className="text-xs whitespace-pre-wrap rounded border border-neutral-300 dark:border-neutral-600 p-3 bg-neutral-50 dark:bg-neutral-900/50">
-              {data.queueItem.fullInput ?? data.queueItem.previewText}
-            </pre>
+            <h2 className="font-medium text-sm mb-1">
+              Exact prompt under test (raw input)
+            </h2>
+            {(data.queueItem.reviewStatus === "queued" ||
+              data.queueItem.reviewStatus === "in_review") && (
+              <div className="mb-3 space-y-2">
+                <label className="block text-xs text-neutral-600 dark:text-neutral-400">
+                  previewText (list preview)
+                  <textarea
+                    className="mt-1 w-full min-h-[56px] font-mono text-xs rounded border border-neutral-300 dark:border-neutral-600 p-2 bg-white dark:bg-neutral-900"
+                    value={draftPreview}
+                    onChange={(e) => setDraftPreview(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs text-neutral-600 dark:text-neutral-400">
+                  fullInput (exact user message to run in /chat)
+                  <textarea
+                    className="mt-1 w-full min-h-[120px] font-mono text-xs rounded border border-neutral-300 dark:border-neutral-600 p-2 bg-white dark:bg-neutral-900"
+                    value={draftFull}
+                    onChange={(e) => setDraftFull(e.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="rounded border border-neutral-400 px-3 py-1 text-sm dark:border-neutral-600"
+                  onClick={savePromptDrafts}
+                >
+                  Save prompt to queue row
+                </button>
+                <p className="text-xs text-neutral-500">
+                  Only <code>queued</code> / <code>in_review</code> rows can be edited.
+                  Completed cases are read-only for evidence integrity.
+                </p>
+              </div>
+            )}
+            {(data.queueItem.reviewStatus === "completed" ||
+              data.queueItem.reviewStatus === "skipped") && (
+              <pre className="text-xs whitespace-pre-wrap rounded border border-neutral-300 dark:border-neutral-600 p-3 bg-neutral-50 dark:bg-neutral-900/50">
+                {data.queueItem.fullInput ?? data.queueItem.previewText}
+              </pre>
+            )}
           </section>
 
           <section>

@@ -11,10 +11,12 @@ function ExportDownloadButton({
   date,
   format,
   label,
+  benchmarkSet,
 }: {
   date: string;
   format: "markdown" | "csv" | "json";
   label: string;
+  benchmarkSet?: string;
 }) {
   const [busy, setBusy] = useState(false);
   return (
@@ -25,8 +27,15 @@ function ExportDownloadButton({
       onClick={async () => {
         setBusy(true);
         try {
+          const q = new URLSearchParams({
+            date,
+            format,
+          });
+          if (benchmarkSet?.trim()) {
+            q.set("benchmarkSet", benchmarkSet.trim());
+          }
           const res = await observationFetch(
-            `/api/internal/h-observation/export?date=${encodeURIComponent(date)}&format=${format}`
+            `/api/internal/h-observation/export?${q.toString()}`
           );
           if (!res.ok) {
             window.alert(await res.text());
@@ -34,9 +43,13 @@ function ExportDownloadButton({
           }
           const blob = await res.blob();
           const ext = format === "markdown" ? "md" : format;
+          const benchSuffix =
+            benchmarkSet?.trim()
+              ? `-${benchmarkSet.trim().replace(/[^a-zA-Z0-9._-]+/g, "_")}`
+              : "";
           const a = document.createElement("a");
           a.href = URL.createObjectURL(blob);
-          a.download = `h-observation-${date}.${ext}`;
+          a.download = `h-observation-${date}${benchSuffix}.${ext}`;
           a.click();
           URL.revokeObjectURL(a.href);
         } finally {
@@ -55,13 +68,18 @@ function todayUtc(): string {
 
 export default function HObservationSummaryPage() {
   const [date, setDate] = useState(todayUtc);
+  const [benchmarkSet, setBenchmarkSet] = useState("");
   const [summary, setSummary] = useState<ObservationDailySummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
+    const q = new URLSearchParams({ date });
+    if (benchmarkSet.trim()) {
+      q.set("benchmarkSet", benchmarkSet.trim());
+    }
     const res = await observationFetch(
-      `/api/internal/h-observation/summary?date=${encodeURIComponent(date)}`
+      `/api/internal/h-observation/summary?${q.toString()}`
     );
     if (!res.ok) {
       setError(await res.text());
@@ -70,7 +88,7 @@ export default function HObservationSummaryPage() {
     }
     const data = (await res.json()) as { summary: ObservationDailySummary };
     setSummary(data.summary);
-  }, [date]);
+  }, [date, benchmarkSet]);
 
   useEffect(() => {
     load();
@@ -105,6 +123,16 @@ export default function HObservationSummaryPage() {
             onChange={(e) => setDate(e.target.value)}
           />
         </label>
+        <label className="text-sm">
+          benchmarkSet filter (optional)
+          <input
+            type="text"
+            placeholder="e.g. lumen-daily-core-7 or __passive__"
+            className="mt-1 block w-56 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 font-mono text-xs"
+            value={benchmarkSet}
+            onChange={(e) => setBenchmarkSet(e.target.value)}
+          />
+        </label>
         <button
           type="button"
           className="rounded border border-neutral-400 px-3 py-1.5 text-sm dark:border-neutral-600"
@@ -112,9 +140,24 @@ export default function HObservationSummaryPage() {
         >
           Refresh
         </button>
-        <ExportDownloadButton date={date} format="markdown" label="Download MD" />
-        <ExportDownloadButton date={date} format="csv" label="Download CSV" />
-        <ExportDownloadButton date={date} format="json" label="Download JSON" />
+        <ExportDownloadButton
+          date={date}
+          benchmarkSet={benchmarkSet}
+          format="markdown"
+          label="Download MD"
+        />
+        <ExportDownloadButton
+          date={date}
+          benchmarkSet={benchmarkSet}
+          format="csv"
+          label="Download CSV"
+        />
+        <ExportDownloadButton
+          date={date}
+          benchmarkSet={benchmarkSet}
+          format="json"
+          label="Download JSON"
+        />
       </div>
       <p className="text-xs text-neutral-500 mb-4">
         Downloads use your saved API key. For curl: send{" "}

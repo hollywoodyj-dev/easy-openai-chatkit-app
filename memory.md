@@ -120,6 +120,10 @@
 
 - **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — Tree + Lumen; no-change 1–3d window; *forget H*; daily rollup; optional Notion/Nova logger noted. Linked from Tree plan, Wisewave soft-pass, drift checklist, Lumen results, **`AGENTS.md`**.
 
+## 2026-02-09 — Observation tool: custom benchmark queue rows
+
+- **`POST /api/internal/h-observation/queue/custom`** — exact `fullInput` / metadata (`benchmarkSet`, `benchmarkCaseId`, `benchmarkLayer`, `observationMilestone`, run fields). Prisma columns on `HObservationQueueItem`. Filter **`benchmarkSet`** on queue GET, summary, export, review list; **`__passive__`** = rows without `benchmarkSet`. **`PATCH .../queue/[caseId]`** can update `previewText`/`fullInput` while `queued`/`in_review`. UI: queue panel + review benchmark banner + prompt editor. **`prisma db push`** required for new columns.
+
 ## 2026-02-08 — Nova: Milestone H observation queue + logging UI (v1)
 
 - **`docs/HC_OS_V1_Milestone_H_Nova_Observation_Queue_Tool.md`** — `lib/milestone-h-observation/*`, **`/internal/h-observation`**, **`/api/internal/h-observation/*`**, workspace store **`data/h-observation/`** (gitignored live JSON). Optional **`H_OBSERVATION_API_KEY`**. 30-scenario pack in code; real samples via `real-samples.json`. No auto milestone verdict.

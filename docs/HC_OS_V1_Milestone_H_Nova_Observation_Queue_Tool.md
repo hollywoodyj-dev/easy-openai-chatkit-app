@@ -31,22 +31,33 @@
 
 ## API (summary)
 
-- `GET/POST /api/internal/h-observation/queue` — list; generate batch (append).
-- `PATCH /api/internal/h-observation/queue/[caseId]` — `reviewStatus`.
+- `GET/POST /api/internal/h-observation/queue` — list; generate batch (append).  
+  - Optional `?status=queued|in_review|completed|skipped`.  
+  - Optional `?benchmarkSet=<id>` — filter rows; use `__passive__` for rows **without** a benchmark set (passive / generated only).
+- `POST /api/internal/h-observation/queue/custom` — **benchmark / exact QA rows** (body `{ items: [...] }`).  
+  - Each item: `language`, `conversationType`, `signalStrength`, `previewText`, `fullInput`, optional `tags`, `benchmarkSet`, `benchmarkCaseId`, `benchmarkLayer`, `observationMilestone` (e.g. `H`), `runLabel`, `runAt`, `runOwner`, `suiteName`, optional explicit `caseId`.  
+  - Either **`caseId`** or **`benchmarkSet` + `benchmarkCaseId`** required. Default `sourceType` is **`benchmark`**.  
+  - Derived `caseId` includes a short hash of `fullInput` so the same suite id + case id + text stays stable; re-post **upserts**.
+- `PATCH /api/internal/h-observation/queue/[caseId]` — `reviewStatus` and/or `previewText` / `fullInput` (prompt edit only while `queued` | `in_review`).
 - `GET /api/internal/h-observation/case/[caseId]` — queue row + snapshot + review.
 - `PUT /api/internal/h-observation/snapshot/[caseId]` — save response snapshot (JSON).
-- `GET/POST /api/internal/h-observation/review` — list by `?date=`; submit log (`?force=1` overrides strict validation).
-- `GET /api/internal/h-observation/summary?date=YYYY-MM-DD`
-- `GET /api/internal/h-observation/export?date=&format=markdown|csv|json`
+- `GET/POST /api/internal/h-observation/review` — list by `?date=` and optional `?benchmarkSet=`; submit log (`?force=1` overrides strict validation).
+- `GET /api/internal/h-observation/summary?date=YYYY-MM-DD` — optional `&benchmarkSet=` (same semantics as queue).
+- `GET /api/internal/h-observation/export?date=&format=markdown|csv|json` — optional `&benchmarkSet=`.
 - `POST /api/internal/h-observation/hourly` — alias batch generate (~4 cases).
+
+### Deploy note (schema)
+
+New queue columns require **`prisma db push`** (or a migration) on the target database before custom rows work in production.
 
 ## Workflow
 
-1. Pull cases — generate queue (hourly or manual).  
-2. Queue — status `queued` → `in_review` → `completed` / `skipped`.  
-3. Human review — open case, paste reduced snapshot JSON if needed; **Submit log** auto-persists the snapshot when JSON is valid and `fullResponseText` is non-empty (optional **Save snapshot** if saving before submit).  
-4. Daily summary — suppression ratio, removal distribution, drift counts, verdict counts.  
-5. Export — CSV / Markdown / JSON for Tree / archive.
+1. **Passive observation** — generate queue (hourly or manual) from scenario pack + trusted real samples.  
+2. **Benchmark / exact QA** — `POST /queue/custom` or Queue UI “custom benchmark rows” with the exact prompts; filter list/summary/export by `benchmarkSet` so passive stats do not mix with suite stats.  
+3. Queue — status `queued` → `in_review` → `completed` / `skipped`.  
+4. Human review — benchmark rows show metadata + exact `fullInput`; editable prompts while not completed. Paste reduced snapshot JSON; **Submit log** auto-persists snapshot when valid and `fullResponseText` is non-empty.  
+5. Daily summary — optional benchmark filter (`__passive__` = non-benchmark only).  
+6. Export — CSV / Markdown / JSON for Tree / archive (same filters).
 
 ## Lumen — first-run QA watchpoints
 

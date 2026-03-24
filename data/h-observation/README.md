@@ -19,3 +19,7 @@ The JSON files in this folder are mainly for **sampling inputs** (optional).
 The queue generator only treats a `real-samples.json` row as `sourceType: "real"` when its `fullInput` looks like actual anonymized user text.
 
 If a row still contains placeholder/template strings (for example the defaults in `real-samples.example.json`), it is considered untrusted and will be excluded from `sourceType: "real"` sampling. In that case, the queue fills the remaining slots with `sourceType: "scenario"` cases.
+
+## Benchmark / exact QA rows (no JSON file required)
+
+For **fixed prompt sets** (e.g. daily-7 / regression-14 / confidence-25), use **`POST /api/internal/h-observation/queue/custom`** or the **Custom benchmark rows** panel on `/internal/h-observation/queue`. Rows are stored in Postgres with `sourceType: benchmark` and optional `benchmarkSet`, `benchmarkCaseId`, `benchmarkLayer`, `observationMilestone`, run metadata, etc. Summary and export accept `benchmarkSet` (or `__passive__` to exclude benchmark rows).

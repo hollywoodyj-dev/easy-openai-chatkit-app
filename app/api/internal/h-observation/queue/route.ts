@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { guardObservationApi } from "@/lib/milestone-h-observation/api-guard";
 import { generateQueue } from "@/lib/milestone-h-observation/queue-generate";
+import { filterQueueItemsByBenchmarkParam } from "@/lib/milestone-h-observation/custom-benchmark-queue";
 import {
   appendQueueItems,
   listQueueItems,
@@ -16,7 +17,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
+  const benchmarkSet = searchParams.get("benchmarkSet");
   let items = await listQueueItems();
+  items = filterQueueItemsByBenchmarkParam(items, benchmarkSet);
   if (!status) {
     items = items.filter((x) => x.reviewStatus === "queued" || x.reviewStatus === "in_review");
   }

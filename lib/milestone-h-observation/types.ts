@@ -5,7 +5,7 @@
 
 // ===== Core enums =====
 
-export type SourceType = "real" | "scenario";
+export type SourceType = "real" | "scenario" | "benchmark";
 export type Language = "en" | "zh";
 export type ConversationType = "reflective" | "mixed" | "factual";
 export type SignalStrength = "low" | "medium" | "high";
@@ -52,6 +52,36 @@ export interface ObservationQueueItem {
   createdAt: string; // ISO8601
   reviewStatus: ReviewStatus;
   tags?: string[];
+  /** Set for custom/benchmark rows; omit/null for passive or generated scenario/real rows. */
+  benchmarkSet?: string | null;
+  benchmarkCaseId?: string | null;
+  benchmarkLayer?: string | null;
+  /** Milestone under test (H today; E/F/G later). */
+  observationMilestone?: string | null;
+  runLabel?: string | null;
+  runAt?: string | null;
+  runOwner?: string | null;
+  suiteName?: string | null;
+}
+
+/** API body item for POST /queue/custom (partial; server fills caseId, createdAt, reviewStatus). */
+export interface CustomObservationQueueItemInput {
+  caseId?: string;
+  sourceType?: SourceType;
+  language: Language;
+  conversationType: ConversationType;
+  signalStrength: SignalStrength;
+  previewText: string;
+  fullInput: string;
+  tags?: string[];
+  benchmarkSet?: string;
+  benchmarkCaseId?: string;
+  benchmarkLayer?: string;
+  observationMilestone?: string;
+  runLabel?: string;
+  runAt?: string;
+  runOwner?: string;
+  suiteName?: string;
 }
 
 // ===== Generated response snapshot =====

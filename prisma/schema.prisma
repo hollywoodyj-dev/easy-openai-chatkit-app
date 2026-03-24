@@ -188,6 +188,18 @@ model HObservationQueueItem {
   createdAt        DateTime @map("created_at")
   reviewStatus     String   @map("review_status")
   tags             Json?    // e.g. ["mild_affect", "placeholder"]
+
+  /// Named benchmark suite (e.g. lumen-daily-core-7). Null = passive / generated row.
+  benchmarkSet         String? @map("benchmark_set")
+  benchmarkCaseId      String? @map("benchmark_case_id")
+  benchmarkLayer       String? @map("benchmark_layer") // e.g. daily-7, regression-14
+  observationMilestone String? @map("observation_milestone") // H, E, F, G, …
+  runLabel             String? @map("run_label")
+  runAt                String? @map("run_at") // ISO or human label from operator
+  runOwner             String? @map("run_owner")
+  suiteName            String? @map("suite_name")
+
+  @@index([benchmarkSet])
 }
 
 model HObservationSnapshot {

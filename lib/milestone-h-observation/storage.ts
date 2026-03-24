@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { PASSIVE_BENCHMARK_QUERY } from "./custom-benchmark-queue";
 import type {
   ObservationQueueItem,
   ObservationResponseSnapshot,
@@ -47,11 +48,27 @@ export function listRealSamples(): RealSampleRow[] {
 
 // ===== Queue (persistent in Postgres) =====
 
-export async function listQueueItems(): Promise<ObservationQueueItem[]> {
-  const rows = await prisma.hObservationQueueItem.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return rows.map((r) => ({
+function mapDbRowToQueueItem(r: {
+  caseId: string;
+  sourceType: string;
+  language: string;
+  conversationType: string;
+  signalStrength: string;
+  previewText: string;
+  fullInput: string;
+  createdAt: Date;
+  reviewStatus: string;
+  tags: Prisma.JsonValue;
+  benchmarkSet: string | null;
+  benchmarkCaseId: string | null;
+  benchmarkLayer: string | null;
+  observationMilestone: string | null;
+  runLabel: string | null;
+  runAt: string | null;
+  runOwner: string | null;
+  suiteName: string | null;
+}): ObservationQueueItem {
+  return {
     caseId: r.caseId,
     sourceType: r.sourceType as ObservationQueueItem["sourceType"],
     language: r.language as ObservationQueueItem["language"],
@@ -61,45 +78,68 @@ export async function listQueueItems(): Promise<ObservationQueueItem[]> {
     fullInput: r.fullInput,
     createdAt: r.createdAt.toISOString(),
     reviewStatus: r.reviewStatus as ObservationQueueItem["reviewStatus"],
-    tags: (r.tags as string[] | null) ?? undefined,
-  }));
+    tags: Array.isArray(r.tags) ? (r.tags as string[]) : undefined,
+    benchmarkSet: r.benchmarkSet,
+    benchmarkCaseId: r.benchmarkCaseId,
+    benchmarkLayer: r.benchmarkLayer,
+    observationMilestone: r.observationMilestone,
+    runLabel: r.runLabel,
+    runAt: r.runAt,
+    runOwner: r.runOwner,
+    suiteName: r.suiteName,
+  };
+}
+
+async function upsertQueueItemRow(it: ObservationQueueItem): Promise<void> {
+  const fullInput = it.fullInput ?? it.previewText;
+  const core = {
+    sourceType: it.sourceType,
+    language: it.language,
+    conversationType: it.conversationType,
+    signalStrength: it.signalStrength,
+    previewText: it.previewText,
+    fullInput,
+    createdAt: new Date(it.createdAt),
+    reviewStatus: it.reviewStatus,
+    benchmarkSet: it.benchmarkSet ?? null,
+    benchmarkCaseId: it.benchmarkCaseId ?? null,
+    benchmarkLayer: it.benchmarkLayer ?? null,
+    observationMilestone: it.observationMilestone ?? null,
+    runLabel: it.runLabel ?? null,
+    runAt: it.runAt ?? null,
+    runOwner: it.runOwner ?? null,
+    suiteName: it.suiteName ?? null,
+  };
+  await prisma.hObservationQueueItem.upsert({
+    where: { caseId: it.caseId },
+    update: {
+      ...core,
+      ...(it.tags !== undefined
+        ? { tags: it.tags as unknown as Prisma.InputJsonValue }
+        : {}),
+    },
+    create: {
+      caseId: it.caseId,
+      ...core,
+      tags: it.tags?.length
+        ? (it.tags as unknown as Prisma.InputJsonValue)
+        : undefined,
+    },
+  });
+}
+
+export async function listQueueItems(): Promise<ObservationQueueItem[]> {
+  const rows = await prisma.hObservationQueueItem.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapDbRowToQueueItem);
 }
 
 export async function saveQueueItems(
   items: ObservationQueueItem[]
 ): Promise<void> {
-  // Upsert is enough; we don't need full array writes.
   for (const it of items) {
-    await prisma.hObservationQueueItem.upsert({
-      where: { caseId: it.caseId },
-      update: {
-        sourceType: it.sourceType,
-        language: it.language,
-        conversationType: it.conversationType,
-        signalStrength: it.signalStrength,
-        previewText: it.previewText,
-        fullInput: it.fullInput ?? it.previewText,
-        createdAt: new Date(it.createdAt),
-        reviewStatus: it.reviewStatus,
-        tags: it.tags
-          ? (it.tags as unknown as Prisma.InputJsonValue)
-          : undefined,
-      },
-      create: {
-        caseId: it.caseId,
-        sourceType: it.sourceType,
-        language: it.language,
-        conversationType: it.conversationType,
-        signalStrength: it.signalStrength,
-        previewText: it.previewText,
-        fullInput: it.fullInput ?? it.previewText,
-        createdAt: new Date(it.createdAt),
-        reviewStatus: it.reviewStatus,
-        tags: it.tags
-          ? (it.tags as unknown as Prisma.InputJsonValue)
-          : undefined,
-      },
-    });
+    await upsertQueueItemRow(it);
   }
 }
 
@@ -107,36 +147,7 @@ export async function appendQueueItems(
   items: ObservationQueueItem[]
 ): Promise<void> {
   for (const it of items) {
-    await prisma.hObservationQueueItem.upsert({
-      where: { caseId: it.caseId },
-      update: {
-        sourceType: it.sourceType,
-        language: it.language,
-        conversationType: it.conversationType,
-        signalStrength: it.signalStrength,
-        previewText: it.previewText,
-        fullInput: it.fullInput ?? it.previewText,
-        createdAt: new Date(it.createdAt),
-        reviewStatus: it.reviewStatus,
-        tags: it.tags
-          ? (it.tags as unknown as Prisma.InputJsonValue)
-          : undefined,
-      },
-      create: {
-        caseId: it.caseId,
-        sourceType: it.sourceType,
-        language: it.language,
-        conversationType: it.conversationType,
-        signalStrength: it.signalStrength,
-        previewText: it.previewText,
-        fullInput: it.fullInput ?? it.previewText,
-        createdAt: new Date(it.createdAt),
-        reviewStatus: it.reviewStatus,
-        tags: it.tags
-          ? (it.tags as unknown as Prisma.InputJsonValue)
-          : undefined,
-      },
-    });
+    await upsertQueueItemRow(it);
   }
 }
 
@@ -156,18 +167,42 @@ export async function getQueueItem(
 ): Promise<ObservationQueueItem | null> {
   const r = await prisma.hObservationQueueItem.findUnique({ where: { caseId } });
   if (!r) return null;
-  return {
-    caseId: r.caseId,
-    sourceType: r.sourceType as ObservationQueueItem["sourceType"],
-    language: r.language as ObservationQueueItem["language"],
-    conversationType: r.conversationType as ObservationQueueItem["conversationType"],
-    signalStrength: r.signalStrength as ObservationQueueItem["signalStrength"],
-    previewText: r.previewText,
-    fullInput: r.fullInput,
-    createdAt: r.createdAt.toISOString(),
-    reviewStatus: r.reviewStatus as ObservationQueueItem["reviewStatus"],
-    tags: (r.tags as string[] | null) ?? undefined,
-  };
+  return mapDbRowToQueueItem(r);
+}
+
+/** Update preview/fullInput for rows still in queued | in_review (benchmark QA edits). */
+export async function updateQueueItemPrompt(
+  caseId: string,
+  patch: { previewText?: string; fullInput?: string }
+): Promise<{ ok: boolean; reason?: string }> {
+  const row = await prisma.hObservationQueueItem.findUnique({ where: { caseId } });
+  if (!row) return { ok: false, reason: "not_found" };
+  if (!["queued", "in_review"].includes(row.reviewStatus)) {
+    return { ok: false, reason: "not_editable_status" };
+  }
+  const data: Prisma.HObservationQueueItemUpdateInput = {};
+  if (patch.previewText !== undefined) data.previewText = patch.previewText;
+  if (patch.fullInput !== undefined) data.fullInput = patch.fullInput;
+  if (Object.keys(data).length === 0) return { ok: true };
+  await prisma.hObservationQueueItem.update({ where: { caseId }, data });
+  return { ok: true };
+}
+
+/** Filter review logs by benchmark set or passive-only (see PASSIVE_BENCHMARK_QUERY). */
+export async function filterReviewLogsByBenchmarkSet(
+  logs: ObservationReviewLog[],
+  benchmarkSetParam: string | null | undefined
+): Promise<ObservationReviewLog[]> {
+  if (!benchmarkSetParam?.trim()) return logs;
+  const rows = await prisma.hObservationQueueItem.findMany({
+    select: { caseId: true, benchmarkSet: true },
+  });
+  const byCase = new Map(rows.map((x) => [x.caseId, x.benchmarkSet]));
+  const v = benchmarkSetParam.trim();
+  if (v === PASSIVE_BENCHMARK_QUERY) {
+    return logs.filter((r) => !byCase.get(r.caseId));
+  }
+  return logs.filter((r) => byCase.get(r.caseId) === v);
 }
 
 // ===== Snapshots =====

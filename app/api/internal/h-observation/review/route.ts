@@ -3,6 +3,7 @@ import { guardObservationApi } from "@/lib/milestone-h-observation/api-guard";
 import { validateReviewLog } from "@/lib/milestone-h-observation/validation";
 import {
   appendReview,
+  filterReviewLogsByBenchmarkSet,
   getQueueItem,
   listReviews,
   updateQueueItemStatus,
@@ -18,11 +19,16 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
+  const benchmarkSet = searchParams.get("benchmarkSet");
   let logs = await listReviews();
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
     logs = logs.filter((r) => r.reviewedAt.startsWith(date));
   }
-  return NextResponse.json({ reviews: logs });
+  logs = await filterReviewLogsByBenchmarkSet(logs, benchmarkSet);
+  return NextResponse.json({
+    reviews: logs,
+    benchmarkSet: benchmarkSet ?? null,
+  });
 }
 
 /** POST body: ObservationReviewLog; ?force=true skips strict validation contradictions */
