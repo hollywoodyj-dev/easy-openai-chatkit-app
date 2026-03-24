@@ -50,6 +50,10 @@
 
 New queue columns require **`prisma db push`** (or a migration) on the target database before custom rows work in production.
 
+### Reporting discipline
+
+Lumen / Wisewave (2026-03-24): keep **passive** observation suppression metrics **separate** from **benchmark-set** metrics. See **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`**.
+
 ## Workflow
 
 1. **Passive observation** — generate queue (hourly or manual) from scenario pack + trusted real samples.  

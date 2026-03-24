@@ -120,6 +120,10 @@
 
 - **`docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`** — Tree + Lumen; no-change 1–3d window; *forget H*; daily rollup; optional Notion/Nova logger noted. Linked from Tree plan, Wisewave soft-pass, drift checklist, Lumen results, **`AGENTS.md`**.
 
+## 2026-03-24 — Lumen + Wisewave: benchmark end-of-day summary
+
+- Three suites on hosted (`lumen-daily-core-7`, `lumen-regression-14`, `lumen-confidence-25`) via custom queue rows; **passive vs benchmark suppression ratios must stay separate**. **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`**; pointer in **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`**, **`docs/QA_HANDOFF.md`** §8.
+
 ## 2026-02-09 — Observation tool: custom benchmark queue rows
 
 - **`POST /api/internal/h-observation/queue/custom`** — exact `fullInput` / metadata (`benchmarkSet`, `benchmarkCaseId`, `benchmarkLayer`, `observationMilestone`, run fields). Prisma columns on `HObservationQueueItem`. Filter **`benchmarkSet`** on queue GET, summary, export, review list; **`__passive__`** = rows without `benchmarkSet`. **`PATCH .../queue/[caseId]`** can update `previewText`/`fullInput` while `queued`/`in_review`. UI: queue panel + review benchmark banner + prompt editor. **`prisma db push`** required for new columns.

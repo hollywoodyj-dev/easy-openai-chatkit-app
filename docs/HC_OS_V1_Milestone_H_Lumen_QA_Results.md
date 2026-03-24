@@ -364,6 +364,10 @@ Lumen verified browser behavior on live `/chat`:
 
 **Verdict:** v3 counted as a **successful follow-up iteration**; H3 less repetitive (guilt/rest, everyday affect); H4 still strong. **Ongoing watchpoint:** H3 precision on **prove myself** and **replay** threads (uneven, not broken). Detail: **`docs/HC_OS_V1_Milestone_H_Lumen_7case_Followup_Nova_2026-02-08.md`** (closure section).
 
+### Addendum — End-of-day benchmark suites (2026-03-24)
+
+Lumen completed three filtered benchmark sets on hosted (`lumen-daily-core-7`, `lumen-regression-14`, `lumen-confidence-25`) using the **custom observation row** path; Wisewave concurred on conclusions and **reporting separation** (passive vs benchmark suppression ratios). Full tables and locked reporting rule: **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`**.
+
 ---
 
 ## Next phase (Tree / Wisewave)

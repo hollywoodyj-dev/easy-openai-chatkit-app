@@ -1,6 +1,6 @@
 ## Wisewave Chat – QA Handoff
 
-**Last updated:** 2026-02-08 (implementation follow-up 2026-03-13)  
+**Last updated:** 2026-02-08 (implementation follow-up 2026-03-13; Milestone H benchmark reporting note 2026-03-24)  
 **Environment:** Next.js app at `/chat` (Option B – backend turn API + DB persistence)
 
 ### 1. High‑level status
@@ -121,3 +121,8 @@ Both 2026-03-13 QA items above have been implemented in the codebase:
   - **Observed (anonymous path):** `chat_session_id:anon` was used and the visible history was separate/minimal rather than reusing the token-side conversation list.
   - **Conclusion:** This is additional live evidence that account-context separation remains intact after today's changes.
   - **Limitation:** This is not yet a full logout/login switching proof across two distinct authenticated accounts; it is a token-vs-anonymous isolation check.
+
+### 8. Milestone H observation — passive vs benchmark metrics (2026-03-24)
+
+- **Do not mix:** Treat **benchmark-set** suppression ratios (filtered by `benchmarkSet` in the internal observation tool) as **different** from **passive observation** ratios (unfiltered or `benchmarkSet=__passive__`).
+- **Record:** Lumen + Wisewave end-of-day benchmark summary and locked reporting rule: **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`**.
