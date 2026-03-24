@@ -44,7 +44,7 @@
 
 1. Pull cases — generate queue (hourly or manual).  
 2. Queue — status `queued` → `in_review` → `completed` / `skipped`.  
-3. Human review — open case, paste snapshot from `/chat` or API if needed, submit log.  
+3. Human review — open case, paste reduced snapshot JSON if needed; **Submit log** auto-persists the snapshot when JSON is valid and `fullResponseText` is non-empty (optional **Save snapshot** if saving before submit).  
 4. Daily summary — suppression ratio, removal distribution, drift counts, verdict counts.  
 5. Export — CSV / Markdown / JSON for Tree / archive.
 

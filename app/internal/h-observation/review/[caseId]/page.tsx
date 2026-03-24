@@ -194,6 +194,30 @@ export default function HObservationReviewPage() {
     setLog((prev) => (prev ? { ...prev, [key]: value } : prev));
   }
 
+  /** PUT snapshot from editor. Returns false if save failed (caller should stop). */
+  async function persistSnapshotFromEditor(): Promise<boolean> {
+    if (!caseId) return true;
+    let snapshot: ObservationResponseSnapshot;
+    try {
+      snapshot = JSON.parse(snapshotJson) as ObservationResponseSnapshot;
+    } catch {
+      return true; // invalid JSON — do not block review submit
+    }
+    const text = snapshot.fullResponseText;
+    if (typeof text !== "string" || !text.trim()) {
+      return true; // nothing to persist
+    }
+    const res = await observationFetch(
+      `/api/internal/h-observation/snapshot/${encodeURIComponent(caseId)}`,
+      { method: "PUT", body: JSON.stringify(snapshot) }
+    );
+    if (!res.ok) {
+      setError(await res.text());
+      return false;
+    }
+    return true;
+  }
+
   async function saveSnapshot() {
     if (!caseId) return;
     setBusy(true);
@@ -235,6 +259,11 @@ export default function HObservationReviewPage() {
     if (!log) return;
     setBusy(true);
     setError(null);
+    const snapOk = await persistSnapshotFromEditor();
+    if (!snapOk) {
+      setBusy(false);
+      return;
+    }
     const q = force ? "?force=1" : "";
     const res = await observationFetch(
       `/api/internal/h-observation/review${q}`,
@@ -272,6 +301,11 @@ export default function HObservationReviewPage() {
               <li>Pick a <code>scenario</code> row first on Queue.</li>
               <li>Run the raw input in <code>/chat</code>.</li>
               <li>Paste a reduced snapshot JSON here.</li>
+              <li>
+                <strong>Submit log</strong> auto-saves the snapshot when JSON is valid and{" "}
+                <code>fullResponseText</code> is non-empty. Use <strong>Save snapshot</strong>{" "}
+                to persist without submitting yet.
+              </li>
               <li>Complete and submit the structured review log.</li>
             </ol>
           </section>
