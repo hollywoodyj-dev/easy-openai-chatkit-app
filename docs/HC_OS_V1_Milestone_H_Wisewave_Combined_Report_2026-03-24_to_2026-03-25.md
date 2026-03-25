@@ -118,6 +118,16 @@ Suppress **more aggressively** when the line is:
 Engine and gates: **`lib/wisewave-milestone-h-micro-awareness.ts`** (H1/H3/H4/H5 selection, suppression reasons, strict linter).  
 Observation / metrics: **`docs/HC_OS_V1_Milestone_H_Nova_Observation_Queue_Tool.md`**, internal `/internal/h-observation`.
 
+### Nova implementation (2026-03-25)
+
+Shipped in-repo:
+
+- **Build marker:** **`milestone_h_v4`** (`milestoneHBuildMarker()`).
+- **H3:** `h3_permissiveness_narrowing` — prove/earn/deserve/pressure user text no longer emits H3 (silence; H4 already wins when insight carries pressure); reply/replay themes need length ≥ 68 or reflective structure; default theme suppresses short maybe/perhaps without `?`; very short user turns need uncertainty bridge in insight.
+- **H1:** `h1_permissiveness_narrowing` — extra soft-everyday / flat-okay families; mild-substrate length bypass raised **100 → 115** chars; shared **`insightHasDurableHPattern`** helper.
+- **H5:** `h5_narrowing_insufficient_substrate` when split-language insight is **shorter than 42** characters.
+- **H4:** unchanged (calibration anchor preserved).
+
 ---
 
 ## Related docs

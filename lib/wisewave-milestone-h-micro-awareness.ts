@@ -11,10 +11,13 @@ import {
  * - docs/HC_OS_V1_Milestone_H_Wisewave_Consciousness_Quality_Boundary_Layer.md
  *
  * Default-off: set ENABLE_H_CUE=true or ENABLE_H_CUE=1 to render.
+ *
+ * Narrowing pass (Lumen/Wisewave 2026-03-25): **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**
+ * — H3/H1 tightened; H4 preserved; H5 substrate floor; build marker **milestone_h_v4**.
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v3";
+const BUILD_MARKER = "milestone_h_v4";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -67,6 +70,12 @@ export type MilestoneHSuppressedReason =
   | "wisewave_kill_list_multi_sentence"
   /** Wisewave linter: H too long (correlates with explanation/presence). */
   | "wisewave_kill_list_too_long"
+  /** Lumen/Wisewave 2026-03-25 combined brief: H3 materially narrowed (prove/reply/replay/short). */
+  | "h3_permissiveness_narrowing"
+  /** Same brief: extra H1 suppression on soft everyday / low-intensity without durable insight. */
+  | "h1_permissiveness_narrowing"
+  /** H5 only when split language is substantive enough. */
+  | "h5_narrowing_insufficient_substrate"
   | "emitted";
 
 export type MilestoneHOutcome =
@@ -176,8 +185,8 @@ function isH1MildSubstrateSuppressed(userMessage: string, insight: string): bool
   const ins = insight.trim().toLowerCase();
   const len = t.length;
 
-  // Longer substrate: let H1 through for human/QA judgment
-  if (len >= 100) return false;
+  // Longer substrate: let H1 through for human/QA judgment (raised bar, 2026-03-25 narrowing).
+  if (len >= 115) return false;
 
   const userHasStructure =
     /\b(because|although|whenever|every time|always|never|except|but then|ends up|keeps happening)\b/i.test(
@@ -188,14 +197,7 @@ function isH1MildSubstrateSuppressed(userMessage: string, insight: string): bool
 
   if (userHasStructure) return false;
 
-  // IMPORTANT: Do not use raw insight length or generic LLM words (uncertainty, reaction, pattern, pull…)
-  // — hosted insights are almost always long and contain those tokens, which bypassed this gate entirely (Lumen re-QA).
-  const insightDurable =
-    /(inner rule|torn between|conflict between|split between|both (pulls|sides|ways)|two (strong )?pulls|pull(s|ing)? in (two|different|opposite)|stuck in (a |the )?loop|pattern of (avoiding|shutting|rushing|reacting when)|prove (yourself|i deserve|that i)|never (quite )?good enough|pressure to (perform|prove|keep up)|keep up (the )?appearance|performance (trap|treadmill|pressure))/i.test(
-      ins
-    ) || /(矛盾|拉扯|兩股|两股).{0,16}(拉|扯)/.test(ins);
-
-  if (insightDurable) return false;
+  if (insightHasDurableHPattern(ins)) return false;
 
   const mild =
     /\boverwhelmed\b/.test(t) ||
@@ -213,6 +215,50 @@ function isH1MildSubstrateSuppressed(userMessage: string, insight: string): bool
     /\b(i feel|i'm feeling|i am feeling)\s+(kind of |a little |slightly )?(off|weird|strange|unsettled)\b/.test(t);
 
   return mild;
+}
+
+/** Durable insight structure for H1/H3 narrowing (not generic LLM filler tokens alone). */
+function insightHasDurableHPattern(insightLower: string): boolean {
+  return (
+    /(inner rule|torn between|conflict between|split between|both (pulls|sides|ways)|two (strong )?pulls|pull(s|ing)? in (two|different|opposite)|stuck in (a |the )?loop|pattern of (avoiding|shutting|rushing|reacting when)|prove (yourself|i deserve|that i)|never (quite )?good enough|pressure to (perform|prove|keep up)|keep up (the )?appearance|performance (trap|treadmill|pressure))/i.test(
+      insightLower
+    ) || /(矛盾|拉扯|兩股|两股).{0,16}(拉|扯)/.test(insightLower)
+  );
+}
+
+function userHasReflectiveStructureForNarrowing(message: string): boolean {
+  const t = normalizeApostrophesForHeuristics(message.trim().toLowerCase());
+  const raw = message;
+  return (
+    /\b(because|although|whenever|every time|always|never|even though|i keep|i always|i end up|pattern|loop|keeps happening|turns out)\b/i.test(
+      t
+    ) || /(因为|虽然|每次|总是|可是|但是|却又|一直)/.test(raw)
+  );
+}
+
+/**
+ * Extra H1 narrowing beyond h1_mild_reflective_insufficient (soft everyday / flat okay).
+ */
+function isH1ExtraNarrowingSuppressed(userMessage: string, insight: string): boolean {
+  const t = normalizeApostrophesForHeuristics(userMessage.trim().toLowerCase());
+  const ins = insight.trim().toLowerCase();
+  const len = userMessage.trim().length;
+
+  if (len >= 115) return false;
+  if (userHasReflectiveStructureForNarrowing(userMessage)) return false;
+  if (insightHasDurableHPattern(ins)) return false;
+
+  const softDaily =
+    /\b(just (thinking|wondering)|it'?s fine|pretty fine|mostly fine|nothing much|not much happened|small thing|no big deal|kind of okay|kind of ok)\b/i.test(
+      t
+    ) ||
+    /还好|一般吧|没什么|小事|还好吧/.test(userMessage);
+
+  if (softDaily && len < 100) return true;
+
+  if (len < 88 && /\b(i feel )?kind of (okay|ok|fine)\b/i.test(t)) return true;
+
+  return false;
 }
 
 /**
@@ -421,6 +467,52 @@ function detectH3ThemeKey(userMessage: string): H3ThemeKey {
     return "rest_guilt";
   }
   return "default";
+}
+
+/**
+ * H3 narrowed: prove/earn blur, thin reply/replay, weak default uncertainty (Lumen/Wisewave 2026-03-25).
+ */
+function isH3SuppressedByNarrowing(userMessage: string, insight: string): boolean {
+  const t = normalizeApostrophesForHeuristics(userMessage.trim().toLowerCase());
+  const ins = insight.trim().toLowerCase();
+  const theme = detectH3ThemeKey(userMessage);
+  const len = userMessage.trim().length;
+
+  if (
+    /\b(prove (myself|yourself|it)|have to prove|proving myself|proving yourself|good enough|never good enough|earn(ed)? (it|this|rest|a break)|deserve (to |a )?rest|deserve a break|worth(y)? before i|pressure to (perform|prove)|have to earn)\b/i.test(
+      t
+    ) ||
+    /证明|值不值得|不配|够好|才敢|才配|证明自己/.test(userMessage)
+  ) {
+    return true;
+  }
+
+  if (theme === "reply_anxiety" || theme === "replay_ruminate") {
+    if (len < 68 && !userHasReflectiveStructureForNarrowing(userMessage)) {
+      return true;
+    }
+  }
+
+  if (
+    theme === "default" &&
+    len < 56 &&
+    !userMessage.includes("?") &&
+    !userMessage.includes("？")
+  ) {
+    if (/\bmaybe\b|\bperhaps\b|\bmight be wrong\b/i.test(t)) {
+      return true;
+    }
+  }
+
+  if (len < 42 && !userHasReflectiveStructureForNarrowing(userMessage)) {
+    const insUncertaintyBridge =
+      /(uncertain|unsure|whether|don'?t know|not sure|ambival|torn|worry|anxious|纠结|犹豫|说不清|不知道)/i.test(
+        ins
+      );
+    if (!insUncertaintyBridge) return true;
+  }
+
+  return false;
 }
 
 function pickH3Template(seed: string, userMessage: string): { en: string; zh: string } {
@@ -793,6 +885,21 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1MildSubstrateSuppressed(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_mild_reflective_insufficient" };
+  }
+
+  if (kind === "H1" && isH1ExtraNarrowingSuppressed(userMessage, insight)) {
+    return { status: "suppressed", reason: "h1_permissiveness_narrowing" };
+  }
+
+  if (kind === "H3" && isH3SuppressedByNarrowing(userMessage, insight)) {
+    return { status: "suppressed", reason: "h3_permissiveness_narrowing" };
+  }
+
+  if (kind === "H5" && insight.length < 42) {
+    return {
+      status: "suppressed",
+      reason: "h5_narrowing_insufficient_substrate",
+    };
   }
 
   const pair = pickTemplate(kind, seed, userMessage);
