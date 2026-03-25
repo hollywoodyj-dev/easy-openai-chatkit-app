@@ -136,6 +136,11 @@
 
 - **`milestone_h_v6`**: suppress `H3` when the main reflection already carries the needed value (residual over-emission); treat generic `default` H3 phrasing as danger patterns when redundant. **H4** unchanged. **`lib/wisewave-milestone-h-micro-awareness.ts`**.
 
+## 2026-03-25 — Wisewave: v6 closure consideration
+
+- **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
+- Recommendation: run **one final narrow confirmation pass** (including the remaining rest/guilt edge case). If clean, move to **closure consideration / confirmation pass**.
+
 ## 2026-03-25 — Lumen + Wisewave: combined report (24–25)
 
 - **Combined read** (benchmark 24th + reruns 25th): **H viable, not closure-clean**; preserve **H4** as calibration anchor; tighten **H3** significantly, **H1** moderately; **H5** narrow; suppression healthy. **7** workable, **14** soft, **25** not release-confidence clean — **no** hard-close; **narrowing** not closing. **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**. Pointer in Tree plan + Lumen QA Results.
