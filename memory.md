@@ -132,6 +132,10 @@
 
 - **`milestone_h_v5`**: stricter **replay_ruminate** (substrate: reflective OR replay-specific structure OR durable insight; short-message guard); **reply_anxiety** floors **76** / **96** without structure+durable insight; expanded prove/earn **user** regex + ZH; **`isH3SuppressedForProveEarnInsightBlur`** on insight when durable pattern absent. **H4** unchanged. **`lib/wisewave-milestone-h-micro-awareness.ts`**.
 
+## 2026-03-25 — Nova: Milestone H v6 (targeted H3 redundancy)
+
+- **`milestone_h_v6`**: suppress `H3` when the main reflection already carries the needed value (residual over-emission); treat generic `default` H3 phrasing as danger patterns when redundant. **H4** unchanged. **`lib/wisewave-milestone-h-micro-awareness.ts`**.
+
 ## 2026-03-25 — Lumen + Wisewave: combined report (24–25)
 
 - **Combined read** (benchmark 24th + reruns 25th): **H viable, not closure-clean**; preserve **H4** as calibration anchor; tighten **H3** significantly, **H1** moderately; **H5** narrow; suppression healthy. **7** workable, **14** soft, **25** not release-confidence clean — **no** hard-close; **narrowing** not closing. **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**. Pointer in Tree plan + Lumen QA Results.

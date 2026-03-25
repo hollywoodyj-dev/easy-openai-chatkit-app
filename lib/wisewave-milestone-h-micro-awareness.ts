@@ -15,10 +15,13 @@ import {
  * Narrowing pass (Lumen/Wisewave 2026-03-25): **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**
  * — H3/H1 tightened; H4 preserved; H5 substrate floor; build marker **milestone_h_v4**.
  * v5 (2026-03-25): H3 tighter on **replay/rumination** substrate, **reply** length floor, **prove/earn** user + insight residual blur; H4 unchanged.
+ * v6 (2026-03-25): family-targeted H3 redundancy suppression:
+ * - suppress H3 when the main reflection already carries the needed value
+ * - treat generic `default` H3 phrasing as danger patterns when redundant
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v5";
+const BUILD_MARKER = "milestone_h_v6";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -73,6 +76,8 @@ export type MilestoneHSuppressedReason =
   | "wisewave_kill_list_too_long"
   /** Lumen/Wisewave 2026-03-25 combined brief: H3 materially narrowed (prove/reply/replay/short). */
   | "h3_permissiveness_narrowing"
+  /** Wisewave review (v6): suppress H3 when main reflection already carries value (residual over-emission). */
+  | "h3_main_reflection_sufficiency"
   /** Same brief: extra H1 suppression on soft everyday / low-intensity without durable insight. */
   | "h1_permissiveness_narrowing"
   /** H5 only when split language is substantive enough. */
@@ -560,6 +565,45 @@ function isH3SuppressedByNarrowing(userMessage: string, insight: string): boolea
   return false;
 }
 
+function isH3GenericDangerPairEn(textEn: string): boolean {
+  const t = textEn.toLowerCase();
+  // Wisewave v5 revise-list: these `default` phrasing shapes are danger when redundant.
+  return (
+    /there can be a little room here/.test(t) ||
+    /a pause might be enough/.test(t) ||
+    /not knowing the next move/.test(t) ||
+    /ambiguity .* might not need tightening/.test(t)
+  );
+}
+
+function isMainReflectionSufficientForH3(insight: string): boolean {
+  const ins = insight.trim().toLowerCase();
+  // Durable internal structure => main reflection already does the work.
+  if (insightHasDurableHPattern(ins)) return true;
+  // Strong main reflection length/signal => prefer silence over a generic H3.
+  if (ins.length >= 72) return true;
+  return (
+    ins.length >= 52 &&
+    /(inner rule|pressure|loop|pattern|prove|conflict|torn|split|performance|because|therefore|so )/i.test(
+      ins
+    )
+  );
+}
+
+function insightHasReplayRumination(insightLower: string): boolean {
+  return (
+    /(loop|replay|ruminat|rehash|over and over|again|replaying)/i.test(insightLower) ||
+    /反复|重播|循环|一直想|重想|没完没了/.test(insightLower)
+  );
+}
+
+function insightHasReplyAnxiety(insightLower: string): boolean {
+  return (
+    /(reply|message|seen|waiting|silence|left on read|read receipt|ghosted)/i.test(insightLower) ||
+    /不回|没回|已读|等着|不回复|没回复/.test(insightLower)
+  );
+}
+
 function pickH3Template(seed: string, userMessage: string): { en: string; zh: string } {
   const theme = detectH3ThemeKey(userMessage);
   const pool = H3_THEME_PAIRS[theme];
@@ -948,6 +992,25 @@ export function computeMicroAwarenessCue(params: {
   }
 
   const pair = pickTemplate(kind, seed, userMessage);
+
+  // v6: redundancy suppression for H3.
+  // Wisewave review: residual revise cluster isn't broad instability; H3 awareness line can still be removable
+  // when the main reflection already carries the needed value.
+  if (kind === "H3") {
+    const theme = detectH3ThemeKey(userMessage);
+    const mainSufficient = isMainReflectionSufficientForH3(insight);
+    if (mainSufficient) {
+      if (theme === "default" && isH3GenericDangerPairEn(pair.en)) {
+        return { status: "suppressed", reason: "h3_main_reflection_sufficiency" };
+      }
+      if (theme === "replay_ruminate" && insightHasReplayRumination(lower)) {
+        return { status: "suppressed", reason: "h3_main_reflection_sufficiency" };
+      }
+      if (theme === "reply_anxiety" && insightHasReplyAnxiety(lower)) {
+        return { status: "suppressed", reason: "h3_main_reflection_sufficiency" };
+      }
+    }
+  }
 
   // Strict stabilization linter: guardrail only (suppress; never generate new H).
   if (isMilestoneHStrictLinterEnabled()) {
