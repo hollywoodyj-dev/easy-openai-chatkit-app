@@ -9,6 +9,8 @@
 
 **Companion:** Wisewave framing and checklist — **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`**. Gate 1 doctrine — **`docs/HC_OS_V1_Milestone_H_OctopusMind_Lumen_Closure_Doctrine.md`**.
 
+**Combined Lumen/Wisewave coordination (2026-03-24 → 25):** **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`** — viable **not** closure-clean; preserve **H4**, tighten **H3**/**H1**, narrow **H5**; **no** hard-close; Tree metrics + Nova narrowing scope.
+
 ---
 
 ## 0. Purpose

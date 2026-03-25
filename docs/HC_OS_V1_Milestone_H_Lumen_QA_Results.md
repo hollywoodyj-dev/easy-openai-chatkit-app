@@ -368,6 +368,10 @@ Lumen verified browser behavior on live `/chat`:
 
 Lumen completed three filtered benchmark sets on hosted (`lumen-daily-core-7`, `lumen-regression-14`, `lumen-confidence-25`) using the **custom observation row** path; Wisewave concurred on conclusions and **reporting separation** (passive vs benchmark suppression ratios). Full tables and locked reporting rule: **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`**.
 
+### Addendum — Combined interpretation (2026-03-24 → 2026-03-25)
+
+**Lumen + Wisewave:** End-of-day **v3** picture (24th) plus **25th** reruns → combined read: **H viable, not closure-clean**; preserve **H4**, tighten **H3** significantly and **H1** moderately, keep **H5** narrow, **stabilization not hard-close**; 7-case workable, 14 soft, 25 not release-confidence clean. Full synthesis and Tree/Nova action brief: **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**.
+
 ---
 
 ## Next phase (Tree / Wisewave)

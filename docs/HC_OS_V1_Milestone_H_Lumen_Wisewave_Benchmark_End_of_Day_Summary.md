@@ -4,6 +4,8 @@
 **Audience:** Wisewave, Nova, Chino (CTO)  
 **Context:** Custom observation benchmark rows live on hosted after DB push; reporting separated from passive observation.
 
+**Update (2026-03-25):** Single-day benchmarks here sit alongside **next-day reruns**. For **closure judgment** and **Tree/Nova action brief**, use the **combined** report: **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**.
+
 ---
 
 ## Summary
