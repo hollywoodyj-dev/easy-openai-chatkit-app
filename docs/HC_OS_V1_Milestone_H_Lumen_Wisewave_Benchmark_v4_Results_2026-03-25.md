@@ -108,3 +108,13 @@ v4 is a **genuine** step up from the earlier v3 rerun, especially **core/regress
 - **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`** — decision + Nova v4 implementation note  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`** — 2026-03-24 single-day benchmark (v3-era)  
 - **`docs/HC_OS_V1_Milestone_H_Nova_Observation_Queue_Tool.md`** — benchmark tooling  
+
+## v6 targeted retest pointer
+
+Lumen/Wisewave v4 still ended with **confidence 25** revise-heavy and **residual H3 over-emission** concentrated in three families:
+`replay/rumination`, `reply anxiety`, and `prove/earn` residual blur.
+
+After deploying **`milestone_h_v6`**, retest primarily to confirm:
+- H3 suppression becomes **more family-targeted** (fewer generic `default`-shaped H3 emissions)
+- the **main-reflection-sufficiency** redundancy rule reduces removable H3 suffixes
+- `debug_milestone_h_build_marker` matches **`milestone_h_v6`** on hosted
