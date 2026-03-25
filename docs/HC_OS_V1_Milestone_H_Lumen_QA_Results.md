@@ -372,6 +372,10 @@ Lumen completed three filtered benchmark sets on hosted (`lumen-daily-core-7`, `
 
 **Lumen + Wisewave:** End-of-day **v3** picture (24th) plus **25th** reruns → combined read: **H viable, not closure-clean**; preserve **H4**, tighten **H3** significantly and **H1** moderately, keep **H5** narrow, **stabilization not hard-close**; 7-case workable, 14 soft, 25 not release-confidence clean. Full synthesis and Tree/Nova action brief: **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**.
 
+### Addendum — **`milestone_h_v4`** benchmark rerun (2026-03-25)
+
+Lumen re-ran **7 / 14 / 25** suites vs earlier **v3** same-day baseline: **+1 PASS** (7), **+2 PASS** (14), **+1 / −1** (25); **`h3_permissiveness_narrowing`** confirmed in targeted cases; **confidence 25** still revise-heavy; **replay/rumination** still soft. Wisewave **agreed** — real narrowing effect, **not** closure-clean. Detail: **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_v4_Results_2026-03-25.md`**.
+
 ---
 
 ## Next phase (Tree / Wisewave)

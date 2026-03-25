@@ -128,11 +128,14 @@ Shipped in-repo:
 - **H5:** `h5_narrowing_insufficient_substrate` when split-language insight is **shorter than 42** characters.
 - **H4:** unchanged (calibration anchor preserved).
 
+**Post-ship validation (2026-03-25):** Lumen re-ran all three benchmark sets on **v4** — **real** gains on **7** and **14**; **`h3_permissiveness_narrowing`** observed in expected rows; **25** still too revise-heavy; H3 still main failure lane. Full tables: **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_v4_Results_2026-03-25.md`**.
+
 ---
 
 ## Related docs
 
 - **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`** — 2026-03-24 benchmark tables + passive vs benchmark reporting rule  
+- **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_v4_Results_2026-03-25.md`** — v4 vs v3 benchmark rerun + Wisewave concurrence  
 - **`docs/HC_OS_V1_Milestone_H_Lumen_QA_Results.md`** — QA round + addenda  
 - **`docs/HC_OS_V1_Milestone_H_Tree_Stabilization_Plan_Execution.md`** — Tree execution / exit gate  
 - **`docs/HC_OS_V1_Milestone_H_Wisewave_Status_Soft_Pass_and_Stabilization_Phase.md`** — Wisewave stabilization framing  
