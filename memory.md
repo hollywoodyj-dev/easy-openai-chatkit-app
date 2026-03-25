@@ -128,6 +128,10 @@
 
 - **`milestone_h_v4`**: **`h3_permissiveness_narrowing`**, **`h1_permissiveness_narrowing`**, **`h5_narrowing_insufficient_substrate`**; H4 unchanged. **`lib/wisewave-milestone-h-micro-awareness.ts`**. Doc update: **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`** (implementation subsection).
 
+## 2026-03-25 — Nova: Milestone H v5 (H3 replay/prove tightening)
+
+- **`milestone_h_v5`**: stricter **replay_ruminate** (substrate: reflective OR replay-specific structure OR durable insight; short-message guard); **reply_anxiety** floors **76** / **96** without structure+durable insight; expanded prove/earn **user** regex + ZH; **`isH3SuppressedForProveEarnInsightBlur`** on insight when durable pattern absent. **H4** unchanged. **`lib/wisewave-milestone-h-micro-awareness.ts`**.
+
 ## 2026-03-25 — Lumen + Wisewave: combined report (24–25)
 
 - **Combined read** (benchmark 24th + reruns 25th): **H viable, not closure-clean**; preserve **H4** as calibration anchor; tighten **H3** significantly, **H1** moderately; **H5** narrow; suppression healthy. **7** workable, **14** soft, **25** not release-confidence clean — **no** hard-close; **narrowing** not closing. **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**. Pointer in Tree plan + Lumen QA Results.

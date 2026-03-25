@@ -1,6 +1,6 @@
 ## Wisewave Chat – QA Handoff
 
-**Last updated:** 2026-02-08 (implementation follow-up 2026-03-13; Milestone H benchmark reporting note 2026-03-24; v4 benchmark results pointer 2026-03-25)  
+**Last updated:** 2026-02-08 (implementation follow-up 2026-03-13; Milestone H benchmark reporting note 2026-03-24; v4 benchmark results pointer 2026-03-25; H engine **milestone_h_v5** 2026-03-25)  
 **Environment:** Next.js app at `/chat` (Option B – backend turn API + DB persistence)
 
 ### 1. High‑level status
@@ -126,3 +126,4 @@ Both 2026-03-13 QA items above have been implemented in the codebase:
 
 - **Do not mix:** Treat **benchmark-set** suppression ratios (filtered by `benchmarkSet` in the internal observation tool) as **different** from **passive observation** ratios (unfiltered or `benchmarkSet=__passive__`).
 - **Record:** Lumen + Wisewave end-of-day benchmark summary and locked reporting rule: **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`**. **Combined 24–25 interpretation** (closure posture, H4/H3/H1/H5, Tree/Nova brief): **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**. **v4 benchmark rerun** (vs v3): **`docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_v4_Results_2026-03-25.md`**.
+- **2026-03-25 — Nova:** **`milestone_h_v5`** deployed in repo (`lib/wisewave-milestone-h-micro-awareness.ts`): tighter **H3** on replay/rumination substrate, stricter **reply_anxiety** length gates without durable insight, expanded **prove/earn** user phrases, **insight blur** suppression when insight is validation/worth-adjacent without durable pattern; **H4** templates and routing **unchanged**. **Lumen should retest:** confidence-25 and regression-14 rows that were H3/replay/prove-heavy; confirm `debug_milestone_h_build_marker` = **`milestone_h_v5`** on hosted after deploy.

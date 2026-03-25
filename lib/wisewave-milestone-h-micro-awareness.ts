@@ -14,10 +14,11 @@ import {
  *
  * Narrowing pass (Lumen/Wisewave 2026-03-25): **`docs/HC_OS_V1_Milestone_H_Wisewave_Combined_Report_2026-03-24_to_2026-03-25.md`**
  * — H3/H1 tightened; H4 preserved; H5 substrate floor; build marker **milestone_h_v4**.
+ * v5 (2026-03-25): H3 tighter on **replay/rumination** substrate, **reply** length floor, **prove/earn** user + insight residual blur; H4 unchanged.
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v4";
+const BUILD_MARKER = "milestone_h_v5";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -236,6 +237,27 @@ function userHasReflectiveStructureForNarrowing(message: string): boolean {
   );
 }
 
+/** Replay/rumination-specific structure (Lumen v5 — not covered by generic causal/loop words). */
+function userHasReplayRuminationStructure(message: string): boolean {
+  const t = normalizeApostrophesForHeuristics(message.trim().toLowerCase());
+  const raw = message;
+  return (
+    /\b(each time|again and again|lost count|can'?t stop thinking|cant stop thinking|keeps coming back|keep(s)? thinking about|playing it back|mental loop|go(es)? round in my head|intrusive|rehash|dwelling on|same (scene|moment|memory|fight|argument|mistake|conversation))\b/i.test(
+      t
+    ) || /(放不下|绕圈|转来转去|老想着|一直想|同样的事|同一段)/.test(raw)
+  );
+}
+
+/**
+ * Insight still routed to H3 (e.g. user "?") but language sits in prove/validation space without Gate-1 durable pattern — suppress H3 (Lumen: prove/earn residual blur).
+ */
+function isH3SuppressedForProveEarnInsightBlur(insightLower: string): boolean {
+  if (insightHasDurableHPattern(insightLower)) return false;
+  return /(worthy|unworthy|worthless|validation|impost|measur(e|ing) up|stack up|belong(ing)?|\ba fraud\b|feel(ing)? fake|不配|自卑|怕被否定|怕別人|怕别人|在意别人怎么看|在意別人)/i.test(
+    insightLower
+  );
+}
+
 /**
  * Extra H1 narrowing beyond h1_mild_reflective_insufficient (soft everyday / flat okay).
  */
@@ -443,10 +465,10 @@ function detectH3ThemeKey(userMessage: string): H3ThemeKey {
   const t = normalizeApostrophesForHeuristics(userMessage.toLowerCase());
   const raw = userMessage;
   if (
-    /\b(replay|ruminate|ruminating|over and over|same (thing|conversation|scenario)|spiral|on repeat|stuck (on|thinking)|keep (going over|rehashing))\b/i.test(
+    /\b(replay|ruminate|ruminating|over and over|same (thing|conversation|scenario)|spiral|on repeat|stuck (on|thinking)|keep (going over|rehashing)|can'?t stop thinking|cant stop thinking|keeps coming back|intrusive thought|mental loop|dwelling|circular|going in circles)\b/i.test(
       t
     ) ||
-    /反复|重播|循环|一直想|重复|没完没了|重想/.test(raw)
+    /反复|重播|循环|一直想|重复|没完没了|重想|放不下|绕圈|转来转去|老想着/.test(raw)
   ) {
     return "replay_ruminate";
   }
@@ -479,16 +501,39 @@ function isH3SuppressedByNarrowing(userMessage: string, insight: string): boolea
   const len = userMessage.trim().length;
 
   if (
-    /\b(prove (myself|yourself|it)|have to prove|proving myself|proving yourself|good enough|never good enough|earn(ed)? (it|this|rest|a break)|deserve (to |a )?rest|deserve a break|worth(y)? before i|pressure to (perform|prove)|have to earn)\b/i.test(
+    /\b(prove (myself|yourself|it|to them|to him|to her)|have to prove|proving myself|proving yourself|good enough|never good enough|earn(ed)? (it|this|rest|a break|my place)|deserve (to |a )?rest|deserve a break|worth(y)? before i|pressure to (perform|prove)|have to earn|show (that )?i'?m|show them i|convince (myself|them)|validat(e|ing) myself|(imposter|impostor)( syndrome)?|measur(e|ing) up|stack up against|have something to prove|need to show|earn my keep)\b/i.test(
       t
     ) ||
-    /证明|值不值得|不配|够好|才敢|才配|证明自己/.test(userMessage)
+    /证明|值不值得|不配|够好|才敢|才配|证明自己|证明给|怕被看|怕别人|拿不出|印证|自卑/.test(userMessage)
   ) {
     return true;
   }
 
-  if (theme === "reply_anxiety" || theme === "replay_ruminate") {
-    if (len < 68 && !userHasReflectiveStructureForNarrowing(userMessage)) {
+  if (isH3SuppressedForProveEarnInsightBlur(ins)) {
+    return true;
+  }
+
+  if (theme === "replay_ruminate") {
+    const uStruct = userHasReflectiveStructureForNarrowing(userMessage);
+    const uReplay = userHasReplayRuminationStructure(userMessage);
+    const insDur = insightHasDurableHPattern(ins);
+    if (!uStruct && !uReplay && !insDur) {
+      return true;
+    }
+    if (len < 60 && !(insDur && (uStruct || uReplay))) {
+      return true;
+    }
+  }
+
+  if (theme === "reply_anxiety") {
+    if (len < 76 && !userHasReflectiveStructureForNarrowing(userMessage)) {
+      return true;
+    }
+    if (
+      len < 96 &&
+      !userHasReflectiveStructureForNarrowing(userMessage) &&
+      !insightHasDurableHPattern(ins)
+    ) {
       return true;
     }
   }
