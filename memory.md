@@ -160,6 +160,10 @@
 
 - **`milestone_h_v13`**: targeted remaining ZH medium-band survivors (`h-d01-006`, `h-d02-006`) with stricter Chinese live-activation gate before medium-band admissibility can pass. Added suppression reason `h_medium_zh_activation_not_strong_enough`; keeps v12 lane-agnostic doctrine intact.
 
+## 2026-03-26 — Nova: Post-H v14 final ZH residual deny
+
+- **`milestone_h_v14`**: ultra-narrow exception-deny for final ZH medium-band H1 survivors (`h-d01-006`, `h-d02-006`). If medium-band ZH pressure/perfection/rest-permission shape is present in both user text and insight, and main reflection is already materially sufficient, H1 suppresses via `h1_zh_medium_residual_exception_deny`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

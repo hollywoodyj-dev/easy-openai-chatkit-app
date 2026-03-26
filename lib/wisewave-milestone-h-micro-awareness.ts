@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v13";
+const BUILD_MARKER = "milestone_h_v14";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -86,6 +86,8 @@ export type MilestoneHSuppressedReason =
   | "h_medium_main_reflection_sufficient_global"
   /** v13 parity: ZH medium-band requires stricter live-activation proof. */
   | "h_medium_zh_activation_not_strong_enough"
+  /** v14 ultra-narrow cleanup: deny residual ZH medium-band H1 pressure/rest-permission pocket. */
+  | "h1_zh_medium_residual_exception_deny"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -496,6 +498,12 @@ function hasStrictZhMomentActivation(message: string): boolean {
     /(一停下来|一慢下来|马上|立刻).{0,12}(就|会).{0,16}(紧|绷|慌|催|压|停不住|停不下来)/.test(raw) ||
     /(我能感觉到|我明显感觉到|此刻).{0,18}(身体|胸口|胃里|呼吸).{0,14}(发紧|绷|卡|乱|急)/.test(raw) ||
     /(正在).{0,12}(收紧|绷紧|发紧|慌|催|推着我|拉扯)/.test(raw)
+  );
+}
+
+function isZhPressurePerfectionRestPermissionShape(text: string): boolean {
+  return /(压力|完美|不够好|证明|配不配|值不值得|值得|不值得|休息.{0,8}(愧疚|不配)|应该.{0,8}(更多|更努力)|停下来.{0,8}(不安|焦虑|内疚))/i.test(
+    text
   );
 }
 
@@ -1156,6 +1164,20 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1SuppressedByMainReflectionSufficiency(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_main_reflection_sufficient" };
+  }
+
+  // v14: final exception-deny cleanup for residual ZH medium-band H1 pocket.
+  // If user + insight are in pressure/perfection/rest-permission family and main reflection
+  // already materially carries movement, suppress H1 by default.
+  if (
+    kind === "H1" &&
+    isMediumBand(userMessage) &&
+    hasCjkText(userMessage) &&
+    isZhPressurePerfectionRestPermissionShape(userMessage) &&
+    isZhPressurePerfectionRestPermissionShape(insight) &&
+    isMainReflectionMateriallySufficientGlobal(insight)
+  ) {
+    return { status: "suppressed", reason: "h1_zh_medium_residual_exception_deny" };
   }
 
   if (kind === "H1" && isH1SuppressedByMediumMomentActivationGate(userMessage)) {
