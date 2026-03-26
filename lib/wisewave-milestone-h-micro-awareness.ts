@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v8";
+const BUILD_MARKER = "milestone_h_v9";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -74,6 +74,8 @@ export type MilestoneHSuppressedReason =
   | "h1_medium_signal_downgrade"
   /** v8 tightening: medium turns require clear moment-level activation for H1 eligibility. */
   | "h1_medium_requires_moment_activation"
+  /** v9 tightening: medium H1 suppress when main reflection already captures pressure/bracing movement. */
+  | "h1_medium_main_reflection_capture"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -426,6 +428,30 @@ function isH1SuppressedByMediumMomentActivationGate(userMessage: string): boolea
   const inMediumBand = len >= 40 && len < 140;
   if (!inMediumBand) return false;
   return !hasClearMomentLevelActivation(userMessage);
+}
+
+/**
+ * v9 cleanup:
+ * In medium-band H1, if the main reflection already captures pressure/perfection/rest-worth or
+ * ambient bracing/vigilance movement, H is typically decorative and should suppress.
+ */
+function insightCapturesMediumPressureOrBracing(insight: string): boolean {
+  const ins = insight.trim().toLowerCase();
+  return (
+    /\b(pressure|self[- ]?pressure|perfection|perfect|not enough|never enough|prove|worthy|worth|deserve|earn rest|rest guilt|should be doing more|bracing|brace|guard(ed)?|on edge|vigilance|hypervigil|threat|always scanning)\b/i.test(
+      ins
+    ) ||
+    /(压力|完美|不够好|证明|配不配|值得|不值得|休息.{0,8}(愧疚|不配)|应该.{0,6}(更多|更努力)|绷着|提防|警觉|不敢放松|一直防着)/.test(
+      insight
+    )
+  );
+}
+
+function isH1SuppressedByMediumMainReflectionCapture(userMessage: string, insight: string): boolean {
+  const len = userMessage.trim().length;
+  if (len < 40 || len >= 140) return false;
+  if (!hasStrongInsightSignal(insight)) return false;
+  return insightCapturesMediumPressureOrBracing(insight);
 }
 
 /**
@@ -1061,6 +1087,10 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1SuppressedByMediumMomentActivationGate(userMessage)) {
     return { status: "suppressed", reason: "h1_medium_requires_moment_activation" };
+  }
+
+  if (kind === "H1" && isH1SuppressedByMediumMainReflectionCapture(userMessage, insight)) {
+    return { status: "suppressed", reason: "h1_medium_main_reflection_capture" };
   }
 
   if (kind === "H1" && isH1SuppressedByMediumSignalDowngrade(userMessage, insight)) {
