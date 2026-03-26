@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v7";
+const BUILD_MARKER = "milestone_h_v8";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -72,6 +72,8 @@ export type MilestoneHSuppressedReason =
   | "h1_main_reflection_sufficient"
   /** Post-H guardrail: medium-signal reflective turns no longer default-allow H1. */
   | "h1_medium_signal_downgrade"
+  /** v8 tightening: medium turns require clear moment-level activation for H1 eligibility. */
+  | "h1_medium_requires_moment_activation"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -399,6 +401,31 @@ function isH1SuppressedByMainReflectionSufficiency(userMessage: string, insight:
     return true;
   }
   return false;
+}
+
+/** Explicit in-the-moment activation substrate (EN/ZH), used for medium-signal H1 gating. */
+function hasClearMomentLevelActivation(message: string): boolean {
+  const t = normalizeApostrophesForHeuristics(message.trim().toLowerCase());
+  const raw = message;
+  return (
+    /\b(right now|in this moment|as soon as|immediately|right away|i can feel myself|i feel myself|my body|tightening|brace|bracing|clench|clenching|drop(s|ping)?|collapse|spiral(ing)?|rush(ing)?|heart racing|chest tight|knot in (my )?(stomach|chest)|hands? (shake|shaking)|can't slow down|cannot slow down)\b/i.test(
+      t
+    ) ||
+    /(一停下来|立刻|马上|当下|此刻|正在|身体|胸口|胃里|发紧|绷紧|收紧|心跳|心里一紧|开始慌|停不下来|停不住)/.test(
+      raw
+    )
+  );
+}
+
+/**
+ * v8 tightening: medium-signal reflective turns require explicit moment-level activation.
+ * Without that substrate, H1 is treated as decorative and suppressed.
+ */
+function isH1SuppressedByMediumMomentActivationGate(userMessage: string): boolean {
+  const len = userMessage.trim().length;
+  const inMediumBand = len >= 40 && len < 140;
+  if (!inMediumBand) return false;
+  return !hasClearMomentLevelActivation(userMessage);
 }
 
 /**
@@ -1030,6 +1057,10 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1SuppressedByMainReflectionSufficiency(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_main_reflection_sufficient" };
+  }
+
+  if (kind === "H1" && isH1SuppressedByMediumMomentActivationGate(userMessage)) {
+    return { status: "suppressed", reason: "h1_medium_requires_moment_activation" };
   }
 
   if (kind === "H1" && isH1SuppressedByMediumSignalDowngrade(userMessage, insight)) {
