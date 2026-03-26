@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v9";
+const BUILD_MARKER = "milestone_h_v10";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -76,6 +76,8 @@ export type MilestoneHSuppressedReason =
   | "h1_medium_requires_moment_activation"
   /** v9 tightening: medium H1 suppress when main reflection already captures pressure/bracing movement. */
   | "h1_medium_main_reflection_capture"
+  /** v10 tightening: block medium-band cross-kind substitution (e.g., H1->H5) on already-captured movement. */
+  | "h_medium_cross_kind_substitution_block"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -452,6 +454,11 @@ function isH1SuppressedByMediumMainReflectionCapture(userMessage: string, insigh
   if (len < 40 || len >= 140) return false;
   if (!hasStrongInsightSignal(insight)) return false;
   return insightCapturesMediumPressureOrBracing(insight);
+}
+
+function isMediumBand(userMessage: string): boolean {
+  const len = userMessage.trim().length;
+  return len >= 40 && len < 140;
 }
 
 /**
@@ -1091,6 +1098,12 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1SuppressedByMediumMainReflectionCapture(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_medium_main_reflection_capture" };
+  }
+
+  // v10: prevent H1-cleaned medium cases from rerouting into H5/H3 when the same movement
+  // is already captured by the main reflection (decorative cross-kind substitution).
+  if (isMediumBand(userMessage) && kind !== "H4" && insightCapturesMediumPressureOrBracing(insight)) {
+    return { status: "suppressed", reason: "h_medium_cross_kind_substitution_block" };
   }
 
   if (kind === "H1" && isH1SuppressedByMediumSignalDowngrade(userMessage, insight)) {
