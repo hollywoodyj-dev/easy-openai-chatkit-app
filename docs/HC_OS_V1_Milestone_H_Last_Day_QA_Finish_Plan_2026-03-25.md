@@ -115,6 +115,7 @@ Only work that helps us make the final stabilization judgment:
 - feature brainstorming
 - trying to make H “nicer” by widening logic
 - opening Milestone I work
+- running the 14-day post-H enforcement / guardrail dashboard (that starts after H closure)
 
 ---
 
@@ -421,3 +422,4 @@ Use this exact shape at end of day:
 - `docs/HC_OS_V1_Milestone_H_Lumen_Drift_Detection_Checklist_Stabilization.md`
 - `docs/HC_OS_V1_Milestone_H_Observation_Log_Template_Wisewave.md`
 - `docs/HC_OS_V1_Milestone_H_Lumen_Wisewave_Benchmark_End_of_Day_Summary.md`
+- `docs/post-h-guardrail-pack.md` — post-H 14-day enforcement + drift guardrails (after closure)
