@@ -50,9 +50,24 @@ export type MilestoneISuppressedReason =
   | "thread_not_supported"
   | "weak_thread_candidate";
 
+export type MilestoneIDebugPath = {
+  previousFamily: ContinuityPatternFamily | null;
+  currentFamily: ContinuityPatternFamily | null;
+  familyMatched: boolean;
+  threadStrength: "none" | "weak" | "moderate" | "strong" | null;
+  userReflectiveStructure: boolean;
+  mainReflectionSufficient: boolean;
+};
+
 export type MilestoneIOutcome =
-  | { status: "emitted"; cueFamily: MilestoneICueFamily; textEn: string; textZh: string }
-  | { status: "suppressed"; reason: MilestoneISuppressedReason };
+  | {
+      status: "emitted";
+      cueFamily: MilestoneICueFamily;
+      textEn: string;
+      textZh: string;
+      debugPath: MilestoneIDebugPath;
+    }
+  | { status: "suppressed"; reason: MilestoneISuppressedReason; debugPath: MilestoneIDebugPath };
 
 const VAGUE_SOURCE_SNIPPETS = [
   "i don't know",
@@ -351,59 +366,83 @@ export function computeMilestoneICarryoverCue(params: {
   // Language parity is controlled by the same "wantsChinese" heuristic used elsewhere.
   wantsChinese: boolean;
 }): MilestoneIOutcome {
+  const debugPath: MilestoneIDebugPath = {
+    previousFamily: null,
+    currentFamily: null,
+    familyMatched: false,
+    threadStrength: null,
+    userReflectiveStructure: userHasReflectiveStructureForCarryover(params.userMessage),
+    mainReflectionSufficient: false,
+  };
+
   if (!isMilestoneICarryoverEnabled()) {
-    return { status: "suppressed", reason: "milestone_i_disabled" };
+    return { status: "suppressed", reason: "milestone_i_disabled", debugPath };
   }
 
   const { userMessage, reflectionState, previousReflectionState, recurrenceCueEmitted, awarenessCueEmitted } = params;
 
   if (!reflectionState || !reflectionState.insight_candidate.trim()) {
-    return { status: "suppressed", reason: "no_reflection_state" };
+    return { status: "suppressed", reason: "no_reflection_state", debugPath };
   }
 
   if (userMessage.trim().length < 18) {
-    return { status: "suppressed", reason: "thin_user_message" };
+    return { status: "suppressed", reason: "thin_user_message", debugPath };
   }
 
   if (looksUtilitarianOrFactual(userMessage)) {
-    return { status: "suppressed", reason: "utilitarian_or_factual" };
+    return { status: "suppressed", reason: "utilitarian_or_factual", debugPath };
   }
 
   if (isVagueUserMessage(userMessage)) {
-    return { status: "suppressed", reason: "vague_source" };
+    return { status: "suppressed", reason: "vague_source", debugPath };
   }
 
   if (isMinimalAffectOrFlatHedge(userMessage)) {
-    return { status: "suppressed", reason: "minimal_affect_low_signal" };
+    return { status: "suppressed", reason: "minimal_affect_low_signal", debugPath };
   }
 
   // Conflict containment: E or H already doing the work => suppress I first.
-  if (recurrenceCueEmitted) return { status: "suppressed", reason: "recurrence_overlap_e" };
-  if (awarenessCueEmitted) return { status: "suppressed", reason: "awareness_overlap_h" };
+  if (recurrenceCueEmitted)
+    return { status: "suppressed", reason: "recurrence_overlap_e", debugPath };
+  if (awarenessCueEmitted)
+    return { status: "suppressed", reason: "awareness_overlap_h", debugPath };
 
   if (isExplicitRecallRisk(userMessage)) {
-    return { status: "suppressed", reason: "explicit_recall_dependency" };
+    return { status: "suppressed", reason: "explicit_recall_dependency", debugPath };
   }
+
+  const currentFamily = detectContinuityPatternFamily(
+    reflectionState.insight_candidate
+  );
+  const previousFamily = previousReflectionState
+    ? detectContinuityPatternFamily(previousReflectionState.insight_candidate)
+    : null;
+  debugPath.currentFamily = currentFamily;
+  debugPath.previousFamily = previousFamily;
+  debugPath.familyMatched =
+    previousFamily != null && currentFamily === previousFamily;
 
   const thread = detectThreadSupport({
     current: reflectionState,
     previous: previousReflectionState,
   });
+  debugPath.threadStrength = thread.threadStrength;
 
   if (thread.threadStrength === "none") {
-    return { status: "suppressed", reason: "thread_not_supported" };
+    return { status: "suppressed", reason: "thread_not_supported", debugPath };
   }
   if (thread.threadStrength === "weak") {
     // Keep "weak" as weak_candidate: admissible but do not render.
-    return { status: "suppressed", reason: "weak_thread_candidate" };
+    return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
   }
 
   const mainSufficient = mainReflectionSufficientHeuristic({
     userMessage,
     reflection: reflectionState,
   });
+  debugPath.mainReflectionSufficient = mainSufficient;
   if (mainSufficient) {
-    return { status: "suppressed", reason: "main_reflection_sufficient" };
+    return { status: "suppressed", reason: "main_reflection_sufficient", debugPath };
   }
 
   const family = pickFamily({
@@ -421,18 +460,18 @@ export function computeMilestoneICarryoverCue(params: {
   const textZh = zhTemplates[idx] ?? zhTemplates[0] ?? "";
 
   if (!textEn || !textZh) {
-    return { status: "suppressed", reason: "visibility_risk" };
+    return { status: "suppressed", reason: "visibility_risk", debugPath };
   }
 
   if (isVisibilityRisk(textEn, textZh)) {
-    return { status: "suppressed", reason: "visibility_risk" };
+    return { status: "suppressed", reason: "visibility_risk", debugPath };
   }
 
   // Minimal visibility control: keep I extremely light; if it would be too long, suppress.
   const selected = langKey === "en" ? textEn : textZh;
   const len = selected.trim().length;
   if (len > 90) {
-    return { status: "suppressed", reason: "visibility_risk" };
+    return { status: "suppressed", reason: "visibility_risk", debugPath };
   }
 
   return {
@@ -440,6 +479,7 @@ export function computeMilestoneICarryoverCue(params: {
     cueFamily: family,
     textEn,
     textZh,
+    debugPath,
   };
 }
 

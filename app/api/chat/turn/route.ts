@@ -1267,6 +1267,12 @@ export async function POST(request: Request) {
   let debugMilestoneICueFamily: string | null = null;
   let debugMilestoneICueTextEn: string | null = null;
   let debugMilestoneICueTextZh: string | null = null;
+  let debugMilestoneIPreviousFamily: string | null = null;
+  let debugMilestoneICurrentFamily: string | null = null;
+  let debugMilestoneIFamilyMatched: boolean | null = null;
+  let debugMilestoneIThreadStrength: string | null = null;
+  let debugMilestoneIUserReflectiveStructure: boolean | null = null;
+  let debugMilestoneIMainReflectionSufficient: boolean | null = null;
   const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
 
   // Ticket 4: save one durable insight when we have a good candidate.
@@ -1996,11 +2002,23 @@ export async function POST(request: Request) {
         debugMilestoneICueFamily = iResult.cueFamily;
         debugMilestoneICueTextEn = iResult.textEn;
         debugMilestoneICueTextZh = iResult.textZh;
+        debugMilestoneIPreviousFamily = iResult.debugPath.previousFamily;
+        debugMilestoneICurrentFamily = iResult.debugPath.currentFamily;
+        debugMilestoneIFamilyMatched = iResult.debugPath.familyMatched;
+        debugMilestoneIThreadStrength = iResult.debugPath.threadStrength;
+        debugMilestoneIUserReflectiveStructure = iResult.debugPath.userReflectiveStructure;
+        debugMilestoneIMainReflectionSufficient = iResult.debugPath.mainReflectionSufficient;
       } else {
         debugMilestoneIOutcome = "suppressed";
         debugMilestoneISuppressedReason = iResult.reason;
         debugMilestoneICueTextEn = null;
         debugMilestoneICueTextZh = null;
+        debugMilestoneIPreviousFamily = iResult.debugPath.previousFamily;
+        debugMilestoneICurrentFamily = iResult.debugPath.currentFamily;
+        debugMilestoneIFamilyMatched = iResult.debugPath.familyMatched;
+        debugMilestoneIThreadStrength = iResult.debugPath.threadStrength;
+        debugMilestoneIUserReflectiveStructure = iResult.debugPath.userReflectiveStructure;
+        debugMilestoneIMainReflectionSufficient = iResult.debugPath.mainReflectionSufficient;
       }
     }
   } else {
@@ -2149,6 +2167,12 @@ export async function POST(request: Request) {
     debug_milestone_i_cue_family: debugMilestoneICueFamily,
     debug_milestone_i_cue_text_en: debugMilestoneICueTextEn,
     debug_milestone_i_cue_text_zh: debugMilestoneICueTextZh,
+    debug_milestone_i_previous_family: debugMilestoneIPreviousFamily,
+    debug_milestone_i_current_family: debugMilestoneICurrentFamily,
+    debug_milestone_i_family_matched: debugMilestoneIFamilyMatched,
+    debug_milestone_i_thread_strength: debugMilestoneIThreadStrength,
+    debug_milestone_i_user_reflective_structure: debugMilestoneIUserReflectiveStructure,
+    debug_milestone_i_main_reflection_sufficient: debugMilestoneIMainReflectionSufficient,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

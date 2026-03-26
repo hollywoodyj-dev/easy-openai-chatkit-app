@@ -164,6 +164,11 @@
 
 - **`milestone_h_v14`**: ultra-narrow exception-deny for final ZH medium-band H1 survivors (`h-d01-006`, `h-d02-006`). If medium-band ZH pressure/perfection/rest-permission shape is present in both user text and insight, and main reflection is already materially sufficient, H1 suppresses via `h1_zh_medium_residual_exception_deny`.
 
+## 2026-03-26 — Day-3 decision baseline (unresolved pocket)
+
+- Hosted retest after **`milestone_h_v14`**: broad surface remains improved, but final ZH medium-band H1 survivors still emit on `h-d01-006` and `h-d02-006`. Marked as unresolved boundary pocket; do not claim closure.
+- Day-3 fork: **(A)** deterministic hard-deny for this residual ZH shape (with explicit over-suppression trade-off), or **(B)** treat as current model-limit boundary and carry as known residual risk.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
