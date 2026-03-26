@@ -555,3 +555,13 @@ If any of these conditions appear, OctopusMind must recommend rollback and bound
 
 ## 16. One-Line Truth
 **OctopusMind protects H by refusing to let strategic reasoning convert a closed exception into an acceptable pattern.**
+
+---
+
+# Part IV — Nova Guardrail Constitution
+
+**HC-OS V1 — Milestone H Closed / Implementation Preservation Protocol**
+
+Nova’s governing role is defined in:
+
+- `docs/post-h-nova-guardrail-constitution.md`
