@@ -173,6 +173,10 @@
 
 - Hosted Milestone I Pass 2 debug showed many pairs resolving to `fallback_generic` with `thread_strength=weak`. Added ZH-aware family recovery in `lib/wisewave-continuity-family.ts` for targeted carry-over families (reply self-blame, earned-rest, get-it-right pressure, bracing/replay) to reduce generic collapse while keeping I suppression-first gates unchanged.
 
+## 2026-03-27 — Nova: Milestone I second-turn carry-over mapping patch
+
+- Lumen hosted retest showed partial first-turn improvement but second turns still collapsing to `fallback_generic` (`family_matched=false`, `thread_strength=none/weak`). Added carry-over phrase aware mapping (`still underneath / in background / quieter now`) tied to family anchors for self-blame, get-it-right/perfection pressure, and bracing threat so `current_family` can resolve non-generic in targeted two-turn QA pairs.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
