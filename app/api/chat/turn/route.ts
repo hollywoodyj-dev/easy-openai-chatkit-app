@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
-import { extractReflectionState } from "@/lib/wisewave-extract";
+import {
+  extractReflectionState,
+  type ExtractedReflectionState,
+} from "@/lib/wisewave-extract";
 import { CHAT_SYSTEM_PROMPT as WISEWAVE_CHAT_PROMPT } from "@/lib/wisewave-prompts";
 import {
   type ContinuityPatternFamily,
@@ -22,6 +25,13 @@ import {
   milestoneHBuildMarker,
   type MicroAwarenessKind,
 } from "@/lib/wisewave-milestone-h-micro-awareness";
+import {
+  computeMilestoneICarryoverCue,
+  isMilestoneICarryoverEnabled,
+  milestoneIBuildMarker,
+  type MilestoneISuppressedReason,
+  type MilestoneIOutcome,
+} from "@/lib/wisewave-milestone-i-soft-continuity-carryover";
 import {
   milestoneHLightModeBuildMarker,
   milestoneHLightModeSystemAppendix,
@@ -1251,6 +1261,12 @@ export async function POST(request: Request) {
   let debugMilestoneHSuppressedReason: string | null = null;
   const debugMilestoneHEnabled = isMilestoneHCueEnabled();
 
+  // Milestone I: soft continuity carry-over (minimal carry, no new UI layer).
+  let debugMilestoneIOutcome: string = "skipped_not_computed";
+  let debugMilestoneISuppressedReason: MilestoneISuppressedReason | null = null;
+  let debugMilestoneICueFamily: string | null = null;
+  const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -1874,6 +1890,7 @@ export async function POST(request: Request) {
   // Milestone H: micro awareness cue — after reflection + E strips; suppressed when E recurrence emitted.
   if (assistantMsgId) {
     let previousAssistantHadAwarenessCue = false;
+    let previousAssistantReflectionState: ExtractedReflectionState | null = null;
     try {
       const priorAssistant = await prisma.message.findFirst({
         where: {
@@ -1892,6 +1909,28 @@ export async function POST(request: Request) {
           typeof w === "object" &&
           !Array.isArray(w) &&
           typeof (w as { kind?: unknown }).kind === "string";
+
+        const rs = (pm as Record<string, unknown>).wisewave_reflection_state;
+        if (rs && typeof rs === "object" && !Array.isArray(rs)) {
+          const r = rs as Record<string, unknown>;
+          if (
+            typeof r.trigger_label === "string" &&
+            typeof r.emotion_label === "string" &&
+            typeof r.interpretation_label === "string" &&
+            typeof r.regulation_label === "string" &&
+            typeof r.choice_label === "string" &&
+            typeof r.insight_candidate === "string"
+          ) {
+            previousAssistantReflectionState = {
+              trigger_label: r.trigger_label,
+              emotion_label: r.emotion_label,
+              interpretation_label: r.interpretation_label,
+              regulation_label: r.regulation_label,
+              choice_label: r.choice_label,
+              insight_candidate: r.insight_candidate,
+            } as ExtractedReflectionState;
+          }
+        }
       }
     } catch {
       previousAssistantHadAwarenessCue = false;
@@ -1922,6 +1961,41 @@ export async function POST(request: Request) {
     } else {
       debugMilestoneHOutcome = "suppressed";
       debugMilestoneHSuppressedReason = hResult.reason;
+    }
+
+    // Milestone I: soft continuity carry-over (append subtle carry sentence to assistant_message)
+    if (reflectionState) {
+      const iResult: MilestoneIOutcome = computeMilestoneICarryoverCue({
+        userMessage: message,
+        seed: `${userMsg.id}:${assistantMsgId}`,
+        reflectionState,
+        previousReflectionState: previousAssistantReflectionState,
+        recurrenceCueEmitted: !!responseRecurrenceCue,
+        awarenessCueEmitted: !!responseAwarenessCue,
+        wantsChinese,
+      });
+
+      if (iResult.status === "emitted") {
+        const cueText = wantsChinese ? iResult.textZh : iResult.textEn;
+        const merged = `${assistantContent?.trim() ?? ""} ${cueText}`.replace(/\s+/g, " ").trim();
+        // Update in-memory response + persisted assistant message for coherence.
+        assistantContent = normalizeModelTextForStorage(merged);
+        try {
+          await prisma.message.update({
+            where: { id: assistantMsgId },
+            data: { message: assistantContent },
+          });
+        } catch (e) {
+          console.warn("[chat/turn] assistant message update (milestone I) failed", e);
+        }
+
+        debugMilestoneIOutcome = "emitted";
+        debugMilestoneISuppressedReason = null;
+        debugMilestoneICueFamily = iResult.cueFamily;
+      } else {
+        debugMilestoneIOutcome = "suppressed";
+        debugMilestoneISuppressedReason = iResult.reason;
+      }
     }
   } else {
     debugMilestoneHOutcome = "skipped_no_assistant_row";
@@ -2062,6 +2136,11 @@ export async function POST(request: Request) {
     debug_milestone_h_outcome: debugMilestoneHOutcome,
     debug_milestone_h_suppressed_reason: debugMilestoneHSuppressedReason,
     debug_milestone_h_kind: responseAwarenessCue?.kind ?? null,
+    debug_milestone_i_enabled: debugMilestoneIEnabled,
+    debug_milestone_i_build_marker: milestoneIBuildMarker(),
+    debug_milestone_i_outcome: debugMilestoneIOutcome,
+    debug_milestone_i_suppressed_reason: debugMilestoneISuppressedReason,
+    debug_milestone_i_cue_family: debugMilestoneICueFamily,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
