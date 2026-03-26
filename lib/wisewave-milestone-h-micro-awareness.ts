@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v6";
+const BUILD_MARKER = "milestone_h_v7";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -68,6 +68,10 @@ export type MilestoneHSuppressedReason =
   | "minimal_affect_low_signal"
   /** Lumen follow-up: H1 on mild/generic reflective only — insight not durable enough; prefer silence. */
   | "h1_mild_reflective_insufficient"
+  /** Post-H guardrail: suppress H1 when the main reflection is likely already sufficient (avoid additive tails). */
+  | "h1_main_reflection_sufficient"
+  /** Post-H guardrail: medium-signal reflective turns no longer default-allow H1. */
+  | "h1_medium_signal_downgrade"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -334,12 +338,26 @@ function looksUtilitarianOrFactual(message: string): boolean {
 
   if (looksTaskHelpOrUtilitarianRequest(t)) return true;
 
+  // Post-H hard kill: direct drafting / rewrite / summarize style asks must never emit H.
+  // (Observed leak: "Rewrite this email in a more professional tone.")
+  if (
+    /^(rewrite|summarize|summarise|paraphrase|proofread|edit|polish|format|organize|organise|outline)\b/i.test(
+      t
+    )
+  )
+    return true;
+  if (/\b(rewrite|summarize|summarise|paraphrase|proofread|edit|polish)\b/i.test(t) && /\b(email|document|notes|meeting notes)\b/i.test(t))
+    return true;
+  if (/^(帮我|请帮我|麻烦)\s*(总结|改写|润色|整理|起草)/.test(t)) return true;
+  if (/(会议纪要|邮件|文档|总结成|更正式)/.test(t) && /(帮我|请帮我|麻烦)/.test(t)) return true;
+
   // Reflective first-person (ZH/EN) first — avoids false positives on 怎么… when 我/我觉得 follows
   if (hasReflectiveFirstPersonAnchor(t)) {
     // Still block obvious English homework / lookup patterns
     if (/^(what|when|where|who|which|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\b/i.test(t))
       return true;
-    if (/^(define|explain|translate|calculate|list|give me)\b/i.test(t)) return true;
+    if (/^(define|explain|translate|calculate|list|give me|rewrite|summarize|summarise|paraphrase|proofread|edit|polish|format|organize|organise|outline)\b/i.test(t))
+      return true;
     if (/^\d+[\s\+\-*\/=]/.test(t)) return true;
     if (/^(http|https):\/\//i.test(t)) return true;
     return false;
@@ -348,7 +366,8 @@ function looksUtilitarianOrFactual(message: string): boolean {
   // Obvious non-reflective asks
   if (/^(what|when|where|who|which|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\b/i.test(t))
     return true;
-  if (/^(define|explain|translate|calculate|list|give me)\b/i.test(t)) return true;
+  if (/^(define|explain|translate|calculate|list|give me|rewrite|summarize|summarise|paraphrase|proofread|edit|polish|format|organize|organise|outline)\b/i.test(t))
+    return true;
   if (/^\d+[\s\+\-*\/=]/.test(t)) return true;
   if (/^(http|https):\/\//i.test(t)) return true;
 
@@ -362,6 +381,39 @@ function looksUtilitarianOrFactual(message: string): boolean {
   if (t.length < 40) return true;
 
   return false;
+}
+
+/**
+ * Post-H: H1 over-emission fix.
+ * If the extracted insight is already durable/structured and the user message is medium-length,
+ * H1 is likely an additive tail (removal improves multiple cases). Prefer suppression.
+ */
+function isH1SuppressedByMainReflectionSufficiency(userMessage: string, insight: string): boolean {
+  const len = userMessage.trim().length;
+  if (len >= 140) return false; // long substrate: allow room for human judgment
+  const ins = insight.trim().toLowerCase();
+  if (!hasStrongInsightSignal(insight)) return false;
+  if (insightHasDurableHPattern(ins)) return true;
+  // Medium-ish substrate without explicit reflective structure: treat H1 as likely redundant.
+  if (len >= 48 && len < 115 && !userHasReflectiveStructureForNarrowing(userMessage)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Post-H: medium signal downgrade.
+ * If the turn looks reflective but not strongly earned (no structure, no durable insight),
+ * suppress H1 rather than allowing it by default.
+ */
+function isH1SuppressedByMediumSignalDowngrade(userMessage: string, insight: string): boolean {
+  const len = userMessage.trim().length;
+  if (len < 40 || len >= 140) return false;
+  if (userHasReflectiveStructureForNarrowing(userMessage)) return false;
+  const ins = insight.trim().toLowerCase();
+  if (insightHasDurableHPattern(ins)) return false;
+  // Medium-length + non-durable insight => treat as medium-signal and prefer silence.
+  return true;
 }
 
 function hasStrongInsightSignal(insight: string): boolean {
@@ -974,6 +1026,14 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1MildSubstrateSuppressed(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_mild_reflective_insufficient" };
+  }
+
+  if (kind === "H1" && isH1SuppressedByMainReflectionSufficiency(userMessage, insight)) {
+    return { status: "suppressed", reason: "h1_main_reflection_sufficient" };
+  }
+
+  if (kind === "H1" && isH1SuppressedByMediumSignalDowngrade(userMessage, insight)) {
+    return { status: "suppressed", reason: "h1_medium_signal_downgrade" };
   }
 
   if (kind === "H1" && isH1ExtraNarrowingSuppressed(userMessage, insight)) {

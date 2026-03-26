@@ -136,6 +136,10 @@
 
 - **`milestone_h_v6`**: suppress `H3` when the main reflection already carries the needed value (residual over-emission); treat generic `default` H3 phrasing as danger patterns when redundant. **H4** unchanged. **`lib/wisewave-milestone-h-micro-awareness.ts`**.
 
+## 2026-03-26 — Nova: Post-H containment tightening (Day 1 + Day 2)
+
+- **`milestone_h_v7`**: post-H suppression tightening after repeated Day 1 + Day 2 failures (H1 medium over-emission + utilitarian leakage). Added: **factual/utilitarian hard-kill** for drafting requests (rewrite/summarize/email/meeting notes), **H1 main-reflection-sufficiency** suppression (avoid additive tails), and **medium-signal downgrade** for H1 (no longer default-allowed). **`lib/wisewave-milestone-h-micro-awareness.ts`**.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
