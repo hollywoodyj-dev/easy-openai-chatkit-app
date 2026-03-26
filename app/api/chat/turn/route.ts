@@ -1265,6 +1265,8 @@ export async function POST(request: Request) {
   let debugMilestoneIOutcome: string = "skipped_not_computed";
   let debugMilestoneISuppressedReason: MilestoneISuppressedReason | null = null;
   let debugMilestoneICueFamily: string | null = null;
+  let debugMilestoneICueTextEn: string | null = null;
+  let debugMilestoneICueTextZh: string | null = null;
   const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
 
   // Ticket 4: save one durable insight when we have a good candidate.
@@ -1992,9 +1994,13 @@ export async function POST(request: Request) {
         debugMilestoneIOutcome = "emitted";
         debugMilestoneISuppressedReason = null;
         debugMilestoneICueFamily = iResult.cueFamily;
+        debugMilestoneICueTextEn = iResult.textEn;
+        debugMilestoneICueTextZh = iResult.textZh;
       } else {
         debugMilestoneIOutcome = "suppressed";
         debugMilestoneISuppressedReason = iResult.reason;
+        debugMilestoneICueTextEn = null;
+        debugMilestoneICueTextZh = null;
       }
     }
   } else {
@@ -2141,6 +2147,8 @@ export async function POST(request: Request) {
     debug_milestone_i_outcome: debugMilestoneIOutcome,
     debug_milestone_i_suppressed_reason: debugMilestoneISuppressedReason,
     debug_milestone_i_cue_family: debugMilestoneICueFamily,
+    debug_milestone_i_cue_text_en: debugMilestoneICueTextEn,
+    debug_milestone_i_cue_text_zh: debugMilestoneICueTextZh,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
