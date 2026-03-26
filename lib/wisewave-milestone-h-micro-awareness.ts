@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v11";
+const BUILD_MARKER = "milestone_h_v12";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -80,6 +80,10 @@ export type MilestoneHSuppressedReason =
   | "h_medium_cross_kind_substitution_block"
   /** v11 boundary correction: medium-band pressure/bracing shapes default suppress unless stronger admissibility. */
   | "h_medium_boundary_default_suppress"
+  /** v12 doctrine: medium-band is lane-agnostic default suppress unless necessity bundle is proven. */
+  | "h_medium_lane_agnostic_default_suppress"
+  /** v12 doctrine: medium-band global main-reflection sufficiency suppress across all H lanes. */
+  | "h_medium_main_reflection_sufficient_global"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -473,6 +477,18 @@ function hasStrongerMediumAdmissibility(userMessage: string, insight: string): b
     hasClearMomentLevelActivation(userMessage) &&
     userHasReflectiveStructureForNarrowing(userMessage) &&
     insightHasDurableHPattern(ins)
+  );
+}
+
+function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
+  const ins = insight.trim().toLowerCase();
+  if (insightHasDurableHPattern(ins)) return true;
+  if (insightCapturesMediumPressureOrBracing(insight)) return true;
+  return (
+    ins.length >= 60 &&
+    /(pressure|pattern|loop|split|conflict|bracing|over[- ]?effort|avoid|prove|self[- ]?doubt|perfection|worth|deserve|guilt)/i.test(
+      ins
+    )
   );
 }
 
@@ -1097,6 +1113,17 @@ export function computeMicroAwarenessCue(params: {
     kind = "H3";
   } else {
     kind = "H1";
+  }
+
+  // v12 doctrine (Wisewave): medium-band is lane-agnostic default suppress.
+  // Suppress across all H lanes when main reflection is already materially sufficient.
+  if (isMediumBand(userMessage) && isMainReflectionMateriallySufficientGlobal(insight)) {
+    return { status: "suppressed", reason: "h_medium_main_reflection_sufficient_global" };
+  }
+
+  // v12 doctrine: medium-band ineligible unless necessity bundle is clearly proven.
+  if (isMediumBand(userMessage) && !hasStrongerMediumAdmissibility(userMessage, insight)) {
+    return { status: "suppressed", reason: "h_medium_lane_agnostic_default_suppress" };
   }
 
   if (kind === "H1" && isH1MildSubstrateSuppressed(userMessage, insight)) {

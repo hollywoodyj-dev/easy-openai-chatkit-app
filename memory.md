@@ -152,6 +152,10 @@
 
 - **`milestone_h_v11`**: converted remaining survivor handling into admissibility correction (not wording cleanup): for medium-band pressure/perfection/rest-worth/bracing shapes, awareness defaults to suppress unless stronger admissibility is present (moment-level activation + reflective structure + durable insight pattern). New suppression reason: `h_medium_boundary_default_suppress`. Targets remain `h-d01-006`, `h-d01-007`, `h-d02-006`.
 
+## 2026-03-26 — Nova: Post-H v12 lane-agnostic medium doctrine
+
+- **`milestone_h_v12`**: applied Wisewave lane-agnostic medium-band doctrine as a global admission rule across H1/H3/H4/H5: medium-band defaults to suppress unless necessity bundle is proven (`h_medium_lane_agnostic_default_suppress`), and global main-reflection sufficiency suppresses across lanes (`h_medium_main_reflection_sufficient_global`). Added to prevent residual survivors and H4 reopen (`h-d02-005`).
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
