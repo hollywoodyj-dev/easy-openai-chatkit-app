@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v12";
+const BUILD_MARKER = "milestone_h_v13";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -84,6 +84,8 @@ export type MilestoneHSuppressedReason =
   | "h_medium_lane_agnostic_default_suppress"
   /** v12 doctrine: medium-band global main-reflection sufficiency suppress across all H lanes. */
   | "h_medium_main_reflection_sufficient_global"
+  /** v13 parity: ZH medium-band requires stricter live-activation proof. */
+  | "h_medium_zh_activation_not_strong_enough"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -477,6 +479,23 @@ function hasStrongerMediumAdmissibility(userMessage: string, insight: string): b
     hasClearMomentLevelActivation(userMessage) &&
     userHasReflectiveStructureForNarrowing(userMessage) &&
     insightHasDurableHPattern(ins)
+  );
+}
+
+function hasCjkText(s: string): boolean {
+  return /[\u4E00-\u9FFF]/.test(s);
+}
+
+/**
+ * v13: stricter ZH live-activation proof (avoid admitting medium cases from generic
+ * pressure/rest-worth wording that QA still reads as additive).
+ */
+function hasStrictZhMomentActivation(message: string): boolean {
+  const raw = message.trim();
+  return (
+    /(一停下来|一慢下来|马上|立刻).{0,12}(就|会).{0,16}(紧|绷|慌|催|压|停不住|停不下来)/.test(raw) ||
+    /(我能感觉到|我明显感觉到|此刻).{0,18}(身体|胸口|胃里|呼吸).{0,14}(发紧|绷|卡|乱|急)/.test(raw) ||
+    /(正在).{0,12}(收紧|绷紧|发紧|慌|催|推着我|拉扯)/.test(raw)
   );
 }
 
@@ -1119,6 +1138,11 @@ export function computeMicroAwarenessCue(params: {
   // Suppress across all H lanes when main reflection is already materially sufficient.
   if (isMediumBand(userMessage) && isMainReflectionMateriallySufficientGlobal(insight)) {
     return { status: "suppressed", reason: "h_medium_main_reflection_sufficient_global" };
+  }
+
+  // v13 ZH parity: medium-band Chinese cases need stricter live activation proof.
+  if (isMediumBand(userMessage) && hasCjkText(userMessage) && !hasStrictZhMomentActivation(userMessage)) {
+    return { status: "suppressed", reason: "h_medium_zh_activation_not_strong_enough" };
   }
 
   // v12 doctrine: medium-band ineligible unless necessity bundle is clearly proven.
