@@ -21,6 +21,7 @@ export type ContinuityPatternFamily =
  */
 export function detectContinuityPatternFamily(corePattern: string): ContinuityPatternFamily {
   const text = corePattern.trim().toLowerCase();
+  const raw = corePattern.trim();
 
   // Short explicit lines: "not earned" + recovery noun (Lumen Pass 2: thin third turn must stay
   // in family when extractor keeps both tokens — avoids lone "still not earned yet" with no rest).
@@ -42,6 +43,14 @@ export function detectContinuityPatternFamily(corePattern: string): ContinuityPa
     return "rest_must_be_earned";
   }
 
+  // ZH recovery/earnedness cluster (Milestone I hosted QA: avoid fallback_generic collapse).
+  if (
+    /(休息|停下来|慢下来|喘口气|放松|暂停)/.test(raw) &&
+    /(配得上|不配|值得|不值得|先.*才能.*休息|休息.*(愧疚|内疚)|不敢休息|还没资格)/.test(raw)
+  ) {
+    return "rest_must_be_earned";
+  }
+
   if (
     /even after .*the user tends to interpret their (worth|value) as still needing to be earned/.test(
       text
@@ -58,12 +67,28 @@ export function detectContinuityPatternFamily(corePattern: string): ContinuityPa
     return "earned_value_after_effort";
   }
 
+  // ZH earned-value-after-effort cluster.
+  if (
+    /(做完|完成|努力|很用力|已经做了很多|明明做了|付出)/.test(raw) &&
+    /(还是不够|还不够|还要证明|证明自己|才算|才配|才值得)/.test(raw)
+  ) {
+    return "earned_value_after_effort";
+  }
+
   // Short/brief reply → wrong / proof (timing words may appear without literal "reply").
   if (
     /(delayed|late|slow|brief|short|quick|instant|immediate)/.test(text) &&
     /(did something wrong|made a mistake|mistake|wrong|proof|must have|mustn't|should already|already know)/.test(
       text
     )
+  ) {
+    return "delayed_reply_means_i_did_something_wrong";
+  }
+
+  // ZH delayed-reply self-blame cluster.
+  if (
+    /(沉默|没回|未回|不回|不回复|还没回复|没有回音)/.test(raw) &&
+    /(做错|哪里错|是不是我|先怪自己|我的问题|我有问题|怪我)/.test(raw)
   ) {
     return "delayed_reply_means_i_did_something_wrong";
   }
@@ -80,10 +105,28 @@ export function detectContinuityPatternFamily(corePattern: string): ContinuityPa
     return "constant_pressure_keep_up";
   }
 
+  // ZH get-it-right / perfection pressure cluster.
+  if (
+    /(一定要做对|必须做对|做得很对|很完整|不能出错|不许出错|完美|完美一点|要把它做好)/.test(
+      raw
+    )
+  ) {
+    return "constant_pressure_keep_up";
+  }
+
   if (
     /replay/.test(text) ||
     /did something wrong/.test(text) ||
     /searching for mistakes|missteps/.test(text)
+  ) {
+    return "replay_for_mistakes";
+  }
+
+  // ZH replay / bracing threat cluster (kept conservative; still suppression-first upstream).
+  if (
+    /(反复想|反复回想|重播|一直想|老想着|哪里做错|先绷住|绷感|准备出事|会出问题)/.test(
+      raw
+    )
   ) {
     return "replay_for_mistakes";
   }
