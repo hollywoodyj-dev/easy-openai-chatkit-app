@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v10";
+const BUILD_MARKER = "milestone_h_v11";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -78,6 +78,8 @@ export type MilestoneHSuppressedReason =
   | "h1_medium_main_reflection_capture"
   /** v10 tightening: block medium-band cross-kind substitution (e.g., H1->H5) on already-captured movement. */
   | "h_medium_cross_kind_substitution_block"
+  /** v11 boundary correction: medium-band pressure/bracing shapes default suppress unless stronger admissibility. */
+  | "h_medium_boundary_default_suppress"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -459,6 +461,19 @@ function isH1SuppressedByMediumMainReflectionCapture(userMessage: string, insigh
 function isMediumBand(userMessage: string): boolean {
   const len = userMessage.trim().length;
   return len >= 40 && len < 140;
+}
+
+/**
+ * v11 boundary correction:
+ * medium-band awareness in pressure/bracing shapes needs stronger admissibility than pattern-family match.
+ */
+function hasStrongerMediumAdmissibility(userMessage: string, insight: string): boolean {
+  const ins = insight.trim().toLowerCase();
+  return (
+    hasClearMomentLevelActivation(userMessage) &&
+    userHasReflectiveStructureForNarrowing(userMessage) &&
+    insightHasDurableHPattern(ins)
+  );
 }
 
 /**
@@ -1098,6 +1113,17 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1SuppressedByMediumMainReflectionCapture(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_medium_main_reflection_capture" };
+  }
+
+  // v11: medium-band boundary correction.
+  // For pressure/perfection/rest-worth/bracing families, default to silence unless stronger
+  // admissibility is present beyond pattern-family routing.
+  if (
+    isMediumBand(userMessage) &&
+    insightCapturesMediumPressureOrBracing(insight) &&
+    !hasStrongerMediumAdmissibility(userMessage, insight)
+  ) {
+    return { status: "suppressed", reason: "h_medium_boundary_default_suppress" };
   }
 
   // v10: prevent H1-cleaned medium cases from rerouting into H5/H3 when the same movement
