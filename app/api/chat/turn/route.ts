@@ -1270,6 +1270,7 @@ export async function POST(request: Request) {
   let debugMilestoneIPreviousFamily: string | null = null;
   let debugMilestoneICurrentFamily: string | null = null;
   let debugMilestoneIFamilyMatched: boolean | null = null;
+  let debugMilestoneIFamilyCompatible: boolean | null = null;
   let debugMilestoneIThreadStrength: string | null = null;
   let debugMilestoneIUserReflectiveStructure: boolean | null = null;
   let debugMilestoneIMainReflectionSufficient: boolean | null = null;
@@ -2005,6 +2006,7 @@ export async function POST(request: Request) {
         debugMilestoneIPreviousFamily = iResult.debugPath.previousFamily;
         debugMilestoneICurrentFamily = iResult.debugPath.currentFamily;
         debugMilestoneIFamilyMatched = iResult.debugPath.familyMatched;
+        debugMilestoneIFamilyCompatible = iResult.debugPath.familyCompatible;
         debugMilestoneIThreadStrength = iResult.debugPath.threadStrength;
         debugMilestoneIUserReflectiveStructure = iResult.debugPath.userReflectiveStructure;
         debugMilestoneIMainReflectionSufficient = iResult.debugPath.mainReflectionSufficient;
@@ -2016,6 +2018,7 @@ export async function POST(request: Request) {
         debugMilestoneIPreviousFamily = iResult.debugPath.previousFamily;
         debugMilestoneICurrentFamily = iResult.debugPath.currentFamily;
         debugMilestoneIFamilyMatched = iResult.debugPath.familyMatched;
+        debugMilestoneIFamilyCompatible = iResult.debugPath.familyCompatible;
         debugMilestoneIThreadStrength = iResult.debugPath.threadStrength;
         debugMilestoneIUserReflectiveStructure = iResult.debugPath.userReflectiveStructure;
         debugMilestoneIMainReflectionSufficient = iResult.debugPath.mainReflectionSufficient;
@@ -2170,6 +2173,7 @@ export async function POST(request: Request) {
     debug_milestone_i_previous_family: debugMilestoneIPreviousFamily,
     debug_milestone_i_current_family: debugMilestoneICurrentFamily,
     debug_milestone_i_family_matched: debugMilestoneIFamilyMatched,
+    debug_milestone_i_family_compatible: debugMilestoneIFamilyCompatible,
     debug_milestone_i_thread_strength: debugMilestoneIThreadStrength,
     debug_milestone_i_user_reflective_structure: debugMilestoneIUserReflectiveStructure,
     debug_milestone_i_main_reflection_sufficient: debugMilestoneIMainReflectionSufficient,

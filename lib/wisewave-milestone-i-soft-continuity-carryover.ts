@@ -54,6 +54,7 @@ export type MilestoneIDebugPath = {
   previousFamily: ContinuityPatternFamily | null;
   currentFamily: ContinuityPatternFamily | null;
   familyMatched: boolean;
+  familyCompatible: boolean;
   threadStrength: "none" | "weak" | "moderate" | "strong" | null;
   userReflectiveStructure: boolean;
   mainReflectionSufficient: boolean;
@@ -207,7 +208,14 @@ function detectThreadSupport(args: {
     : null;
 
   const family: ContinuityPatternFamily = currentFamily;
-  if (!args.previous || !prevFamily || prevFamily !== currentFamily) {
+  const isCompatible =
+    !!prevFamily &&
+    ((prevFamily === "replay_for_mistakes" &&
+      currentFamily === "delayed_reply_means_i_did_something_wrong") ||
+      (prevFamily === "delayed_reply_means_i_did_something_wrong" &&
+        currentFamily === "replay_for_mistakes"));
+
+  if (!args.previous || !prevFamily || (prevFamily !== currentFamily && !isCompatible)) {
     return { threadStrength: "none", family };
   }
 
@@ -370,6 +378,7 @@ export function computeMilestoneICarryoverCue(params: {
     previousFamily: null,
     currentFamily: null,
     familyMatched: false,
+    familyCompatible: false,
     threadStrength: null,
     userReflectiveStructure: userHasReflectiveStructureForCarryover(params.userMessage),
     mainReflectionSufficient: false,
@@ -421,6 +430,12 @@ export function computeMilestoneICarryoverCue(params: {
   debugPath.previousFamily = previousFamily;
   debugPath.familyMatched =
     previousFamily != null && currentFamily === previousFamily;
+  debugPath.familyCompatible =
+    previousFamily != null &&
+    ((previousFamily === "replay_for_mistakes" &&
+      currentFamily === "delayed_reply_means_i_did_something_wrong") ||
+      (previousFamily === "delayed_reply_means_i_did_something_wrong" &&
+        currentFamily === "replay_for_mistakes"));
 
   const thread = detectThreadSupport({
     current: reflectionState,
