@@ -212,6 +212,12 @@
 - **Wisewave directive implemented:** promotion sensitivity calibration, weak-family floor hardening, weight guard, cross-family protection (strict boundary, only same movement+direction exception).
 - **Code:** `lib/wisewave-milestone-i-soft-continuity-carryover.ts` + `app/api/chat/turn/route.ts`. New suppress reason `weight_guard`; new debug fields `debug_milestone_i_promotion_confidence`, `debug_milestone_i_cross_family_blocked`, `debug_milestone_i_weight_guard_triggered`. **Marker:** `milestone_i_soft_continuity_v7`.
 
+## 2026-03-27 — Nova: Milestone I admission rebalance (v8)
+
+- **Lumen hosted read on v7:** safer controls but Phase A widening under-admitted (A 2/4; B/C/D 0).
+- **Code:** moved thin/vague/minimal prechecks behind thread support in `lib/wisewave-milestone-i-soft-continuity-carryover.ts`; these now suppress only when `threadStrength` is `none|weak`, so credible same-family moderate/strong paths can reach promotion.
+- **Debug:** added `precheckThinUserMessage`, `precheckVagueSource`, `precheckMinimalAffect`. **Marker:** `milestone_i_soft_continuity_v8`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

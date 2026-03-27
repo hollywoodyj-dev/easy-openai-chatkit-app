@@ -35,7 +35,7 @@ import {
 } from "@/lib/wisewave-milestone-i-promotion-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v7";
+const BUILD_MARKER = "milestone_i_soft_continuity_v8";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -97,6 +97,9 @@ export type MilestoneIDebugPath = {
   promotionReasons: string[];
   crossFamilyBlocked: boolean;
   weightGuardTriggered: boolean;
+  precheckThinUserMessage: boolean;
+  precheckVagueSource: boolean;
+  precheckMinimalAffect: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -772,6 +775,9 @@ export function computeMilestoneICarryoverCue(params: {
     promotionReasons: [],
     crossFamilyBlocked: false,
     weightGuardTriggered: false,
+    precheckThinUserMessage: false,
+    precheckVagueSource: false,
+    precheckMinimalAffect: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -791,20 +797,15 @@ export function computeMilestoneICarryoverCue(params: {
     return { status: "suppressed", reason: "no_reflection_state", debugPath };
   }
 
-  if (userMessage.trim().length < 18) {
-    return { status: "suppressed", reason: "thin_user_message", debugPath };
-  }
+  const thinUserMessage = userMessage.trim().length < 18;
+  const vagueSource = isVagueUserMessage(userMessage);
+  const minimalAffect = isMinimalAffectOrFlatHedge(userMessage);
+  debugPath.precheckThinUserMessage = thinUserMessage;
+  debugPath.precheckVagueSource = vagueSource;
+  debugPath.precheckMinimalAffect = minimalAffect;
 
   if (looksUtilitarianOrFactual(userMessage)) {
     return { status: "suppressed", reason: "utilitarian_or_factual", debugPath };
-  }
-
-  if (isVagueUserMessage(userMessage)) {
-    return { status: "suppressed", reason: "vague_source", debugPath };
-  }
-
-  if (isMinimalAffectOrFlatHedge(userMessage)) {
-    return { status: "suppressed", reason: "minimal_affect_low_signal", debugPath };
   }
 
   // Conflict containment: E or H already doing the work => suppress I first.
@@ -850,6 +851,18 @@ export function computeMilestoneICarryoverCue(params: {
   debugPath.signatureScore = thread.signatureScore;
   debugPath.signatureTier = thread.signatureTier;
   debugPath.signatureRescuedThread = thread.signatureRescuedThread;
+
+  // Phase A widening: do not let early style heuristics kill credible same-family carry-over.
+  // Keep suppression-first behavior for weak/none threads.
+  if (thinUserMessage && (thread.threadStrength === "none" || thread.threadStrength === "weak")) {
+    return { status: "suppressed", reason: "thin_user_message", debugPath };
+  }
+  if (vagueSource && (thread.threadStrength === "none" || thread.threadStrength === "weak")) {
+    return { status: "suppressed", reason: "vague_source", debugPath };
+  }
+  if (minimalAffect && (thread.threadStrength === "none" || thread.threadStrength === "weak")) {
+    return { status: "suppressed", reason: "minimal_affect_low_signal", debugPath };
+  }
 
   if (thread.threadStrength === "none") {
     return { status: "suppressed", reason: "thread_not_supported", debugPath };
