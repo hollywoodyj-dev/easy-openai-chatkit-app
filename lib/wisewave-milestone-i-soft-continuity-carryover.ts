@@ -55,7 +55,7 @@ import {
 } from "@/lib/wisewave-milestone-i-overlap-routing-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v22";
+const BUILD_MARKER = "milestone_i_soft_continuity_v23";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -138,6 +138,8 @@ export type MilestoneIDebugPath = {
   hOverlapRoutingReasons: string[];
   hOverlapIValid: boolean | null;
   hOverlapIInvalidReasons: string[];
+  hOverlapFamilyShiftRelaxed: boolean;
+  hOverlapAdmissionConfidenceBridgeUsed: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -914,6 +916,8 @@ export function computeMilestoneICarryoverCue(params: {
     hOverlapRoutingReasons: [],
     hOverlapIValid: null,
     hOverlapIInvalidReasons: [],
+    hOverlapFamilyShiftRelaxed: false,
+    hOverlapAdmissionConfidenceBridgeUsed: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -1022,7 +1026,7 @@ export function computeMilestoneICarryoverCue(params: {
   // I vs H routing rule (Wisewave): in overlap cases, prefer I only when
   // weak-edge self-blame is truly admissible and live-enough.
   if (awarenessCueEmitted) {
-    const familyShiftDetected =
+    const familyShiftDetectedBase =
       previousFamily != null && currentFamily !== previousFamily;
     const weakEdgeSelfTurnStrength = detectWeakEdgeSelfTurnStrength(
       userMessage,
@@ -1043,6 +1047,16 @@ export function computeMilestoneICarryoverCue(params: {
             | "over_effort"
             | "bracing"
             | "unknown");
+    const overlapFamilyShiftRelaxed =
+      !params.wantsChinese &&
+      familyShiftDetectedBase &&
+      admissionFamily === "self_blame" &&
+      thread.coreThreadFamily === "self_blame" &&
+      thread.coreConfidence !== "none" &&
+      presentTurnSelfBlameDirection;
+    const familyShiftDetected = overlapFamilyShiftRelaxed
+      ? false
+      : familyShiftDetectedBase;
     const liveSelfTurnNow =
       weakEdgeSelfTurnStrength !== "none" ||
       promotionInput.current_turn_has_live_movement;
@@ -1066,9 +1080,19 @@ export function computeMilestoneICarryoverCue(params: {
       liveSelfTurnNow
         ? "weak"
         : calibratedInput.family_confidence;
+    const overlapAdmissionConfidenceBridge =
+      !params.wantsChinese &&
+      admissionFamily === "self_blame" &&
+      weakEdgeFamilyConfidence === "none" &&
+      presentTurnSelfBlameDirection &&
+      !weakEdgePurelyHistorical &&
+      !familyShiftDetected;
+    const overlapFamilyConfidence: FamilyConfidence = overlapAdmissionConfidenceBridge
+      ? "weak"
+      : weakEdgeFamilyConfidence;
     const weakEdgeAdmission = resolveWeakEdgeSelfBlameAdmission({
       family: admissionFamily,
-      family_confidence: weakEdgeFamilyConfidence,
+      family_confidence: overlapFamilyConfidence,
       direction_toward_self:
         presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
       current_turn_has_live_self_turn: activeSelfTurnNow || liveSelfTurnNow,
@@ -1122,6 +1146,8 @@ export function computeMilestoneICarryoverCue(params: {
     debugPath.hOverlapRoutingReasons = routing.reasons;
     debugPath.hOverlapIValid = routing.i_valid;
     debugPath.hOverlapIInvalidReasons = routing.i_invalid_reasons;
+    debugPath.hOverlapFamilyShiftRelaxed = overlapFamilyShiftRelaxed;
+    debugPath.hOverlapAdmissionConfidenceBridgeUsed = overlapAdmissionConfidenceBridge;
     if (routing.decision !== "prefer_I") {
       return { status: "suppressed", reason: "awareness_overlap_h", debugPath };
     }

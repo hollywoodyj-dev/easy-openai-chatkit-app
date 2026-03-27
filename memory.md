@@ -309,6 +309,13 @@
 - **Debug:** added `debug_milestone_i_h_overlap_i_valid` and `debug_milestone_i_h_overlap_i_invalid_reasons`.
 - **Marker:** `milestone_i_soft_continuity_v22`.
 
+## 2026-03-27 — Nova: overlap anchor patch (v23)
+
+- **Why:** hosted v22 showed EN-2 still `prefer_H`, with invalidity focused on `weak_edge_admission_failed` and `family_shift_detected`.
+- **Code:** overlap-only EN self-blame fixes: relaxed overlap family-shift when core self-blame continuity still holds; added narrow admission-confidence bridge (`none -> weak`) for non-historical, non-shifted inward self-blame overlap cases.
+- **Debug:** added `debug_milestone_i_h_overlap_family_shift_relaxed` and `debug_milestone_i_h_overlap_admission_confidence_bridge_used`.
+- **Marker:** `milestone_i_soft_continuity_v23`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

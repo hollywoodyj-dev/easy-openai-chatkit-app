@@ -1302,6 +1302,8 @@ export async function POST(request: Request) {
   let debugMilestoneIHOverlapRoutingReasons: string[] | null = null;
   let debugMilestoneIHOverlapIValid: boolean | null = null;
   let debugMilestoneIHOverlapIInvalidReasons: string[] | null = null;
+  let debugMilestoneIHOverlapFamilyShiftRelaxed: boolean | null = null;
+  let debugMilestoneIHOverlapAdmissionConfidenceBridgeUsed: boolean | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2102,6 +2104,10 @@ export async function POST(request: Request) {
         debugMilestoneIHOverlapIValid = iResult.debugPath.hOverlapIValid;
         debugMilestoneIHOverlapIInvalidReasons =
           iResult.debugPath.hOverlapIInvalidReasons;
+        debugMilestoneIHOverlapFamilyShiftRelaxed =
+          iResult.debugPath.hOverlapFamilyShiftRelaxed;
+        debugMilestoneIHOverlapAdmissionConfidenceBridgeUsed =
+          iResult.debugPath.hOverlapAdmissionConfidenceBridgeUsed;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2161,6 +2167,10 @@ export async function POST(request: Request) {
         debugMilestoneIHOverlapIValid = iResult.debugPath.hOverlapIValid;
         debugMilestoneIHOverlapIInvalidReasons =
           iResult.debugPath.hOverlapIInvalidReasons;
+        debugMilestoneIHOverlapFamilyShiftRelaxed =
+          iResult.debugPath.hOverlapFamilyShiftRelaxed;
+        debugMilestoneIHOverlapAdmissionConfidenceBridgeUsed =
+          iResult.debugPath.hOverlapAdmissionConfidenceBridgeUsed;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2363,6 +2373,10 @@ export async function POST(request: Request) {
     debug_milestone_i_h_overlap_i_valid: debugMilestoneIHOverlapIValid,
     debug_milestone_i_h_overlap_i_invalid_reasons:
       debugMilestoneIHOverlapIInvalidReasons,
+    debug_milestone_i_h_overlap_family_shift_relaxed:
+      debugMilestoneIHOverlapFamilyShiftRelaxed,
+    debug_milestone_i_h_overlap_admission_confidence_bridge_used:
+      debugMilestoneIHOverlapAdmissionConfidenceBridgeUsed,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,
