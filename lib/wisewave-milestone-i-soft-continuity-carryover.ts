@@ -51,7 +51,7 @@ import {
 } from "@/lib/wisewave-milestone-i-residual-movement-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v18";
+const BUILD_MARKER = "milestone_i_soft_continuity_v19";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -1058,14 +1058,22 @@ export function computeMilestoneICarryoverCue(params: {
           userMessage
         ) ||
         /(还是会|有一点|会先|先往自己身上)/.test(userMessage));
+    // Weak-edge local confidence fallback: if weak thread + present-turn inward
+    // self-turn are both true, keep this lane at weak (not none) for admission.
+    const weakEdgeFamilyConfidence: FamilyConfidence =
+      calibratedInput.family_confidence === "none" &&
+      presentTurnSelfBlameDirection &&
+      liveSelfTurnNow
+        ? "weak"
+        : calibratedInput.family_confidence;
     const residualCarryShapeUsed =
       !faintResidualSelfTurnPresent &&
       !activeSelfTurnNow &&
       !weakEdgePurelyHistorical &&
       !familyShiftDetected &&
       weakEdgeSelfTurnStrength === "none" &&
-      thread.coreThreadFamily === "self_blame" &&
-      thread.coreConfidence === "weak" &&
+      admissionFamily === "self_blame" &&
+      (weakEdgeFamilyConfidence === "weak" || presentTurnSelfBlameDirection) &&
       hasResidualSelfBlameCarryShape(userMessage);
     const residualResult = resolveResidualSelfBlameMovement({
       family: admissionFamily,
@@ -1094,14 +1102,6 @@ export function computeMilestoneICarryoverCue(params: {
     debugPath.weakEdgeResidualMovementDecision = residualResult.decision;
     debugPath.weakEdgeResidualMovementReasons = residualResult.reasons;
     debugPath.weakEdgeResidualCarryShapeUsed = residualCarryShapeUsed;
-    // Weak-edge local confidence fallback: if weak thread + present-turn inward
-    // self-turn are both true, keep this lane at weak (not none) for admission.
-    const weakEdgeFamilyConfidence: FamilyConfidence =
-      calibratedInput.family_confidence === "none" &&
-      presentTurnSelfBlameDirection &&
-      liveSelfTurnNow
-        ? "weak"
-        : calibratedInput.family_confidence;
 
     const weakEdgeAdmission = resolveWeakEdgeSelfBlameAdmission({
       family: admissionFamily,

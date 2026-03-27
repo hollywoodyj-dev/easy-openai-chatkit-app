@@ -282,6 +282,12 @@
 - **Debug:** `debug_milestone_i_weak_edge_residual_carry_shape_used`.
 - **Marker:** `milestone_i_soft_continuity_v18`.
 
+## 2026-03-27 — Nova: frontier patch phase 1.1 D4 activation fix (v19)
+
+- **Why:** Lumen v18 showed carry-shape path never activated (`residual_carry_shape_used=0`) and D2 dropped.
+- **Code:** relax D4 carry-shape gate from core-family-only to weak-edge self-blame context (admission family + weak/directional present-turn evidence), preserving historical/family-shift guards and no template changes.
+- **Marker:** `milestone_i_soft_continuity_v19`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
