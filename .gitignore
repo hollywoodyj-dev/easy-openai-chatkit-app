@@ -42,6 +42,11 @@ next-env.d.ts
 /data/h-observation/reviews.json
 /data/h-observation/real-samples.json
 
+# Local scratch / QA artifacts (do not commit)
+/tmp-*.js
+/tmp-*.json
+/tmp-*.md
+
 .vercel
 
 # Expo / React Native
