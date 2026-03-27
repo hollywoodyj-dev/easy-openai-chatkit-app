@@ -249,6 +249,12 @@
 - **Code:** reordered weak execution in `lib/wisewave-milestone-i-soft-continuity-carryover.ts` so weak cases run admission and corridor before hard promotion rejection; admitted weak corridor path now injects strict weak promotion shim (`weak_promotion`, `ultra_light_only`) to continue ultra-light rendering.
 - **Marker:** `milestone_i_soft_continuity_v13`.
 
+## 2026-03-27 — Nova: weak-edge family mapping correction (v14)
+
+- **Why:** hosted v13 showed weak-edge admission activated, but A3/B3/C3/D3 were rejected mostly as `not_self_blame_family`.
+- **Code:** in weak path admission input mapping, derive family/direction/live-self-turn from present-turn inward evidence (`hasFaintSelfBlameDirection`, `weakEdgeSelfTurnStrength`) when core family is unknown, while keeping existing safety blockers intact.
+- **Marker:** `milestone_i_soft_continuity_v14`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

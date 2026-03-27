@@ -46,7 +46,7 @@ import {
 } from "@/lib/wisewave-milestone-i-weak-edge-admission-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v13";
+const BUILD_MARKER = "milestone_i_soft_continuity_v14";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -988,16 +988,29 @@ export function computeMilestoneICarryoverCue(params: {
     debugPath.weakEdgeSelfTurnStrength = weakEdgeSelfTurnStrength;
     debugPath.weakEdgePurelyHistorical = weakEdgePurelyHistorical;
 
+    // Weak-edge admission should be keyed by present-turn inward shape, not only
+    // by cross-turn core family match, so indirect weak cases can be evaluated.
+    const presentTurnSelfBlameDirection =
+      hasFaintSelfBlameDirection(userMessage, reflectionState.insight_candidate) ||
+      weakEdgeSelfTurnStrength !== "none";
+    const admissionFamily =
+      thread.coreThreadFamily === "self_blame" || presentTurnSelfBlameDirection
+        ? "self_blame"
+        : ((thread.coreThreadFamily ?? "unknown") as
+            | "self_blame"
+            | "over_effort"
+            | "bracing"
+            | "unknown");
+    const liveSelfTurnNow =
+      weakEdgeSelfTurnStrength !== "none" ||
+      promotionInput.current_turn_has_live_movement;
+
     const weakEdgeAdmission = resolveWeakEdgeSelfBlameAdmission({
-      family: (thread.coreThreadFamily ?? "unknown") as
-        | "self_blame"
-        | "over_effort"
-        | "bracing"
-        | "unknown",
+      family: admissionFamily,
       family_confidence: calibratedInput.family_confidence,
-      direction_toward_self: !!thread.coreMovementDirectionMatch,
-      current_turn_has_live_self_turn:
-        promotionInput.current_turn_has_live_movement,
+      direction_toward_self:
+        presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
+      current_turn_has_live_self_turn: liveSelfTurnNow,
       current_turn_self_turn_strength: weakEdgeSelfTurnStrength,
       purely_historical: weakEdgePurelyHistorical,
       main_reflection_sufficient: mainSufficient,
