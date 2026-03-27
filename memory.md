@@ -288,6 +288,20 @@
 - **Code:** relax D4 carry-shape gate from core-family-only to weak-edge self-blame context (admission family + weak/directional present-turn evidence), preserving historical/family-shift guards and no template changes.
 - **Marker:** `milestone_i_soft_continuity_v19`.
 
+## 2026-03-27 — Nova: EN weak-edge trust calibration (v20)
+
+- **Why:** Lumen+Wisewave narrowed frontier to EN weak-edge recognition/admission lag (not thin input, not broad residual failure).
+- **Code:** EN-only signal expansion in `wisewave-milestone-i-thread-family-map.ts` and EN weak-edge helpers in `wisewave-milestone-i-soft-continuity-carryover.ts` for indirect/mixed/long residual self-blame phrasing.
+- **Guardrails:** no template changes, no ZH broadening, no H policy weakening.
+- **Marker:** `milestone_i_soft_continuity_v20`.
+
+## 2026-03-27 — Nova: I x H overlap routing map (v21)
+
+- **Why:** frontier narrowed to overlap routing (EN-2-like) rather than broad EN trust failure.
+- **Code:** new `lib/wisewave-milestone-i-overlap-routing-map.ts`; in overlap cases, apply map decision after weak-edge admission + live-enough. `prefer_I` allows I and suppresses H; non-`prefer_I` keeps `awareness_overlap_h`.
+- **Debug:** added routing decision/reasons to turn output.
+- **Marker:** `milestone_i_soft_continuity_v21`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

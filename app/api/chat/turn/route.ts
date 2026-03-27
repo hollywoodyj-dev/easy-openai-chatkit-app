@@ -1297,6 +1297,9 @@ export async function POST(request: Request) {
   let debugMilestoneIWeakEdgeResidualMovementDecision: string | null = null;
   let debugMilestoneIWeakEdgeResidualMovementReasons: string[] | null = null;
   let debugMilestoneIWeakEdgeResidualCarryShapeUsed: boolean | null = null;
+  let debugMilestoneIHOverlapPreferIActivated: boolean | null = null;
+  let debugMilestoneIHOverlapRoutingDecision: string | null = null;
+  let debugMilestoneIHOverlapRoutingReasons: string[] | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2088,6 +2091,12 @@ export async function POST(request: Request) {
           iResult.debugPath.weakEdgeResidualMovementReasons;
         debugMilestoneIWeakEdgeResidualCarryShapeUsed =
           iResult.debugPath.weakEdgeResidualCarryShapeUsed;
+        debugMilestoneIHOverlapPreferIActivated =
+          iResult.debugPath.hOverlapPreferIActivated;
+        debugMilestoneIHOverlapRoutingDecision =
+          iResult.debugPath.hOverlapRoutingDecision;
+        debugMilestoneIHOverlapRoutingReasons =
+          iResult.debugPath.hOverlapRoutingReasons;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2138,6 +2147,12 @@ export async function POST(request: Request) {
           iResult.debugPath.weakEdgeResidualMovementReasons;
         debugMilestoneIWeakEdgeResidualCarryShapeUsed =
           iResult.debugPath.weakEdgeResidualCarryShapeUsed;
+        debugMilestoneIHOverlapPreferIActivated =
+          iResult.debugPath.hOverlapPreferIActivated;
+        debugMilestoneIHOverlapRoutingDecision =
+          iResult.debugPath.hOverlapRoutingDecision;
+        debugMilestoneIHOverlapRoutingReasons =
+          iResult.debugPath.hOverlapRoutingReasons;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2331,6 +2346,12 @@ export async function POST(request: Request) {
       debugMilestoneIWeakEdgeResidualMovementReasons,
     debug_milestone_i_weak_edge_residual_carry_shape_used:
       debugMilestoneIWeakEdgeResidualCarryShapeUsed,
+    debug_milestone_i_h_overlap_prefer_i_activated:
+      debugMilestoneIHOverlapPreferIActivated,
+    debug_milestone_i_h_overlap_routing_decision:
+      debugMilestoneIHOverlapRoutingDecision,
+    debug_milestone_i_h_overlap_routing_reasons:
+      debugMilestoneIHOverlapRoutingReasons,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,

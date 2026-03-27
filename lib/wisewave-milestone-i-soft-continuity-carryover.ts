@@ -49,9 +49,13 @@ import {
   resolveResidualSelfBlameMovement,
   type ResidualMovementDecision,
 } from "@/lib/wisewave-milestone-i-residual-movement-map";
+import {
+  resolveIHOverlapRouting,
+  type OverlapRoutingDecision,
+} from "@/lib/wisewave-milestone-i-overlap-routing-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v19";
+const BUILD_MARKER = "milestone_i_soft_continuity_v21";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -129,6 +133,9 @@ export type MilestoneIDebugPath = {
   weakEdgeResidualMovementDecision: ResidualMovementDecision | null;
   weakEdgeResidualMovementReasons: string[];
   weakEdgeResidualCarryShapeUsed: boolean;
+  hOverlapPreferIActivated: boolean;
+  hOverlapRoutingDecision: OverlapRoutingDecision | null;
+  hOverlapRoutingReasons: string[];
 };
 
 export type MilestoneIOutcome =
@@ -900,6 +907,9 @@ export function computeMilestoneICarryoverCue(params: {
     weakEdgeResidualMovementDecision: null,
     weakEdgeResidualMovementReasons: [],
     weakEdgeResidualCarryShapeUsed: false,
+    hOverlapPreferIActivated: false,
+    hOverlapRoutingDecision: null,
+    hOverlapRoutingReasons: [],
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -933,8 +943,6 @@ export function computeMilestoneICarryoverCue(params: {
   // Conflict containment: E or H already doing the work => suppress I first.
   if (recurrenceCueEmitted)
     return { status: "suppressed", reason: "recurrence_overlap_e", debugPath };
-  if (awarenessCueEmitted)
-    return { status: "suppressed", reason: "awareness_overlap_h", debugPath };
 
   if (isExplicitRecallRisk(userMessage)) {
     return { status: "suppressed", reason: "explicit_recall_dependency", debugPath };
@@ -1007,6 +1015,100 @@ export function computeMilestoneICarryoverCue(params: {
     language: params.wantsChinese ? "zh" : "en",
   });
   const calibratedInput = applyPromotionSensitivityCalibration(promotionInput);
+  // I vs H routing rule (Wisewave): in overlap cases, prefer I only when
+  // weak-edge self-blame is truly admissible and live-enough.
+  if (awarenessCueEmitted) {
+    const familyShiftDetected =
+      previousFamily != null && currentFamily !== previousFamily;
+    const weakEdgeSelfTurnStrength = detectWeakEdgeSelfTurnStrength(
+      userMessage,
+      reflectionState.insight_candidate
+    );
+    const weakEdgePurelyHistorical = isPurelyHistoricalWeakEdge(
+      userMessage,
+      reflectionState.insight_candidate
+    );
+    const presentTurnSelfBlameDirection =
+      hasFaintSelfBlameDirection(userMessage, reflectionState.insight_candidate) ||
+      weakEdgeSelfTurnStrength !== "none";
+    const admissionFamily =
+      thread.coreThreadFamily === "self_blame" || presentTurnSelfBlameDirection
+        ? "self_blame"
+        : ((thread.coreThreadFamily ?? "unknown") as
+            | "self_blame"
+            | "over_effort"
+            | "bracing"
+            | "unknown");
+    const liveSelfTurnNow =
+      weakEdgeSelfTurnStrength !== "none" ||
+      promotionInput.current_turn_has_live_movement;
+    const activeSelfTurnNow = hasActiveSelfBlameMovement(
+      userMessage,
+      reflectionState.insight_candidate
+    );
+    const faintResidualSelfTurnPresent =
+      presentTurnSelfBlameDirection &&
+      !activeSelfTurnNow &&
+      !weakEdgePurelyHistorical &&
+      !familyShiftDetected &&
+      (weakEdgeSelfTurnStrength === "faint" ||
+        /(?:\bstill\b|\bkind of\b|\bsort of\b|\ba little\b|\bfirst\b)/i.test(
+          userMessage
+        ) ||
+        /(还是会|有一点|会先|先往自己身上)/.test(userMessage));
+    const weakEdgeFamilyConfidence: FamilyConfidence =
+      calibratedInput.family_confidence === "none" &&
+      presentTurnSelfBlameDirection &&
+      liveSelfTurnNow
+        ? "weak"
+        : calibratedInput.family_confidence;
+    const weakEdgeAdmission = resolveWeakEdgeSelfBlameAdmission({
+      family: admissionFamily,
+      family_confidence: weakEdgeFamilyConfidence,
+      direction_toward_self:
+        presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
+      current_turn_has_live_self_turn: activeSelfTurnNow || liveSelfTurnNow,
+      current_turn_self_turn_strength: weakEdgeSelfTurnStrength,
+      purely_historical: weakEdgePurelyHistorical,
+      main_reflection_sufficient: mainSufficient,
+      visibility_risk_high: promotionInput.visibility_risk_high,
+      e_sufficient: promotionInput.e_sufficient,
+      h_sufficient: false,
+      removal_cleaner: promotionInput.removal_cleaner,
+      family_shift_detected: familyShiftDetected,
+      explicit_recall_needed: isExplicitRecallRisk(userMessage),
+    });
+    const residualResult = resolveResidualSelfBlameMovement({
+      family: admissionFamily,
+      direction_toward_self:
+        presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
+      current_turn_has_live_self_turn: activeSelfTurnNow,
+      faint_residual_self_turn_present: faintResidualSelfTurnPresent,
+      purely_historical: weakEdgePurelyHistorical,
+      family_shift_detected: familyShiftDetected,
+    });
+    const currentTurnIsLiveEnough = resolveCurrentTurnLiveEnough({
+      current_turn_has_live_movement: activeSelfTurnNow || liveSelfTurnNow,
+      residual_result: residualResult,
+    });
+    const routing = resolveIHOverlapRouting({
+      family: admissionFamily,
+      weak_edge_admission_passed: weakEdgeAdmission.admitted,
+      current_turn_is_live_enough: currentTurnIsLiveEnough,
+      family_shift_detected: familyShiftDetected,
+      visibility_risk_high: promotionInput.visibility_risk_high,
+      main_reflection_sufficient: mainSufficient,
+      h_candidate: awarenessCueEmitted,
+      i_removal_cleaner: promotionInput.removal_cleaner,
+      h_removal_cleaner: false,
+    });
+    debugPath.hOverlapRoutingDecision = routing.decision;
+    debugPath.hOverlapRoutingReasons = routing.reasons;
+    if (routing.decision !== "prefer_I") {
+      return { status: "suppressed", reason: "awareness_overlap_h", debugPath };
+    }
+    debugPath.hOverlapPreferIActivated = true;
+  }
   let promotion = resolvePromotionState(calibratedInput);
   debugPath.promotionState = promotion.promotion_state;
   debugPath.promotionConfidence = calibratedInput.family_confidence;
