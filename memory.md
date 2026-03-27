@@ -224,6 +224,12 @@
 - **Code:** add narrow weak-family survival bridge in `lib/wisewave-milestone-i-soft-continuity-carryover.ts`: weak threads can continue only under `weak_promotion + ultra_light_only + self_blame`; otherwise still suppressed. Added debug `weakPromotionBridgeUsed` and route field `debug_milestone_i_weak_promotion_bridge_used`.
 - **Marker:** `milestone_i_soft_continuity_v9`.
 
+## 2026-03-27 — Nova: Milestone I weak-path activation (v10)
+
+- **Why:** v9 was flat on hosted; bridge never fired (`weak_promotion_bridge_used=0`), so bottleneck remained before bridge qualification.
+- **Code:** in `lib/wisewave-milestone-i-soft-continuity-carryover.ts`, weak self-blame can satisfy current-turn live support via faint-direction phrases; weak bridge condition simplified to `weak_promotion + ultra_light_only` to match actual promotion eligibility path.
+- **Boundary unchanged:** no new templates, no weight increase allowances, weight guard + cross-family protection remain active. **Marker:** `milestone_i_soft_continuity_v10`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

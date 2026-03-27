@@ -35,7 +35,7 @@ import {
 } from "@/lib/wisewave-milestone-i-promotion-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v9";
+const BUILD_MARKER = "milestone_i_soft_continuity_v10";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -282,6 +282,16 @@ function currentTurnLiveMovement(
   return coreConfidence === "strong";
 }
 
+function hasFaintSelfBlameDirection(userMessage: string, insightCandidate: string): boolean {
+  const raw = `${userMessage}\n${insightCandidate}`;
+  return (
+    /(往自己身上|怀疑自己|是不是我|我的问题|是我问题|怪自己|先怪自己|有点像是我)/.test(raw) ||
+    /(on me|my fault|might be me|maybe i caused|question myself|turn it on myself|i might be the problem)/i.test(
+      raw
+    )
+  );
+}
+
 function buildPromotionInput(args: {
   coreThreadFamily: ThreadFamily | null;
   coreConfidence: ConfidenceLevel | null;
@@ -295,12 +305,18 @@ function buildPromotionInput(args: {
   const family = (args.coreThreadFamily ?? "unknown") as PromotionInput["family"];
   const fc = toFamilyConfidence(args.coreConfidence, args.coreUseFallbackGeneric, args.coreThreadFamily);
   const decay = inferDecayState(args.previousUserMessage, args.userMessage);
-  const live = currentTurnLiveMovement(
+  const liveByMovement = currentTurnLiveMovement(
     args.userMessage,
     args.reflectionState.insight_candidate,
     args.language,
     args.coreConfidence
   );
+  // Weak-family widening bridge (Phase A/D): allow faint self-blame direction to count as live support.
+  const weakDirectionalSelfBlame =
+    args.coreThreadFamily === "self_blame" &&
+    args.coreConfidence === "weak" &&
+    hasFaintSelfBlameDirection(args.userMessage, args.reflectionState.insight_candidate);
+  const live = liveByMovement || weakDirectionalSelfBlame;
   return {
     family,
     family_confidence: fc,
@@ -906,8 +922,7 @@ export function computeMilestoneICarryoverCue(params: {
   if (thread.threadStrength === "weak") {
     const weakBridgeAllowed =
       promotion.promotion_state === "weak_promotion" &&
-      promotion.template_allowance === "ultra_light_only" &&
-      thread.coreThreadFamily === "self_blame";
+      promotion.template_allowance === "ultra_light_only";
     if (!weakBridgeAllowed) {
       return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
     }
