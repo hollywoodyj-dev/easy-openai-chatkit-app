@@ -316,6 +316,19 @@
 - **Debug:** added `debug_milestone_i_h_overlap_family_shift_relaxed` and `debug_milestone_i_h_overlap_admission_confidence_bridge_used`.
 - **Marker:** `milestone_i_soft_continuity_v23`.
 
+## 2026-03-27 — Lumen: Phase A closure-ready judgment (v23)
+
+- **Hosted evidence:** closure confirmation pass on `milestone_i_soft_continuity_v23` = **16 tested / 10 emitted** (`A 3/4`, `B 2/4`, `C 2/4`, `D 3/4`), with `weight_guard_triggered=0` and `cross_family_blocked=0`.
+- **Overlap frontier truth:** EN-2 anchor now emits via `prefer_I`; decisive mechanism is `h_overlap_family_shift_relaxed=true` while `h_overlap_admission_confidence_bridge_used=false`.
+- **Read:** no live systemic blocker remains; behavior is broad enough and still light/safe.
+- **Recommendation:** treat Milestone I Phase A as **closure-ready** and stop broad patching; leave isolated misses as non-blocking edge-level items unless Tree asks for one final narrow polish pass.
+
+## 2026-03-27 — Wisewave: formal closure decision published
+
+- **Doc:** `docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`.
+- **Decision:** Milestone I Phase A is closure-ready.
+- **Operating mode:** stop broad patching, enter closure review / lock mode, preserve current lightness profile, keep remaining misses as post-close refinements only.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
