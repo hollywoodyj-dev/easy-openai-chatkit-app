@@ -27,14 +27,18 @@ export function detectContinuityPatternFamily(corePattern: string): ContinuityPa
   // "still underneath / in the background / quieter now" and can collapse to generic
   // unless family anchors are also recognized.
   const hasCarryoverAtmosphereEn =
-    /(still|same).*(underneath|in the background|beneath|still there|lingering|quiet(er)? now|still present)/i.test(
+    /(still|same).*(underneath|in the background|beneath|still there|lingering|quiet(er)? now|still present|hasn'?t left|not gone|sitting with)/i.test(
       text
     ) ||
-    /(quieter now).*(still|same)/i.test(text);
+    /(quieter now).*(still|same)/i.test(text) ||
+    /(linger(s|ing)?|persist(s|ing)?).*(sense|feeling|worry|doubt|tension)/i.test(text) ||
+    /(underlying|beneath the surface).*(tension|worry|sense|feeling)/i.test(text);
   const hasCarryoverAtmosphereZh =
     /(还在(下面|底下|后面)|还留在(下面|底下|后面)|还没散掉|还在背景里|安静了一点|柔了一点|但.*还在)/.test(
       raw
-    );
+    ) ||
+    /(心里|底下|下面).{0,10}(还|仍).*(怪|责|内疚|愧疚|不对)/.test(raw) ||
+    /(挥之不去|放不下|没散|没走).{0,8}(怪自己|自责|内疚)/.test(raw);
 
   // Short explicit lines: "not earned" + recovery noun (Lumen Pass 2: thin third turn must stay
   // in family when extractor keeps both tokens — avoids lone "still not earned yet" with no rest).
@@ -153,6 +157,36 @@ export function detectContinuityPatternFamily(corePattern: string): ContinuityPa
     hasCarryoverAtmosphereZh
   ) {
     return "constant_pressure_keep_up";
+  }
+
+  // Persistent self-blame / wrongness thread (Milestone I): extractor often paraphrases without
+  // literal "did something wrong" or fixed carry-over phrases — stabilize second-turn classification.
+  const hasSelfBlameLexEn =
+    /(self[- ]?blam|blame(s)?\s+(myself|themselves|himself|herself)|my fault|at fault|i\s+('?m|am)\s+wrong|i did something wrong|feel(s)? guilty|guilty about|sense of guilt|wrong of me|shouldn'?t have|should not have)/i.test(
+      text
+      );
+  const hasSelfBlameLexZh =
+    /(怪自己|先怪自己|自责|内疚|愧疚|都是我的错|是不是我错|是我的问题|我有问题|觉得.*(有罪|不对|错了))/.test(raw);
+  const hasPersistenceLexEn =
+    /(still|continu(e|es|ing)|persist(s|ing)?|linger(s|ing)?|underlying|remains|hasn'?t (gone|lifted|left)|not fully gone|in the background|beneath|underneath|same (worry|fear)|keeps returning|keeps coming back|hasn'?t gone away)/i.test(
+      text
+    );
+  const hasSelfBlamePersistenceZh =
+    /((还|仍|依然).{0,24}(怪自己|自责|内疚|愧疚|觉得.*错|是我的问题))|((怪自己|自责|内疚|愧疚).{0,24}(还在|没散|没走|挥之不去|放不下))/.test(
+      raw
+    );
+
+  if (
+    (hasSelfBlameLexEn && (hasPersistenceLexEn || hasCarryoverAtmosphereEn)) ||
+    (hasSelfBlameLexZh && (hasSelfBlamePersistenceZh || hasCarryoverAtmosphereZh))
+  ) {
+    const hasReplySilenceSubstrate =
+      /(delayed|late|slow|brief|short|reply|respond|response|silent|silence|no response|left on read|ghost(ed)?)/i.test(
+        text
+      ) || /(不回|没回|不回复|沉默|已读|回复|回音|没人回|等回复|没有回音)/.test(raw);
+    return hasReplySilenceSubstrate
+      ? "delayed_reply_means_i_did_something_wrong"
+      : "replay_for_mistakes";
   }
 
   if (

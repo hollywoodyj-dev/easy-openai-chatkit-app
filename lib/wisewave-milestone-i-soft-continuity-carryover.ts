@@ -15,7 +15,7 @@ import {
 } from "@/lib/wisewave-continuity-family";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v1";
+const BUILD_MARKER = "milestone_i_soft_continuity_v2";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {

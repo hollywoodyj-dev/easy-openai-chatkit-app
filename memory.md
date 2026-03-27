@@ -181,6 +181,12 @@
 
 - Lumen diagnosis shifted from generic collapse to alignment strictness. Added narrow carry-over compatibility for `replay_for_mistakes` <-> `delayed_reply_means_i_did_something_wrong` (Milestone I admission only), plus debug field `debug_milestone_i_family_compatible` to distinguish exact-family match vs compatible-family alignment in hosted QA.
 
+## 2026-03-27 — Lumen + Wisewave: Milestone I Pass 3/4 read + Nova v2 family slice
+
+- **Lumen:** Pass 3 one hosted-positive; Pass 4 did not repeat — I fragile, not fake. Stance: not stable carry-over; fix second-turn family resolution before parity talk.
+- **Wisewave:** Directive = thread **recognition** over continuity expression; stabilize `fallback_generic` / self-blame; no template or UX polish until repetition holds.
+- **Nova:** `milestone_i_soft_continuity_v2` — `detectContinuityPatternFamily` gains persistent self-blame + expanded carry-over atmosphere (EN/ZH) so paraphrased second-turn insights route to `delayed_reply_means_i_did_something_wrong` vs `replay_for_mistakes` instead of `fallback_generic`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
