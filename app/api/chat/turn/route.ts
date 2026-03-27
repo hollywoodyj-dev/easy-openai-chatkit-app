@@ -1285,6 +1285,9 @@ export async function POST(request: Request) {
   let debugMilestoneICrossFamilyBlocked: boolean | null = null;
   let debugMilestoneIWeightGuardTriggered: boolean | null = null;
   let debugMilestoneIWeakPromotionBridgeUsed: boolean | null = null;
+  let debugMilestoneIWeakSurvivalCorridorDecision: string | null = null;
+  let debugMilestoneIWeakSurvivalCorridorTemplateAllowance: string | null = null;
+  let debugMilestoneIWeakSurvivalCorridorReasons: string[] | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2052,6 +2055,12 @@ export async function POST(request: Request) {
         debugMilestoneICrossFamilyBlocked = iResult.debugPath.crossFamilyBlocked;
         debugMilestoneIWeightGuardTriggered = iResult.debugPath.weightGuardTriggered;
         debugMilestoneIWeakPromotionBridgeUsed = iResult.debugPath.weakPromotionBridgeUsed;
+        debugMilestoneIWeakSurvivalCorridorDecision =
+          iResult.debugPath.weakSurvivalCorridorDecision;
+        debugMilestoneIWeakSurvivalCorridorTemplateAllowance =
+          iResult.debugPath.weakSurvivalCorridorTemplateAllowance;
+        debugMilestoneIWeakSurvivalCorridorReasons =
+          iResult.debugPath.weakSurvivalCorridorReasons;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2078,6 +2087,12 @@ export async function POST(request: Request) {
         debugMilestoneICrossFamilyBlocked = iResult.debugPath.crossFamilyBlocked;
         debugMilestoneIWeightGuardTriggered = iResult.debugPath.weightGuardTriggered;
         debugMilestoneIWeakPromotionBridgeUsed = iResult.debugPath.weakPromotionBridgeUsed;
+        debugMilestoneIWeakSurvivalCorridorDecision =
+          iResult.debugPath.weakSurvivalCorridorDecision;
+        debugMilestoneIWeakSurvivalCorridorTemplateAllowance =
+          iResult.debugPath.weakSurvivalCorridorTemplateAllowance;
+        debugMilestoneIWeakSurvivalCorridorReasons =
+          iResult.debugPath.weakSurvivalCorridorReasons;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2247,6 +2262,12 @@ export async function POST(request: Request) {
     debug_milestone_i_cross_family_blocked: debugMilestoneICrossFamilyBlocked,
     debug_milestone_i_weight_guard_triggered: debugMilestoneIWeightGuardTriggered,
     debug_milestone_i_weak_promotion_bridge_used: debugMilestoneIWeakPromotionBridgeUsed,
+    debug_milestone_i_weak_survival_corridor_decision:
+      debugMilestoneIWeakSurvivalCorridorDecision,
+    debug_milestone_i_weak_survival_corridor_template_allowance:
+      debugMilestoneIWeakSurvivalCorridorTemplateAllowance,
+    debug_milestone_i_weak_survival_corridor_reasons:
+      debugMilestoneIWeakSurvivalCorridorReasons,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,

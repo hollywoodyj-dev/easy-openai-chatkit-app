@@ -230,6 +230,13 @@
 - **Code:** in `lib/wisewave-milestone-i-soft-continuity-carryover.ts`, weak self-blame can satisfy current-turn live support via faint-direction phrases; weak bridge condition simplified to `weak_promotion + ultra_light_only` to match actual promotion eligibility path.
 - **Boundary unchanged:** no new templates, no weight increase allowances, weight guard + cross-family protection remain active. **Marker:** `milestone_i_soft_continuity_v10`.
 
+## 2026-03-27 — Nova: Milestone I weak-family survival corridor (v11)
+
+- **Why:** v10 still flat; weak bridge not activating in hosted D bucket.
+- **Code:** added `lib/wisewave-milestone-i-survival-corridor-map.ts` with `resolveWeakFamilySurvival()` and ultra-light-only template allowance; carryover engine now runs this corridor gate for weak threads before allowing survival.
+- **Debug:** new route fields `debug_milestone_i_weak_survival_corridor_*` to show open/blocked reasons directly on hosted QA.
+- **Marker:** `milestone_i_soft_continuity_v11`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

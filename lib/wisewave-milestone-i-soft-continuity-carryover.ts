@@ -33,9 +33,14 @@ import {
   type PromotionState,
   type TemplateAllowance,
 } from "@/lib/wisewave-milestone-i-promotion-map";
+import {
+  resolveWeakFamilySurvival,
+  type CorridorDecision,
+  type CorridorTemplateAllowance,
+} from "@/lib/wisewave-milestone-i-survival-corridor-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v10";
+const BUILD_MARKER = "milestone_i_soft_continuity_v11";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -101,6 +106,9 @@ export type MilestoneIDebugPath = {
   precheckVagueSource: boolean;
   precheckMinimalAffect: boolean;
   weakPromotionBridgeUsed: boolean;
+  weakSurvivalCorridorDecision: CorridorDecision | null;
+  weakSurvivalCorridorTemplateAllowance: CorridorTemplateAllowance | null;
+  weakSurvivalCorridorReasons: string[];
 };
 
 export type MilestoneIOutcome =
@@ -801,6 +809,9 @@ export function computeMilestoneICarryoverCue(params: {
     precheckVagueSource: false,
     precheckMinimalAffect: false,
     weakPromotionBridgeUsed: false,
+    weakSurvivalCorridorDecision: null,
+    weakSurvivalCorridorTemplateAllowance: null,
+    weakSurvivalCorridorReasons: [],
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -920,10 +931,28 @@ export function computeMilestoneICarryoverCue(params: {
 
   let effectiveThreadStrength = thread.threadStrength;
   if (thread.threadStrength === "weak") {
-    const weakBridgeAllowed =
-      promotion.promotion_state === "weak_promotion" &&
-      promotion.template_allowance === "ultra_light_only";
-    if (!weakBridgeAllowed) {
+    const familyShiftDetected =
+      previousFamily != null && currentFamily !== previousFamily;
+    const weakCorridor = resolveWeakFamilySurvival({
+      family: (thread.coreThreadFamily ?? "unknown") as "self_blame" | "over_effort" | "bracing" | "unknown",
+      family_confidence: calibratedInput.family_confidence,
+      movement_match: !!thread.coreMovementDirectionMatch,
+      direction_match: !!thread.coreMovementDirectionMatch,
+      current_turn_has_live_movement: promotionInput.current_turn_has_live_movement,
+      same_family_still_alive: promotionInput.same_family_still_alive,
+      main_reflection_sufficient: mainSufficient,
+      visibility_risk_high: promotionInput.visibility_risk_high,
+      e_sufficient: promotionInput.e_sufficient,
+      h_sufficient: promotionInput.h_sufficient,
+      removal_cleaner: promotionInput.removal_cleaner,
+      family_shift_detected: familyShiftDetected,
+      explicit_recall_needed: isExplicitRecallRisk(userMessage),
+    });
+    debugPath.weakSurvivalCorridorDecision = weakCorridor.decision;
+    debugPath.weakSurvivalCorridorTemplateAllowance = weakCorridor.template_allowance;
+    debugPath.weakSurvivalCorridorReasons = weakCorridor.reasons;
+
+    if (weakCorridor.decision !== "ultra_light_survival") {
       return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
     }
     // Keep weak widening path ultra-light while preserving suppression-first elsewhere.
