@@ -275,6 +275,13 @@
 - **Debug:** added residual decision/reasons in turn API output.
 - **Marker:** `milestone_i_soft_continuity_v17`.
 
+## 2026-03-27 — Nova: frontier patch phase 1 D4-only (v18)
+
+- **Why:** Wisewave requested frontier surgery order (D4 -> B3 -> C3) with v17 lightness frozen; no broad widening.
+- **Code:** add narrow residual carry-shape detector for weak self-blame ("still a little this feeling" shape). This contributes only when core weak self-blame is already present and guards pass (non-historical, no family shift).
+- **Debug:** `debug_milestone_i_weak_edge_residual_carry_shape_used`.
+- **Marker:** `milestone_i_soft_continuity_v18`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

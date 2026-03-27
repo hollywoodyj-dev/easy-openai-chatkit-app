@@ -1296,6 +1296,7 @@ export async function POST(request: Request) {
   let debugMilestoneIWeakEdgeCurrentTurnLiveEnough: boolean | null = null;
   let debugMilestoneIWeakEdgeResidualMovementDecision: string | null = null;
   let debugMilestoneIWeakEdgeResidualMovementReasons: string[] | null = null;
+  let debugMilestoneIWeakEdgeResidualCarryShapeUsed: boolean | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2085,6 +2086,8 @@ export async function POST(request: Request) {
           iResult.debugPath.weakEdgeResidualMovementDecision;
         debugMilestoneIWeakEdgeResidualMovementReasons =
           iResult.debugPath.weakEdgeResidualMovementReasons;
+        debugMilestoneIWeakEdgeResidualCarryShapeUsed =
+          iResult.debugPath.weakEdgeResidualCarryShapeUsed;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2133,6 +2136,8 @@ export async function POST(request: Request) {
           iResult.debugPath.weakEdgeResidualMovementDecision;
         debugMilestoneIWeakEdgeResidualMovementReasons =
           iResult.debugPath.weakEdgeResidualMovementReasons;
+        debugMilestoneIWeakEdgeResidualCarryShapeUsed =
+          iResult.debugPath.weakEdgeResidualCarryShapeUsed;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2324,6 +2329,8 @@ export async function POST(request: Request) {
       debugMilestoneIWeakEdgeResidualMovementDecision,
     debug_milestone_i_weak_edge_residual_movement_reasons:
       debugMilestoneIWeakEdgeResidualMovementReasons,
+    debug_milestone_i_weak_edge_residual_carry_shape_used:
+      debugMilestoneIWeakEdgeResidualCarryShapeUsed,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,

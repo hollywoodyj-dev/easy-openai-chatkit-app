@@ -51,7 +51,7 @@ import {
 } from "@/lib/wisewave-milestone-i-residual-movement-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v17";
+const BUILD_MARKER = "milestone_i_soft_continuity_v18";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -128,6 +128,7 @@ export type MilestoneIDebugPath = {
   weakEdgeCurrentTurnLiveEnough: boolean;
   weakEdgeResidualMovementDecision: ResidualMovementDecision | null;
   weakEdgeResidualMovementReasons: string[];
+  weakEdgeResidualCarryShapeUsed: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -347,6 +348,23 @@ function hasActiveSelfBlameMovement(userMessage: string, insightCandidate: strin
   return (
     /(是不是我做错|是不是我的错|是我错了|都是我的错|我做错了|我的问题)/.test(raw) ||
     /(i did something wrong|it'?s my fault|this is my fault|i caused it|i am the problem)/i.test(raw)
+  );
+}
+
+function hasResidualSelfBlameCarryShape(userMessage: string): boolean {
+  // Frontier D4 patch (narrow): residual "still/a little/this feeling" phrasing
+  // may be live-enough only when upstream still resolves core weak self-blame.
+  const t = normalizeApostrophesForHeuristics(userMessage.trim().toLowerCase());
+  if (
+    /(现在也还是有一点这种感觉|还是有一点这种感觉|还是有一点这样|还是会有一点这个感觉|还是有一点这个感觉)/.test(
+      userMessage
+    )
+  ) {
+    return true;
+  }
+  return (
+    /(still).*(a little|slightly|kind of|sort of).*(this|that).*(feeling|sense)/i.test(t) ||
+    /(a little).*(still).*(there|present)/i.test(t)
   );
 }
 
@@ -881,6 +899,7 @@ export function computeMilestoneICarryoverCue(params: {
     weakEdgeCurrentTurnLiveEnough: false,
     weakEdgeResidualMovementDecision: null,
     weakEdgeResidualMovementReasons: [],
+    weakEdgeResidualCarryShapeUsed: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -1039,12 +1058,24 @@ export function computeMilestoneICarryoverCue(params: {
           userMessage
         ) ||
         /(还是会|有一点|会先|先往自己身上)/.test(userMessage));
+    const residualCarryShapeUsed =
+      !faintResidualSelfTurnPresent &&
+      !activeSelfTurnNow &&
+      !weakEdgePurelyHistorical &&
+      !familyShiftDetected &&
+      weakEdgeSelfTurnStrength === "none" &&
+      thread.coreThreadFamily === "self_blame" &&
+      thread.coreConfidence === "weak" &&
+      hasResidualSelfBlameCarryShape(userMessage);
     const residualResult = resolveResidualSelfBlameMovement({
       family: admissionFamily,
       direction_toward_self:
-        presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
+        presentTurnSelfBlameDirection ||
+        !!thread.coreMovementDirectionMatch ||
+        residualCarryShapeUsed,
       current_turn_has_live_self_turn: activeSelfTurnNow,
-      faint_residual_self_turn_present: faintResidualSelfTurnPresent,
+      faint_residual_self_turn_present:
+        faintResidualSelfTurnPresent || residualCarryShapeUsed,
       purely_historical: weakEdgePurelyHistorical,
       family_shift_detected: familyShiftDetected,
       subtle_self_questioning: weakEdgeSelfTurnStrength !== "none",
@@ -1062,6 +1093,7 @@ export function computeMilestoneICarryoverCue(params: {
     debugPath.weakEdgeCurrentTurnLiveEnough = currentTurnIsLiveEnough;
     debugPath.weakEdgeResidualMovementDecision = residualResult.decision;
     debugPath.weakEdgeResidualMovementReasons = residualResult.reasons;
+    debugPath.weakEdgeResidualCarryShapeUsed = residualCarryShapeUsed;
     // Weak-edge local confidence fallback: if weak thread + present-turn inward
     // self-turn are both true, keep this lane at weak (not none) for admission.
     const weakEdgeFamilyConfidence: FamilyConfidence =
