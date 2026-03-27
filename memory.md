@@ -237,6 +237,12 @@
 - **Debug:** new route fields `debug_milestone_i_weak_survival_corridor_*` to show open/blocked reasons directly on hosted QA.
 - **Marker:** `milestone_i_soft_continuity_v11`.
 
+## 2026-03-27 — Nova: Milestone I weak-edge admission gate (v12)
+
+- **Why:** v11 still flat; corridor never opened on real weak-edge set, implying upstream admission failure.
+- **Code:** new `lib/wisewave-milestone-i-weak-edge-admission-map.ts`; weak thread path now uses explicit self-blame weak-edge admission (`reject|admit_fragile|admit_strong_weak_edge`) before corridor. Added self-turn strength + purely-historical checks.
+- **Debug:** route exposes `debug_milestone_i_weak_edge_admission_*` for hosted triage. **Marker:** `milestone_i_soft_continuity_v12`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

@@ -38,9 +38,15 @@ import {
   type CorridorDecision,
   type CorridorTemplateAllowance,
 } from "@/lib/wisewave-milestone-i-survival-corridor-map";
+import {
+  mapAdmissionToCorridorEligibility,
+  resolveWeakEdgeSelfBlameAdmission,
+  type SelfTurnStrength,
+  type WeakEdgeAdmissionDecision,
+} from "@/lib/wisewave-milestone-i-weak-edge-admission-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v11";
+const BUILD_MARKER = "milestone_i_soft_continuity_v12";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -109,6 +115,10 @@ export type MilestoneIDebugPath = {
   weakSurvivalCorridorDecision: CorridorDecision | null;
   weakSurvivalCorridorTemplateAllowance: CorridorTemplateAllowance | null;
   weakSurvivalCorridorReasons: string[];
+  weakEdgeAdmissionDecision: WeakEdgeAdmissionDecision | null;
+  weakEdgeAdmissionReasons: string[];
+  weakEdgeSelfTurnStrength: SelfTurnStrength | null;
+  weakEdgePurelyHistorical: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -297,6 +307,40 @@ function hasFaintSelfBlameDirection(userMessage: string, insightCandidate: strin
     /(on me|my fault|might be me|maybe i caused|question myself|turn it on myself|i might be the problem)/i.test(
       raw
     )
+  );
+}
+
+function detectWeakEdgeSelfTurnStrength(
+  userMessage: string,
+  insightCandidate: string
+): SelfTurnStrength {
+  const raw = `${userMessage}\n${insightCandidate}`;
+  const lower = raw.toLowerCase();
+  if (
+    /(先往自己身上想|先怀疑自己|是不是自己哪里不对|是不是我的问题|是不是我做错|转到自己身上|归到自己)/.test(raw) ||
+    /(my mind.*(to me|on me)|turn it back on myself|question myself first|might be me|i might be the problem)/i.test(
+      lower
+    )
+  ) {
+    return "clear_but_faint";
+  }
+  if (
+    /(有点像是我|还是会有一点觉得是不是我|有一点往自己身上)/.test(raw) ||
+    /(still sort of|still kind of).*(on me|my fault|question myself)/i.test(lower)
+  ) {
+    return "faint";
+  }
+  return "none";
+}
+
+function isPurelyHistoricalWeakEdge(userMessage: string, insightCandidate: string): boolean {
+  const raw = `${userMessage}\n${insightCandidate}`;
+  return (
+    /(以前|之前|那时候|曾经|过去)/.test(raw) &&
+    !/(现在|还是|仍然|此刻|当下)/.test(raw)
+  ) || (
+    /\b(used to|earlier|before|in the past)\b/i.test(raw) &&
+    !/\b(still|now|currently|right now)\b/i.test(raw)
   );
 }
 
@@ -812,6 +856,10 @@ export function computeMilestoneICarryoverCue(params: {
     weakSurvivalCorridorDecision: null,
     weakSurvivalCorridorTemplateAllowance: null,
     weakSurvivalCorridorReasons: [],
+    weakEdgeAdmissionDecision: null,
+    weakEdgeAdmissionReasons: [],
+    weakEdgeSelfTurnStrength: null,
+    weakEdgePurelyHistorical: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -933,6 +981,45 @@ export function computeMilestoneICarryoverCue(params: {
   if (thread.threadStrength === "weak") {
     const familyShiftDetected =
       previousFamily != null && currentFamily !== previousFamily;
+    const weakEdgeSelfTurnStrength = detectWeakEdgeSelfTurnStrength(
+      userMessage,
+      reflectionState.insight_candidate
+    );
+    const weakEdgePurelyHistorical = isPurelyHistoricalWeakEdge(
+      userMessage,
+      reflectionState.insight_candidate
+    );
+    debugPath.weakEdgeSelfTurnStrength = weakEdgeSelfTurnStrength;
+    debugPath.weakEdgePurelyHistorical = weakEdgePurelyHistorical;
+
+    const weakEdgeAdmission = resolveWeakEdgeSelfBlameAdmission({
+      family: (thread.coreThreadFamily ?? "unknown") as
+        | "self_blame"
+        | "over_effort"
+        | "bracing"
+        | "unknown",
+      family_confidence: calibratedInput.family_confidence,
+      direction_toward_self: !!thread.coreMovementDirectionMatch,
+      current_turn_has_live_self_turn:
+        promotionInput.current_turn_has_live_movement,
+      current_turn_self_turn_strength: weakEdgeSelfTurnStrength,
+      purely_historical: weakEdgePurelyHistorical,
+      main_reflection_sufficient: mainSufficient,
+      visibility_risk_high: promotionInput.visibility_risk_high,
+      e_sufficient: promotionInput.e_sufficient,
+      h_sufficient: promotionInput.h_sufficient,
+      removal_cleaner: promotionInput.removal_cleaner,
+      family_shift_detected: familyShiftDetected,
+      explicit_recall_needed: isExplicitRecallRisk(userMessage),
+    });
+    debugPath.weakEdgeAdmissionDecision = weakEdgeAdmission.decision;
+    debugPath.weakEdgeAdmissionReasons = weakEdgeAdmission.reasons;
+    const weakSurvivalEligibility =
+      mapAdmissionToCorridorEligibility(weakEdgeAdmission);
+    if (weakSurvivalEligibility === "blocked_before_corridor") {
+      return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
+    }
+
     const weakCorridor = resolveWeakFamilySurvival({
       family: (thread.coreThreadFamily ?? "unknown") as "self_blame" | "over_effort" | "bracing" | "unknown",
       family_confidence: calibratedInput.family_confidence,

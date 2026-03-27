@@ -1288,6 +1288,10 @@ export async function POST(request: Request) {
   let debugMilestoneIWeakSurvivalCorridorDecision: string | null = null;
   let debugMilestoneIWeakSurvivalCorridorTemplateAllowance: string | null = null;
   let debugMilestoneIWeakSurvivalCorridorReasons: string[] | null = null;
+  let debugMilestoneIWeakEdgeAdmissionDecision: string | null = null;
+  let debugMilestoneIWeakEdgeAdmissionReasons: string[] | null = null;
+  let debugMilestoneIWeakEdgeSelfTurnStrength: string | null = null;
+  let debugMilestoneIWeakEdgePurelyHistorical: boolean | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2061,6 +2065,14 @@ export async function POST(request: Request) {
           iResult.debugPath.weakSurvivalCorridorTemplateAllowance;
         debugMilestoneIWeakSurvivalCorridorReasons =
           iResult.debugPath.weakSurvivalCorridorReasons;
+        debugMilestoneIWeakEdgeAdmissionDecision =
+          iResult.debugPath.weakEdgeAdmissionDecision;
+        debugMilestoneIWeakEdgeAdmissionReasons =
+          iResult.debugPath.weakEdgeAdmissionReasons;
+        debugMilestoneIWeakEdgeSelfTurnStrength =
+          iResult.debugPath.weakEdgeSelfTurnStrength;
+        debugMilestoneIWeakEdgePurelyHistorical =
+          iResult.debugPath.weakEdgePurelyHistorical;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2093,6 +2105,14 @@ export async function POST(request: Request) {
           iResult.debugPath.weakSurvivalCorridorTemplateAllowance;
         debugMilestoneIWeakSurvivalCorridorReasons =
           iResult.debugPath.weakSurvivalCorridorReasons;
+        debugMilestoneIWeakEdgeAdmissionDecision =
+          iResult.debugPath.weakEdgeAdmissionDecision;
+        debugMilestoneIWeakEdgeAdmissionReasons =
+          iResult.debugPath.weakEdgeAdmissionReasons;
+        debugMilestoneIWeakEdgeSelfTurnStrength =
+          iResult.debugPath.weakEdgeSelfTurnStrength;
+        debugMilestoneIWeakEdgePurelyHistorical =
+          iResult.debugPath.weakEdgePurelyHistorical;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2268,6 +2288,14 @@ export async function POST(request: Request) {
       debugMilestoneIWeakSurvivalCorridorTemplateAllowance,
     debug_milestone_i_weak_survival_corridor_reasons:
       debugMilestoneIWeakSurvivalCorridorReasons,
+    debug_milestone_i_weak_edge_admission_decision:
+      debugMilestoneIWeakEdgeAdmissionDecision,
+    debug_milestone_i_weak_edge_admission_reasons:
+      debugMilestoneIWeakEdgeAdmissionReasons,
+    debug_milestone_i_weak_edge_self_turn_strength:
+      debugMilestoneIWeakEdgeSelfTurnStrength,
+    debug_milestone_i_weak_edge_purely_historical:
+      debugMilestoneIWeakEdgePurelyHistorical,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,
