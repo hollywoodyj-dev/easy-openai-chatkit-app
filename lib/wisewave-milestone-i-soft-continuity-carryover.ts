@@ -46,7 +46,7 @@ import {
 } from "@/lib/wisewave-milestone-i-weak-edge-admission-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v14";
+const BUILD_MARKER = "milestone_i_soft_continuity_v15";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -1004,10 +1004,18 @@ export function computeMilestoneICarryoverCue(params: {
     const liveSelfTurnNow =
       weakEdgeSelfTurnStrength !== "none" ||
       promotionInput.current_turn_has_live_movement;
+    // Weak-edge local confidence fallback: if weak thread + present-turn inward
+    // self-turn are both true, keep this lane at weak (not none) for admission.
+    const weakEdgeFamilyConfidence: FamilyConfidence =
+      calibratedInput.family_confidence === "none" &&
+      presentTurnSelfBlameDirection &&
+      liveSelfTurnNow
+        ? "weak"
+        : calibratedInput.family_confidence;
 
     const weakEdgeAdmission = resolveWeakEdgeSelfBlameAdmission({
       family: admissionFamily,
-      family_confidence: calibratedInput.family_confidence,
+      family_confidence: weakEdgeFamilyConfidence,
       direction_toward_self:
         presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
       current_turn_has_live_self_turn: liveSelfTurnNow,
@@ -1028,14 +1036,24 @@ export function computeMilestoneICarryoverCue(params: {
     if (weakSurvivalEligibility === "blocked_before_corridor") {
       return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
     }
+    const weakEdgeCorridorMovementDirectionMatch =
+      !!thread.coreMovementDirectionMatch ||
+      (weakEdgeAdmission.admitted &&
+        admissionFamily === "self_blame" &&
+        presentTurnSelfBlameDirection);
+    const weakEdgeCorridorSameFamilyAlive =
+      promotionInput.same_family_still_alive ||
+      (weakEdgeAdmission.admitted &&
+        admissionFamily === "self_blame" &&
+        liveSelfTurnNow);
 
     const weakCorridor = resolveWeakFamilySurvival({
       family: (thread.coreThreadFamily ?? "unknown") as "self_blame" | "over_effort" | "bracing" | "unknown",
-      family_confidence: calibratedInput.family_confidence,
-      movement_match: !!thread.coreMovementDirectionMatch,
-      direction_match: !!thread.coreMovementDirectionMatch,
+      family_confidence: weakEdgeFamilyConfidence,
+      movement_match: weakEdgeCorridorMovementDirectionMatch,
+      direction_match: weakEdgeCorridorMovementDirectionMatch,
       current_turn_has_live_movement: promotionInput.current_turn_has_live_movement,
-      same_family_still_alive: promotionInput.same_family_still_alive,
+      same_family_still_alive: weakEdgeCorridorSameFamilyAlive,
       main_reflection_sufficient: mainSufficient,
       visibility_risk_high: promotionInput.visibility_risk_high,
       e_sufficient: promotionInput.e_sufficient,

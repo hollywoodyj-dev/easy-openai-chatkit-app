@@ -255,6 +255,12 @@
 - **Code:** in weak path admission input mapping, derive family/direction/live-self-turn from present-turn inward evidence (`hasFaintSelfBlameDirection`, `weakEdgeSelfTurnStrength`) when core family is unknown, while keeping existing safety blockers intact.
 - **Marker:** `milestone_i_soft_continuity_v14`.
 
+## 2026-03-27 — Nova: weak-edge confidence + corridor bridge (v15)
+
+- **Why:** v14 showed first D-bucket gain (1/4) but frontier EN weak cases still rejected as `not_weak_family`; corridor remained unopened.
+- **Code:** add weak-edge local confidence fallback (`none -> weak`) when weak thread has present-turn inward self-turn evidence; for admitted weak-edge self-blame, bridge corridor movement/direction and same-family-alive inputs from present-turn evidence instead of core-only match.
+- **Marker:** `milestone_i_soft_continuity_v15`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
