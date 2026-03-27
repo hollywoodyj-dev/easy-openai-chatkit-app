@@ -35,7 +35,7 @@ import {
 } from "@/lib/wisewave-milestone-i-promotion-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v8";
+const BUILD_MARKER = "milestone_i_soft_continuity_v9";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -100,6 +100,7 @@ export type MilestoneIDebugPath = {
   precheckThinUserMessage: boolean;
   precheckVagueSource: boolean;
   precheckMinimalAffect: boolean;
+  weakPromotionBridgeUsed: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -391,6 +392,11 @@ function pickFamilyFromAllowance(args: {
   userMessage: string;
   seed: string;
 }): MilestoneICueFamily {
+  // Weak-promotion path stays capped to the lightest carry-over shape.
+  if (args.promotion.promotion_state === "weak_promotion") {
+    return "ultra_light_fallback";
+  }
+
   const keys = getAllowedTemplateFamilies(args.promotion);
   const allowed: MilestoneICueFamily[] = [];
   for (const k of keys) {
@@ -778,6 +784,7 @@ export function computeMilestoneICarryoverCue(params: {
     precheckThinUserMessage: false,
     precheckVagueSource: false,
     precheckMinimalAffect: false,
+    weakPromotionBridgeUsed: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -895,13 +902,23 @@ export function computeMilestoneICarryoverCue(params: {
     return { status: "suppressed", reason: "promotion_not_granted", debugPath };
   }
 
+  let effectiveThreadStrength = thread.threadStrength;
   if (thread.threadStrength === "weak") {
-    return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
+    const weakBridgeAllowed =
+      promotion.promotion_state === "weak_promotion" &&
+      promotion.template_allowance === "ultra_light_only" &&
+      thread.coreThreadFamily === "self_blame";
+    if (!weakBridgeAllowed) {
+      return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
+    }
+    // Keep weak widening path ultra-light while preserving suppression-first elsewhere.
+    effectiveThreadStrength = "moderate";
+    debugPath.weakPromotionBridgeUsed = true;
   }
 
   const family = pickFamilyFromAllowance({
     promotion,
-    threadStrength: thread.threadStrength,
+    threadStrength: effectiveThreadStrength,
     userMessage,
     seed: params.seed,
   });
