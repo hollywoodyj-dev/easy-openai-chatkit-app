@@ -1281,6 +1281,9 @@ export async function POST(request: Request) {
   let debugMilestoneICoreConfidence: string | null = null;
   let debugMilestoneICoreReasons: string[] | null = null;
   let debugMilestoneICoreUseFallbackGeneric: boolean | null = null;
+  let debugMilestoneIPromotionConfidence: string | null = null;
+  let debugMilestoneICrossFamilyBlocked: boolean | null = null;
+  let debugMilestoneIWeightGuardTriggered: boolean | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2044,6 +2047,9 @@ export async function POST(request: Request) {
         debugMilestoneICoreConfidence = iResult.debugPath.coreConfidence;
         debugMilestoneICoreReasons = iResult.debugPath.coreReasons;
         debugMilestoneICoreUseFallbackGeneric = iResult.debugPath.coreUseFallbackGeneric;
+        debugMilestoneIPromotionConfidence = iResult.debugPath.promotionConfidence;
+        debugMilestoneICrossFamilyBlocked = iResult.debugPath.crossFamilyBlocked;
+        debugMilestoneIWeightGuardTriggered = iResult.debugPath.weightGuardTriggered;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2066,6 +2072,9 @@ export async function POST(request: Request) {
         debugMilestoneICoreConfidence = iResult.debugPath.coreConfidence;
         debugMilestoneICoreReasons = iResult.debugPath.coreReasons;
         debugMilestoneICoreUseFallbackGeneric = iResult.debugPath.coreUseFallbackGeneric;
+        debugMilestoneIPromotionConfidence = iResult.debugPath.promotionConfidence;
+        debugMilestoneICrossFamilyBlocked = iResult.debugPath.crossFamilyBlocked;
+        debugMilestoneIWeightGuardTriggered = iResult.debugPath.weightGuardTriggered;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2231,6 +2240,9 @@ export async function POST(request: Request) {
     debug_milestone_i_core_confidence: debugMilestoneICoreConfidence,
     debug_milestone_i_core_reasons: debugMilestoneICoreReasons,
     debug_milestone_i_core_use_fallback_generic: debugMilestoneICoreUseFallbackGeneric,
+    debug_milestone_i_promotion_confidence: debugMilestoneIPromotionConfidence,
+    debug_milestone_i_cross_family_blocked: debugMilestoneICrossFamilyBlocked,
+    debug_milestone_i_weight_guard_triggered: debugMilestoneIWeightGuardTriggered,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,

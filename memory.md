@@ -207,6 +207,11 @@
 - **Docs / Tree / Wisewave:** Widening = support surface, not feature weight; preserve gold path; one dimension (self-blame phrasing first).
 - **Code:** `lib/wisewave-milestone-i-thread-family-map.ts` v1.1 — broader **self_blame** hints + regex only; templates/promotion unchanged. **Marker:** `milestone_i_soft_continuity_v6`.
 
+## 2026-03-27 — Nova: Milestone I control-layer tightening (v7)
+
+- **Wisewave directive implemented:** promotion sensitivity calibration, weak-family floor hardening, weight guard, cross-family protection (strict boundary, only same movement+direction exception).
+- **Code:** `lib/wisewave-milestone-i-soft-continuity-carryover.ts` + `app/api/chat/turn/route.ts`. New suppress reason `weight_guard`; new debug fields `debug_milestone_i_promotion_confidence`, `debug_milestone_i_cross_family_blocked`, `debug_milestone_i_weight_guard_triggered`. **Marker:** `milestone_i_soft_continuity_v7`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

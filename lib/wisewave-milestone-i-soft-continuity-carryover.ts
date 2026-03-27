@@ -35,7 +35,7 @@ import {
 } from "@/lib/wisewave-milestone-i-promotion-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v6";
+const BUILD_MARKER = "milestone_i_soft_continuity_v7";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -69,7 +69,8 @@ export type MilestoneISuppressedReason =
   | "main_reflection_sufficient"
   | "thread_not_supported"
   | "weak_thread_candidate"
-  | "promotion_not_granted";
+  | "promotion_not_granted"
+  | "weight_guard";
 
 export type MilestoneIDebugPath = {
   previousFamily: ContinuityPatternFamily | null;
@@ -91,8 +92,11 @@ export type MilestoneIDebugPath = {
   /** True when lexical family failed but core map did not fall back to generic. */
   signatureRescuedThread: boolean;
   promotionState: PromotionState | null;
+  promotionConfidence: "none" | "weak" | "strong" | null;
   promotionTemplateAllowance: TemplateAllowance | null;
   promotionReasons: string[];
+  crossFamilyBlocked: boolean;
+  weightGuardTriggered: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -312,6 +316,72 @@ function buildPromotionInput(args: {
   };
 }
 
+function calibratedPromotionConfidence(input: {
+  familyConfidence: FamilyConfidence;
+  currentTurnSupportsThread: boolean;
+  decayState: DecayState;
+}): "none" | "weak" | "strong" {
+  const familyBase =
+    input.familyConfidence === "strong"
+      ? 2
+      : input.familyConfidence === "weak"
+        ? 1
+        : 0;
+  const support = input.currentTurnSupportsThread ? 1 : 0;
+  const decay =
+    input.decayState === "fresh" ? 1 : input.decayState === "soft_decay" ? 0 : -1;
+  const total = familyBase + support + decay;
+  if (total >= 4) return "strong";
+  if (total >= 2) return "weak";
+  return "none";
+}
+
+function applyPromotionSensitivityCalibration(input: PromotionInput): PromotionInput {
+  const calibrated = calibratedPromotionConfidence({
+    familyConfidence: input.family_confidence,
+    currentTurnSupportsThread: input.current_turn_supports_thread,
+    decayState: input.decay_state,
+  });
+  const family_confidence: FamilyConfidence =
+    calibrated === "strong" ? "strong" : calibrated === "weak" ? "weak" : "none";
+  return { ...input, family_confidence };
+}
+
+function weightGuardSignals(text: string): {
+  addsExplanation: boolean;
+  addsPatternNaming: boolean;
+  addsExplicitLinking: boolean;
+  feelsLikeRecall: boolean;
+} {
+  const t = text.trim().toLowerCase();
+  return {
+    addsExplanation:
+      /\b(because|therefore|so that|which means|that is why)\b/.test(t) ||
+      /(因为|所以|也就是说|这说明)/.test(text),
+    addsPatternNaming:
+      /\b(pattern|issue|mechanism|thread)\b/.test(t) ||
+      /(模式|机制|同一个问题|线索)/.test(text),
+    addsExplicitLinking:
+      /\b(still the same|same issue|same pattern|same thread)\b/.test(t) ||
+      /(还是同一个|同一个问题|同一条线索)/.test(text),
+    feelsLikeRecall:
+      /\b(as before|like before|earlier you said|remember)\b/.test(t) ||
+      /(像之前一样|你前面说过|记得你)/.test(text),
+  };
+}
+
+function isWeightGuardTriggered(args: {
+  selectedText: string;
+  promotionState: PromotionState | null;
+}): boolean {
+  const s = weightGuardSignals(args.selectedText);
+  if (s.feelsLikeRecall) return true;
+  const nonRecallFlags = [s.addsExplanation, s.addsPatternNaming, s.addsExplicitLinking].filter(Boolean).length;
+  // Weak promotion has a tighter cap; strong promotion may tolerate one light linkage marker.
+  if (args.promotionState === "weak_promotion") return nonRecallFlags >= 1;
+  return nonRecallFlags >= 2;
+}
+
 function pickFamilyFromAllowance(args: {
   promotion: PromotionDecision;
   threadStrength: "weak" | "moderate" | "strong";
@@ -365,6 +435,8 @@ function detectThreadSupport(args: {
   coreConfidence: ConfidenceLevel | null;
   coreReasons: string[];
   coreUseFallbackGeneric: boolean | null;
+  coreMovementDirectionMatch: boolean;
+  crossFamilyBlocked: boolean;
 } {
   const currentFamily = detectContinuityPatternFamily(args.current.insight_candidate);
   const prevFamily = args.previous
@@ -381,6 +453,7 @@ function detectThreadSupport(args: {
 
   let coreDetection: ReturnType<typeof detectThreadFamily> | null = null;
   let resolved: ReturnType<typeof resolveFamilyOrFallback> | null = null;
+  let coreMovementDirectionMatch = false;
   if (args.previous && args.previousUserMessage?.trim()) {
     const sigPrev = extractMilestoneIThreadSignature(
       args.previousUserMessage,
@@ -394,6 +467,11 @@ function detectThreadSupport(args: {
     );
     coreDetection = detectThreadFamily(sigPrev, sigCur);
     resolved = resolveFamilyOrFallback(coreDetection);
+    coreMovementDirectionMatch =
+      sigPrev.movement === sigCur.movement &&
+      sigPrev.direction === sigCur.direction &&
+      sigPrev.movement !== "unknown" &&
+      sigPrev.direction !== "unknown";
   }
 
   const coreThreadFamily = resolved?.resolvedFamily ?? null;
@@ -412,8 +490,28 @@ function detectThreadSupport(args: {
 
   const lexicalMatched =
     !!args.previous && !!prevFamily && (prevFamily === currentFamily || isCompatible);
+  const crossFamilyBlocked =
+    !!args.previous &&
+    !!prevFamily &&
+    prevFamily !== currentFamily &&
+    !coreMovementDirectionMatch;
 
   if (lexicalMatched) {
+    if (crossFamilyBlocked) {
+      return {
+        threadStrength: "none",
+        family,
+        signatureScore,
+        signatureTier,
+        signatureRescuedThread: false,
+        coreThreadFamily,
+        coreConfidence,
+        coreReasons,
+        coreUseFallbackGeneric,
+        coreMovementDirectionMatch,
+        crossFamilyBlocked: true,
+      };
+    }
     if (family === "fallback_generic") {
       // Lexical collapse to generic must not block when core map recognizes a trunk family (Lumen v4).
       const corePromotes =
@@ -437,6 +535,8 @@ function detectThreadSupport(args: {
           coreConfidence,
           coreReasons,
           coreUseFallbackGeneric,
+          coreMovementDirectionMatch,
+          crossFamilyBlocked: false,
         };
       }
       return {
@@ -449,6 +549,8 @@ function detectThreadSupport(args: {
         coreConfidence,
         coreReasons,
         coreUseFallbackGeneric,
+        coreMovementDirectionMatch,
+        crossFamilyBlocked: false,
       };
     }
     const insightLen = args.current.insight_candidate.trim().length;
@@ -465,6 +567,8 @@ function detectThreadSupport(args: {
       coreConfidence,
       coreReasons,
       coreUseFallbackGeneric,
+      coreMovementDirectionMatch,
+      crossFamilyBlocked: false,
     };
   }
 
@@ -479,6 +583,8 @@ function detectThreadSupport(args: {
       coreConfidence,
       coreReasons,
       coreUseFallbackGeneric,
+      coreMovementDirectionMatch,
+      crossFamilyBlocked: false,
     };
   }
 
@@ -493,6 +599,8 @@ function detectThreadSupport(args: {
       coreConfidence,
       coreReasons,
       coreUseFallbackGeneric,
+      coreMovementDirectionMatch,
+      crossFamilyBlocked: false,
     };
   }
 
@@ -518,6 +626,8 @@ function detectThreadSupport(args: {
     coreConfidence,
     coreReasons,
     coreUseFallbackGeneric,
+    coreMovementDirectionMatch,
+    crossFamilyBlocked: false,
   };
 }
 
@@ -657,8 +767,11 @@ export function computeMilestoneICarryoverCue(params: {
     signatureTier: null,
     signatureRescuedThread: false,
     promotionState: null,
+    promotionConfidence: null,
     promotionTemplateAllowance: null,
     promotionReasons: [],
+    crossFamilyBlocked: false,
+    weightGuardTriggered: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -733,6 +846,7 @@ export function computeMilestoneICarryoverCue(params: {
   debugPath.coreConfidence = thread.coreConfidence;
   debugPath.coreReasons = thread.coreReasons;
   debugPath.coreUseFallbackGeneric = thread.coreUseFallbackGeneric;
+  debugPath.crossFamilyBlocked = thread.crossFamilyBlocked;
   debugPath.signatureScore = thread.signatureScore;
   debugPath.signatureTier = thread.signatureTier;
   debugPath.signatureRescuedThread = thread.signatureRescuedThread;
@@ -757,8 +871,10 @@ export function computeMilestoneICarryoverCue(params: {
     mainReflectionSufficient: mainSufficient,
     language: params.wantsChinese ? "zh" : "en",
   });
-  const promotion = resolvePromotionState(promotionInput);
+  const calibratedInput = applyPromotionSensitivityCalibration(promotionInput);
+  const promotion = resolvePromotionState(calibratedInput);
   debugPath.promotionState = promotion.promotion_state;
+  debugPath.promotionConfidence = calibratedInput.family_confidence;
   debugPath.promotionTemplateAllowance = promotion.template_allowance;
   debugPath.promotionReasons = promotion.reasons;
 
@@ -795,6 +911,10 @@ export function computeMilestoneICarryoverCue(params: {
 
   // Minimal visibility control: keep I extremely light; if it would be too long, suppress.
   const selected = langKey === "en" ? textEn : textZh;
+  if (isWeightGuardTriggered({ selectedText: selected, promotionState: promotion.promotion_state })) {
+    debugPath.weightGuardTriggered = true;
+    return { status: "suppressed", reason: "weight_guard", debugPath };
+  }
   const len = selected.trim().length;
   if (len > 90) {
     return { status: "suppressed", reason: "visibility_risk", debugPath };
