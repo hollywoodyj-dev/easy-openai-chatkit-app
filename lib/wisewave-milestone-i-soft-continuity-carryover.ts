@@ -314,7 +314,7 @@ function hasFaintSelfBlameDirection(userMessage: string, insightCandidate: strin
   const raw = `${userMessage}\n${insightCandidate}`;
   return (
     /(往自己身上|怀疑自己|是不是我|我的问题|是我问题|怪自己|先怪自己|有点像是我)/.test(raw) ||
-    /(on me|my fault|might be me|maybe i caused|question myself|turn it on myself|i might be the problem)/i.test(
+    /(on me|my fault|might be me|maybe i caused|question myself( first)?|turn it (back )?on myself|turn(s)? back on myself|bends? back toward me|leans? back toward me|wonder whether it is me|whether it'?s me|quietly turns back on myself|i might be the problem|i might be the issue|checking whether i might be)/i.test(
       raw
     )
   );
@@ -328,7 +328,7 @@ function detectWeakEdgeSelfTurnStrength(
   const lower = raw.toLowerCase();
   if (
     /(先往自己身上想|先怀疑自己|是不是自己哪里不对|是不是我的问题|是不是我做错|转到自己身上|归到自己)/.test(raw) ||
-    /(my mind.*(to me|on me)|turn it back on myself|question myself first|might be me|i might be the problem)/i.test(
+    /(my mind.*(to me|on me)|turn(s)?( it)? back on myself|question myself first|wonder whether it is me|bend(s)? back toward me|leans? back toward me|quietly turns back on myself|might be me|i might be the problem|checking whether i might be)/i.test(
       lower
     )
   ) {

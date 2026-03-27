@@ -133,6 +133,12 @@ export const MILESTONE_I_THREAD_FAMILY_MAP: ThreadFamilySignatureMap = {
           "I tend to turn it back on myself",
           "My mind goes to me being the issue",
           "Part of me assumes this must be my fault",
+          "I question myself first",
+          "I still sort of question myself first",
+          "I still kind of wonder whether it is me",
+          "Part of me still turns back on myself a little",
+          "Part of me still bends back toward me a little",
+          "It still bends back toward me a bit",
         ],
         zh: [
           "是不是我做错了",
@@ -398,7 +404,7 @@ function selfBlameSignals(raw: string, lower: string, lang: "en" | "zh"): boolea
     /(怪自己|先怪自己|自责|都是我的错|是不是我|我是不是|我做错|我哪里错|我的问题|我有问题|往自己身上想|往自己身上|往自己|对自己失望|怀疑是不是自己|是不是自己哪里|自己哪里不对|下意识地怪|归到(了)?自己|揽在(了)?自己|第一反应.*(怪|错|问题)|转成对.*自己的怀疑|先想到是自己)/.test(
       raw
     ) ||
-    /(self[- ]?blam|blame(s)?\s+myself|my fault|at fault|must be my fault|i\s+('?m|am)\s+wrong|i did something wrong|assume i'?m the (issue|problem)|turn it back on myself|tend to turn it back|what i did|my mind goes to (me|myself|being)|mind goes to me being|whether i caused|start checking whether i caused|part of me assumes.*my fault)/i.test(
+    /(self[- ]?blam|blame(s)?\s+myself|my fault|at fault|must be my fault|i\s+('?m|am)\s+wrong|i did something wrong|assume i'?m the (issue|problem)|turn it back on myself|tend to turn it back|question myself( first)?|i still sort of question myself first|wonder whether it is me|whether it'?s me|whether it is me|bend(s)? back toward me|leans? back toward me|quietly turns back on myself|part of me still turns back on myself|part of me still bends back toward me|my mind goes to (me|myself|being)|mind goes to me being|whether i caused|start checking whether i caused|checking whether i might be|might be the problem|part of me assumes.*my fault)/i.test(
       lower
     )
   ) {
