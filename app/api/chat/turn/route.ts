@@ -1277,6 +1277,10 @@ export async function POST(request: Request) {
   let debugMilestoneISignatureScore: number | null = null;
   let debugMilestoneISignatureTier: string | null = null;
   let debugMilestoneISignatureRescuedThread: boolean | null = null;
+  let debugMilestoneICoreThreadFamily: string | null = null;
+  let debugMilestoneICoreConfidence: string | null = null;
+  let debugMilestoneICoreReasons: string[] | null = null;
+  let debugMilestoneICoreUseFallbackGeneric: boolean | null = null;
   const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
 
   // Ticket 4: save one durable insight when we have a good candidate.
@@ -2033,6 +2037,10 @@ export async function POST(request: Request) {
         debugMilestoneISignatureScore = iResult.debugPath.signatureScore;
         debugMilestoneISignatureTier = iResult.debugPath.signatureTier;
         debugMilestoneISignatureRescuedThread = iResult.debugPath.signatureRescuedThread;
+        debugMilestoneICoreThreadFamily = iResult.debugPath.coreThreadFamily;
+        debugMilestoneICoreConfidence = iResult.debugPath.coreConfidence;
+        debugMilestoneICoreReasons = iResult.debugPath.coreReasons;
+        debugMilestoneICoreUseFallbackGeneric = iResult.debugPath.coreUseFallbackGeneric;
       } else {
         debugMilestoneIOutcome = "suppressed";
         debugMilestoneISuppressedReason = iResult.reason;
@@ -2048,6 +2056,10 @@ export async function POST(request: Request) {
         debugMilestoneISignatureScore = iResult.debugPath.signatureScore;
         debugMilestoneISignatureTier = iResult.debugPath.signatureTier;
         debugMilestoneISignatureRescuedThread = iResult.debugPath.signatureRescuedThread;
+        debugMilestoneICoreThreadFamily = iResult.debugPath.coreThreadFamily;
+        debugMilestoneICoreConfidence = iResult.debugPath.coreConfidence;
+        debugMilestoneICoreReasons = iResult.debugPath.coreReasons;
+        debugMilestoneICoreUseFallbackGeneric = iResult.debugPath.coreUseFallbackGeneric;
       }
     }
   } else {
@@ -2206,6 +2218,10 @@ export async function POST(request: Request) {
     debug_milestone_i_signature_score: debugMilestoneISignatureScore,
     debug_milestone_i_signature_tier: debugMilestoneISignatureTier,
     debug_milestone_i_signature_rescued_thread: debugMilestoneISignatureRescuedThread,
+    debug_milestone_i_core_thread_family: debugMilestoneICoreThreadFamily,
+    debug_milestone_i_core_confidence: debugMilestoneICoreConfidence,
+    debug_milestone_i_core_reasons: debugMilestoneICoreReasons,
+    debug_milestone_i_core_use_fallback_generic: debugMilestoneICoreUseFallbackGeneric,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

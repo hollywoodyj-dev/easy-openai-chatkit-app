@@ -192,6 +192,11 @@
 - **Doc:** Thread Family Detection Model — trigger / movement / direction / tone; score thresholds 0.75 / 0.5; weak match keeps low confidence; decay/topic shift deferred (suppression-first still gates utilitarian etc.).
 - **Code:** `lib/wisewave-milestone-i-thread-signature.ts` + `detectThreadSupport` uses prior **user** message + prior/current insights; lexical path unchanged when it already matches; **signature rescue** upgrades lexical mismatch + `same_family` tier to moderate/strong thread; `weak_family` → weak (still suppressed for I emit). **Markers:** `milestone_i_soft_continuity_v3`; debug `debug_milestone_i_signature_*`.
 
+## 2026-03-27 — Nova: Milestone I Thread Family Signature Map (v4)
+
+- **Docs:** Core family definitions (self_blame / over_effort / bracing) + Nova-ready JSON/TS map + `detectThreadFamily` / `resolveFamilyOrFallback`.
+- **Code:** `lib/wisewave-milestone-i-thread-family-map.ts` (map + matchers + extraction); removed `wisewave-milestone-i-thread-signature.ts`. **Weak preservation:** movement+direction only → `confidence: weak` + `should_preserve_as_weak_family`; resolver sets `useFallbackGeneric: false`; engine maps rescued weak → **moderate** thread for I (not `thread_not_supported`). **API debug:** `debug_milestone_i_core_*`. **Marker:** `milestone_i_soft_continuity_v4`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

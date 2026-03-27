@@ -14,13 +14,18 @@ import {
   type ContinuityPatternFamily,
 } from "@/lib/wisewave-continuity-family";
 import {
-  extractThreadSignature,
-  scoreThreadFamilyMatch,
-  type ThreadFamilyTier,
-} from "@/lib/wisewave-milestone-i-thread-signature";
+  coreConfidenceToLegacyTier,
+  coreConfidenceToScore,
+  detectThreadFamily,
+  resolveFamilyOrFallback,
+  extractMilestoneIThreadSignature,
+  type ConfidenceLevel,
+  type LegacySignatureTier,
+  type ThreadFamily,
+} from "@/lib/wisewave-milestone-i-thread-family-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v3";
+const BUILD_MARKER = "milestone_i_soft_continuity_v4";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -63,10 +68,16 @@ export type MilestoneIDebugPath = {
   threadStrength: "none" | "weak" | "moderate" | "strong" | null;
   userReflectiveStructure: boolean;
   mainReflectionSufficient: boolean;
-  /** Recognition-layer score (trigger/movement/direction/tone); null if no prior user turn. */
+  /** Core thread family map (self_blame / over_effort / bracing / unknown). */
+  coreThreadFamily: ThreadFamily | null;
+  coreConfidence: ConfidenceLevel | null;
+  coreReasons: string[];
+  coreUseFallbackGeneric: boolean | null;
+  /** Legacy 0–1 style score for scripts; derived from core confidence. */
   signatureScore: number | null;
-  signatureTier: ThreadFamilyTier | null;
-  /** True when lexical family failed but signature tier carried the thread. */
+  /** Legacy tier alias: same_family | weak_family | new_thread. */
+  signatureTier: LegacySignatureTier | null;
+  /** True when lexical family failed but core map did not fall back to generic. */
   signatureRescuedThread: boolean;
 };
 
@@ -213,12 +224,17 @@ function detectThreadSupport(args: {
   previous: ExtractedReflectionState | null;
   currentUserMessage: string;
   previousUserMessage: string | null;
+  language: "en" | "zh";
 }): {
   threadStrength: "none" | "weak" | "moderate" | "strong";
   family: ContinuityPatternFamily;
   signatureScore: number | null;
-  signatureTier: ThreadFamilyTier | null;
+  signatureTier: LegacySignatureTier | null;
   signatureRescuedThread: boolean;
+  coreThreadFamily: ThreadFamily | null;
+  coreConfidence: ConfidenceLevel | null;
+  coreReasons: string[];
+  coreUseFallbackGeneric: boolean | null;
 } {
   const currentFamily = detectContinuityPatternFamily(args.current.insight_candidate);
   const prevFamily = args.previous
@@ -233,21 +249,36 @@ function detectThreadSupport(args: {
       (prevFamily === "delayed_reply_means_i_did_something_wrong" &&
         currentFamily === "replay_for_mistakes"));
 
-  let signatureScore: number | null = null;
-  let signatureTier: ThreadFamilyTier | null = null;
+  let coreDetection: ReturnType<typeof detectThreadFamily> | null = null;
+  let resolved: ReturnType<typeof resolveFamilyOrFallback> | null = null;
   if (args.previous && args.previousUserMessage?.trim()) {
-    const sigPrev = extractThreadSignature(
+    const sigPrev = extractMilestoneIThreadSignature(
       args.previousUserMessage,
-      args.previous.insight_candidate
+      args.previous.insight_candidate,
+      args.language
     );
-    const sigCur = extractThreadSignature(
+    const sigCur = extractMilestoneIThreadSignature(
       args.currentUserMessage,
-      args.current.insight_candidate
+      args.current.insight_candidate,
+      args.language
     );
-    const m = scoreThreadFamilyMatch(sigPrev, sigCur);
-    signatureScore = m.score;
-    signatureTier = m.tier;
+    coreDetection = detectThreadFamily(sigPrev, sigCur);
+    resolved = resolveFamilyOrFallback(coreDetection);
   }
+
+  const coreThreadFamily = resolved?.resolvedFamily ?? null;
+  const coreConfidence = coreDetection?.confidence ?? null;
+  const coreReasons = coreDetection?.reasons ?? [];
+  const coreUseFallbackGeneric = resolved ? resolved.useFallbackGeneric : null;
+
+  const signatureScore =
+    coreConfidence != null && coreUseFallbackGeneric != null
+      ? coreConfidenceToScore(coreConfidence, coreUseFallbackGeneric)
+      : null;
+  const signatureTier =
+    coreConfidence != null && coreUseFallbackGeneric != null
+      ? coreConfidenceToLegacyTier(coreConfidence, coreUseFallbackGeneric)
+      : null;
 
   const lexicalMatched =
     !!args.previous && !!prevFamily && (prevFamily === currentFamily || isCompatible);
@@ -260,6 +291,10 @@ function detectThreadSupport(args: {
         signatureScore,
         signatureTier,
         signatureRescuedThread: false,
+        coreThreadFamily,
+        coreConfidence,
+        coreReasons,
+        coreUseFallbackGeneric,
       };
     }
     const insightLen = args.current.insight_candidate.trim().length;
@@ -272,50 +307,63 @@ function detectThreadSupport(args: {
       signatureScore,
       signatureTier,
       signatureRescuedThread: false,
+      coreThreadFamily,
+      coreConfidence,
+      coreReasons,
+      coreUseFallbackGeneric,
     };
   }
 
-  // Recognition layer: wording shifted but movement + direction may still match.
-  if (!args.previous || !args.previousUserMessage?.trim() || signatureTier == null) {
+  if (!args.previous || !args.previousUserMessage?.trim() || !resolved) {
     return {
       threadStrength: "none",
       family,
       signatureScore,
       signatureTier,
       signatureRescuedThread: false,
+      coreThreadFamily,
+      coreConfidence,
+      coreReasons,
+      coreUseFallbackGeneric,
     };
   }
 
-  if (signatureTier === "new_thread") {
+  if (resolved.useFallbackGeneric) {
     return {
       threadStrength: "none",
       family,
       signatureScore,
       signatureTier,
       signatureRescuedThread: false,
-    };
-  }
-
-  if (signatureTier === "weak_family") {
-    return {
-      threadStrength: "weak",
-      family,
-      signatureScore,
-      signatureTier,
-      signatureRescuedThread: true,
+      coreThreadFamily,
+      coreConfidence,
+      coreReasons,
+      coreUseFallbackGeneric,
     };
   }
 
   const insightLen = args.current.insight_candidate.trim().length;
   const reflective = userHasReflectiveStructureForCarryover(args.current.insight_candidate);
+  const bumpStrong = insightLen >= 55 || reflective;
+
+  // Weak core family is preserved (not generic); treat as carry-over-eligible moderate per map §weak rule.
   const threadStrength: "moderate" | "strong" =
-    insightLen >= 55 || reflective ? "strong" : "moderate";
+    resolved.familyStrength === "strong"
+      ? bumpStrong
+        ? "strong"
+        : "moderate"
+      : "moderate";
+
   return {
     threadStrength,
     family,
     signatureScore,
     signatureTier,
     signatureRescuedThread: true,
+    coreThreadFamily,
+    coreConfidence,
+    coreReasons,
+    coreUseFallbackGeneric,
   };
 }
 
@@ -472,6 +520,10 @@ export function computeMilestoneICarryoverCue(params: {
     threadStrength: null,
     userReflectiveStructure: userHasReflectiveStructureForCarryover(params.userMessage),
     mainReflectionSufficient: false,
+    coreThreadFamily: null,
+    coreConfidence: null,
+    coreReasons: [],
+    coreUseFallbackGeneric: null,
     signatureScore: null,
     signatureTier: null,
     signatureRescuedThread: false,
@@ -542,8 +594,13 @@ export function computeMilestoneICarryoverCue(params: {
     previous: previousReflectionState,
     currentUserMessage: userMessage,
     previousUserMessage,
+    language: params.wantsChinese ? "zh" : "en",
   });
   debugPath.threadStrength = thread.threadStrength;
+  debugPath.coreThreadFamily = thread.coreThreadFamily;
+  debugPath.coreConfidence = thread.coreConfidence;
+  debugPath.coreReasons = thread.coreReasons;
+  debugPath.coreUseFallbackGeneric = thread.coreUseFallbackGeneric;
   debugPath.signatureScore = thread.signatureScore;
   debugPath.signatureTier = thread.signatureTier;
   debugPath.signatureRescuedThread = thread.signatureRescuedThread;
