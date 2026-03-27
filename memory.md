@@ -243,6 +243,12 @@
 - **Code:** new `lib/wisewave-milestone-i-weak-edge-admission-map.ts`; weak thread path now uses explicit self-blame weak-edge admission (`reject|admit_fragile|admit_strong_weak_edge`) before corridor. Added self-turn strength + purely-historical checks.
 - **Debug:** route exposes `debug_milestone_i_weak_edge_admission_*` for hosted triage. **Marker:** `milestone_i_soft_continuity_v12`.
 
+## 2026-03-27 — Nova: Milestone I weak-path ordering fix (v13)
+
+- **Why:** Lumen hosted v12 reported weak-edge and corridor decisions never opening (`D=0/4`), indicating weak path was still blocked earlier.
+- **Code:** reordered weak execution in `lib/wisewave-milestone-i-soft-continuity-carryover.ts` so weak cases run admission and corridor before hard promotion rejection; admitted weak corridor path now injects strict weak promotion shim (`weak_promotion`, `ultra_light_only`) to continue ultra-light rendering.
+- **Marker:** `milestone_i_soft_continuity_v13`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

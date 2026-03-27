@@ -46,7 +46,7 @@ import {
 } from "@/lib/wisewave-milestone-i-weak-edge-admission-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v12";
+const BUILD_MARKER = "milestone_i_soft_continuity_v13";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -967,15 +967,11 @@ export function computeMilestoneICarryoverCue(params: {
     language: params.wantsChinese ? "zh" : "en",
   });
   const calibratedInput = applyPromotionSensitivityCalibration(promotionInput);
-  const promotion = resolvePromotionState(calibratedInput);
+  let promotion = resolvePromotionState(calibratedInput);
   debugPath.promotionState = promotion.promotion_state;
   debugPath.promotionConfidence = calibratedInput.family_confidence;
   debugPath.promotionTemplateAllowance = promotion.template_allowance;
   debugPath.promotionReasons = promotion.reasons;
-
-  if (!promotion.should_render_carryover) {
-    return { status: "suppressed", reason: "promotion_not_granted", debugPath };
-  }
 
   let effectiveThreadStrength = thread.threadStrength;
   if (thread.threadStrength === "weak") {
@@ -1042,9 +1038,24 @@ export function computeMilestoneICarryoverCue(params: {
     if (weakCorridor.decision !== "ultra_light_survival") {
       return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
     }
+    // For weak-edge survivors, synthesize a strict weak promotion so the path
+    // can proceed to ultra-light rendering instead of dying at promotion gate.
+    promotion = {
+      promotion_state: "weak_promotion",
+      template_allowance: "ultra_light_only",
+      should_render_carryover: true,
+      reasons: [...promotion.reasons, "weak_edge_corridor_promoted"],
+    };
+    debugPath.promotionState = promotion.promotion_state;
+    debugPath.promotionTemplateAllowance = promotion.template_allowance;
+    debugPath.promotionReasons = promotion.reasons;
     // Keep weak widening path ultra-light while preserving suppression-first elsewhere.
     effectiveThreadStrength = "moderate";
     debugPath.weakPromotionBridgeUsed = true;
+  }
+
+  if (!promotion.should_render_carryover) {
+    return { status: "suppressed", reason: "promotion_not_granted", debugPath };
   }
 
   const family = pickFamilyFromAllowance({
