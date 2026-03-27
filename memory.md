@@ -202,6 +202,11 @@
 - **Docs:** Promotion tiers (none / weak / strong), prerequisites, template policies; Wisewave + Lumen: recognition necessary but not sufficient.
 - **Code:** `lib/wisewave-milestone-i-promotion-map.ts`; `detectThreadSupport` promotes lexical **`fallback_generic`** when core trunk family is strong/weak and not generic fallback; `computeMilestoneICarryoverCue` calls **`resolvePromotionState`** then **`pickFamilyFromAllowance`**. **Suppress:** `promotion_not_granted`. **Marker:** `milestone_i_soft_continuity_v5`.
 
+## 2026-03-27 — Nova: Milestone I Widening Phase A (v6)
+
+- **Docs / Tree / Wisewave:** Widening = support surface, not feature weight; preserve gold path; one dimension (self-blame phrasing first).
+- **Code:** `lib/wisewave-milestone-i-thread-family-map.ts` v1.1 — broader **self_blame** hints + regex only; templates/promotion unchanged. **Marker:** `milestone_i_soft_continuity_v6`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

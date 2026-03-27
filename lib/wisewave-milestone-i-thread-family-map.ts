@@ -91,7 +91,7 @@ export interface ThreadFamilySignatureMap {
 export const MILESTONE_I_THREAD_FAMILY_MAP: ThreadFamilySignatureMap = {
   milestone: "I",
   feature: "thread_family_detection",
-  version: "v1",
+  version: "v1.1",
   governing_rule:
     "Thread family is determined by inner movement structure, not by repeated wording.",
   matching_priority: ["movement + direction", "trigger pattern", "tone / phenomenology"],
@@ -130,6 +130,9 @@ export const MILESTONE_I_THREAD_FAMILY_MAP: ThreadFamilySignatureMap = {
           "I turn it back on myself",
           "I assume I'm the issue",
           "I start checking whether I caused it",
+          "I tend to turn it back on myself",
+          "My mind goes to me being the issue",
+          "Part of me assumes this must be my fault",
         ],
         zh: [
           "是不是我做错了",
@@ -137,6 +140,9 @@ export const MILESTONE_I_THREAD_FAMILY_MAP: ThreadFamilySignatureMap = {
           "我会先往自己身上想",
           "我会先怀疑自己",
           "是不是我哪里不对",
+          "我会怀疑是不是自己哪里不对",
+          "我心里会很快转成对自己的怀疑",
+          "别人一沉默我就会开始怀疑自己",
         ],
       },
       non_match_hints: {
@@ -151,6 +157,7 @@ export const MILESTONE_I_THREAD_FAMILY_MAP: ThreadFamilySignatureMap = {
         "Do not require the literal word 'blame'.",
         "ZH often expresses self-blame indirectly via self-turning implication.",
         "Primary key is inward fault attribution under uncertainty.",
+        "Widening Phase A: broaden phrasing coverage only; do not increase cue weight or add templates.",
       ],
     },
     over_effort: {
@@ -388,10 +395,10 @@ function selfBlameSignals(raw: string, lower: string, lang: "en" | "zh"): boolea
     return true;
   }
   if (
-    /(怪自己|先怪自己|自责|都是我的错|是不是我|我是不是|我做错|我哪里错|我的问题|我有问题|往自己身上|往自己|对自己失望)/.test(
+    /(怪自己|先怪自己|自责|都是我的错|是不是我|我是不是|我做错|我哪里错|我的问题|我有问题|往自己身上想|往自己身上|往自己|对自己失望|怀疑是不是自己|是不是自己哪里|自己哪里不对|下意识地怪|归到(了)?自己|揽在(了)?自己|第一反应.*(怪|错|问题)|转成对.*自己的怀疑|先想到是自己)/.test(
       raw
     ) ||
-    /(self[- ]?blam|blame(s)?\s+myself|my fault|at fault|must be my fault|i\s+('?m|am)\s+wrong|i did something wrong|assume i'?m the (issue|problem)|turn it back on myself|what i did)/i.test(
+    /(self[- ]?blam|blame(s)?\s+myself|my fault|at fault|must be my fault|i\s+('?m|am)\s+wrong|i did something wrong|assume i'?m the (issue|problem)|turn it back on myself|tend to turn it back|what i did|my mind goes to (me|myself|being)|mind goes to me being|whether i caused|start checking whether i caused|part of me assumes.*my fault)/i.test(
       lower
     )
   ) {

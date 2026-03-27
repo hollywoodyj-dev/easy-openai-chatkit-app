@@ -35,7 +35,7 @@ import {
 } from "@/lib/wisewave-milestone-i-promotion-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v5";
+const BUILD_MARKER = "milestone_i_soft_continuity_v6";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
