@@ -13,9 +13,14 @@ import {
   detectContinuityPatternFamily,
   type ContinuityPatternFamily,
 } from "@/lib/wisewave-continuity-family";
+import {
+  extractThreadSignature,
+  scoreThreadFamilyMatch,
+  type ThreadFamilyTier,
+} from "@/lib/wisewave-milestone-i-thread-signature";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v2";
+const BUILD_MARKER = "milestone_i_soft_continuity_v3";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -58,6 +63,11 @@ export type MilestoneIDebugPath = {
   threadStrength: "none" | "weak" | "moderate" | "strong" | null;
   userReflectiveStructure: boolean;
   mainReflectionSufficient: boolean;
+  /** Recognition-layer score (trigger/movement/direction/tone); null if no prior user turn. */
+  signatureScore: number | null;
+  signatureTier: ThreadFamilyTier | null;
+  /** True when lexical family failed but signature tier carried the thread. */
+  signatureRescuedThread: boolean;
 };
 
 export type MilestoneIOutcome =
@@ -201,7 +211,15 @@ function mainReflectionSufficientHeuristic(args: {
 function detectThreadSupport(args: {
   current: ExtractedReflectionState;
   previous: ExtractedReflectionState | null;
-}): { threadStrength: "none" | "weak" | "moderate" | "strong"; family: ContinuityPatternFamily } {
+  currentUserMessage: string;
+  previousUserMessage: string | null;
+}): {
+  threadStrength: "none" | "weak" | "moderate" | "strong";
+  family: ContinuityPatternFamily;
+  signatureScore: number | null;
+  signatureTier: ThreadFamilyTier | null;
+  signatureRescuedThread: boolean;
+} {
   const currentFamily = detectContinuityPatternFamily(args.current.insight_candidate);
   const prevFamily = args.previous
     ? detectContinuityPatternFamily(args.previous.insight_candidate)
@@ -215,20 +233,90 @@ function detectThreadSupport(args: {
       (prevFamily === "delayed_reply_means_i_did_something_wrong" &&
         currentFamily === "replay_for_mistakes"));
 
-  if (!args.previous || !prevFamily || (prevFamily !== currentFamily && !isCompatible)) {
-    return { threadStrength: "none", family };
+  let signatureScore: number | null = null;
+  let signatureTier: ThreadFamilyTier | null = null;
+  if (args.previous && args.previousUserMessage?.trim()) {
+    const sigPrev = extractThreadSignature(
+      args.previousUserMessage,
+      args.previous.insight_candidate
+    );
+    const sigCur = extractThreadSignature(
+      args.currentUserMessage,
+      args.current.insight_candidate
+    );
+    const m = scoreThreadFamilyMatch(sigPrev, sigCur);
+    signatureScore = m.score;
+    signatureTier = m.tier;
   }
 
-  // Prefer non-generic families for stability; "fallback_generic" is treated as weak.
-  if (family === "fallback_generic") {
-    return { threadStrength: "weak", family };
+  const lexicalMatched =
+    !!args.previous && !!prevFamily && (prevFamily === currentFamily || isCompatible);
+
+  if (lexicalMatched) {
+    if (family === "fallback_generic") {
+      return {
+        threadStrength: "weak",
+        family,
+        signatureScore,
+        signatureTier,
+        signatureRescuedThread: false,
+      };
+    }
+    const insightLen = args.current.insight_candidate.trim().length;
+    const reflective = userHasReflectiveStructureForCarryover(args.current.insight_candidate);
+    const threadStrength: "moderate" | "strong" =
+      insightLen >= 55 || reflective ? "strong" : "moderate";
+    return {
+      threadStrength,
+      family,
+      signatureScore,
+      signatureTier,
+      signatureRescuedThread: false,
+    };
   }
 
-  // Moderate strength when user keeps reflective structure OR insight is long enough.
+  // Recognition layer: wording shifted but movement + direction may still match.
+  if (!args.previous || !args.previousUserMessage?.trim() || signatureTier == null) {
+    return {
+      threadStrength: "none",
+      family,
+      signatureScore,
+      signatureTier,
+      signatureRescuedThread: false,
+    };
+  }
+
+  if (signatureTier === "new_thread") {
+    return {
+      threadStrength: "none",
+      family,
+      signatureScore,
+      signatureTier,
+      signatureRescuedThread: false,
+    };
+  }
+
+  if (signatureTier === "weak_family") {
+    return {
+      threadStrength: "weak",
+      family,
+      signatureScore,
+      signatureTier,
+      signatureRescuedThread: true,
+    };
+  }
+
   const insightLen = args.current.insight_candidate.trim().length;
   const reflective = userHasReflectiveStructureForCarryover(args.current.insight_candidate);
-  if (insightLen >= 55 || reflective) return { threadStrength: "strong", family };
-  return { threadStrength: "moderate", family };
+  const threadStrength: "moderate" | "strong" =
+    insightLen >= 55 || reflective ? "strong" : "moderate";
+  return {
+    threadStrength,
+    family,
+    signatureScore,
+    signatureTier,
+    signatureRescuedThread: true,
+  };
 }
 
 const FAMILY_TEMPLATES: Record<MilestoneICueFamily, { en: string[]; zh: string[] }> = {
@@ -366,6 +454,8 @@ function isVisibilityRisk(textEn: string, textZh: string): boolean {
 
 export function computeMilestoneICarryoverCue(params: {
   userMessage: string;
+  /** Prior user turn text (same conversation); drives cross-turn signature matching. */
+  previousUserMessage: string | null;
   seed: string;
   reflectionState: ExtractedReflectionState | null;
   previousReflectionState: ExtractedReflectionState | null;
@@ -382,13 +472,23 @@ export function computeMilestoneICarryoverCue(params: {
     threadStrength: null,
     userReflectiveStructure: userHasReflectiveStructureForCarryover(params.userMessage),
     mainReflectionSufficient: false,
+    signatureScore: null,
+    signatureTier: null,
+    signatureRescuedThread: false,
   };
 
   if (!isMilestoneICarryoverEnabled()) {
     return { status: "suppressed", reason: "milestone_i_disabled", debugPath };
   }
 
-  const { userMessage, reflectionState, previousReflectionState, recurrenceCueEmitted, awarenessCueEmitted } = params;
+  const {
+    userMessage,
+    previousUserMessage,
+    reflectionState,
+    previousReflectionState,
+    recurrenceCueEmitted,
+    awarenessCueEmitted,
+  } = params;
 
   if (!reflectionState || !reflectionState.insight_candidate.trim()) {
     return { status: "suppressed", reason: "no_reflection_state", debugPath };
@@ -440,8 +540,13 @@ export function computeMilestoneICarryoverCue(params: {
   const thread = detectThreadSupport({
     current: reflectionState,
     previous: previousReflectionState,
+    currentUserMessage: userMessage,
+    previousUserMessage,
   });
   debugPath.threadStrength = thread.threadStrength;
+  debugPath.signatureScore = thread.signatureScore;
+  debugPath.signatureTier = thread.signatureTier;
+  debugPath.signatureRescuedThread = thread.signatureRescuedThread;
 
   if (thread.threadStrength === "none") {
     return { status: "suppressed", reason: "thread_not_supported", debugPath };

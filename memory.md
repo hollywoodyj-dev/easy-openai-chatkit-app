@@ -187,6 +187,11 @@
 - **Wisewave:** Directive = thread **recognition** over continuity expression; stabilize `fallback_generic` / self-blame; no template or UX polish until repetition holds.
 - **Nova:** `milestone_i_soft_continuity_v2` — `detectContinuityPatternFamily` gains persistent self-blame + expanded carry-over atmosphere (EN/ZH) so paraphrased second-turn insights route to `delayed_reply_means_i_did_something_wrong` vs `replay_for_mistakes` instead of `fallback_generic`.
 
+## 2026-03-27 — Nova: Milestone I thread signature layer (v3)
+
+- **Doc:** Thread Family Detection Model — trigger / movement / direction / tone; score thresholds 0.75 / 0.5; weak match keeps low confidence; decay/topic shift deferred (suppression-first still gates utilitarian etc.).
+- **Code:** `lib/wisewave-milestone-i-thread-signature.ts` + `detectThreadSupport` uses prior **user** message + prior/current insights; lexical path unchanged when it already matches; **signature rescue** upgrades lexical mismatch + `same_family` tier to moderate/strong thread; `weak_family` → weak (still suppressed for I emit). **Markers:** `milestone_i_soft_continuity_v3`; debug `debug_milestone_i_signature_*`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

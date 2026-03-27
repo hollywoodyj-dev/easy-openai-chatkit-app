@@ -1274,6 +1274,9 @@ export async function POST(request: Request) {
   let debugMilestoneIThreadStrength: string | null = null;
   let debugMilestoneIUserReflectiveStructure: boolean | null = null;
   let debugMilestoneIMainReflectionSufficient: boolean | null = null;
+  let debugMilestoneISignatureScore: number | null = null;
+  let debugMilestoneISignatureTier: string | null = null;
+  let debugMilestoneISignatureRescuedThread: boolean | null = null;
   const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
 
   // Ticket 4: save one durable insight when we have a good candidate.
@@ -1974,8 +1977,25 @@ export async function POST(request: Request) {
 
     // Milestone I: soft continuity carry-over (append subtle carry sentence to assistant_message)
     if (reflectionState) {
+      let previousUserMessageForI: string | null = null;
+      try {
+        const priorUser = await prisma.message.findFirst({
+          where: {
+            conversationId: sessionId,
+            role: "user",
+            createdAt: { lt: userMsg.createdAt },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { message: true },
+        });
+        previousUserMessageForI = priorUser?.message?.trim() || null;
+      } catch {
+        previousUserMessageForI = null;
+      }
+
       const iResult: MilestoneIOutcome = computeMilestoneICarryoverCue({
         userMessage: message,
+        previousUserMessage: previousUserMessageForI,
         seed: `${userMsg.id}:${assistantMsgId}`,
         reflectionState,
         previousReflectionState: previousAssistantReflectionState,
@@ -2010,6 +2030,9 @@ export async function POST(request: Request) {
         debugMilestoneIThreadStrength = iResult.debugPath.threadStrength;
         debugMilestoneIUserReflectiveStructure = iResult.debugPath.userReflectiveStructure;
         debugMilestoneIMainReflectionSufficient = iResult.debugPath.mainReflectionSufficient;
+        debugMilestoneISignatureScore = iResult.debugPath.signatureScore;
+        debugMilestoneISignatureTier = iResult.debugPath.signatureTier;
+        debugMilestoneISignatureRescuedThread = iResult.debugPath.signatureRescuedThread;
       } else {
         debugMilestoneIOutcome = "suppressed";
         debugMilestoneISuppressedReason = iResult.reason;
@@ -2022,6 +2045,9 @@ export async function POST(request: Request) {
         debugMilestoneIThreadStrength = iResult.debugPath.threadStrength;
         debugMilestoneIUserReflectiveStructure = iResult.debugPath.userReflectiveStructure;
         debugMilestoneIMainReflectionSufficient = iResult.debugPath.mainReflectionSufficient;
+        debugMilestoneISignatureScore = iResult.debugPath.signatureScore;
+        debugMilestoneISignatureTier = iResult.debugPath.signatureTier;
+        debugMilestoneISignatureRescuedThread = iResult.debugPath.signatureRescuedThread;
       }
     }
   } else {
@@ -2177,6 +2203,9 @@ export async function POST(request: Request) {
     debug_milestone_i_thread_strength: debugMilestoneIThreadStrength,
     debug_milestone_i_user_reflective_structure: debugMilestoneIUserReflectiveStructure,
     debug_milestone_i_main_reflection_sufficient: debugMilestoneIMainReflectionSufficient,
+    debug_milestone_i_signature_score: debugMilestoneISignatureScore,
+    debug_milestone_i_signature_tier: debugMilestoneISignatureTier,
+    debug_milestone_i_signature_rescued_thread: debugMilestoneISignatureRescuedThread,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
