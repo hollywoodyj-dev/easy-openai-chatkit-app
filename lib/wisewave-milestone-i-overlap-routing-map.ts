@@ -37,6 +37,8 @@ export interface OverlapRoutingResult {
   allow_h: boolean;
   suppress_i: boolean;
   suppress_h: boolean;
+  i_valid: boolean;
+  i_invalid_reasons: string[];
   reasons: string[];
 }
 
@@ -95,6 +97,15 @@ export function resolveIHOverlapRouting(
   input: OverlapRoutingInput
 ): OverlapRoutingResult {
   const reasons: string[] = [];
+  const iInvalidReasons: string[] = [];
+
+  if (input.family !== "self_blame") iInvalidReasons.push("family_not_self_blame");
+  if (!input.weak_edge_admission_passed) iInvalidReasons.push("weak_edge_admission_failed");
+  if (!input.current_turn_is_live_enough) iInvalidReasons.push("current_turn_not_live_enough");
+  if (input.family_shift_detected) iInvalidReasons.push("family_shift_detected");
+  if (input.visibility_risk_high) iInvalidReasons.push("visibility_risk_high");
+  if (input.main_reflection_sufficient) iInvalidReasons.push("main_reflection_sufficient");
+  if (input.i_removal_cleaner === true) iInvalidReasons.push("i_removal_cleaner");
 
   const iValid =
     input.family === "self_blame" &&
@@ -116,6 +127,8 @@ export function resolveIHOverlapRouting(
       allow_h: false,
       suppress_i: false,
       suppress_h: true,
+      i_valid: true,
+      i_invalid_reasons: [],
       reasons,
     };
   }
@@ -128,6 +141,8 @@ export function resolveIHOverlapRouting(
       allow_h: false,
       suppress_i: false,
       suppress_h: true,
+      i_valid: true,
+      i_invalid_reasons: [],
       reasons,
     };
   }
@@ -140,6 +155,8 @@ export function resolveIHOverlapRouting(
       allow_h: true,
       suppress_i: true,
       suppress_h: false,
+      i_valid: false,
+      i_invalid_reasons: iInvalidReasons,
       reasons,
     };
   }
@@ -151,6 +168,8 @@ export function resolveIHOverlapRouting(
     allow_h: false,
     suppress_i: true,
     suppress_h: true,
+    i_valid: false,
+    i_invalid_reasons: iInvalidReasons,
     reasons,
   };
 }

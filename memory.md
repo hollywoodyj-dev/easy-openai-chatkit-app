@@ -302,6 +302,13 @@
 - **Debug:** added routing decision/reasons to turn output.
 - **Marker:** `milestone_i_soft_continuity_v21`.
 
+## 2026-03-27 — Nova: overlap frontier calibration (v22)
+
+- **Why:** hosted v21 proved router runs, but EN-2 anchor still resolved `prefer_H` with `i_not_valid_h_valid`.
+- **Code:** narrow overlap-input bridge for EN weak-edge self-blame live-enough (only when admission already passed + inward direction still present + not historical + no family shift). Routing rule unchanged.
+- **Debug:** added `debug_milestone_i_h_overlap_i_valid` and `debug_milestone_i_h_overlap_i_invalid_reasons`.
+- **Marker:** `milestone_i_soft_continuity_v22`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

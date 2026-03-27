@@ -55,7 +55,7 @@ import {
 } from "@/lib/wisewave-milestone-i-overlap-routing-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v21";
+const BUILD_MARKER = "milestone_i_soft_continuity_v22";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -136,6 +136,8 @@ export type MilestoneIDebugPath = {
   hOverlapPreferIActivated: boolean;
   hOverlapRoutingDecision: OverlapRoutingDecision | null;
   hOverlapRoutingReasons: string[];
+  hOverlapIValid: boolean | null;
+  hOverlapIInvalidReasons: string[];
 };
 
 export type MilestoneIOutcome =
@@ -910,6 +912,8 @@ export function computeMilestoneICarryoverCue(params: {
     hOverlapPreferIActivated: false,
     hOverlapRoutingDecision: null,
     hOverlapRoutingReasons: [],
+    hOverlapIValid: null,
+    hOverlapIInvalidReasons: [],
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -1087,10 +1091,22 @@ export function computeMilestoneICarryoverCue(params: {
       purely_historical: weakEdgePurelyHistorical,
       family_shift_detected: familyShiftDetected,
     });
-    const currentTurnIsLiveEnough = resolveCurrentTurnLiveEnough({
+    const currentTurnIsLiveEnoughBase = resolveCurrentTurnLiveEnough({
       current_turn_has_live_movement: activeSelfTurnNow || liveSelfTurnNow,
       residual_result: residualResult,
     });
+    // v22 overlap frontier calibration:
+    // In EN self-blame weak-edge overlap, allow a narrowly-scoped "live enough"
+    // bridge when admission already passed and the turn still bends inward.
+    const overlapENLiveEnoughBridge =
+      !params.wantsChinese &&
+      admissionFamily === "self_blame" &&
+      weakEdgeAdmission.admitted &&
+      presentTurnSelfBlameDirection &&
+      !weakEdgePurelyHistorical &&
+      !familyShiftDetected;
+    const currentTurnIsLiveEnough =
+      currentTurnIsLiveEnoughBase || overlapENLiveEnoughBridge;
     const routing = resolveIHOverlapRouting({
       family: admissionFamily,
       weak_edge_admission_passed: weakEdgeAdmission.admitted,
@@ -1104,6 +1120,8 @@ export function computeMilestoneICarryoverCue(params: {
     });
     debugPath.hOverlapRoutingDecision = routing.decision;
     debugPath.hOverlapRoutingReasons = routing.reasons;
+    debugPath.hOverlapIValid = routing.i_valid;
+    debugPath.hOverlapIInvalidReasons = routing.i_invalid_reasons;
     if (routing.decision !== "prefer_I") {
       return { status: "suppressed", reason: "awareness_overlap_h", debugPath };
     }

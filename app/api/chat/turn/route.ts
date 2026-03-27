@@ -1300,6 +1300,8 @@ export async function POST(request: Request) {
   let debugMilestoneIHOverlapPreferIActivated: boolean | null = null;
   let debugMilestoneIHOverlapRoutingDecision: string | null = null;
   let debugMilestoneIHOverlapRoutingReasons: string[] | null = null;
+  let debugMilestoneIHOverlapIValid: boolean | null = null;
+  let debugMilestoneIHOverlapIInvalidReasons: string[] | null = null;
   let debugMilestoneIPromotionState: string | null = null;
   let debugMilestoneIPromotionTemplateAllowance: string | null = null;
   let debugMilestoneIPromotionReasons: string[] | null = null;
@@ -2097,6 +2099,9 @@ export async function POST(request: Request) {
           iResult.debugPath.hOverlapRoutingDecision;
         debugMilestoneIHOverlapRoutingReasons =
           iResult.debugPath.hOverlapRoutingReasons;
+        debugMilestoneIHOverlapIValid = iResult.debugPath.hOverlapIValid;
+        debugMilestoneIHOverlapIInvalidReasons =
+          iResult.debugPath.hOverlapIInvalidReasons;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2153,6 +2158,9 @@ export async function POST(request: Request) {
           iResult.debugPath.hOverlapRoutingDecision;
         debugMilestoneIHOverlapRoutingReasons =
           iResult.debugPath.hOverlapRoutingReasons;
+        debugMilestoneIHOverlapIValid = iResult.debugPath.hOverlapIValid;
+        debugMilestoneIHOverlapIInvalidReasons =
+          iResult.debugPath.hOverlapIInvalidReasons;
         debugMilestoneIPromotionState = iResult.debugPath.promotionState;
         debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
@@ -2352,6 +2360,9 @@ export async function POST(request: Request) {
       debugMilestoneIHOverlapRoutingDecision,
     debug_milestone_i_h_overlap_routing_reasons:
       debugMilestoneIHOverlapRoutingReasons,
+    debug_milestone_i_h_overlap_i_valid: debugMilestoneIHOverlapIValid,
+    debug_milestone_i_h_overlap_i_invalid_reasons:
+      debugMilestoneIHOverlapIInvalidReasons,
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,
