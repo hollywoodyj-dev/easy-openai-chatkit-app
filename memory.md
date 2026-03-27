@@ -261,6 +261,20 @@
 - **Code:** add weak-edge local confidence fallback (`none -> weak`) when weak thread has present-turn inward self-turn evidence; for admitted weak-edge self-blame, bridge corridor movement/direction and same-family-alive inputs from present-turn evidence instead of core-only match.
 - **Marker:** `milestone_i_soft_continuity_v15`.
 
+## 2026-03-27 — Nova: residual live-movement patch (v16)
+
+- **Why:** Wisewave identified new bottleneck as corridor `no_live_movement_now`, not weak-edge admission.
+- **Code:** weak-edge corridor now treats current turn as live-enough when `active_self_turn || faint_residual_self_turn_present`, with strict guards (toward-self direction, not historical-only, no family shift). No template/suppression expansion.
+- **Debug:** exposes `debug_milestone_i_weak_edge_faint_residual_self_turn_present` and `debug_milestone_i_weak_edge_current_turn_live_enough`.
+- **Marker:** `milestone_i_soft_continuity_v16`.
+
+## 2026-03-27 — Nova: residual movement map integration (v17)
+
+- **Why:** Wisewave provided Nova-ready residual movement map; convert v16 inline rule to explicit map/resolver for auditable QA path.
+- **Code:** added `lib/wisewave-milestone-i-residual-movement-map.ts`; weak-edge live-enough now uses `resolveResidualSelfBlameMovement()` + `resolveCurrentTurnLiveEnough()`.
+- **Debug:** added residual decision/reasons in turn API output.
+- **Marker:** `milestone_i_soft_continuity_v17`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

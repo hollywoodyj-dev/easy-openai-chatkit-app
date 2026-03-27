@@ -44,9 +44,14 @@ import {
   type SelfTurnStrength,
   type WeakEdgeAdmissionDecision,
 } from "@/lib/wisewave-milestone-i-weak-edge-admission-map";
+import {
+  resolveCurrentTurnLiveEnough,
+  resolveResidualSelfBlameMovement,
+  type ResidualMovementDecision,
+} from "@/lib/wisewave-milestone-i-residual-movement-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v15";
+const BUILD_MARKER = "milestone_i_soft_continuity_v17";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -119,6 +124,10 @@ export type MilestoneIDebugPath = {
   weakEdgeAdmissionReasons: string[];
   weakEdgeSelfTurnStrength: SelfTurnStrength | null;
   weakEdgePurelyHistorical: boolean;
+  weakEdgeFaintResidualSelfTurnPresent: boolean;
+  weakEdgeCurrentTurnLiveEnough: boolean;
+  weakEdgeResidualMovementDecision: ResidualMovementDecision | null;
+  weakEdgeResidualMovementReasons: string[];
 };
 
 export type MilestoneIOutcome =
@@ -331,6 +340,14 @@ function detectWeakEdgeSelfTurnStrength(
     return "faint";
   }
   return "none";
+}
+
+function hasActiveSelfBlameMovement(userMessage: string, insightCandidate: string): boolean {
+  const raw = `${userMessage}\n${insightCandidate}`;
+  return (
+    /(是不是我做错|是不是我的错|是我错了|都是我的错|我做错了|我的问题)/.test(raw) ||
+    /(i did something wrong|it'?s my fault|this is my fault|i caused it|i am the problem)/i.test(raw)
+  );
 }
 
 function isPurelyHistoricalWeakEdge(userMessage: string, insightCandidate: string): boolean {
@@ -860,6 +877,10 @@ export function computeMilestoneICarryoverCue(params: {
     weakEdgeAdmissionReasons: [],
     weakEdgeSelfTurnStrength: null,
     weakEdgePurelyHistorical: false,
+    weakEdgeFaintResidualSelfTurnPresent: false,
+    weakEdgeCurrentTurnLiveEnough: false,
+    weakEdgeResidualMovementDecision: null,
+    weakEdgeResidualMovementReasons: [],
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -1004,6 +1025,43 @@ export function computeMilestoneICarryoverCue(params: {
     const liveSelfTurnNow =
       weakEdgeSelfTurnStrength !== "none" ||
       promotionInput.current_turn_has_live_movement;
+    const activeSelfTurnNow = hasActiveSelfBlameMovement(
+      userMessage,
+      reflectionState.insight_candidate
+    );
+    const faintResidualSelfTurnPresent =
+      presentTurnSelfBlameDirection &&
+      !activeSelfTurnNow &&
+      !weakEdgePurelyHistorical &&
+      !familyShiftDetected &&
+      (weakEdgeSelfTurnStrength === "faint" ||
+        /(?:\bstill\b|\bkind of\b|\bsort of\b|\ba little\b|\bfirst\b)/i.test(
+          userMessage
+        ) ||
+        /(还是会|有一点|会先|先往自己身上)/.test(userMessage));
+    const residualResult = resolveResidualSelfBlameMovement({
+      family: admissionFamily,
+      direction_toward_self:
+        presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
+      current_turn_has_live_self_turn: activeSelfTurnNow,
+      faint_residual_self_turn_present: faintResidualSelfTurnPresent,
+      purely_historical: weakEdgePurelyHistorical,
+      family_shift_detected: familyShiftDetected,
+      subtle_self_questioning: weakEdgeSelfTurnStrength !== "none",
+      inward_attribution_language: presentTurnSelfBlameDirection,
+      still_first_kind_of_language:
+        /(?:\bstill\b|\bkind of\b|\bsort of\b|\ba little\b|\bfirst\b)/i.test(
+          userMessage
+        ) || /(还是会|有一点|会先|先往自己身上)/.test(userMessage),
+    });
+    const currentTurnIsLiveEnough = resolveCurrentTurnLiveEnough({
+      current_turn_has_live_movement: activeSelfTurnNow || liveSelfTurnNow,
+      residual_result: residualResult,
+    });
+    debugPath.weakEdgeFaintResidualSelfTurnPresent = faintResidualSelfTurnPresent;
+    debugPath.weakEdgeCurrentTurnLiveEnough = currentTurnIsLiveEnough;
+    debugPath.weakEdgeResidualMovementDecision = residualResult.decision;
+    debugPath.weakEdgeResidualMovementReasons = residualResult.reasons;
     // Weak-edge local confidence fallback: if weak thread + present-turn inward
     // self-turn are both true, keep this lane at weak (not none) for admission.
     const weakEdgeFamilyConfidence: FamilyConfidence =
@@ -1018,7 +1076,7 @@ export function computeMilestoneICarryoverCue(params: {
       family_confidence: weakEdgeFamilyConfidence,
       direction_toward_self:
         presentTurnSelfBlameDirection || !!thread.coreMovementDirectionMatch,
-      current_turn_has_live_self_turn: liveSelfTurnNow,
+      current_turn_has_live_self_turn: activeSelfTurnNow || liveSelfTurnNow,
       current_turn_self_turn_strength: weakEdgeSelfTurnStrength,
       purely_historical: weakEdgePurelyHistorical,
       main_reflection_sufficient: mainSufficient,
@@ -1052,7 +1110,7 @@ export function computeMilestoneICarryoverCue(params: {
       family_confidence: weakEdgeFamilyConfidence,
       movement_match: weakEdgeCorridorMovementDirectionMatch,
       direction_match: weakEdgeCorridorMovementDirectionMatch,
-      current_turn_has_live_movement: promotionInput.current_turn_has_live_movement,
+      current_turn_has_live_movement: currentTurnIsLiveEnough,
       same_family_still_alive: weakEdgeCorridorSameFamilyAlive,
       main_reflection_sufficient: mainSufficient,
       visibility_risk_high: promotionInput.visibility_risk_high,
