@@ -197,6 +197,11 @@
 - **Docs:** Core family definitions (self_blame / over_effort / bracing) + Nova-ready JSON/TS map + `detectThreadFamily` / `resolveFamilyOrFallback`.
 - **Code:** `lib/wisewave-milestone-i-thread-family-map.ts` (map + matchers + extraction); removed `wisewave-milestone-i-thread-signature.ts`. **Weak preservation:** movement+direction only → `confidence: weak` + `should_preserve_as_weak_family`; resolver sets `useFallbackGeneric: false`; engine maps rescued weak → **moderate** thread for I (not `thread_not_supported`). **API debug:** `debug_milestone_i_core_*`. **Marker:** `milestone_i_soft_continuity_v4`.
 
+## 2026-03-27 — Nova: Milestone I Promotion Rule Map (v5)
+
+- **Docs:** Promotion tiers (none / weak / strong), prerequisites, template policies; Wisewave + Lumen: recognition necessary but not sufficient.
+- **Code:** `lib/wisewave-milestone-i-promotion-map.ts`; `detectThreadSupport` promotes lexical **`fallback_generic`** when core trunk family is strong/weak and not generic fallback; `computeMilestoneICarryoverCue` calls **`resolvePromotionState`** then **`pickFamilyFromAllowance`**. **Suppress:** `promotion_not_granted`. **Marker:** `milestone_i_soft_continuity_v5`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.

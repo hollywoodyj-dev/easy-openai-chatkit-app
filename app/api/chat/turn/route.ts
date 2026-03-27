@@ -1281,6 +1281,9 @@ export async function POST(request: Request) {
   let debugMilestoneICoreConfidence: string | null = null;
   let debugMilestoneICoreReasons: string[] | null = null;
   let debugMilestoneICoreUseFallbackGeneric: boolean | null = null;
+  let debugMilestoneIPromotionState: string | null = null;
+  let debugMilestoneIPromotionTemplateAllowance: string | null = null;
+  let debugMilestoneIPromotionReasons: string[] | null = null;
   const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
 
   // Ticket 4: save one durable insight when we have a good candidate.
@@ -2041,6 +2044,9 @@ export async function POST(request: Request) {
         debugMilestoneICoreConfidence = iResult.debugPath.coreConfidence;
         debugMilestoneICoreReasons = iResult.debugPath.coreReasons;
         debugMilestoneICoreUseFallbackGeneric = iResult.debugPath.coreUseFallbackGeneric;
+        debugMilestoneIPromotionState = iResult.debugPath.promotionState;
+        debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
+        debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
       } else {
         debugMilestoneIOutcome = "suppressed";
         debugMilestoneISuppressedReason = iResult.reason;
@@ -2060,6 +2066,9 @@ export async function POST(request: Request) {
         debugMilestoneICoreConfidence = iResult.debugPath.coreConfidence;
         debugMilestoneICoreReasons = iResult.debugPath.coreReasons;
         debugMilestoneICoreUseFallbackGeneric = iResult.debugPath.coreUseFallbackGeneric;
+        debugMilestoneIPromotionState = iResult.debugPath.promotionState;
+        debugMilestoneIPromotionTemplateAllowance = iResult.debugPath.promotionTemplateAllowance;
+        debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
       }
     }
   } else {
@@ -2222,6 +2231,9 @@ export async function POST(request: Request) {
     debug_milestone_i_core_confidence: debugMilestoneICoreConfidence,
     debug_milestone_i_core_reasons: debugMilestoneICoreReasons,
     debug_milestone_i_core_use_fallback_generic: debugMilestoneICoreUseFallbackGeneric,
+    debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
+    debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
+    debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

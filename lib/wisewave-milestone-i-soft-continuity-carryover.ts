@@ -23,9 +23,19 @@ import {
   type LegacySignatureTier,
   type ThreadFamily,
 } from "@/lib/wisewave-milestone-i-thread-family-map";
+import {
+  getAllowedTemplateFamilies,
+  resolvePromotionState,
+  type DecayState,
+  type FamilyConfidence,
+  type PromotionDecision,
+  type PromotionInput,
+  type PromotionState,
+  type TemplateAllowance,
+} from "@/lib/wisewave-milestone-i-promotion-map";
 
 /** Bump when Milestone I cue semantics change. */
-const BUILD_MARKER = "milestone_i_soft_continuity_v4";
+const BUILD_MARKER = "milestone_i_soft_continuity_v5";
 
 /** Global kill switch: I only when explicitly enabled. */
 export function isMilestoneICarryoverEnabled(): boolean {
@@ -58,7 +68,8 @@ export type MilestoneISuppressedReason =
   | "visibility_risk"
   | "main_reflection_sufficient"
   | "thread_not_supported"
-  | "weak_thread_candidate";
+  | "weak_thread_candidate"
+  | "promotion_not_granted";
 
 export type MilestoneIDebugPath = {
   previousFamily: ContinuityPatternFamily | null;
@@ -79,6 +90,9 @@ export type MilestoneIDebugPath = {
   signatureTier: LegacySignatureTier | null;
   /** True when lexical family failed but core map did not fall back to generic. */
   signatureRescuedThread: boolean;
+  promotionState: PromotionState | null;
+  promotionTemplateAllowance: TemplateAllowance | null;
+  promotionReasons: string[];
 };
 
 export type MilestoneIOutcome =
@@ -219,6 +233,122 @@ function mainReflectionSufficientHeuristic(args: {
   return explicitPatternRef && hasStrongPatternCue(ins);
 }
 
+function toFamilyConfidence(
+  coreConfidence: ConfidenceLevel | null,
+  useFallback: boolean | null,
+  coreFamily: ThreadFamily | null
+): FamilyConfidence {
+  if (!coreFamily || coreFamily === "unknown" || useFallback == null || useFallback) return "none";
+  if (!coreConfidence || coreConfidence === "none") return "none";
+  return coreConfidence;
+}
+
+function inferDecayState(previousUserMessage: string | null, userMessage: string): DecayState {
+  if (!previousUserMessage?.trim()) return "expired";
+  if (userMessage.trim().length < 24) return "soft_decay";
+  return "fresh";
+}
+
+function removalCleanerHeuristic(userMessage: string, reflection: ExtractedReflectionState): boolean {
+  const ins = reflection.insight_candidate.trim();
+  if (ins.length >= 120 && hasStrongPatternCue(ins.toLowerCase())) return true;
+  return false;
+}
+
+function visibilityRiskHighHeuristic(userMessage: string): boolean {
+  const t = userMessage.trim().toLowerCase();
+  return (
+    /\b(still the same|same issue|same pattern|as last time|remember you said)\b/i.test(t) ||
+    /(还是同一个|上次一样|你说过)/.test(userMessage)
+  );
+}
+
+function currentTurnLiveMovement(
+  userMessage: string,
+  insightCandidate: string,
+  language: "en" | "zh",
+  coreConfidence: ConfidenceLevel | null
+): boolean {
+  const sig = extractMilestoneIThreadSignature(userMessage, insightCandidate, language);
+  if (sig.movement !== "unknown") return true;
+  return coreConfidence === "strong";
+}
+
+function buildPromotionInput(args: {
+  coreThreadFamily: ThreadFamily | null;
+  coreConfidence: ConfidenceLevel | null;
+  coreUseFallbackGeneric: boolean | null;
+  userMessage: string;
+  reflectionState: ExtractedReflectionState;
+  previousUserMessage: string | null;
+  mainReflectionSufficient: boolean;
+  language: "en" | "zh";
+}): PromotionInput {
+  const family = (args.coreThreadFamily ?? "unknown") as PromotionInput["family"];
+  const fc = toFamilyConfidence(args.coreConfidence, args.coreUseFallbackGeneric, args.coreThreadFamily);
+  const decay = inferDecayState(args.previousUserMessage, args.userMessage);
+  const live = currentTurnLiveMovement(
+    args.userMessage,
+    args.reflectionState.insight_candidate,
+    args.language,
+    args.coreConfidence
+  );
+  return {
+    family,
+    family_confidence: fc,
+    current_turn_supports_thread: live,
+    decay_state: decay,
+    main_reflection_sufficient: args.mainReflectionSufficient,
+    visibility_risk_high: visibilityRiskHighHeuristic(args.userMessage),
+    e_sufficient: false,
+    h_sufficient: false,
+    removal_cleaner: removalCleanerHeuristic(args.userMessage, args.reflectionState),
+    same_family_still_alive:
+      fc !== "none" &&
+      args.coreUseFallbackGeneric === false &&
+      args.coreThreadFamily != null &&
+      args.coreThreadFamily !== "unknown",
+    current_turn_has_live_movement: live,
+  };
+}
+
+function pickFamilyFromAllowance(args: {
+  promotion: PromotionDecision;
+  threadStrength: "weak" | "moderate" | "strong";
+  userMessage: string;
+  seed: string;
+}): MilestoneICueFamily {
+  const keys = getAllowedTemplateFamilies(args.promotion);
+  const allowed: MilestoneICueFamily[] = [];
+  for (const k of keys) {
+    if (k === "faint_same_space_coherence" || k === "same_space_coherence") {
+      if (!allowed.includes("same_space_coherence")) allowed.push("same_space_coherence");
+    } else if (k === "ultra_light_fallback") allowed.push("ultra_light_fallback");
+    else if (k === "residual_background_presence") allowed.push("residual_background_presence");
+    else if (k === "softened_continuation") allowed.push("softened_continuation");
+  }
+  if (allowed.length === 0) return "ultra_light_fallback";
+
+  const u = normalizeApostrophesForHeuristics(args.userMessage.trim().toLowerCase());
+  if (
+    allowed.includes("quiet_unresolvedness") &&
+    (/(unfinished|not quite landed|not fully settled|still feels|not settled)/i.test(u) ||
+      /还没有.*落定|还没有.*走完|还没.*落下/.test(args.userMessage))
+  ) {
+    return "quiet_unresolvedness";
+  }
+
+  if (args.threadStrength === "moderate" && allowed.includes("residual_background_presence")) {
+    return "residual_background_presence";
+  }
+  if (args.threadStrength === "strong" && allowed.includes("same_space_coherence")) {
+    return "same_space_coherence";
+  }
+
+  const idx = hashPick(`${args.seed}:pick`, allowed.length);
+  return allowed[idx] ?? allowed[0] ?? "ultra_light_fallback";
+}
+
 function detectThreadSupport(args: {
   current: ExtractedReflectionState;
   previous: ExtractedReflectionState | null;
@@ -285,6 +415,30 @@ function detectThreadSupport(args: {
 
   if (lexicalMatched) {
     if (family === "fallback_generic") {
+      // Lexical collapse to generic must not block when core map recognizes a trunk family (Lumen v4).
+      const corePromotes =
+        !!resolved &&
+        !resolved.useFallbackGeneric &&
+        coreThreadFamily != null &&
+        coreThreadFamily !== "unknown" &&
+        (coreConfidence === "strong" || coreConfidence === "weak");
+      if (corePromotes) {
+        const insightLen = args.current.insight_candidate.trim().length;
+        const reflective = userHasReflectiveStructureForCarryover(args.current.insight_candidate);
+        const threadStrength: "moderate" | "strong" =
+          coreConfidence === "strong" && (insightLen >= 55 || reflective) ? "strong" : "moderate";
+        return {
+          threadStrength,
+          family,
+          signatureScore,
+          signatureTier,
+          signatureRescuedThread: true,
+          coreThreadFamily,
+          coreConfidence,
+          coreReasons,
+          coreUseFallbackGeneric,
+        };
+      }
       return {
         threadStrength: "weak",
         family,
@@ -466,31 +620,6 @@ const FAMILY_TEMPLATES: Record<MilestoneICueFamily, { en: string[]; zh: string[]
   },
 };
 
-function pickFamily(args: {
-  threadStrength: "none" | "weak" | "moderate" | "strong";
-  userMessage: string;
-  insightCandidate: string;
-}): MilestoneICueFamily {
-  const u = normalizeApostrophesForHeuristics(args.userMessage.trim().toLowerCase());
-
-  if (/(unfinished|not quite landed|not fully settled|still feels|not settled)/i.test(u) || /还没有.*落定|还没有.*走完|还没.*落下/.test(args.userMessage)) {
-    return "quiet_unresolvedness";
-  }
-
-  if (args.threadStrength === "moderate") {
-    // Keep continuity as atmosphere, not a direct "thread" statement.
-    return "residual_background_presence";
-  }
-
-  if (args.threadStrength === "strong") {
-    // Strong but still light: keep "same space" coherent.
-    return "same_space_coherence";
-  }
-
-  // Weak/none: fallback (should be suppressed by caller, but safe default).
-  return "ultra_light_fallback";
-}
-
 function isVisibilityRisk(textEn: string, textZh: string): boolean {
   // This should be very low; we defensively scan for recall-like language.
   const en = textEn.toLowerCase();
@@ -527,6 +656,9 @@ export function computeMilestoneICarryoverCue(params: {
     signatureScore: null,
     signatureTier: null,
     signatureRescuedThread: false,
+    promotionState: null,
+    promotionTemplateAllowance: null,
+    promotionReasons: [],
   };
 
   if (!isMilestoneICarryoverEnabled()) {
@@ -608,24 +740,41 @@ export function computeMilestoneICarryoverCue(params: {
   if (thread.threadStrength === "none") {
     return { status: "suppressed", reason: "thread_not_supported", debugPath };
   }
-  if (thread.threadStrength === "weak") {
-    // Keep "weak" as weak_candidate: admissible but do not render.
-    return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
-  }
 
   const mainSufficient = mainReflectionSufficientHeuristic({
     userMessage,
     reflection: reflectionState,
   });
   debugPath.mainReflectionSufficient = mainSufficient;
-  if (mainSufficient) {
-    return { status: "suppressed", reason: "main_reflection_sufficient", debugPath };
+
+  const promotionInput = buildPromotionInput({
+    coreThreadFamily: thread.coreThreadFamily,
+    coreConfidence: thread.coreConfidence,
+    coreUseFallbackGeneric: thread.coreUseFallbackGeneric,
+    userMessage,
+    reflectionState,
+    previousUserMessage,
+    mainReflectionSufficient: mainSufficient,
+    language: params.wantsChinese ? "zh" : "en",
+  });
+  const promotion = resolvePromotionState(promotionInput);
+  debugPath.promotionState = promotion.promotion_state;
+  debugPath.promotionTemplateAllowance = promotion.template_allowance;
+  debugPath.promotionReasons = promotion.reasons;
+
+  if (!promotion.should_render_carryover) {
+    return { status: "suppressed", reason: "promotion_not_granted", debugPath };
   }
 
-  const family = pickFamily({
+  if (thread.threadStrength === "weak") {
+    return { status: "suppressed", reason: "weak_thread_candidate", debugPath };
+  }
+
+  const family = pickFamilyFromAllowance({
+    promotion,
     threadStrength: thread.threadStrength,
     userMessage,
-    insightCandidate: reflectionState.insight_candidate,
+    seed: params.seed,
   });
 
   const pool = FAMILY_TEMPLATES[family];
