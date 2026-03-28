@@ -335,6 +335,12 @@
 - **Decision:** Milestone I Phase A is closure-ready.
 - **Operating mode:** stop broad patching, enter closure review / lock mode, preserve current lightness profile, keep remaining misses as post-close refinements only.
 
+## 2026-03-28 — Lumen: Milestone I A+B+C — protected, not build-open
+
+- **Hosted:** `milestone_i_soft_continuity_v23`. **No I code changes** unless strategic decision later.
+- **Read:** A closure-ready; B boundary containment strong; C initial bracing + over-effort transfer with cross-family still clean. Gaps = breadth/parity, not mechanism failure.
+- **Doc:** `docs/HC_OS_V1_Milestone_I_Closure_Status_Decision_2026-03-28.md`.
+
 ## 2026-03-25 — Wisewave: v6 closure consideration
 
 - **Agreed.** v6 appears to narrow the remaining weakness to a **residual generic H3 over-emission** pattern where the main reflection is already sufficient.
