@@ -335,6 +335,11 @@
 - **Code:** same gate + reason; `isZhH4ComparisonKeepUpAdmissionCorridor` adds **和别人比**, **越比越**, 看别人→更顺/顺, **否定自己**, prove-pressure (**反复想证明** / **说不出来…在证明**), cold→not-enough (**冷淡…怀疑/不够**, **怀疑自己…不够好**). EN / factual / vague-source paths unchanged.
 - **Lumen retest:** those four rows; regressions (EN Day 5 comparison, `h-d05-009`, factual); **Day 3** including `h-d03-003` (H1 baseline not assumed flat).
 
+## 2026-03-28 — Lumen + Nova: ZH H4 corridor micro-pass (milestone_h_v17)
+
+- **Lumen on v16:** 3/5 target suppressions; residuals **`h-d05-004`**, **`h-d04-003`** only; regressions clean; **`h-d03-003`** H1 = separate Day-3 issue.
+- **v17:** explicit spiral anchors (**越比越…停不下**, **拿自己…和别人比**, **忍不住…比较**), cold→verdict bridges (**是不是不够好**, **哪怕…冷淡**, **冷淡…不够好**). Marker **`milestone_h_v17`**.
+
 ## 2026-03-27 — Wisewave: formal closure decision published
 
 - **Doc:** `docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`.

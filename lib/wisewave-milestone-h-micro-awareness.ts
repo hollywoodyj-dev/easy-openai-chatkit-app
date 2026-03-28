@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v16";
+const BUILD_MARKER = "milestone_h_v17";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -522,10 +522,10 @@ function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
 }
 
 /**
- * v15–v16 Post-H (Lumen Day 4/5): narrow ZH semantic corridor where H4 easing lines
+ * v15–v17 Post-H (Lumen Day 4/5): narrow ZH semantic corridor where H4 easing lines
  * (loosen / hold less tightly) are often removable when reflection already carries the movement.
- * v16 widens adjacent shapes only: 和别人比 / 越比越, 看别人→更顺 + 否定自己, 反复想证明,
- * 冷淡→怀疑不够好 — not EN, not factual/vague paths (caller gates on hasCjkText + kind H4 + main sufficient).
+ * v16–v17 widen adjacent shapes only — not EN, not factual/vague paths
+ * (caller gates on hasCjkText + kind H4 + main sufficient).
  */
 function isZhH4ComparisonKeepUpAdmissionCorridor(
   userMessage: string,
@@ -544,6 +544,16 @@ function isZhH4ComparisonKeepUpAdmissionCorridor(
     return true;
   }
 
+  // v17 micro: direct comparison spiral → self-verdict (Lumen h-d05-004 survivor).
+  if (
+    /越比越.{0,22}停不下/.test(u) ||
+    /拿自己.{0,20}和别人比/.test(u) ||
+    /拿自己.{0,20}跟人比/.test(u) ||
+    /忍不住.{0,12}(和别人比|跟人比|比较|对比)/.test(u)
+  ) {
+    return true;
+  }
+
   // Comparison → self-negation (e.g. h-d05-003); 和别人比 (v15 had 跟别人比 only, h-d05-004).
   if (
     /(看到别人|看别人).{0,22}(更顺|更好|更强|顺利|顺[,，。、\s]|顺的|顺的时候)/.test(u) ||
@@ -558,11 +568,14 @@ function isZhH4ComparisonKeepUpAdmissionCorridor(
     return true;
   }
 
-  // Slight cold / distance → not-good-enough collapse (e.g. h-d04-003).
+  // Slight cold / distance → not-good-enough collapse (e.g. h-d04-003); v17 adds explicit bridges.
   if (
     /(冷淡|冷漠|疏离).{0,26}(怀疑|不够|不配|是不是)/.test(u) ||
     /怀疑自己.{0,12}不够好/.test(u) ||
-    /一点点.{0,10}(冷淡|冷漠|疏离)/.test(u)
+    /一点点.{0,10}(冷淡|冷漠|疏离)/.test(u) ||
+    /是不是不够好/.test(u) ||
+    /哪怕.{0,18}(冷淡|冷漠|疏离)/.test(u) ||
+    /(冷淡|冷漠|疏离).{0,48}不够好/.test(u)
   ) {
     return true;
   }
