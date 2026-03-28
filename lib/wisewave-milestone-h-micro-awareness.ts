@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v17";
+const BUILD_MARKER = "milestone_h_v18";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -524,8 +524,8 @@ function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
 /**
  * v15–v17 Post-H (Lumen Day 4/5): narrow ZH semantic corridor where H4 easing lines
  * (loosen / hold less tightly) are often removable when reflection already carries the movement.
- * v16–v17 widen adjacent shapes only — not EN, not factual/vague paths
- * (caller gates on hasCjkText + kind H4 + main sufficient).
+ * v18: sufficiency + H1 alignment live in `computeMicroAwarenessCue`, not here — this map is
+ * corridor shape only (still not EN / factual / vague paths).
  */
 function isZhH4ComparisonKeepUpAdmissionCorridor(
   userMessage: string,
@@ -581,6 +581,33 @@ function isZhH4ComparisonKeepUpAdmissionCorridor(
   }
 
   return false;
+}
+
+/**
+ * v18 lane alignment (Lumen hosted v17): `isMainReflectionMateriallySufficientGlobal` keys on
+ * insight text; hosted extraction can return short English while the ZH user turn already
+ * states the full comparison / cold-collapse movement. Those turns must still count as
+ * "main reflection sufficient" for the ZH H4 corridor gate — without widening the corridor regex.
+ *
+ * Only used together with `isZhH4ComparisonKeepUpAdmissionCorridor` (same neighborhood).
+ */
+function isZhCorridorUserUtteranceAlreadyCarriesRemovableMovement(userMessage: string): boolean {
+  const u = userMessage;
+  return (
+    /越比越.{0,22}停不下/.test(u) ||
+    /拿自己.{0,20}和别人比/.test(u) ||
+    /拿自己.{0,20}跟人比/.test(u) ||
+    /忍不住.{0,12}(和别人比|跟人比|比较|对比)/.test(u) ||
+    /看到别人.{0,14}顺/.test(u) ||
+    /悄悄跟上比较|跟上比较/.test(u) ||
+    /(看到别人|看别人).{0,18}(更顺|更好|更强)/.test(u) ||
+    /否定.{0,10}自己/.test(u) ||
+    /是不是不够好/.test(u) ||
+    /怀疑自己.{0,12}不够好/.test(u) ||
+    /哪怕.{0,18}(冷淡|冷漠|疏离)/.test(u) ||
+    /(冷淡|冷漠|疏离).{0,48}不够好/.test(u) ||
+    /一点点.{0,10}(冷淡|冷漠|疏离)/.test(u)
+  );
 }
 
 /**
@@ -1222,13 +1249,20 @@ export function computeMicroAwarenessCue(params: {
     return { status: "suppressed", reason: "h_medium_lane_agnostic_default_suppress" };
   }
 
-  // v15 Post-H Day 4/5: surgical ZH H4 admission tightening — comparison / self-measurement /
-  // keep-up / perfection-pressure shapes where medium-band global gate may not run (high-band turns).
+  // v15–v18 Post-H: ZH comparison / keep-up / cold-collapse neighborhood — suppress additive H4
+  // easing when reflection (insight or sharp user utterance) already carries the movement.
+  // v18: Kind selection uses English-heavy insight regex; same neighborhood can misroute as H1
+  // (e.g. h-d05-006). Align admission: one gate for H4 and H1, not corridor-regex-only widening.
+  const zhH4AdmissionCorridor =
+    hasCjkText(userMessage) && isZhH4ComparisonKeepUpAdmissionCorridor(userMessage, insight, fam);
+  const zhCorridorMainReflectionSufficient =
+    isMainReflectionMateriallySufficientGlobal(insight) ||
+    isZhCorridorUserUtteranceAlreadyCarriesRemovableMovement(userMessage);
+
   if (
-    kind === "H4" &&
-    hasCjkText(userMessage) &&
-    isZhH4ComparisonKeepUpAdmissionCorridor(userMessage, insight, fam) &&
-    isMainReflectionMateriallySufficientGlobal(insight)
+    zhH4AdmissionCorridor &&
+    zhCorridorMainReflectionSufficient &&
+    (kind === "H4" || kind === "H1")
   ) {
     return {
       status: "suppressed",

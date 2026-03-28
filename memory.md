@@ -340,6 +340,11 @@
 - **Lumen on v16:** 3/5 target suppressions; residuals **`h-d05-004`**, **`h-d04-003`** only; regressions clean; **`h-d03-003`** H1 = separate Day-3 issue.
 - **v17:** explicit spiral anchors (**越比越…停不下**, **拿自己…和别人比**, **忍不住…比较**), cold→verdict bridges (**是不是不够好**, **哪怕…冷淡**, **冷淡…不够好**). Marker **`milestone_h_v17`**.
 
+## 2026-03-28 — Nova: ZH corridor lane alignment (milestone_h_v18)
+
+- **Lumen on v17:** stop regex-only widening; **`h-d05-006`** H1 reopen = misroute + admission hierarchy, not missing corridor string.
+- **v18:** `zhCorridorMainReflectionSufficient` = `isMainReflectionMateriallySufficientGlobal(insight)` **or** `isZhCorridorUserUtteranceAlreadyCarriesRemovableMovement(userMessage)`; suppress with same reason for **`H4` or `H1`** in corridor (not H3/H5). Marker **`milestone_h_v18`**.
+
 ## 2026-03-27 — Wisewave: formal closure decision published
 
 - **Doc:** `docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`.
