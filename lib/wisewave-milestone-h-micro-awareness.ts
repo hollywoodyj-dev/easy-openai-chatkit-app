@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v15";
+const BUILD_MARKER = "milestone_h_v16";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -522,9 +522,10 @@ function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
 }
 
 /**
- * v15 Post-H (Lumen Day 4/5): narrow ZH semantic corridor where H4 easing lines
+ * v15–v16 Post-H (Lumen Day 4/5): narrow ZH semantic corridor where H4 easing lines
  * (loosen / hold less tightly) are often removable when reflection already carries the movement.
- * Does not key off generic "pressure" alone; EN paths unchanged (caller gates on hasCjkText user).
+ * v16 widens adjacent shapes only: 和别人比 / 越比越, 看别人→更顺 + 否定自己, 反复想证明,
+ * 冷淡→怀疑不够好 — not EN, not factual/vague paths (caller gates on hasCjkText + kind H4 + main sufficient).
  */
 function isZhH4ComparisonKeepUpAdmissionCorridor(
   userMessage: string,
@@ -533,11 +534,40 @@ function isZhH4ComparisonKeepUpAdmissionCorridor(
 ): boolean {
   if (fam === "constant_pressure_keep_up") return true;
   const raw = `${userMessage}\n${insight}`;
-  return (
-    /(比较|对比|比不上|不如别人|跟别人比|和.{1,10}比|落后|追上|赶上|跟上|不掉队|怕被落下|怕落后|同龄人|衡量自己|对照|标准太高|样样|都想做好|都想扛|撑住一切|扛稳|把局面撑住|把事情做对)/.test(
+  const u = userMessage;
+
+  if (
+    /(比较|对比|比不上|不如别人|跟别人比|和别人比|和.{1,10}比|落后|追上|赶上|跟上|不掉队|怕被落下|怕落后|同龄人|衡量自己|对照|标准太高|样样|都想做好|都想扛|撑住一切|扛稳|把局面撑住|把事情做对|越比越)/.test(
       raw
     )
-  );
+  ) {
+    return true;
+  }
+
+  // Comparison → self-negation (e.g. h-d05-003); 和别人比 (v15 had 跟别人比 only, h-d05-004).
+  if (
+    /(看到别人|看别人).{0,22}(更顺|更好|更强|顺利|顺[,，。、\s]|顺的|顺的时候)/.test(u) ||
+    /否定.{0,10}自己/.test(u) ||
+    /看不上自己/.test(u)
+  ) {
+    return true;
+  }
+
+  // Prove-pressure spiral (e.g. h-d04-004).
+  if (/反复.{0,10}想证明|反复想证明|说不出来.{0,14}在证明|说不出来到底在证明/.test(u)) {
+    return true;
+  }
+
+  // Slight cold / distance → not-good-enough collapse (e.g. h-d04-003).
+  if (
+    /(冷淡|冷漠|疏离).{0,26}(怀疑|不够|不配|是不是)/.test(u) ||
+    /怀疑自己.{0,12}不够好/.test(u) ||
+    /一点点.{0,10}(冷淡|冷漠|疏离)/.test(u)
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**

@@ -329,6 +329,12 @@
 - **Code:** `lib/wisewave-milestone-h-micro-awareness.ts` — after medium-band gates, if `H4` + CJK user + corridor (family `constant_pressure_keep_up` or narrow ZH phrase match) + `isMainReflectionMateriallySufficientGlobal(insight)`, suppress with `h4_zh_comparison_keepup_corridor_main_reflection_sufficient`.
 - **Brief:** `docs/post-h-nova-patch-brief-day4-day5-2026-03-28.md`.
 
+## 2026-03-28 — Nova: ZH H4 corridor widen (milestone_h_v16)
+
+- **Why:** Lumen on `milestone_h_v15`: corridor real for `h-d05-006`, but still too narrow — `h-d05-003`, `h-d05-004`, `h-d04-003`, `h-d04-004` survived as H4.
+- **Code:** same gate + reason; `isZhH4ComparisonKeepUpAdmissionCorridor` adds **和别人比**, **越比越**, 看别人→更顺/顺, **否定自己**, prove-pressure (**反复想证明** / **说不出来…在证明**), cold→not-enough (**冷淡…怀疑/不够**, **怀疑自己…不够好**). EN / factual / vague-source paths unchanged.
+- **Lumen retest:** those four rows; regressions (EN Day 5 comparison, `h-d05-009`, factual); **Day 3** including `h-d03-003` (H1 baseline not assumed flat).
+
 ## 2026-03-27 — Wisewave: formal closure decision published
 
 - **Doc:** `docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`.
