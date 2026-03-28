@@ -21,7 +21,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v14";
+const BUILD_MARKER = "milestone_h_v15";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -88,6 +88,8 @@ export type MilestoneHSuppressedReason =
   | "h_medium_zh_activation_not_strong_enough"
   /** v14 ultra-narrow cleanup: deny residual ZH medium-band H1 pressure/rest-permission pocket. */
   | "h1_zh_medium_residual_exception_deny"
+  /** v15 Post-H Day 4/5: ZH H4 in comparison/keep-up/perfection corridor when main reflection already lands. */
+  | "h4_zh_comparison_keepup_corridor_main_reflection_sufficient"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -515,6 +517,25 @@ function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
     ins.length >= 60 &&
     /(pressure|pattern|loop|split|conflict|bracing|over[- ]?effort|avoid|prove|self[- ]?doubt|perfection|worth|deserve|guilt)/i.test(
       ins
+    )
+  );
+}
+
+/**
+ * v15 Post-H (Lumen Day 4/5): narrow ZH semantic corridor where H4 easing lines
+ * (loosen / hold less tightly) are often removable when reflection already carries the movement.
+ * Does not key off generic "pressure" alone; EN paths unchanged (caller gates on hasCjkText user).
+ */
+function isZhH4ComparisonKeepUpAdmissionCorridor(
+  userMessage: string,
+  insight: string,
+  fam: ContinuityPatternFamily
+): boolean {
+  if (fam === "constant_pressure_keep_up") return true;
+  const raw = `${userMessage}\n${insight}`;
+  return (
+    /(比较|对比|比不上|不如别人|跟别人比|和.{1,10}比|落后|追上|赶上|跟上|不掉队|怕被落下|怕落后|同龄人|衡量自己|对照|标准太高|样样|都想做好|都想扛|撑住一切|扛稳|把局面撑住|把事情做对)/.test(
+      raw
     )
   );
 }
@@ -1156,6 +1177,20 @@ export function computeMicroAwarenessCue(params: {
   // v12 doctrine: medium-band ineligible unless necessity bundle is clearly proven.
   if (isMediumBand(userMessage) && !hasStrongerMediumAdmissibility(userMessage, insight)) {
     return { status: "suppressed", reason: "h_medium_lane_agnostic_default_suppress" };
+  }
+
+  // v15 Post-H Day 4/5: surgical ZH H4 admission tightening — comparison / self-measurement /
+  // keep-up / perfection-pressure shapes where medium-band global gate may not run (high-band turns).
+  if (
+    kind === "H4" &&
+    hasCjkText(userMessage) &&
+    isZhH4ComparisonKeepUpAdmissionCorridor(userMessage, insight, fam) &&
+    isMainReflectionMateriallySufficientGlobal(insight)
+  ) {
+    return {
+      status: "suppressed",
+      reason: "h4_zh_comparison_keepup_corridor_main_reflection_sufficient",
+    };
   }
 
   if (kind === "H1" && isH1MildSubstrateSuppressed(userMessage, insight)) {

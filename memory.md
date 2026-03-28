@@ -323,6 +323,12 @@
 - **Read:** no live systemic blocker remains; behavior is broad enough and still light/safe.
 - **Recommendation:** treat Milestone I Phase A as **closure-ready** and stop broad patching; leave isolated misses as non-blocking edge-level items unless Tree asks for one final narrow polish pass.
 
+## 2026-03-28 — Nova: Post-H ZH H4 admission corridor (milestone_h_v15)
+
+- **Why:** Lumen Day 4/5 packs showed a narrow residual **ZH H4** corridor (comparison / keep-up / perfection-pressure) where the main reflection already lands and the H4 easing line is removable.
+- **Code:** `lib/wisewave-milestone-h-micro-awareness.ts` — after medium-band gates, if `H4` + CJK user + corridor (family `constant_pressure_keep_up` or narrow ZH phrase match) + `isMainReflectionMateriallySufficientGlobal(insight)`, suppress with `h4_zh_comparison_keepup_corridor_main_reflection_sufficient`.
+- **Brief:** `docs/post-h-nova-patch-brief-day4-day5-2026-03-28.md`.
+
 ## 2026-03-27 — Wisewave: formal closure decision published
 
 - **Doc:** `docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`.
