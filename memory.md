@@ -13,6 +13,7 @@
 ## 2026-03-29 — Milestone J addendum published (preparation mode)
 
 - **Canonical doc:** `docs/HC_OS_V1_Milestone_J_Addendum_Micro_Shift_Embodied_Effect_Layer.md` — Micro-Shift / Embodied Effect Layer; proof = minimal internal shift **without** more system presence; **open a shift, do not direct a shift**.
+- **Wisewave Stream 1 (Done):** `docs/HC_OS_V1_Milestone_J_Wisewave_Language_Handoff.md` — micro-shift = inner room without instruction; hard fail if system “knows” next move; good/bad EN·ZH examples; parity = same lightness/non-directiveness; Nova: prefer “There may be…” / “This may not need to…”; avoid “Try…” / “You could…”; final rule: shift possible **without** feeling system-suggested.
 - **OctopusMind Stream 2:** `docs/HC_OS_V1_Milestone_J_OctopusMind_Boundary_Handoff.md` — suppression-first narrow boundary (Option B); six-fold admissibility; decision order reflection → H → I → J; **J loses first** in all H/I/J conflicts; anti-guidance / anti-presence / authorship tests; turn/pattern/global kill conditions.
 - **Execution:** Tree 4-stream order — Wisewave (language) → OctopusMind (admissibility/suppression/H·I·J conflict) → **Nova** (minimal hook only after 1–2 stable) → Lumen (QA). Kill switch: **`ENABLE_J_MICROSHIFT`** (see `.env.example`); default off.
 - **Nova stance:** no J implementation until Tree clears Streams 1–2; no new UI/persistence; J loses to H/I on overlap; removal-first.

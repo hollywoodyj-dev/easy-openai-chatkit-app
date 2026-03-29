@@ -206,6 +206,8 @@ No stream may jump ahead of this order.
 
 ## 9. Wisewave detailed addendum
 
+**Stream 1 language artifact (expanded, status Done):** **`docs/HC_OS_V1_Milestone_J_Wisewave_Language_Handoff.md`** — micro-shift definition, directive boundary, good/bad EN·ZH examples, parity rule, tone law, core test, Nova template scaffolding note, Wisewave final rule.
+
 ### 9.1 Wisewave mission for J
 
 Protect the possibility of real small shift without letting the system become the visible source of that shift.
