@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatTaskReplyCell } from "@/lib/agent-task-reply-thread";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +139,7 @@ export default async function ArchiveByDatePage({ searchParams }: PageProps) {
                           <th className="px-4 py-2 font-medium">Title</th>
                           <th className="px-4 py-2 font-medium">Description</th>
                           <th className="px-4 py-2 font-medium">Status</th>
-                          <th className="px-4 py-2 font-medium">Reply</th>
+                          <th className="px-4 py-2 font-medium">Reply / thread</th>
                           <th className="px-4 py-2 font-medium">Created</th>
                         </tr>
                       </thead>
@@ -167,7 +168,7 @@ export default async function ArchiveByDatePage({ searchParams }: PageProps) {
                               </span>
                             </td>
                             <td className="px-4 py-2 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
-                              {t.replyContent ?? "—"}
+                              {formatTaskReplyCell(t.replyThread, t.agentName, t.replyContent, t.updatedAt)}
                             </td>
                             <td className="px-4 py-2 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
                               {t.createdAt.toLocaleDateString()} {t.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

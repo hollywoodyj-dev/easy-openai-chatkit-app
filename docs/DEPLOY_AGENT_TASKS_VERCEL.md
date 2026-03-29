@@ -66,6 +66,7 @@ Admin (if you set `AGENT_TASKS_ADMIN_API_KEY`):
 
 - Get all: `GET https://wisewave-agent-task.vercel.app/api/agent-tasks?agent=admin`
 - Bulk reply: `POST https://wisewave-agent-task.vercel.app/api/agent-tasks/admin/reply` with `{ "updates": [ { "taskId", "content" }, ... ] }`
+- Tree follow-up after assignee reply: `POST https://wisewave-agent-task.vercel.app/api/agent-tasks/:id/tree-reply` with `{ "content": "...", "author?": "Tree" }`
 
 ---
 

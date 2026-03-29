@@ -154,7 +154,9 @@ model AgentTask {
   title        String
   description  String?   @db.Text
   status       String    @default("open")    // open | in_progress | replied | closed
-  replyContent String?   @map("reply_content") @db.Text  // set when agent submits a reply
+  replyContent String?   @map("reply_content") @db.Text  // latest message from assignee (agentName); backward compatible
+  /// Chronological thread: { author, content, createdAt }[] — includes Tree follow-ups after assignee replies
+  replyThread  Json?     @map("reply_thread")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   archivedAt   DateTime? @map("archived_at")  // set when Tree archives the day; task then hidden from main list

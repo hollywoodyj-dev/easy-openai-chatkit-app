@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAgentTasksAdminKey } from "@/lib/agent-tasks-auth";
+import { parseReplyThread } from "@/lib/agent-task-reply-thread";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,7 @@ export async function GET(request: Request) {
         description: t.description,
         status: t.status,
         replyContent: t.replyContent,
+        replyThread: parseReplyThread(t.replyThread),
         createdAt: t.createdAt.toISOString(),
         updatedAt: t.updatedAt.toISOString(),
       })),
@@ -101,6 +103,7 @@ export async function GET(request: Request) {
       description: t.description,
       status: t.status,
       replyContent: t.replyContent,
+      replyThread: parseReplyThread(t.replyThread),
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
     })),

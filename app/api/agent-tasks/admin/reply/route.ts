@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { checkAgentTasksAdminKey } from "@/lib/agent-tasks-auth";
+import {
+  appendAssigneeMessage,
+  latestAssigneeContent,
+  mergeLegacyReplyIntoThread,
+  parseReplyThread,
+} from "@/lib/agent-task-reply-thread";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +68,7 @@ export async function POST(request: Request) {
     description: string | null;
     status: string;
     replyContent: string | null;
+    replyThread: ReturnType<typeof parseReplyThread>;
     createdAt: string;
     updatedAt: string;
   }> = [];
@@ -73,9 +81,18 @@ export async function POST(request: Request) {
         errors.push({ taskId, error: "Task not found" });
         continue;
       }
+      let thread = parseReplyThread(task.replyThread);
+      thread = mergeLegacyReplyIntoThread(thread, task.agentName, task.replyContent, task.updatedAt);
+      thread = appendAssigneeMessage(thread, task.agentName, content);
+      const replyContent = latestAssigneeContent(thread, task.agentName) ?? content;
       const u = await prisma.agentTask.update({
         where: { id: taskId },
-        data: { replyContent: content, status: "replied", updatedAt: new Date() },
+        data: {
+          replyThread: thread as Prisma.InputJsonValue,
+          replyContent,
+          status: "replied",
+          updatedAt: new Date(),
+        },
       });
       updated.push({
         id: u.id,
@@ -84,6 +101,7 @@ export async function POST(request: Request) {
         description: u.description,
         status: u.status,
         replyContent: u.replyContent,
+        replyThread: parseReplyThread(u.replyThread),
         createdAt: u.createdAt.toISOString(),
         updatedAt: u.updatedAt.toISOString(),
       });

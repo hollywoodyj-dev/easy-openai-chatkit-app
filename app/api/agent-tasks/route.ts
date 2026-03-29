@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAgentTasksApiKey, checkAgentTasksAdminKey } from "@/lib/agent-tasks-auth";
+import { parseReplyThread } from "@/lib/agent-task-reply-thread";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ const MAX_TASKS_ADMIN = 500;
 /**
  * GET: List tasks for an agent by name (ping the host to get my tasks).
  * Query: agent (required) — e.g. agent=Nova. Use agent=admin with admin API key to get all agents' tasks.
- * Returns { tasks: [{ id, agentName, title, description, status, replyContent, createdAt, updatedAt }] }.
+ * Returns { tasks: [{ id, agentName, title, description, status, replyContent, replyThread, createdAt, updatedAt, archivedAt? }] }.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
     description: t.description,
     status: t.status,
     replyContent: t.replyContent,
+    replyThread: parseReplyThread(t.replyThread),
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
     archivedAt: t.archivedAt?.toISOString() ?? null,
@@ -100,6 +102,7 @@ export async function POST(request: Request) {
     description: created.description,
     status: created.status,
     replyContent: created.replyContent,
+    replyThread: parseReplyThread(created.replyThread),
     createdAt: created.createdAt.toISOString(),
     updatedAt: created.updatedAt.toISOString(),
   });

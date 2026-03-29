@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatTaskReplyCell } from "@/lib/agent-task-reply-thread";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,20 @@ const STATUS_COLORS: Record<string, string> = {
 
 type TaskRow =
   | { type: "summary"; agentName: string; finalizedContent: string }
-  | { type: "task"; agentName: string; task: { id: string; title: string; description: string | null; status: string; replyContent: string | null; createdAt: Date; updatedAt: Date } };
+  | {
+      type: "task";
+      agentName: string;
+      task: {
+        id: string;
+        title: string;
+        description: string | null;
+        status: string;
+        replyContent: string | null;
+        replyThread: unknown;
+        createdAt: Date;
+        updatedAt: Date;
+      };
+    };
 
 export default async function AgentTasksPage() {
   const [tasks, latestSummaries] = await Promise.all([
@@ -106,7 +120,7 @@ export default async function AgentTasksPage() {
                   <th className="px-4 py-3 font-medium">Title</th>
                   <th className="px-4 py-3 font-medium">Description</th>
                   <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Reply</th>
+                  <th className="px-4 py-3 font-medium">Reply / thread</th>
                   <th className="px-4 py-3 font-medium">Created</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                 </tr>
@@ -155,7 +169,12 @@ export default async function AgentTasksPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-400 align-top break-words whitespace-pre-wrap">
-                        {row.task.replyContent ?? "—"}
+                        {formatTaskReplyCell(
+                          row.task.replyThread,
+                          row.agentName,
+                          row.task.replyContent,
+                          row.task.updatedAt
+                        )}
                       </td>
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-500 text-xs whitespace-nowrap align-top">
                         {row.task.createdAt.toLocaleDateString()} {row.task.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -172,7 +191,7 @@ export default async function AgentTasksPage() {
         )}
 
         <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-          Tasks are created and updated via the Agent Tasks API. Tree finalizes the day via POST /api/agent-tasks/archive (admin key); that creates the summary row for the next day.
+          Tasks are created and updated via the Agent Tasks API. Assignee replies: POST /api/agent-tasks/:id/reply. After review, Tree (admin key) can append a follow-up: POST /api/agent-tasks/:id/tree-reply. Tree finalizes the day via POST /api/agent-tasks/archive; that creates the summary row for the next day.
         </p>
       </div>
     </main>

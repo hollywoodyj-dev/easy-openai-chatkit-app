@@ -33,10 +33,11 @@ Replace `Nova` with the agent’s name. Optional: add header if using API key:
 curl -s -H "x-api-key: YOUR_AGENT_TASKS_API_KEY" "${BASE_URL}/api/agent-tasks?agent=Nova"
 ```
 
-**Response:** `{ "tasks": [ { "id", "agentName", "title", "description", "status", "replyContent", "createdAt", "updatedAt" }, ... ] }`
+**Response:** `{ "tasks": [ { "id", "agentName", "title", "description", "status", "replyContent", "replyThread", "createdAt", "updatedAt", "archivedAt?" }, ... ] }`
 
 - `status`: `open` | `in_progress` | `replied` | `closed`
-- `replyContent`: set when the agent has submitted a reply.
+- `replyContent`: latest message from the **assignee** (`agentName`); unchanged when Tree only appends a follow-up.
+- `replyThread`: ordered array of `{ "author", "content", "createdAt" }` — assignee + Tree (or coordinator) messages for threaded review.
 
 ---
 
@@ -61,9 +62,33 @@ curl -s -X POST "${BASE_URL}/api/agent-tasks/TASK_ID/reply" \
 
 Replace `TASK_ID` with the task `id` from the list. The host will:
 
-- Set the task’s `replyContent` to the given `content`.
+- Append an entry to `replyThread` with `author` = the task’s `agentName`.
+- Set `replyContent` to that latest assignee message (for clients that only read one field).
 - Set the task’s `status` to `replied`.
-- Return the updated task JSON.
+- Return the updated task JSON (including `replyThread`).
+
+---
+
+## 2b. Tree follow-up after an assignee reply (admin only)
+
+After Tree reviews Lumen’s (or Nova’s) reply, Tree can **append** a coordinator message without overwriting `replyContent`.
+
+**Command (curl):**
+
+```bash
+curl -s -X POST "${BASE_URL}/api/agent-tasks/TASK_ID/tree-reply" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_AGENT_TASKS_ADMIN_API_KEY" \
+  -d '{"content":"Thanks — please add Day 7 regression to the handoff."}'
+```
+
+Optional body field `author` (default `"Tree"`): e.g. `"author":"Tree"` for display in the thread.
+
+**Rules:**
+
+- Requires **admin** key (`AGENT_TASKS_ADMIN_API_KEY`).
+- Fails with **400** if there is no assignee reply yet (`reply_thread` empty and `reply_content` empty).
+- Appends `{ author, content, createdAt }` to `replyThread`; does **not** replace `replyContent`.
 
 ---
 
@@ -117,7 +142,7 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
      }'
    ```
    Response: `{ "updated": [ task, ... ], "errors": [ { "taskId", "error" }, ... ] }`  
-   Each updated task’s `replyContent` is set and `status` becomes `replied`. Tasks can belong to different agents; you identify them by `taskId` from the admin “get all” response.
+   Each update **appends** an assignee message to `replyThread` (same semantics as POST `/:id/reply`), sets `replyContent` to the latest assignee message, and sets `status` to `replied`. Tasks can belong to different agents; identify them by `taskId` from the admin “get all” response.
 
 3. **Archive the day (Tree)**  
    Tree reads the whole day’s tasks and replies, finalizes one summary per agent, then archives so that:
@@ -144,7 +169,7 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
    **GET** archive (admin key):  
    `GET ${BASE_URL}/api/agent-tasks/archive` returns the latest day’s **summaries**, **tasks** (full task + reply for that day), and **dates**.  
    `GET ${BASE_URL}/api/agent-tasks/archive?date=2026-03-14` returns summaries and tasks for that date.  
-   Response: `{ date?, summaries: [ { agentName, finalizedContent, createdAt } ], tasks: [ { id, agentName, title, description, status, replyContent, createdAt, updatedAt } ], dates? }`.
+   Response: `{ date?, summaries: [ { agentName, finalizedContent, createdAt } ], tasks: [ { id, agentName, title, description, status, replyContent, replyThread, createdAt, updatedAt } ], dates? }`.
 
    **Default list behaviour:**  
    - `GET /api/agent-tasks?agent=Nova` returns only **non-archived** tasks.  
@@ -160,6 +185,7 @@ A separate key **`AGENT_TASKS_ADMIN_API_KEY`** grants **admin** capabilities:
 | Agent  | Reply to one task| POST   | `/api/agent-tasks/:id/reply` with body `{ "content": "..." }` |
 | Admin  | Get all tasks    | GET    | `/api/agent-tasks?agent=admin` (admin key required) |
 | Admin  | Set multiple tasks (bulk reply) | POST | `/api/agent-tasks/admin/reply` with body `{ "updates": [ { "taskId", "content" }, ... ] }` (admin key required) |
+| Admin (Tree) | Follow-up on a task after assignee reply | POST | `/api/agent-tasks/:id/tree-reply` with body `{ "content": "...", "author?": "Tree" }` (admin key required) |
 | Admin (Tree) | Archive day + finalized content per agent | POST | `/api/agent-tasks/archive` with body `{ "date?", "summaries": [ { "agent_name", "finalized_content" } ] }` (admin key required) |
 | Admin  | Get archive (latest or by date) | GET  | `/api/agent-tasks/archive` or `?date=YYYY-MM-DD` (admin key required) |
 

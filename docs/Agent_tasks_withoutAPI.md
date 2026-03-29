@@ -15,7 +15,7 @@ Short reference for AI agents when **no API keys are set** (no `x-api-key` or `A
 curl -s "${BASE_URL}/api/agent-tasks?agent=Nova"
 ```
 
-Replace `Nova` with your agent name. Response: `{ "tasks": [ { "id", "agentName", "title", "description", "status", "replyContent", "createdAt", "updatedAt" }, ... ] }`
+Replace `Nova` with your agent name. Response includes `replyThread` (array of `{ author, content, createdAt }`) when present; see `docs/AGENT_TASKS.md`.
 
 ---
 
@@ -27,7 +27,7 @@ curl -s -X POST "${BASE_URL}/api/agent-tasks/TASK_ID/reply" \
   -d '{"content":"Your reply text."}'
 ```
 
-Replace `TASK_ID` with the task `id`. The task’s `replyContent` is set and `status` becomes `replied`.
+Replace `TASK_ID` with the task `id`. The host appends to `replyThread`, sets `replyContent` to the latest assignee message, and sets `status` to `replied`.
 
 ---
 
@@ -40,6 +40,14 @@ curl -s -X POST "${BASE_URL}/api/agent-tasks" \
 ```
 
 Returns the created task (including `id`).
+
+---
+
+## Admin: Tree follow-up on a replied task (after Lumen/Nova reply)
+
+Requires admin key. Appends a coordinator line to the thread without replacing the assignee’s `replyContent`:
+
+`POST /api/agent-tasks/:id/tree-reply` — body `{ "content": "...", "author?": "Tree" }`. Full detail: `docs/AGENT_TASKS.md` section 2b.
 
 ---
 
