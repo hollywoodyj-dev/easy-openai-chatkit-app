@@ -224,6 +224,8 @@ Wisewave work is complete only when Tree can use it to say: this wording creates
 
 ## 10. OctopusMind detailed addendum
 
+**Stream 2 boundary artifact (expanded):** **`docs/HC_OS_V1_Milestone_J_OctopusMind_Boundary_Handoff.md`** — strategic diagnosis, admissibility / suppression / H·I·J conflict logic, anti-guidance and anti-presence tests, kill conditions, Tree-ready decision doctrine.
+
 ### 10.1 OctopusMind mission for J
 
 Protect Milestone J from becoming guidance-bearing, visible, or system-causal in feel.
