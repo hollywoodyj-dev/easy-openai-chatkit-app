@@ -183,7 +183,13 @@ export function looksUtilitarianOrFactual(message: string): boolean {
   if (/^(what|when|where|who|which|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\b/i.test(lower)) {
     return true;
   }
-  if (/^(define|explain|translate|calculate|list|give me)\b/i.test(lower)) return true;
+  if (
+    /^(define|explain|translate|calculate|list|give me|summarize|summarise|outline|paraphrase)\b/i.test(
+      lower
+    )
+  ) {
+    return true;
+  }
   if (/^\d+[\s\+\-*\/=]/.test(t)) return true;
   if (/^(http|https):\/\//i.test(lower)) return true;
 

@@ -1,6 +1,6 @@
 ## Wisewave Chat – QA Handoff
 
-**Last updated:** 2026-03-30 (Nova: **`milestone_h_v19`** Post-H Day 7 ZH H1 duplication gate + Milestone J wiring; prior entries below unchanged in substance unless noted)  
+**Last updated:** 2026-03-30 (Nova: Milestone J utilitarian fix — **`summarize`/`outline`/`paraphrase`** lead-in in shared `looksUtilitarianOrFactual`; prior entries below unchanged in substance unless noted)  
 **Environment:** Next.js app at `/chat` (Option B – backend turn API + DB persistence)
 
 ### 1. High‑level status
@@ -38,7 +38,7 @@
 
 ### 3. Open questions / good QA targets for Lumen
 
-- **Milestone J (micro-shift):** Formal pass structure and passes — **`docs/HC_OS_V1_Milestone_J_Lumen_QA_Plan.md`**. Server flag **`ENABLE_J_MICROSHIFT`**; turn debug **`debug_milestone_j_*`**; **`microshift_cue`** when emitted.
+- **Milestone J (micro-shift):** Formal pass structure and passes — **`docs/HC_OS_V1_Milestone_J_Lumen_QA_Plan.md`**. Server flag **`ENABLE_J_MICROSHIFT`**; turn debug **`debug_milestone_j_*`**; **`microshift_cue`** when emitted. **2026-03-30:** utilitarian lead-ins **`Summarize…` / `Outline…` / `Paraphrase…`** now hit shared **`looksUtilitarianOrFactual`** (J + I); retest Lumen summarize probe.
 - **Profile correctness (production vs local)**  
   - Confirm in **local** and **production** that the assistant consistently behaves like the Wisewave profile (not “generic GPT”).  
   - Verify env vars are set correctly in each env:  
@@ -185,3 +185,4 @@ Both 2026-03-13 QA items above have been implemented in the codebase:
 - **2026-03-27 — Wisewave (formal closure decision):** published **`docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`**. Formal judgment: **Milestone I Phase A is closure-ready**. Operating rule: stop broad patching, enter closure review/lock mode, preserve v23 lightness profile, and treat remaining misses as post-close refinement candidates only.
 - **2026-03-28 — Lumen (Milestone I Phase A + B + C, hosted `milestone_i_soft_continuity_v23`):** **No Milestone I code changes for now.** **Phase A** remains closure-ready. **Phase B** passed as strong boundary containment (zero over-carry). **Phase C** shows real initial transfer proof into **bracing** and **over-effort** with cross-family confusion still suppressed. Remaining gaps read as narrowness / parity / breadth, not live mechanism failure; reopening I now risks weight or visibility more than milestone value. **Nova:** treat Milestone I as **protected, not build-open**, unless Tree explicitly decides to pursue broader transfer maturity or EN/ZH parity. Full write-up: **`docs/HC_OS_V1_Milestone_I_Closure_Status_Decision_2026-03-28.md`**.
 - **2026-03-29 — Nova (Milestone J wired in turn API):** **`ENABLE_J_MICROSHIFT=true`** (or `1` / `yes`) gates optional **micro-shift** append on **`POST /api/chat/turn`**: runs after Milestone **I** text merge (order: main reflection → I carry → J line). Suppressed when **H** or **I** emitted on the same turn, when E/F stack raises presence risk, when main reflection is already sufficient (I debug), or per boundary evaluator. **Lumen retest:** with flag **off**, `debug_milestone_j_outcome` should be **`skipped_disabled`** and no **`microshift_cue`**; with flag **on**, spot-check EN/ZH reflective turns without H/I/E/F for a single faint non-directive closing line; confirm no coaching drift and removal does not break coherence. Debug: **`debug_milestone_j_*`**, marker **`milestone_j_microshift_v1`**.
+- **2026-03-30 — Lumen (Milestone J local Pass 0J/1):** wiring + kill switch **pass**; **bug:** utilitarian prompt **`Summarize the following section into 3 concise bullet points.`** still **emitted** J (should suppress). **2026-03-30 — Nova (fix):** extended exported **`looksUtilitarianOrFactual`** in **`lib/wisewave-milestone-i-soft-continuity-carryover.ts`** with leading **`summarize` / `summarise` / `outline` / `paraphrase`** (parity with H’s task detector; J boundary + I precheck use this helper). **Lumen retest:** same summarize prompt → `non_reflective_turn` / **`inadmissible`**, **`debug_milestone_j_outcome`** **`suppressed`**, reasons include **`no_shift_support`** or **`non_reflective_turn`**; confirm reflective J cases unchanged.
