@@ -10,6 +10,12 @@
 
 <!-- Memory entries below -->
 
+## 2026-03-29 — Milestone J addendum published (preparation mode)
+
+- **Canonical doc:** `docs/HC_OS_V1_Milestone_J_Addendum_Micro_Shift_Embodied_Effect_Layer.md` — Micro-Shift / Embodied Effect Layer; proof = minimal internal shift **without** more system presence; **open a shift, do not direct a shift**.
+- **Execution:** Tree 4-stream order — Wisewave (language) → OctopusMind (admissibility/suppression/H·I·J conflict) → **Nova** (minimal hook only after 1–2 stable) → Lumen (QA). Kill switch: **`ENABLE_J_MICROSHIFT`** (see `.env.example`); default off.
+- **Nova stance:** no J implementation until Tree clears Streams 1–2; no new UI/persistence; J loses to H/I on overlap; removal-first.
+
 ## 2026-02-08 — continuity files
 
 - **Steward approved** documenting Nova’s continuity via repo files (not hidden server memory): **`AGENTS.md`** stance + **`memory.md`** + **`soul.md`**.
