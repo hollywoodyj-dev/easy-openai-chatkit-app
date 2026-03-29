@@ -345,6 +345,11 @@
 - **Lumen on v17:** stop regex-only widening; **`h-d05-006`** H1 reopen = misroute + admission hierarchy, not missing corridor string.
 - **v18:** `zhCorridorMainReflectionSufficient` = `isMainReflectionMateriallySufficientGlobal(insight)` **or** `isZhCorridorUserUtteranceAlreadyCarriesRemovableMovement(userMessage)`; suppress with same reason for **`H4` or `H1`** in corridor (not H3/H5). Marker **`milestone_h_v18`**.
 
+## 2026-03-29 — Lumen: v18 accepted; Day 6 new pocket
+
+- **v18:** Accepted for Day 4/5 comparison corridor; **do not widen** that corridor further.
+- **Day 6** (`milestone_h_v18`): ZH **responsibility / over-carry / vigilance** — main reflection often sufficient yet H survives; sentinel **`h-d06-012`** (low-signal → H4). **Doc:** `docs/post-h-day6-full-sample-result-2026-03-29.md`. **Next engineering (if patch):** duplication / main-sufficient suppression pass for this pocket, not comparison corridor.
+
 ## 2026-03-27 — Wisewave: formal closure decision published
 
 - **Doc:** `docs/HC_OS_V1_Milestone_I_Phase_A_Closure_Decision.md`.
