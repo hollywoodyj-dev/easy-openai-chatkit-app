@@ -18,10 +18,13 @@ import {
  * v6 (2026-03-25): family-targeted H3 redundancy suppression:
  * - suppress H3 when the main reflection already carries the needed value
  * - treat generic `default` H3 phrasing as danger patterns when redundant
+ * v19 (2026-03-29): Lumen Post-H Day 7 — ZH H1 suppression when `insight_candidate` already names
+ * avoidance↔heavier / return-after-avoid / rational “wise” vs fear / not-really-released put-down
+ * (long ZH turns bypassed medium-band sufficiency; EN untouched).
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v18";
+const BUILD_MARKER = "milestone_h_v19";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -90,6 +93,8 @@ export type MilestoneHSuppressedReason =
   | "h1_zh_medium_residual_exception_deny"
   /** v15 Post-H Day 4/5: ZH H4 in comparison/keep-up/perfection corridor when main reflection already lands. */
   | "h4_zh_comparison_keepup_corridor_main_reflection_sufficient"
+  /** v19 Post-H Day 7: ZH insight already states avoidance/return-loop / wise-vs-fear / unresolved put-down — H1 duplicate. */
+  | "h1_zh_avoidance_return_insight_sufficient"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -519,6 +524,66 @@ function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
       ins
     )
   );
+}
+
+/**
+ * Post-H Day 7 (Lumen): ZH main reflection (`insight_candidate`) already carries readable
+ * avoidance↔heavier, return-after-avoid, “wise/rational” vs underlying fear, or not-really-released
+ * put-down — H1 is a removable second layer. **Insight must contain CJK** (no EN widening).
+ */
+function isZhInsightAvoidanceReturnStructureAlreadyNamed(insight: string): boolean {
+  const ins = insight.trim();
+  if (!/[\u4E00-\u9FFF]/.test(ins)) return false;
+
+  // e.g. 越回避…越加重…负担
+  if (
+    /越回避/.test(ins) &&
+    /(越|愈).{0,8}(重|加重|更沉|更累|更紧|负担|压力|难受)/.test(ins)
+  ) {
+    return true;
+  }
+
+  // e.g. 越想避开，越会回来
+  if (
+    /越想避开|越想躲|越躲(着|开)?|越不想面对/.test(ins) &&
+    /(越|就|又).{0,10}(回来|出現|出现|缠上|跟着|反复)/.test(ins)
+  ) {
+    return true;
+  }
+  if (/避开/.test(ins) && /(却又|还是|又|就).{0,12}回来/.test(ins)) {
+    return true;
+  }
+
+  // e.g. 先放下…其实并没… / 嘴上放下…心里还…
+  if (
+    /(先放下|说要放下|嘴上说放下|表面放下)/.test(ins) &&
+    /(其实|但|却|并|还是|仍然|一直|并没有|从没|越发|越来越).{0,20}(没放下|放不下|松不开|还在|更重|更沉|累积|压着)/.test(
+      ins
+    )
+  ) {
+    return true;
+  }
+
+  // e.g. “明智包装” vs 真正的怕/不舒服
+  if (
+    /(明智|理性包装|合理的理由|稳妥|缓一缓|慢慢来).{0,24}(包装|说法|理由|借口|样子|名义)/.test(
+      ins
+    ) &&
+    /(其实|背后|底下|真正|心里|那点|那种|身体).{0,24}(怕|恐惧|不安|不舒服|难受|慌|紧)/.test(ins)
+  ) {
+    return true;
+  }
+  if (/明智/.test(ins) && /(怕|恐惧|不安|不舒服)/.test(ins) && /(其实|可是|但|却)/.test(ins)) {
+    return true;
+  }
+
+  if (
+    /(没真的放下|并没有真的放下|心里还|一直没真正|说不清是不是放下|放不下的那部分)/.test(ins)
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -1276,6 +1341,19 @@ export function computeMicroAwarenessCue(params: {
 
   if (kind === "H1" && isH1SuppressedByMainReflectionSufficiency(userMessage, insight)) {
     return { status: "suppressed", reason: "h1_main_reflection_sufficient" };
+  }
+
+  // v19: long ZH turns skip medium-band global sufficiency; suppress H1 when insight alone
+  // already names avoidance/return / wise-vs-fear / unresolved put-down (Lumen Day 7).
+  if (
+    kind === "H1" &&
+    hasCjkText(insight) &&
+    isZhInsightAvoidanceReturnStructureAlreadyNamed(insight)
+  ) {
+    return {
+      status: "suppressed",
+      reason: "h1_zh_avoidance_return_insight_sufficient",
+    };
   }
 
   // v14: final exception-deny cleanup for residual ZH medium-band H1 pocket.

@@ -15,6 +15,7 @@
 - **Canonical doc:** `docs/HC_OS_V1_Milestone_J_Addendum_Micro_Shift_Embodied_Effect_Layer.md` — Micro-Shift / Embodied Effect Layer; proof = minimal internal shift **without** more system presence; **open a shift, do not direct a shift**.
 - **Wisewave Stream 1 (Done):** `docs/HC_OS_V1_Milestone_J_Wisewave_Language_Handoff.md` — micro-shift = inner room without instruction; hard fail if system “knows” next move; good/bad EN·ZH examples; parity = same lightness/non-directiveness; Nova: prefer “There may be…” / “This may not need to…”; avoid “Try…” / “You could…”; final rule: shift possible **without** feeling system-suggested.
 - **OctopusMind Stream 2:** `docs/HC_OS_V1_Milestone_J_OctopusMind_Boundary_Handoff.md` — suppression-first narrow boundary (Option B); six-fold admissibility; decision order reflection → H → I → J; **J loses first** in all H/I/J conflicts; anti-guidance / anti-presence / authorship tests; turn/pattern/global kill conditions.
+- **Milestone J (turn path):** `app/api/chat/turn/route.ts` — optional micro-shift line after I when **`ENABLE_J_MICROSHIFT`** on; `buildJBoundaryInputForTurn` + `evaluateMilestoneJBoundary` + `pickJMicroshiftTemplate`; suppresses if H or I emitted same turn or boundary says no; **`microshift_cue`** + **`debug_milestone_j_*`** + metadata **`wisewave_j_microshift`**. Pack/boundary libs unchanged as source of truth.
 - **Execution:** Tree 4-stream order — Wisewave (language) → OctopusMind (admissibility/suppression/H·I·J conflict) → **Nova** (minimal hook only after 1–2 stable) → Lumen (QA). Kill switch: **`ENABLE_J_MICROSHIFT`** (see `.env.example`); default off.
 - **Nova stance:** no J implementation until Tree clears Streams 1–2; no new UI/persistence; J loses to H/I on overlap; removal-first.
 
@@ -347,6 +348,10 @@
 
 - **Lumen on v16:** 3/5 target suppressions; residuals **`h-d05-004`**, **`h-d04-003`** only; regressions clean; **`h-d03-003`** H1 = separate Day-3 issue.
 - **v17:** explicit spiral anchors (**越比越…停不下**, **拿自己…和别人比**, **忍不住…比较**), cold→verdict bridges (**是不是不够好**, **哪怕…冷淡**, **冷淡…不够好**). Marker **`milestone_h_v17`**.
+
+## 2026-03-30 — Nova: Post-H Day 7 ZH H1 insight duplication gate (milestone_h_v19)
+
+- **v19:** When **`insight_candidate`** contains CJK and already names avoidance↔heavier / return-after-avoid / wise-vs-fear / unresolved put-down, **`H1`** suppresses with **`h1_zh_avoidance_return_insight_sufficient`** (fixes long-ZH bypass of medium-band sufficiency). EN-only insights unaffected. Marker **`milestone_h_v19`**. **Lumen:** Day 7 retest per `docs/QA_HANDOFF.md`.
 
 ## 2026-03-28 — Nova: ZH corridor lane alignment (milestone_h_v18)
 

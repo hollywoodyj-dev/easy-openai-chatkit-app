@@ -226,7 +226,7 @@ Wisewave work is complete only when Tree can use it to say: this wording creates
 
 ## 10. OctopusMind detailed addendum
 
-**Stream 2 boundary artifact (expanded):** **`docs/HC_OS_V1_Milestone_J_OctopusMind_Boundary_Handoff.md`** — strategic diagnosis, admissibility / suppression / H·I·J conflict logic, anti-guidance and anti-presence tests, kill conditions, Tree-ready decision doctrine.
+**Stream 2 boundary artifact (expanded):** **`docs/HC_OS_V1_Milestone_J_OctopusMind_Boundary_Handoff.md`** — strategic diagnosis, admissibility / suppression / H·I·J conflict logic, anti-guidance and anti-presence tests, kill conditions, Tree-ready decision doctrine. **Machine-readable map (v1):** **`lib/wisewave-milestone-j-microshift-boundary-map-v1.json`**, evaluator **`lib/wisewave-milestone-j-microshift-boundary.ts`** (`evaluateMilestoneJBoundary`).
 
 ### 10.1 OctopusMind mission for J
 
@@ -246,6 +246,8 @@ Protect Milestone J from becoming guidance-bearing, visible, or system-causal in
 OctopusMind work is complete only when Tree can use it to say: exactly when J may appear; exactly when J must not appear; exactly when J loses to H or I; exactly why J remains non-coaching and non-directive.
 
 ## 11. Nova detailed addendum
+
+**Stream 3 template pack (v1):** **`docs/HC_OS_V1_Milestone_J_Nova_Template_Pack_v1.md`** — JSON `lib/wisewave-milestone-j-microshift-template-pack-v1.json`, picker **`lib/wisewave-milestone-j-microshift.ts`** (`pickJMicroshiftTemplate` / `pickJTemplate`). **Implementation:** **`app/api/chat/turn/route.ts`** — gated by **`ENABLE_J_MICROSHIFT`** (default off); Tree still owns production enablement.
 
 ### 11.1 Nova mission for J
 

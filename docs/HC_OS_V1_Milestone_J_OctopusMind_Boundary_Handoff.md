@@ -3,6 +3,8 @@
 **Audience:** Tree, Nova, Lumen, Wisewave  
 **Companion:** **`docs/HC_OS_V1_Milestone_J_Addendum_Micro_Shift_Embodied_Effect_Layer.md`** (formal execution addendum; Stream 2 deliverable — admissibility / suppression / conflict)
 
+**Machine-readable map (v1):** **`lib/wisewave-milestone-j-microshift-boundary-map-v1.json`** — admissibility, suppression tiers, conflict rules, presence / authorship / persistence limits, implementation flags, QA checks. **`lib/wisewave-milestone-j-microshift-boundary.ts`** — `evaluateMilestoneJBoundary` (compact Nova/Lumen evaluator); pairs with Wisewave language handoff + Nova template pack; turn integration remains gated.
+
 ---
 
 ## Strategic Diagnosis

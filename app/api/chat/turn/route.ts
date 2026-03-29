@@ -36,6 +36,16 @@ import {
   milestoneHLightModeBuildMarker,
   milestoneHLightModeSystemAppendix,
 } from "@/lib/wisewave-milestone-h-light-mode";
+import {
+  isMilestoneJMicroshiftEnabled,
+  milestoneJBuildMarker,
+  pickJMicroshiftTemplate,
+  type JRenderMode,
+} from "@/lib/wisewave-milestone-j-microshift";
+import {
+  buildJBoundaryInputForTurn,
+  evaluateMilestoneJBoundary,
+} from "@/lib/wisewave-milestone-j-microshift-boundary";
 import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -1309,6 +1319,20 @@ export async function POST(request: Request) {
   let debugMilestoneIPromotionReasons: string[] | null = null;
   const debugMilestoneIEnabled = isMilestoneICarryoverEnabled();
 
+  // Milestone J: optional micro-shift line (append after main + I; kill-switch + boundary map).
+  let responseMicroshiftCue: {
+    textEn: string;
+    textZh: string;
+    render_mode: JRenderMode;
+  } | null = null;
+  let debugMilestoneJOutcome = "skipped_not_computed";
+  let debugMilestoneJSuppressedReason: string | null = null;
+  let debugMilestoneJEligibility: string | null = null;
+  let debugMilestoneJAllowRenderMode: string | null = null;
+  let debugMilestoneJReasons: string[] | null = null;
+  let debugMilestoneJRollbackRisk: boolean | null = null;
+  const debugMilestoneJEnabled = isMilestoneJMicroshiftEnabled();
+
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
@@ -2176,12 +2200,88 @@ export async function POST(request: Request) {
         debugMilestoneIPromotionReasons = iResult.debugPath.promotionReasons;
       }
     }
+
+    // Milestone J — after I carry text is merged into assistantContent (order: main → I → J).
+    if (!debugMilestoneJEnabled) {
+      debugMilestoneJOutcome = "skipped_disabled";
+    } else if (!reflectionState) {
+      debugMilestoneJOutcome = "skipped_no_reflection_state";
+    } else {
+      const milestoneIEmitted = debugMilestoneIOutcome === "emitted";
+      const jInput = buildJBoundaryInputForTurn({
+        userMessage: message,
+        reflectionState,
+        awarenessCueEmitted: !!responseAwarenessCue,
+        milestoneIEmitted,
+        recurrenceCueEmitted: !!responseRecurrenceCue,
+        embodimentCueEmitted: !!responseEmbodimentCue,
+        mainReflectionSufficient: debugMilestoneIMainReflectionSufficient,
+        assistantBodyBeforeJ: assistantContent,
+      });
+      const jDecision = evaluateMilestoneJBoundary(jInput);
+      debugMilestoneJEligibility = jDecision.eligibility;
+      debugMilestoneJAllowRenderMode = jDecision.allowRenderMode;
+      debugMilestoneJReasons = jDecision.reasons;
+      debugMilestoneJRollbackRisk = jDecision.rollbackRisk;
+
+      if (jDecision.suppress || jDecision.allowRenderMode === "none") {
+        debugMilestoneJOutcome = "suppressed";
+        debugMilestoneJSuppressedReason =
+          jDecision.reasons.length > 0 ? jDecision.reasons.join(";") : "suppressed";
+      } else {
+        let h = 0;
+        const jSeed = `${userMsg.id}:${assistantMsgId}:j`;
+        for (let i = 0; i < jSeed.length; i++) {
+          h = (h * 31 + jSeed.charCodeAt(i)) >>> 0;
+        }
+        const rm = jDecision.allowRenderMode;
+        const lineEn = pickJMicroshiftTemplate({
+          renderMode: rm,
+          displayLang: "en",
+          variantIndex: h,
+        });
+        const lineZh = pickJMicroshiftTemplate({
+          renderMode: rm,
+          displayLang: "zh",
+          variantIndex: h,
+        });
+        const line = wantsChinese ? lineZh ?? lineEn : lineEn ?? lineZh;
+        if (line) {
+          const mergedJ = `${assistantContent.trim()} ${line}`
+            .replace(/\s+/g, " ")
+            .trim();
+          assistantContent = normalizeModelTextForStorage(mergedJ);
+          try {
+            await prisma.message.update({
+              where: { id: assistantMsgId },
+              data: { message: assistantContent },
+            });
+          } catch (e) {
+            console.warn("[chat/turn] assistant message update (milestone J) failed", e);
+          }
+          responseMicroshiftCue = {
+            textEn: lineEn ?? line,
+            textZh: lineZh ?? line,
+            render_mode: rm,
+          };
+          debugMilestoneJOutcome = "emitted";
+          debugMilestoneJSuppressedReason = null;
+        } else {
+          debugMilestoneJOutcome = "suppressed";
+          debugMilestoneJSuppressedReason = "no_template";
+        }
+      }
+    }
   } else {
     debugMilestoneHOutcome = "skipped_no_assistant_row";
+    debugMilestoneJOutcome = "skipped_no_assistant_row";
   }
 
-  // Persist reflection + embodiment (+ optional H) on assistant metadata so /chat can rehydrate strips after reload.
-  if (assistantMsgId && (reflectionState || responseEmbodimentCue || responseAwarenessCue)) {
+  // Persist reflection + embodiment (+ optional H / J meta) on assistant metadata so /chat can rehydrate strips after reload.
+  if (
+    assistantMsgId &&
+    (reflectionState || responseEmbodimentCue || responseAwarenessCue || responseMicroshiftCue)
+  ) {
     try {
       const row = await prisma.message.findUnique({
         where: { id: assistantMsgId },
@@ -2211,6 +2311,13 @@ export async function POST(request: Request) {
           kind: responseAwarenessCue.kind,
           text_en: responseAwarenessCue.textEn,
           text_zh: responseAwarenessCue.textZh,
+        };
+      }
+      if (responseMicroshiftCue) {
+        merged.wisewave_j_microshift = {
+          text_en: responseMicroshiftCue.textEn,
+          text_zh: responseMicroshiftCue.textZh,
+          render_mode: responseMicroshiftCue.render_mode,
         };
       }
       await prisma.message.update({
@@ -2262,6 +2369,13 @@ export async function POST(request: Request) {
         kind: responseAwarenessCue.kind,
         text_en: responseAwarenessCue.textEn,
         text_zh: responseAwarenessCue.textZh,
+      },
+    }),
+    ...(responseMicroshiftCue && {
+      microshift_cue: {
+        text_en: responseMicroshiftCue.textEn,
+        text_zh: responseMicroshiftCue.textZh,
+        render_mode: responseMicroshiftCue.render_mode,
       },
     }),
     // Debug-only fields to help QA distinguish:
@@ -2380,6 +2494,14 @@ export async function POST(request: Request) {
     debug_milestone_i_promotion_state: debugMilestoneIPromotionState,
     debug_milestone_i_promotion_template_allowance: debugMilestoneIPromotionTemplateAllowance,
     debug_milestone_i_promotion_reasons: debugMilestoneIPromotionReasons,
+    debug_milestone_j_enabled: debugMilestoneJEnabled,
+    debug_milestone_j_build_marker: milestoneJBuildMarker(),
+    debug_milestone_j_outcome: debugMilestoneJOutcome,
+    debug_milestone_j_suppressed_reason: debugMilestoneJSuppressedReason,
+    debug_milestone_j_eligibility: debugMilestoneJEligibility,
+    debug_milestone_j_allow_render_mode: debugMilestoneJAllowRenderMode,
+    debug_milestone_j_reasons: debugMilestoneJReasons,
+    debug_milestone_j_rollback_risk: debugMilestoneJRollbackRisk,
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {

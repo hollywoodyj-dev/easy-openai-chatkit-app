@@ -1,0 +1,203 @@
+{
+  "milestone": "J",
+  "feature": "j_microshift_boundary",
+  "version": "v1",
+  "governing_rule": "Milestone J succeeds only if change happens without the system appearing to cause the change.",
+  "strategic_definition": "Milestone J is a micro-effect milestone, not a guidance milestone. It may lightly open a small shift in how the moment is met, but may not feel directive, coaching-like, system-led, or more noticeable than the reflection itself.",
+  "proof_target": "A real but minimal internal shift can occur without increasing system presence or reducing user authorship.",
+  "admissibility": {
+    "required_conditions": [
+      {
+        "id": "j_adm_01",
+        "description": "The current turn is reflective enough to support a small inner shift rather than a factual or utilitarian response.",
+        "required": true
+      },
+      {
+        "id": "j_adm_02",
+        "description": "A real but minimal shift is plausibly available in the current moment without requiring directive language.",
+        "required": true
+      },
+      {
+        "id": "j_adm_03",
+        "description": "The shift can remain smaller than coaching, smaller than intervention, and secondary to the main reflection.",
+        "required": true
+      },
+      {
+        "id": "j_adm_04",
+        "description": "The wording can preserve user authorship, so the shift still feels like it belongs to the user rather than the system.",
+        "required": true
+      },
+      {
+        "id": "j_adm_05",
+        "description": "The wording can remain low-claim, non-directive, and lower-presence than the surrounding response.",
+        "required": true
+      },
+      {
+        "id": "j_adm_06",
+        "description": "Neither H nor I is already sufficient to provide the needed support or continuity in this turn.",
+        "required": true
+      }
+    ],
+    "grading_rules": {
+      "inadmissible": "One or more required conditions fail, or the moment would need advice-like wording, or the shift would become visible as system action.",
+      "weak_candidate": "A shift is plausible but fragile; only ultra-light J wording may be considered, and suppression is still preferred under ambiguity.",
+      "admissible": "A real but minimal shift is plausibly supportable, and the wording can remain clearly non-directive and subordinate.",
+      "strong_but_still_light": "A small shift is strongly supportable by the current turn, but must still remain hard to notice as a system-originated act."
+    }
+  },
+  "suppression": {
+    "hard_suppression": [
+      {
+        "id": "j_sup_hard_01",
+        "description": "Turn is factual, utilitarian, logistical, or otherwise non-reflective.",
+        "priority": "hard"
+      },
+      {
+        "id": "j_sup_hard_02",
+        "description": "J would need directive, advisory, or corrective wording to work.",
+        "priority": "hard"
+      },
+      {
+        "id": "j_sup_hard_03",
+        "description": "J would increase system presence or feel like the system is doing something active.",
+        "priority": "hard"
+      },
+      {
+        "id": "j_sup_hard_04",
+        "description": "J would reduce user authorship by making the shift feel system-suggested or system-caused.",
+        "priority": "hard"
+      },
+      {
+        "id": "j_sup_hard_05",
+        "description": "J duplicates or competes with H already active and sufficient in the same turn.",
+        "priority": "hard"
+      },
+      {
+        "id": "j_sup_hard_06",
+        "description": "J duplicates or competes with I already active and sufficient in the same turn.",
+        "priority": "hard"
+      }
+    ],
+    "strong_suppression": [
+      {
+        "id": "j_sup_strong_01",
+        "description": "The main reflection already lands cleanly and fully enough without J.",
+        "priority": "strong"
+      },
+      {
+        "id": "j_sup_strong_02",
+        "description": "Removal of J would make the response cleaner, lighter, or less system-visible.",
+        "priority": "strong"
+      },
+      {
+        "id": "j_sup_strong_03",
+        "description": "J risks sounding like pause instruction, calming instruction, or better-response coaching.",
+        "priority": "strong"
+      },
+      {
+        "id": "j_sup_strong_04",
+        "description": "J risks becoming the visible main act rather than a slight secondary opening.",
+        "priority": "strong"
+      },
+      {
+        "id": "j_sup_strong_05",
+        "description": "The shift is too weak to justify extra presence.",
+        "priority": "strong"
+      }
+    ],
+    "soft_suppression": [
+      {
+        "id": "j_sup_soft_01",
+        "description": "A shift is possible but only weakly so, and the gain may not justify even ultra-light J presence.",
+        "priority": "soft"
+      },
+      {
+        "id": "j_sup_soft_02",
+        "description": "J would add atmosphere polishing more than real shift value.",
+        "priority": "soft"
+      },
+      {
+        "id": "j_sup_soft_03",
+        "description": "Presence-risk or guidance-risk is not fatal but still non-zero.",
+        "priority": "soft"
+      }
+    ],
+    "uncertainty_rule": "If uncertain, suppress.",
+    "default_posture": "Default-off. J must be earned from the present moment and may not render simply because a shift would be nice to have."
+  },
+  "conflict_rules": [
+    {
+      "id": "j_conflict_01",
+      "description": "If H already provides enough live support, suppress J first.",
+      "action": "prefer_h"
+    },
+    {
+      "id": "j_conflict_02",
+      "description": "If I already provides enough soft carry-over or coherence, suppress J first.",
+      "action": "prefer_i"
+    },
+    {
+      "id": "j_conflict_03",
+      "description": "If the main reflection already contains enough opening or softening, suppress J rather than layering additional effect.",
+      "action": "suppress_j"
+    },
+    {
+      "id": "j_conflict_04",
+      "description": "If J would make the response feel more engineered, active, or intervention-like than H or I, suppress J.",
+      "action": "suppress_j"
+    }
+  ],
+  "presence_rules": {
+    "governing_rule": "J must remain below the threshold where the system appears to be causing the shift.",
+    "hard_presence_failures": [
+      "system_action_feel",
+      "guidance_feel",
+      "coaching_feel",
+      "visible_intervention_feel",
+      "authorship_loss"
+    ],
+    "presence_cap": "J must stay harder to notice than to benefit from.",
+    "visibility_rule": "If a user or evaluator can point to J as 'the thing that made the shift happen,' J has gone too far."
+  },
+  "authorship_rules": {
+    "governing_rule": "The shift must feel like it becomes possible within the user, not imposed by the system.",
+    "hard_authorship_failures": [
+      "system_suggested_next_move",
+      "system_defined_better_response",
+      "system_led_pause",
+      "system_gave_permission_authoritatively"
+    ],
+    "safe_authorship_effect": "J may only make a different response slightly more available; it may not claim or direct that response."
+  },
+  "render_permissions": {
+    "none": "No J rendering allowed.",
+    "ultra_light": "Allowed only when a small opening is plausibly supportable and any stronger wording would risk guidance or presence drift.",
+    "soft": "Allowed when a real micro-shift is clearly plausible and wording can remain non-directive, low-claim, and secondary."
+  },
+  "persistence_limits": {
+    "cross_turn_persistence": "Disallowed. J is moment-bound and may not create a continuing micro-shift layer across turns.",
+    "memory_dependency": "Disallowed. J may not depend on long-window memory or carry-over to justify itself.",
+    "layer_accumulation": "Disallowed. J may not stack with H and I in a way that increases visible system activity.",
+    "observability_cap": "J may not be made more visible merely to improve measurability or demo clarity."
+  },
+  "implementation_flags": {
+    "require_current_turn_support": true,
+    "suppress_under_uncertainty": true,
+    "suppress_on_guidance_risk": true,
+    "suppress_on_presence_risk": true,
+    "suppress_on_authorship_risk": true,
+    "suppress_on_h_or_i_overlap": true,
+    "allow_cross_turn_persistence": false
+  },
+  "qa_checks": [
+    "J appears only when a real but minimal shift is plausibly present in the current turn",
+    "J suppresses whenever directive wording would be needed",
+    "J suppresses whenever H or I is already sufficient",
+    "J does not increase system presence",
+    "J does not reduce user authorship",
+    "J does not sound like coaching or suggestion",
+    "J remains secondary to the main reflection",
+    "removal is preferred over refinement when mixed",
+    "J does not become a continuing layer across turns"
+  ]
+}

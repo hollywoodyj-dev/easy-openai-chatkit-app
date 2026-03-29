@@ -1,0 +1,343 @@
+{
+  "milestone": "J",
+  "feature": "j_microshift",
+  "version": "v1",
+  "design_rules": {
+    "purpose": "Create a real but minimal inner shift without sounding like advice, coaching, intervention, or system-led action.",
+    "core_rule": "Open a shift, do not direct a shift.",
+    "tone": [
+      "calm",
+      "light",
+      "non_directive",
+      "low_claim",
+      "slightly_releasing"
+    ],
+    "parity_rule": "EN/ZH should preserve equivalent subtlety, non-directiveness, low system presence, and authorship preservation rather than literal wording.",
+    "presence_rule": "If the wording makes the system feel more active, visible, or causally responsible for the shift, suppress it.",
+    "anti_rules": [
+      "Do not sound advisory.",
+      "Do not sound corrective.",
+      "Do not sound coaching-like.",
+      "Do not make the system feel like the source of the shift.",
+      "Do not compete with the main reflection."
+    ]
+  },
+  "render_modes": {
+    "ultra_light": {
+      "label": "minimal_opening",
+      "rule": "Use only when a very faint opening is sufficient and any stronger wording risks guidance-feel."
+    },
+    "soft": {
+      "label": "clear_but_light_shift",
+      "rule": "Use when a real micro-shift is plausible and the wording can stay non-directive."
+    }
+  },
+  "template_families": {
+    "room_opening": {
+      "intent": "Create a little more inner room without assigning an action.",
+      "use_when": [
+        "user seems tightly held by the moment",
+        "a little more inner space may help",
+        "guidance wording is not needed"
+      ],
+      "avoid_when": [
+        "would sound like pause instruction",
+        "reflection already lands fully",
+        "system presence risk is elevated"
+      ],
+      "ultra_light": {
+        "en": [
+          "There may be a little more room here than it first seems.",
+          "A little more space may be here already.",
+          "Something here may be less closed than it first felt.",
+          "There may be a small amount of room around this."
+        ],
+        "zh": [
+          "这里也许比一开始感觉到的，多一点点空间。",
+          "这里可能已经有一点点空间了。",
+          "这当中也许没有一开始那么收紧。",
+          "这件事周围也许还留着一点点空间。"
+        ]
+      },
+      "soft": {
+        "en": [
+          "There may be a little more room here than it first seems.",
+          "A little more space may already be opening around this.",
+          "This may not be as closed in as it first felt.",
+          "Something here may be giving a little more room than expected."
+        ],
+        "zh": [
+          "这里也许比一开始感觉到的，多一点点空间。",
+          "这件事周围也许已经慢慢打开了一点空间。",
+          "这似乎没有一开始那么封住了。",
+          "这里面好像比预想中，多了一点可以松开的余地。"
+        ]
+      }
+    },
+    "tightness_softening": {
+      "intent": "Slightly loosen inner tightness without telling the user to relax or let go.",
+      "use_when": [
+        "bracing, strain, or holding is present",
+        "softening is plausible",
+        "direct relaxation language would be too active"
+      ],
+      "avoid_when": [
+        "would sound like calming instruction",
+        "would resemble regulation cue",
+        "would imply user task"
+      ],
+      "ultra_light": {
+        "en": [
+          "This may not need to stay quite as tight.",
+          "Something in this may be able to ease a little.",
+          "There may be a little less holding here than it first felt.",
+          "This may not need to remain so fully braced."
+        ],
+        "zh": [
+          "这件事可能不需要一直这么紧。",
+          "这里面有一部分，也许可以轻一点。",
+          "这里可能没有一开始感觉的那么绷着。",
+          "这件事也许不需要一直这样撑着。"
+        ]
+      },
+      "soft": {
+        "en": [
+          "This may not need to stay quite as tight.",
+          "Something in this could soften a little without needing to be forced.",
+          "There may be a little less strain needed here than it first seemed.",
+          "This may not need to be held together quite so firmly."
+        ],
+        "zh": [
+          "这件事可能不需要一直这么紧。",
+          "这里面有一部分，或许可以轻一点，而不需要刻意去做什么。",
+          "这里似乎不一定需要像一开始那样那么用力撑着。",
+          "这件事也许不需要一直这么用力地维持着。"
+        ]
+      }
+    },
+    "pressure_release": {
+      "intent": "Reduce internal push or over-efforting without sounding like 'try less' advice.",
+      "use_when": [
+        "over-effort, inner push, or self-driving strain is present",
+        "a low-claim easing is plausible"
+      ],
+      "avoid_when": [
+        "would sound like anti-effort instruction",
+        "would resemble correction",
+        "reflection alone already handles the moment"
+      ],
+      "ultra_light": {
+        "en": [
+          "It may be possible to meet this with slightly less pressure.",
+          "This may not need an immediate inner push.",
+          "There may be a little less forcing needed here.",
+          "This may not need to keep moving from the same pressure."
+        ],
+        "zh": [
+          "这件事也许可以少一点点用力地去面对。",
+          "这里似乎不一定需要立刻在心里往前推。",
+          "这当中也许不需要像原来那样一直硬撑着。",
+          "这件事可能不需要继续从同样的压力里往前走。"
+        ]
+      },
+      "soft": {
+        "en": [
+          "It may be possible to meet this with slightly less pressure.",
+          "This does not seem to need an immediate inner push.",
+          "Something here may work without so much internal forcing.",
+          "This may not need to be carried forward from the same pressure."
+        ],
+        "zh": [
+          "这件事也许可以少一点点用力地去面对。",
+          "这里似乎不一定需要立刻在心里往前推。",
+          "这里面有些部分，也许不需要那么多内在用力也能成立。",
+          "这件事可能不需要继续从同样的压力里往前带。"
+        ]
+      }
+    },
+    "non_compulsory_permission": {
+      "intent": "Lightly signal that the current inner demand is not fully compulsory.",
+      "use_when": [
+        "user is locked into 'must' energy",
+        "a tiny release of compulsion is plausible"
+      ],
+      "avoid_when": [
+        "would sound like permission-giving authority",
+        "would sound therapeutic",
+        "would become the main act"
+      ],
+      "ultra_light": {
+        "en": [
+          "This may not need to keep happening in exactly the same way.",
+          "Something here may be a little less fixed than it feels.",
+          "This may not be as compulsory as it first seems.",
+          "There may be another little bit of room in this than it first felt."
+        ],
+        "zh": [
+          "这件事可能不需要继续以完全同样的方式发生。",
+          "这里似乎没有一开始感觉的那么固定。",
+          "这件事也许没有一开始那么非得如此不可。",
+          "这当中可能比一开始感觉到的，多一点点别的余地。"
+        ]
+      },
+      "soft": {
+        "en": [
+          "This may not need to keep happening in exactly the same way.",
+          "Something here may be less fixed than it first felt.",
+          "This may not be as compulsory as it first seems.",
+          "There may be a little more freedom in this moment than it first looked."
+        ],
+        "zh": [
+          "这件事可能不需要继续以完全同样的方式发生。",
+          "这里似乎没有一开始感觉的那么固定。",
+          "这件事也许没有一开始那么非得如此不可。",
+          "这一刻里，也许比一开始看到的，多一点点可以不同的余地。"
+        ]
+      }
+    },
+    "micro_stabilization": {
+      "intent": "Lightly reduce turbulence without sounding like regulation instruction.",
+      "use_when": [
+        "moment feels activated but not enough for a full regulation cue",
+        "a slight settling is plausible"
+      ],
+      "avoid_when": [
+        "would sound like calming technique",
+        "would overlap with H regulation",
+        "would imply the system is soothing the user"
+      ],
+      "ultra_light": {
+        "en": [
+          "Something here may already be settling a little.",
+          "This may be shifting slightly from the inside already.",
+          "There may be a little less turbulence here than it first felt.",
+          "A small amount of steadiness may already be nearby."
+        ],
+        "zh": [
+          "这里面有些部分，也许已经在慢慢安下来。",
+          "这件事可能已经在里面微微地变化了。",
+          "这里似乎没有一开始感觉的那么乱了。",
+          "这里附近也许已经有一点点稳下来的感觉。"
+        ]
+      },
+      "soft": {
+        "en": [
+          "Something here may already be settling a little.",
+          "This may already be shifting slightly from the inside.",
+          "There may be a little more steadiness here than it first felt.",
+          "Some of the movement here may already be easing on its own."
+        ],
+        "zh": [
+          "这里面有些部分，也许已经在慢慢安下来。",
+          "这件事可能已经从里面开始微微转动了。",
+          "这里似乎比一开始感觉的，多了一点点稳住的东西。",
+          "这里的一些起伏，也许已经在自己慢慢缓下来。"
+        ]
+      }
+    }
+  },
+  "ultra_short_fallbacks": {
+    "en": [
+      "There may be a little more room here.",
+      "This may not need to stay so tight.",
+      "Something here may ease a little.",
+      "This may not need the same pressure."
+    ],
+    "zh": [
+      "这里也许多一点点空间。",
+      "这件事可能不需要一直这么紧。",
+      "这里面也许有一部分会轻一点。",
+      "这件事可能不需要同样的压力。"
+    ]
+  },
+  "blocked_patterns": {
+    "en": [
+      "you could",
+      "try",
+      "it may help to",
+      "you might want to",
+      "take a breath",
+      "pause before",
+      "let go",
+      "stop",
+      "the better move",
+      "what may help now",
+      "here is a gentler way",
+      "let's"
+    ],
+    "zh": [
+      "你可以",
+      "试着",
+      "也许你需要",
+      "你不妨",
+      "先停一下",
+      "深呼吸",
+      "放下",
+      "不要再",
+      "更好的做法",
+      "现在更有帮助的是",
+      "有一种更好的方式",
+      "我们先"
+    ]
+  },
+  "show_hide_rules": {
+    "show_only_if": [
+      "a real but minimal shift is plausibly supportable",
+      "wording can remain non-directive",
+      "reflection remains clearly primary",
+      "low system presence can be preserved"
+    ],
+    "suppress_if": [
+      "wording sounds advisory",
+      "wording sounds corrective",
+      "wording sounds like coaching",
+      "wording makes the system feel active",
+      "H already provides enough live support",
+      "I already provides enough soft carry-over",
+      "reflection alone is sufficient",
+      "uncertainty is meaningful"
+    ],
+    "prefer_ultra_light_if": [
+      "guidance-risk is non-zero",
+      "presence-risk is non-zero",
+      "the shift is plausible but weak",
+      "stronger wording would become noticeable"
+    ],
+    "never_show_if": [
+      "the user could hear a recommendation",
+      "the user could hear a correction",
+      "the line becomes the main act",
+      "the system appears to cause the shift"
+    ]
+  },
+  "implementation_shape": {
+    "required_fields": [
+      "render_mode",
+      "display_lang",
+      "template_family",
+      "template_variant"
+    ],
+    "optional_fields": [
+      "blocked_families",
+      "presence_risk_flag",
+      "guidance_risk_flag",
+      "authorship_risk_flag"
+    ],
+    "recommended_render_order": [
+      "main_reflection",
+      "last_insight",
+      "j_microshift",
+      "regulation_cue",
+      "next_step"
+    ]
+  },
+  "qa_checks": [
+    "creates a small opening without sounding like advice",
+    "preserves user authorship",
+    "keeps reflection primary",
+    "does not increase system presence",
+    "does not sound corrective or coaching-like",
+    "EN/ZH preserve equivalent subtlety and restraint",
+    "if removed, response becomes slightly less open but not dramatically worse"
+  ]
+}

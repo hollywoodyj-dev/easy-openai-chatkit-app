@@ -174,7 +174,7 @@ function normalizeApostrophesForHeuristics(s: string): string {
   return s.replace(/\u2019|\u2018/g, "'");
 }
 
-function looksUtilitarianOrFactual(message: string): boolean {
+export function looksUtilitarianOrFactual(message: string): boolean {
   const t = message.trim();
   const lower = t.toLowerCase();
   if (t.length < 8) return true;
@@ -253,7 +253,7 @@ function hashPick(seed: string, modulo: number): number {
   return modulo > 0 ? h % modulo : 0;
 }
 
-function userHasReflectiveStructureForCarryover(message: string): boolean {
+export function userHasReflectiveStructureForCarryover(message: string): boolean {
   const t = normalizeApostrophesForHeuristics(message.trim());
   return (
     /\b(because|although|whenever|every time|always|never|even though|i keep|i always|i end up|pattern|loop|keeps happening)\b/i.test(
