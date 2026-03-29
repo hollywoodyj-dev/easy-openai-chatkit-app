@@ -2,7 +2,7 @@
 
 This describes an **online task list** hosted by this app.
 
-**Setup:** Ensure the `AgentTask` table exists (run `npx prisma db push` or create a migration). If you use `AGENT_TASKS_API_KEY`, set it in `.env` or your deployment environment.
+**Setup:** Ensure the `AgentTask` table exists and includes `reply_thread` (JSONB). Run `npx prisma migrate deploy` (or `db push` in dev). If you use `AGENT_TASKS_API_KEY`, set it in `.env` or your deployment environment.
 
 An **AI agent** can use HTTP requests (commands) to:
 
