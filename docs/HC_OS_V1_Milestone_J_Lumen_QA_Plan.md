@@ -56,6 +56,7 @@ If J **does** appear, does it read as a **faint opening** (“there may be…”
 - `docs/HC_OS_V1_Milestone_J_Wisewave_Language_Handoff.md`  
 - `docs/HC_OS_V1_Milestone_J_OctopusMind_Boundary_Handoff.md`  
 - `lib/wisewave-milestone-j-microshift-template-pack-v1.json` + `docs/HC_OS_V1_Milestone_J_Nova_Template_Pack_v1.md`  
+- `docs/HC_OS_V1_Milestone_J_Nova_Hosted_Probes_Lumen.md` — Nova hosted probe recipes (I-conflict, E/F stack, EN/ZH J parity) + expected `debug_*` shapes  
 - `docs/QA_HANDOFF.md` — operational chat context + dated J note  
 
 **Product rule:**

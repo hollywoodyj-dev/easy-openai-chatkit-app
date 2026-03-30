@@ -18,12 +18,16 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     console.error("[api/chat/session] prisma.conversation.create failed", e);
-    // This typically means hosted environment can't reach the DB host/port.
+    const localHint =
+      "Local dev: set DATABASE_URL in .env.local to a reachable PostgreSQL URL, then run `npx prisma migrate deploy` (or `npx prisma db push`). Ensure Postgres is running (e.g. Docker or Neon/Supabase connection string).";
+    const hostedHint =
+      "Hosted: verify DATABASE_URL in the deployment environment and that the DB accepts connections from Vercel/your host.";
     return NextResponse.json(
       {
         error: "db_unreachable",
-        message:
-          "Database connection failed while creating a chat session. Try again in a moment or check hosted DATABASE_URL/network.",
+        message: `Database connection failed while creating a chat session. ${
+          process.env.VERCEL ? hostedHint : localHint
+        }`,
       },
       { status: 503 }
     );

@@ -34,7 +34,17 @@ You can get your workflow id from the [Agent Builder](https://platform.openai.co
 
 You can get your OpenAI API key from the [OpenAI API Keys](https://platform.openai.com/api-keys) page.
 
-### 3. Configure ChatKit credentials
+### 3. Database (required for `/chat` Option B)
+
+The reflection chat at **`/chat`** persists sessions and messages via **Prisma + PostgreSQL**.
+
+1. Add **`DATABASE_URL`** to **`.env.local`** (see **`.env.example`** for a commented template).
+2. Apply the schema: **`npx prisma migrate deploy`** (or **`npx prisma db push`** for a quick local sync).
+3. Ensure Postgres is reachable (local install, **Docker**, or a hosted DB such as **Neon** / **Supabase**).
+
+If **`POST /api/chat/session`** returns **`503`** with **`db_unreachable`**, the app cannot connect — fix `DATABASE_URL` and migrations before running Milestone QA scripts against local `127.0.0.1:3000`.
+
+### 4. Configure ChatKit credentials
 
 Update `.env.local` with the variables that match your setup.
 
@@ -52,7 +62,7 @@ npm run dev
 
 Visit `http://localhost:3000` and start chatting. Use the prompts on the start screen to verify your workflow connection, then customize the UI or prompt list in [`lib/config.ts`](lib/config.ts) and [`components/ChatKitPanel.tsx`](components/ChatKitPanel.tsx).
 
-### 5. Deploy to Vercel
+### 6. Deploy to Vercel
 
 1. **Push your repo to GitHub** (or GitLab/Bitbucket).
 
@@ -76,7 +86,7 @@ Visit `http://localhost:3000` and start chatting. Use the prompts on the start s
 
 For a quick deploy without Git, you can also run **`npx vercel`** in the project directory and follow the prompts, then add the env vars in the Vercel dashboard.
 
-### 6. Embed on Wix (or any website)
+### 7. Embed on Wix (or any website)
 
 To show the chat on a Wix page (or any site), use an **iframe** pointing at your app’s embed URL:
 
