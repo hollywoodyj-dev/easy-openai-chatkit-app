@@ -101,6 +101,10 @@ export type MilestoneHSuppressedReason =
   | "h1_zh_avoidance_return_insight_sufficient"
   /** v21 narrow tighten: ZH H1/H4 optional line when main reflection already lands in low-signal/factual-adjacent lanes. */
   | "h_zh_optional_line_main_reflection_sufficient"
+  /** H language grounding map: hard suppress abstract/system-like phrasing before render. */
+  | "h_language_grounding_hard_suppress"
+  /** H language grounding map: replacement pass failed to land in process-close language. */
+  | "h_language_grounding_unresolved_abstraction"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -1081,6 +1085,107 @@ function countChineseChars(textZh: string): number {
   return t.replace(/[^\u4E00-\u9FFF]/g, "").length;
 }
 
+type HLanguagePair = { en: string; zh: string };
+
+const H_ZH_GROUNDING_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /有空间了/g, replacement: "没有那么快被带走" },
+  { pattern: /一点空间/g, replacement: "有一瞬没有跟上" },
+  { pattern: /留一点空间/g, replacement: "不要马上跳进去" },
+  { pattern: /给自己空间/g, replacement: "先不用立刻反应" },
+  { pattern: /出现空间/g, replacement: "中间好像停了一下" },
+  { pattern: /觉察到/g, replacement: "你刚刚好像注意到自己在..." },
+  { pattern: /提升觉察/g, replacement: "更容易看到刚刚那一下" },
+  { pattern: /保持觉察/g, replacement: "就这样看着它发生" },
+  { pattern: /带着觉察/g, replacement: "你现在是看着它，而不是跟着走" },
+  { pattern: /学会放下/g, replacement: "不用一直拉着它" },
+  { pattern: /放下执念/g, replacement: "没那么死死盯着" },
+  { pattern: /放下/g, replacement: "没有那么抓着了" },
+  { pattern: /放开/g, replacement: "手稍微松了一点" },
+  { pattern: /松开控制/g, replacement: "没有一直想把它弄对" },
+  { pattern: /被卡住了/g, replacement: "好像出不去这个反应" },
+  { pattern: /卡点/g, replacement: "老是回到这里" },
+  { pattern: /卡住/g, replacement: "一直在这里打转" },
+  { pattern: /正在转化/g, replacement: "开始没有完全一样" },
+  { pattern: /转化了/g, replacement: "有点不一样了" },
+  { pattern: /提升了/g, replacement: "比刚刚轻了一点" },
+  { pattern: /成长了/g, replacement: "处理方式有一点变化" },
+  { pattern: /突破了/g, replacement: "没有像之前那样走下去" },
+  { pattern: /内在状态/g, replacement: "你现在心里是..." },
+  { pattern: /内在变化/g, replacement: "你刚刚有一点不一样" },
+  { pattern: /内在体验/g, replacement: "你现在感觉是..." },
+  { pattern: /内在波动/g, replacement: "心里有点在动" },
+  { pattern: /能量变化/g, replacement: "感觉轻了一点 / 重了一点" },
+  { pattern: /内在拉扯/g, replacement: "一边想这样，一边又不太一样" },
+  { pattern: /压力/g, replacement: "心里一直顶着" },
+  { pattern: /不安/g, replacement: "心里有点悬着" },
+  { pattern: /紧张/g, replacement: "身体有点绷着" },
+  { pattern: /情绪波动/g, replacement: "一下上来，一下又下去" },
+];
+
+const H_EN_GROUNDING_REPLACEMENTS: Array<{ pattern: RegExp; replacement: string }> = [
+  { pattern: /\bstuck\b/gi, replacement: "keeps looping here" },
+  { pattern: /\bblocked\b/gi, replacement: "can't move out of this moment" },
+];
+
+const H_ZH_FORBIDDEN_CHECKS: RegExp[] = [
+  /空间/,
+  /觉察/,
+  /放下|放开|松开控制/,
+  /卡住|卡点/,
+  /转化|提升了|成长了|突破了/,
+  /内在状态|内在变化|内在体验|内在波动/,
+  /能量变化/,
+  /内在拉扯/,
+  /情绪波动/,
+];
+
+const H_EN_FORBIDDEN_CHECKS: RegExp[] = [/\bstuck\b/i, /\bblocked\b/i];
+
+function countGroundingForbiddenHits(text: string, checks: RegExp[]): number {
+  return checks.reduce((n, re) => n + (re.test(text) ? 1 : 0), 0);
+}
+
+function applyGroundingReplacements(
+  text: string,
+  map: Array<{ pattern: RegExp; replacement: string }>
+): string {
+  let out = text;
+  for (const rule of map) {
+    out = out.replace(rule.pattern, rule.replacement);
+  }
+  return out;
+}
+
+function shouldHardSuppressForGrounding(en: string, zh: string): boolean {
+  const abstractHits =
+    countGroundingForbiddenHits(zh, H_ZH_FORBIDDEN_CHECKS) + countGroundingForbiddenHits(en, H_EN_FORBIDDEN_CHECKS);
+  if (abstractHits >= 2) return true;
+  if (/(灵性|觉醒|疗愈|高维|频率)/.test(zh)) return true;
+  if (/(咨询|来访者|议题|创伤修复|干预|系统性)/.test(zh)) return true;
+  if (/\b(healing|awakening|trauma processing|therapeutic intervention)\b/i.test(en)) return true;
+  return false;
+}
+
+function groundHLanguagePair(pair: HLanguagePair):
+  | { status: "ok"; pair: HLanguagePair }
+  | { status: "suppress"; reason: "h_language_grounding_hard_suppress" | "h_language_grounding_unresolved_abstraction" } {
+  if (shouldHardSuppressForGrounding(pair.en, pair.zh)) {
+    return { status: "suppress", reason: "h_language_grounding_hard_suppress" };
+  }
+
+  const en = applyGroundingReplacements(pair.en, H_EN_GROUNDING_REPLACEMENTS);
+  const zh = applyGroundingReplacements(pair.zh, H_ZH_GROUNDING_REPLACEMENTS);
+
+  const unresolved =
+    countGroundingForbiddenHits(zh, H_ZH_FORBIDDEN_CHECKS) > 0 ||
+    countGroundingForbiddenHits(en, H_EN_FORBIDDEN_CHECKS) > 0;
+  if (unresolved) {
+    return { status: "suppress", reason: "h_language_grounding_unresolved_abstraction" };
+  }
+
+  return { status: "ok", pair: { en, zh } };
+}
+
 function hasWisewaveKillListBan(
   textEn: string,
   textZh: string,
@@ -1503,6 +1608,11 @@ export function computeMicroAwarenessCue(params: {
   }
 
   const pair = pickTemplate(kind, seed, userMessage);
+  const grounded = groundHLanguagePair(pair);
+  if (grounded.status === "suppress") {
+    return { status: "suppressed", reason: grounded.reason };
+  }
+  const groundedPair = grounded.pair;
 
   // v6: redundancy suppression for H3.
   // Wisewave review: residual revise cluster isn't broad instability; H3 awareness line can still be removable
@@ -1511,7 +1621,7 @@ export function computeMicroAwarenessCue(params: {
     const theme = detectH3ThemeKey(userMessage);
     const mainSufficient = isMainReflectionSufficientForH3(insight);
     if (mainSufficient) {
-      if (theme === "default" && isH3GenericDangerPairEn(pair.en)) {
+      if (theme === "default" && isH3GenericDangerPairEn(groundedPair.en)) {
         return { status: "suppressed", reason: "h3_main_reflection_sufficiency" };
       }
       if (theme === "replay_ruminate" && insightHasReplayRumination(lower)) {
@@ -1527,16 +1637,16 @@ export function computeMicroAwarenessCue(params: {
   if (isMilestoneHStrictLinterEnabled()) {
     const strength = getHStrictLinterStrength();
     // Wisewave Kill List hard containment: suppress H if banned phrases show up.
-    if (hasWisewaveKillListMultiSentence(pair.en, pair.zh)) {
+    if (hasWisewaveKillListMultiSentence(groundedPair.en, groundedPair.zh)) {
       return {
         status: "suppressed",
         reason: "wisewave_kill_list_multi_sentence",
       };
     }
-    if (hasWisewaveTooLong(pair.en, pair.zh, strength)) {
+    if (hasWisewaveTooLong(groundedPair.en, groundedPair.zh, strength)) {
       return { status: "suppressed", reason: "wisewave_kill_list_too_long" };
     }
-    if (hasWisewaveKillListBan(pair.en, pair.zh, strength)) {
+    if (hasWisewaveKillListBan(groundedPair.en, groundedPair.zh, strength)) {
       return {
         status: "suppressed",
         reason: "wisewave_kill_list_blacklisted_text",
@@ -1547,7 +1657,7 @@ export function computeMicroAwarenessCue(params: {
   return {
     status: "emitted",
     kind,
-    textEn: pair.en.replace(/\n/g, " ").trim(),
-    textZh: pair.zh.replace(/\n/g, " ").trim(),
+    textEn: groundedPair.en.replace(/\n/g, " ").trim(),
+    textZh: groundedPair.zh.replace(/\n/g, " ").trim(),
   };
 }
