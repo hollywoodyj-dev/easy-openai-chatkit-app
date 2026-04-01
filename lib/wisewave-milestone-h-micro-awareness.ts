@@ -361,7 +361,7 @@ export function hasReflectiveFirstPersonAnchor(message: string): boolean {
   return false;
 }
 
-function looksUtilitarianOrFactual(message: string): boolean {
+export function looksUtilitarianOrFactual(message: string): boolean {
   const t = message.trim();
   if (t.length < 8) return true;
 

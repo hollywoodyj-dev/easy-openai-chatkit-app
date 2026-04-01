@@ -21,7 +21,9 @@ import {
 } from "@/lib/wisewave-milestone-g-integration";
 import {
   computeMicroAwarenessCue,
+  hasReflectiveFirstPersonAnchor,
   isMilestoneHCueEnabled,
+  looksUtilitarianOrFactual,
   milestoneHBuildMarker,
   type MicroAwarenessKind,
 } from "@/lib/wisewave-milestone-h-micro-awareness";
@@ -1125,6 +1127,10 @@ export async function POST(request: Request) {
   openaiMessagesForApi.push(...openaiMessages);
 
   let assistantContent: string;
+  let debugZhRewriteAttempted = false;
+  let debugZhRewriteApplied = false;
+  let debugZhHasCjkBeforeRewrite: boolean | null = null;
+  let debugZhHasCjkAfterRewrite: boolean | null = null;
   try {
     const completion = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -1166,9 +1172,11 @@ export async function POST(request: Request) {
     }
     if (wantsChinese && assistantContent) {
       assistantContent = sanitizeChineseOutputLeaks(assistantContent);
+      debugZhHasCjkBeforeRewrite = hasCjkContent(assistantContent);
       // Narrow regression guard: if hosted returns English-only text for ZH turns,
       // rewrite once into Chinese without changing meaning.
       if (!hasCjkContent(assistantContent)) {
+        debugZhRewriteAttempted = true;
         const rewrittenZh = await rewriteAssistantToChinese({
           apiKey,
           model,
@@ -1176,8 +1184,10 @@ export async function POST(request: Request) {
         }).catch(() => null);
         if (rewrittenZh && hasCjkContent(rewrittenZh)) {
           assistantContent = sanitizeChineseOutputLeaks(rewrittenZh);
+          debugZhRewriteApplied = true;
         }
       }
+      debugZhHasCjkAfterRewrite = hasCjkContent(assistantContent);
     }
   } catch (e) {
     console.error("[chat/turn] OpenAI request failed", e);
@@ -2484,6 +2494,13 @@ export async function POST(request: Request) {
     debug_milestone_h_outcome: debugMilestoneHOutcome,
     debug_milestone_h_suppressed_reason: debugMilestoneHSuppressedReason,
     debug_milestone_h_kind: responseAwarenessCue?.kind ?? null,
+    debug_milestone_h_input_has_reflective_anchor: hasReflectiveFirstPersonAnchor(message),
+    debug_milestone_h_input_looks_utilitarian_or_factual: looksUtilitarianOrFactual(message),
+    debug_language_wants_chinese: wantsChinese,
+    debug_language_has_cjk_before_rewrite: debugZhHasCjkBeforeRewrite,
+    debug_language_rewrite_attempted: debugZhRewriteAttempted,
+    debug_language_rewrite_applied: debugZhRewriteApplied,
+    debug_language_has_cjk_after_rewrite: debugZhHasCjkAfterRewrite,
     debug_milestone_i_enabled: debugMilestoneIEnabled,
     debug_milestone_i_build_marker: milestoneIBuildMarker(),
     debug_milestone_i_outcome: debugMilestoneIOutcome,

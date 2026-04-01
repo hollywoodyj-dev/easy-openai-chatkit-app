@@ -529,10 +529,10 @@ export default function UnifiedDriftDetectionDashboardPage() {
             Board label remains: <span className="font-medium">Pass with watchpoints</span>.
           </p>
           <div className="mt-4 rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
-            <div className="font-medium">Next detection-only step: regression verification check (hosted)</div>
+            <div className="font-medium">Next detection-only step: targeted upstream debug trace (hosted)</div>
             <div className="mt-1">
-              Verify whether the new ZH generic-English fallback pattern is a real hosted behavior regression or a harness/
-              evaluation artifact under milestone_h_v21. Detection-only; no broad Phase 2 reopen.
+              Run a narrow 2-3 case trace for affected ZH rows to isolate upstream classification/routing source for
+              utilitarian_or_factual + generic English fallback behavior under milestone_h_v21.
             </div>
             <div className="mt-2 text-xs text-slate-500">
               Verification result: confirmed in raw hosted API output on affected ZH rows (browser parity not yet confirmed).{" "}
