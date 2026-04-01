@@ -767,6 +767,49 @@ function sanitizeChineseOutputLeaks(text: string): string {
     .trim();
 }
 
+function hasCjkContent(text: string): boolean {
+  return /[\u4E00-\u9FFF]/.test(text);
+}
+
+async function rewriteAssistantToChinese(params: {
+  apiKey: string;
+  model: string;
+  sourceText: string;
+}): Promise<string | null> {
+  const { apiKey, model, sourceText } = params;
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_completion_tokens: 512,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Rewrite the assistant text into natural Chinese only. Keep meaning and tone. " +
+            "Do not add advice, do not add new interpretation, do not use English words.",
+        },
+        {
+          role: "user",
+          content: sourceText,
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) return null;
+  const data = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const out = data.choices?.[0]?.message?.content?.trim();
+  if (!out) return null;
+  return normalizeModelTextForStorage(out);
+}
+
 async function refreshConversationSummary(
   conversationId: string,
   apiKey: string,
@@ -1123,6 +1166,18 @@ export async function POST(request: Request) {
     }
     if (wantsChinese && assistantContent) {
       assistantContent = sanitizeChineseOutputLeaks(assistantContent);
+      // Narrow regression guard: if hosted returns English-only text for ZH turns,
+      // rewrite once into Chinese without changing meaning.
+      if (!hasCjkContent(assistantContent)) {
+        const rewrittenZh = await rewriteAssistantToChinese({
+          apiKey,
+          model,
+          sourceText: assistantContent,
+        }).catch(() => null);
+        if (rewrittenZh && hasCjkContent(rewrittenZh)) {
+          assistantContent = sanitizeChineseOutputLeaks(rewrittenZh);
+        }
+      }
     }
   } catch (e) {
     console.error("[chat/turn] OpenAI request failed", e);

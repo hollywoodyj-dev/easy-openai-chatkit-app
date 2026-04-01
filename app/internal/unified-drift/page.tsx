@@ -521,20 +521,22 @@ export default function UnifiedDriftDetectionDashboardPage() {
             </div>
           </div>
           <p className="mt-4 text-sm text-slate-600">
-            Narrow confirmation result: <span className="font-medium">Partial improvement</span>. No Level 3/systemy signal,
-            but ZH additional-line H1/H4 behavior is not yet a clean hold (especially when main reflection already lands and
-            in low-signal/factual-adjacent rows). Keep Phase 2 direction; no broad rewrite or architecture reopen.
+            Hosted v21 narrow recheck: suppression target succeeded (12/12 suppressed), but possible response-quality /
+            language-routing regression is flagged in affected ZH rows (generic English fallback-style uncertainty framing).
+            Keep Phase 2 direction; do not close yet on suppression count alone.
           </p>
           <p className="mt-2 text-sm text-slate-600">
             Board label remains: <span className="font-medium">Pass with watchpoints</span>.
           </p>
           <div className="mt-4 rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
-            <div className="font-medium">Next detection-only step: one more narrow optional-line suppression tighten</div>
+            <div className="font-medium">Next detection-only step: regression verification check (hosted)</div>
             <div className="mt-1">
-              Keep scope locked to the same weak cluster only: ZH H1/H4 additional-line shapes when main reflection is
-              already sufficient, plus low-signal/factual/near-factual rows. Detection-only; no broad Phase 2 reopen.
+              Verify whether the new ZH generic-English fallback pattern is a real hosted behavior regression or a harness/
+              evaluation artifact under milestone_h_v21. Detection-only; no broad Phase 2 reopen.
             </div>
             <div className="mt-2 text-xs text-slate-500">
+              Verification result: confirmed in raw hosted API output on affected ZH rows (browser parity not yet confirmed).{" "}
+              <br />
               Lumen result artifact: `docs/HC_OS_V1_Phase_2_Narrow_Confirmation_Pass_Results_2026-04-02.md` ·
               Next recheck packet: `docs/HC_OS_V1_Phase_2_Narrow_Recheck_Packet_2026-04-02_v2.md`
             </div>
