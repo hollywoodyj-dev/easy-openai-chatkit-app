@@ -359,6 +359,18 @@
 - **Most likely cause:** the v19 guard is ZH-only and depended on CJK in `insight_candidate`, but on hosted survivors the debug `insight_candidate` is **English fallback-generic** (no CJK). So the guard never activated.
 - **Nova (implemented):** v20 makes the guard robust to EN fallback insight_candidate by gating on **ZH user text** and matching avoidance/return/wise-vs-fear structure in either CJK or EN keywords. New marker **`milestone_h_v20`**.
 
+## 2026-03-30 — Lumen: Post-H Day 7 rerun clean pass (milestone_h_v20)
+
+- Hosted Day 7 rerun: 12 reviewed; H appeared **0** / H suppressed **12** (suppression ratio **100%**).
+- Survivors `h-d07-003` / `h-d07-004` / `h-d07-006` / `h-d07-009` are now suppressed with **`h1_zh_avoidance_return_insight_sufficient`**.
+
+## 2026-03-30 — Lumen: Post-H Day 8 rerun — bounded ZH H1 pocket (milestone_h_v20)
+
+- Hosted Day 8 rerun: 12 reviewed; H appeared **3** / H suppressed **9** (suppression ratio **75%**).
+- Survivors are all **H1**: `h-d08-004`, `h-d08-006`, `h-d08-009`.
+- Diagnosis: new bounded ZH urgency / false-urgency / anticipatory-urgency lane (main reflection already suggests no real deadline, but felt urgency still triggers H1 as a second layer).
+- Likely next patch direction: ZH H1 suppression when the main reflection already clearly names urgency / false urgency / anticipatory time pressure (discriminate still-have-time vs already-feels-too-late; anxiety mistaken for urgency).
+
 ## 2026-03-28 — Nova: ZH corridor lane alignment (milestone_h_v18)
 
 - **Lumen on v17:** stop regex-only widening; **`h-d05-006`** H1 reopen = misroute + admission hierarchy, not missing corridor string.

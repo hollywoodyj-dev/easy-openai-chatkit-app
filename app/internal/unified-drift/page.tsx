@@ -98,6 +98,9 @@ export default function UnifiedDriftDetectionDashboardPage() {
                 Detection-only monitoring for H, I, and J. This page exists to answer one question: is the system
                 becoming more noticeable, more directive, or more system-like over time?
               </p>
+              <p className="mt-2 max-w-3xl text-xs md:text-sm text-slate-500">
+                QA working surface only (detection/logging). No rollback execution and no behavior control.
+              </p>
             </div>
             <div className="rounded-2xl bg-white border border-slate-200 px-4 py-3 shadow-sm">
               <div className="text-xs uppercase tracking-wide text-slate-500">Mode</div>

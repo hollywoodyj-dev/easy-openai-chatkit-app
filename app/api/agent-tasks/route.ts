@@ -8,6 +8,13 @@ export const dynamic = "force-dynamic";
 const MAX_TASKS = 100;
 const MAX_TASKS_ADMIN = 500;
 
+function isMissingReplyThreadColumnError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: string; meta?: { column?: unknown } };
+  const column = typeof e.meta?.column === "string" ? e.meta.column : "";
+  return e.code === "P2022" && column.toLowerCase().includes("reply_thread");
+}
+
 /**
  * GET: List tasks for an agent by name (ping the host to get my tasks).
  * Query: agent (required) — e.g. agent=Nova. Use agent=admin with admin API key to get all agents' tasks.
@@ -40,26 +47,60 @@ export async function GET(request: Request) {
     ...(includeArchived ? {} : { archivedAt: null }),
   };
 
-  const tasks = await prisma.agentTask.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: isAdmin ? MAX_TASKS_ADMIN : MAX_TASKS,
-  });
+  try {
+    const tasks = await prisma.agentTask.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: isAdmin ? MAX_TASKS_ADMIN : MAX_TASKS,
+    });
 
-  const payload = tasks.map((t) => ({
-    id: t.id,
-    agentName: t.agentName,
-    title: t.title,
-    description: t.description,
-    status: t.status,
-    replyContent: t.replyContent,
-    replyThread: parseReplyThread(t.replyThread),
-    createdAt: t.createdAt.toISOString(),
-    updatedAt: t.updatedAt.toISOString(),
-    archivedAt: t.archivedAt?.toISOString() ?? null,
-  }));
+    const payload = tasks.map((t) => ({
+      id: t.id,
+      agentName: t.agentName,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      replyContent: t.replyContent,
+      replyThread: parseReplyThread(t.replyThread),
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+      archivedAt: t.archivedAt?.toISOString() ?? null,
+    }));
 
-  return NextResponse.json({ tasks: payload });
+    return NextResponse.json({ tasks: payload });
+  } catch (error) {
+    if (!isMissingReplyThreadColumnError(error)) {
+      throw error;
+    }
+
+    // Backward-compatible fallback while hosted DB migration catches up.
+    const legacyTasks = await prisma.agentTask.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: isAdmin ? MAX_TASKS_ADMIN : MAX_TASKS,
+      select: {
+        id: true,
+        agentName: true,
+        title: true,
+        description: true,
+        status: true,
+        replyContent: true,
+        createdAt: true,
+        updatedAt: true,
+        archivedAt: true,
+      },
+    });
+
+    const payload = legacyTasks.map((t) => ({
+      ...t,
+      replyThread: [],
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+      archivedAt: t.archivedAt?.toISOString() ?? null,
+    }));
+
+    return NextResponse.json({ tasks: payload });
+  }
 }
 
 /**

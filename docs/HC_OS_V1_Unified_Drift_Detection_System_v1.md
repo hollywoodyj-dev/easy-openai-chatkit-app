@@ -6,6 +6,8 @@
 **Enforcement:** OctopusMind  
 **Implementation:** Nova (read-only logging support; no behavior modification)
 
+**Phase 2 anchor:** `docs/HC_OS_V1_Phase_2_Post_A_to_J_Operational_Execution_Addendum.md`
+
 ---
 
 ## 0. System Purpose (唯一目的)
@@ -122,6 +124,7 @@ Trigger rules (past 20 interactions):
 - Lumen: only record drift
 - Nova: read-only logging support
 - OctopusMind: define rollback policy
+- System must never directly act (observe -> record -> log -> decide, human-governed)
 
 ### 6.2 Cumulative Window Zone Rule（选 A — max severity dominates）
 **Zone = max(Severity Level) observed in the last 20 interactions**
@@ -135,7 +138,26 @@ Supplementary metric:
 
 ---
 
-## 7. Automatic Rollback Conditions（政策门槛，不在 Nova/UI 自动执行）
+## 7. Dashboard -> Logging -> Decision Flow（完整执行链）
+Scope: H / I / J  
+Mode: Detection Only / No Expansion  
+State: Operational (Post Milestone J closure)
+
+End-to-end chain:
+1. Interaction happens in `/chat` (system may emit H/I/J)
+2. Lumen logs via Unified Drift Entry Template v1 (A-F, removal test, severity, high-risk, action)
+3. Nova receives and logs entries (state recorder only; no interpretation/optimization)
+4. Dashboard renders visibility (decision-support UI only)
+5. Tree makes operational decision (observe/review/rollback trigger)
+6. OctopusMind governs boundary logic (rule/rollback policy authority)
+
+Locked rule:
+- System observes -> Lumen records -> Nova logs -> Tree decides -> OctopusMind governs
+- The system never directly acts.
+
+---
+
+## 8. Automatic Rollback Conditions（政策门槛，不在 Nova/UI 自动执行）
 This system’s UI/logging must not execute rollback automatically.
 OctopusMind defines policy and Tree executes rollback decisions.
 
@@ -148,12 +170,12 @@ For reference, policy can include:
 
 ---
 
-## 8. One-line System Law（系统核心法则）
+## 9. One-line System Law（系统核心法则）
 If the system becomes noticeable, it is already drifting.
 
 ---
 
-## 9. Unified Drift Entry Template v1（interface / 锁死版）
+## 10. Unified Drift Entry Template v1（interface / 锁死版）
 > This template is the interface between system behavior and system governance.
 
 ### 9.1 Entry Purpose（唯一目的）
@@ -279,7 +301,22 @@ Zone (locked, select A):
 
 ---
 
-## 10. Dashboard / UI policy text (rollback semantics)
+## 11. Dashboard update authority (locked approvals)
+Nova can:
+- update incoming data state (rolling window, new interactions)
+- render approved UI using existing locked fields/rules
+
+Nova cannot (without approval):
+- change fields, logic, rules, or calculations
+- change drift definitions, severity algorithm, or rollback conditions
+
+Approval gates:
+- Tree approval required: UI structure changes, new fields, new presentation behavior
+- Tree + OctopusMind required: drift rule changes, scoring changes, rollback mechanism changes
+
+---
+
+## 12. Dashboard / UI policy text (rollback semantics)
 Rollback is **not automatic**.
 
 UI must use:

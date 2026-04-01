@@ -23,6 +23,35 @@
 - **Revise:** 4
 - **Remove:** 0
 
+### Hosted rerun on `milestone_h_v20` (Post-H Day 7 specifically)
+- **Total reviewed:** 12
+- **H appeared:** 0
+- **H suppressed:** 12
+- **Suppression ratio:** 100%
+
+**Suppression reason (on those rows):**
+- `h1_zh_avoidance_return_insight_sufficient`
+
+**Previously surviving rows are now suppressed:**
+- `h-d07-003`
+- `h-d07-004`
+- `h-d07-006`
+- `h-d07-009`
+
+**Read:** v20 fixed the real hosted failure mode for the Day 7 ZH H1 duplication pocket.
+
+### Hosted follow-up rerun on `milestone_h_v20` (logging update)
+- **Total reviewed:** 12
+- **H appeared:** 2
+- **H suppressed:** 10
+- **Suppression ratio:** 83.3%
+
+**Survivors (both ZH H1):**
+- `h-d07-004`
+- `h-d07-009`
+
+**Read:** bounded reopen in the same broad ZH H1 duplication / main-reflection-already-sufficient class; no evidence of a new corridor class. Under Phase 2 detection-only posture, this is a board/logging update, not an automatic optimization trigger.
+
 ## Comparison with earlier full-sample days
 - **Day 1:** 7 H appearances / 12
 - **Day 2:** 8 H appearances / 12

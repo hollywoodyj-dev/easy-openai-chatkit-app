@@ -235,6 +235,259 @@ Some surrounding continuity / phrasing polish issues remain in adjacent layers, 
 
 ---
 
+## Hosted post-H Day 7 rerun — `milestone_h_v20`
+
+### Result
+**PASS**
+
+### Verified (12 reviewed)
+- H appeared: **0**
+- H suppressed: **12**
+- suppression ratio: **100%**
+
+### What changed
+All four prior ZH H1 survivors are now suppressed:
+- `h-d07-003`
+- `h-d07-004`
+- `h-d07-006`
+- `h-d07-009`
+
+Suppression reason on those rows:
+- `h1_zh_avoidance_return_insight_sufficient`
+
+### Read
+For **Post-H Day 7 specifically**, `milestone_h_v20` is now a clean pass on the H layer.
+
+---
+
+## Hosted post-H Day 8 rerun — `milestone_h_v20`
+
+### Result
+**PROVISIONAL REVISE / WATCH**
+
+### Verified (12 reviewed)
+- H appeared: **3**
+- H suppressed: **9**
+- suppression ratio: **75%**
+
+### Survivors (all H1)
+- `h-d08-004`
+- `h-d08-006`
+- `h-d08-009`
+
+### Read
+- Day 7 target lane is fixed on `milestone_h_v20`.
+- Day 8 reveals a **new bounded ZH H1 pocket**.
+
+Likely shape:
+- urgency / false urgency / anticipatory urgency lane where the main reflection seems sufficient but H1 still enters as a second layer.
+
+### Recommended next step
+- use **Day 9** as the next regression/comparison check after identifying this bounded Day 8 pocket.
+
+---
+
+## Hosted post-H Day 7 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH** (bounded reopen, no new corridor class indicated)
+
+### Verified (12 reviewed)
+- H appeared: **2**
+- H suppressed: **10**
+- suppression ratio: **83.3%**
+
+### Survivors (both ZH H1)
+- `h-d07-004`
+- `h-d07-009`
+
+### Read
+- This is a bounded reopen of the same broad ZH H1 duplication / main-reflection-already-sufficient class.
+- This does **not** currently read like a new corridor class.
+- Under Phase 2 (Detection Only / No Expansion), this is a board/logging signal update, not an automatic optimization trigger.
+
+---
+
+## Hosted post-H Day 8 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH** (bounded pocket confirmed; no broad reopen signal)
+
+### Run note
+- Initial pass had transport noise (`POST /api/chat/session` 503 on 7 cases).
+- Lumen reran failed cases and merged results before final judgment.
+- Final judgment set: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **3**
+- H suppressed: **9**
+- suppression ratio: **75%**
+
+### Survivors
+- `h-d08-004` (H1)
+- `h-d08-006` (H4)
+- `h-d08-009` (H1)
+
+### Read
+- Confirms the existing bounded ZH urgency / false-urgency / anticipatory-urgency pocket on Day 8.
+- This does **not** currently read as a new corridor class or broad reopen.
+- Under Phase 2 (Detection Only / No Expansion), this is logged as board/handoff observation evidence, not an automatic patch request.
+
+---
+
+## Hosted post-H Day 9 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH** (bounded residual pocket confirmation; no broad reopen signal)
+
+### Run note
+- Initial pass had transport noise on `h-d09-001` (`POST /api/chat/session` 503).
+- Lumen reran the failed case before judgment; rerun returned HTTP 200 with H suppressed.
+- Final judgment set: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **3**
+- H suppressed: **9**
+- suppression ratio: **75%**
+
+### Survivors
+- `h-d09-004` (H1)
+- `h-d09-009` (H1)
+- `h-d09-012` (H1)
+
+### Read
+- Bounded Day 9 ZH-side residual pocket confirmed.
+- This does **not** currently read as a new corridor class or broad reopen.
+- Factual/utilitarian suppression remains intact in this pass.
+- Under Phase 2 (Detection Only / No Expansion), this is logged as board/handoff observation evidence, not an automatic patch request.
+
+---
+
+## Hosted post-H Day 10 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH / REVISE**
+
+### Run note
+- Clean first pass: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **4**
+- H suppressed: **8**
+- suppression ratio: **66.7%**
+
+### Survivors
+- `h-d10-004` (H1)
+- `h-d10-006` (H4)
+- `h-d10-009` (H5)
+- `h-d10-012` (H1)
+
+### Read
+- Day 10 is not clean and shows broader residual spread than Day 8/9 (survivors are not confined to one subtype).
+- This is still observation evidence under Phase 2 detection-only governance.
+- This is **not** logged as an automatic patch request.
+
+---
+
+## Hosted post-H Day 11 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH** (not clean, but narrower residual shape than Day 10)
+
+### Run note
+- Clean first pass: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **3**
+- H suppressed: **9**
+- suppression ratio: **75%**
+
+### Survivors
+- `h-d11-003` (H1)
+- `h-d11-004` (H1)
+- `h-d11-006` (H1)
+
+### Read
+- Day 11 is not clean, but residual shape is narrower than Day 10.
+- Survivors are confined to a bounded H1 pocket (not a broader multi-subtype spread).
+- Under Phase 2 (Detection Only / No Expansion), this is logged as board/handoff observation evidence, not an automatic patch request.
+
+---
+
+## Hosted post-H Day 12 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH / REVISE**
+
+### Run note
+- Clean first pass: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **4**
+- H suppressed: **8**
+- suppression ratio: **66.7%**
+
+### Survivors
+- `h-d12-003` (H4)
+- `h-d12-004` (H4)
+- `h-d12-006` (H4)
+- `h-d12-009` (H1)
+
+### Read
+- Day 12 is not clean and shows a bounded H4-dominant residual pocket with one H1 alongside it.
+- This is narrower than a broad multi-subtype reopen, but distinct enough to log as a subtype-heavy lane.
+- Under Phase 2 (Detection Only / No Expansion), this is logged as board/handoff observation evidence, not an automatic patch request.
+
+---
+
+## Hosted post-H Day 13 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH** (not clean, bounded H1 residual pocket)
+
+### Run note
+- Clean first pass: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **3**
+- H suppressed: **9**
+- suppression ratio: **75%**
+
+### Survivors
+- `h-d13-003` (H1)
+- `h-d13-004` (H1)
+- `h-d13-006` (H1)
+
+### Read
+- Day 13 is not clean but remains a bounded H1 residual pocket.
+- This shape is similar to Day 11 and narrower than Day 10 broad subtype spread or Day 12 H4-dominant pocket.
+- Under Phase 2 (Detection Only / No Expansion), this is logged as board/handoff observation evidence, not an automatic patch request.
+
+---
+
+## Hosted post-H Day 14 rerun follow-up — `milestone_h_v20` (logging update)
+
+### Result
+**PROVISIONAL WATCH** (not clean, bounded H1 residual pocket)
+
+### Run note
+- Clean first pass: **12 reviewed / 12 HTTP 200**.
+
+### Verified (clean set)
+- H appeared: **3**
+- H suppressed: **9**
+- suppression ratio: **75%**
+
+### Survivors
+- `h-d14-003` (H1)
+- `h-d14-004` (H1)
+- `h-d14-006` (H1)
+
+### Read
+- Day 14 is not clean but remains a bounded H1 residual pocket.
+- Shape closely matches Day 11 and Day 13, rather than Day 10 broad subtype spread or Day 12 H4-dominant pocket.
+- Under Phase 2 (Detection Only / No Expansion), this is logged as board/handoff observation evidence, not an automatic patch request.
+
 ## Milestone-level judgment
 
 ## Overall verdict
