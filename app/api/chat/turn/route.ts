@@ -826,6 +826,27 @@ function normalizeIncomingUserMessage(text: string): {
   };
 }
 
+function summarizeIngressText(text: string): {
+  length: number;
+  utf8ByteLength: number;
+  latin1ByteLength: number;
+  preview: string;
+  codepointHead: string[];
+} {
+  const clean = text ?? "";
+  const preview = clean.slice(0, 80);
+  const head = Array.from(preview)
+    .slice(0, 12)
+    .map((ch) => `U+${ch.codePointAt(0)!.toString(16).toUpperCase()}`);
+  return {
+    length: clean.length,
+    utf8ByteLength: Buffer.byteLength(clean, "utf8"),
+    latin1ByteLength: Buffer.byteLength(clean, "latin1"),
+    preview,
+    codepointHead: head,
+  };
+}
+
 async function rewriteAssistantToChinese(params: {
   apiKey: string;
   model: string;
@@ -979,6 +1000,9 @@ export async function POST(request: Request) {
   }
   const inputNorm = normalizeIncomingUserMessage(rawMessage);
   const message = inputNorm.text;
+  const rawIngressSummary =
+    typeof rawMessage === "string" ? summarizeIngressText(rawMessage) : summarizeIngressText("");
+  const normalizedIngressSummary = summarizeIngressText(message);
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: sessionId, userId },
@@ -2559,6 +2583,8 @@ export async function POST(request: Request) {
     debug_input_norm_repaired_applied: inputNorm.repairedApplied,
     debug_input_norm_repaired_has_cjk: inputNorm.repairedHasCjk,
     debug_input_norm_suspected_mojibake: inputNorm.suspectedMojibake,
+    debug_ingress_raw_summary: rawIngressSummary,
+    debug_ingress_normalized_summary: normalizedIngressSummary,
     debug_language_wants_chinese: wantsChinese,
     debug_language_has_cjk_before_rewrite: debugZhHasCjkBeforeRewrite,
     debug_language_rewrite_attempted: debugZhRewriteAttempted,

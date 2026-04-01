@@ -531,8 +531,8 @@ export default function UnifiedDriftDetectionDashboardPage() {
           <div className="mt-4 rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
             <div className="font-medium">Next detection-only step: targeted upstream debug trace (hosted)</div>
             <div className="mt-1">
-              Run a narrow 2-3 case trace for affected ZH rows to isolate upstream classification/routing source for
-              utilitarian_or_factual + generic English fallback behavior under milestone_h_v21.
+              Run a narrow hosted ingress/content debug on 2-3 affected rows: compare sent payload vs route-received
+              message, verify encoding/serialization/body-parse path, and isolate where CJK is lost before classification.
             </div>
             <div className="mt-2 text-xs text-slate-500">
               Verification result: confirmed in raw hosted API output on affected ZH rows (browser parity not yet confirmed).{" "}
