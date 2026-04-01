@@ -4,31 +4,31 @@ const summaryCards = [
   {
     title: "System Status",
     value: "Watch Zone",
-    sub: "Zone rule: max severity dominates (last 20 interactions)",
+    sub: "Day 7-14 hosted snapshot: 96 reviewed, H appeared 25, H suppressed 71",
   },
   {
     title: "Rollback Triggers",
     value: "0 Active",
-    sub: "No rollback automation is executed by this dashboard",
+    sub: "Detection-only evidence flow; Tree remains the only decision point",
   },
   {
     title: "Top Drift Type",
-    value: "Density Drift",
-    sub: "Example: 2 recent flags in the last 20 interactions",
+    value: "Layer + Density Drift",
+    sub: "Residual pockets are H1-dominant, with a Day 12 H4-heavy lane",
   },
   {
     title: "Removal Test",
-    value: "1 Soft Flag",
-    sub: "Example only (structural subtraction, no regeneration)",
+    value: "Residual Signals Ongoing",
+    sub: "Day 10/12 broader spread; Day 11/13/14 bounded H1 pocket",
   },
 ];
 
 const driftRows = [
-  { type: "Presence Drift", score: 1, trend: "Flat", threshold: "High priority", status: "Low" },
+  { type: "Presence Drift", score: 0, trend: "Flat", threshold: "High priority", status: "Clear" },
   { type: "Guidance Drift", score: 0, trend: "Flat", threshold: "Critical", status: "Clear" },
   { type: "Memory Drift", score: 0, trend: "Flat", threshold: "Critical", status: "Clear" },
-  { type: "Layer Drift", score: 1, trend: "Rising", threshold: "Medium", status: "Watch" },
-  { type: "Density Drift", score: 2, trend: "Rising", threshold: "Medium", status: "Watch" },
+  { type: "Layer Drift", score: 8, trend: "Rising", threshold: "Medium", status: "Watch" },
+  { type: "Density Drift", score: 8, trend: "Rising", threshold: "Medium", status: "Watch" },
   { type: "Authorship Drift", score: 0, trend: "Flat", threshold: "Critical", status: "Clear" },
 ];
 
@@ -49,33 +49,33 @@ const rollbackRules = [
 
 const recentCases = [
   {
-    id: "J-184",
-    lang: "EN",
-    type: "reflective",
-    layer: "J",
-    drift: "Density Drift",
-    severity: "Soft",
-    note: "Micro-shift stayed valid, but the full turn felt slightly fuller than baseline.",
-    action: "Observe",
-  },
-  {
-    id: "I-177",
+    id: "h-d14-006",
     lang: "ZH",
     type: "reflective",
-    layer: "I",
+    layer: "H1",
     drift: "Layer Drift",
     severity: "Soft",
-    note: "Continuity was acceptable, but E and I nearly stacked too visibly.",
+    note: "Day 14 survivor in bounded H1 pocket; shape matches Day 11 and Day 13.",
     action: "Observe",
   },
   {
-    id: "H-171",
-    lang: "EN",
-    type: "mixed",
-    layer: "H",
-    drift: "Presence Drift",
-    severity: "Soft",
-    note: "Cue was valid but slightly more noticeable than ideal.",
+    id: "h-d12-004",
+    lang: "ZH",
+    type: "reflective",
+    layer: "H4",
+    drift: "Layer + Density Drift",
+    severity: "Pattern",
+    note: "Day 12 H4-dominant residual lane (subtype-heavy but bounded, not broad reopen).",
+    action: "Watch",
+  },
+  {
+    id: "h-d10-009",
+    lang: "ZH",
+    type: "reflective",
+    layer: "H5",
+    drift: "Layer + Density Drift",
+    severity: "Pattern",
+    note: "Day 10 wider subtype spread (H1/H4/H5) than Day 11/13/14 bounded H1 shape.",
     action: "Watch",
   },
 ];
@@ -125,10 +125,10 @@ export default function UnifiedDriftDetectionDashboardPage() {
               <div>
                 <h2 className="text-xl font-semibold">Unified Drift Matrix</h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  Track the six system-level drift classes across the latest observation window.
+                  Track the six drift classes against hosted Day 7-14 rerun evidence.
                 </p>
               </div>
-              <div className="text-sm text-slate-500">Last 20 interactions</div>
+              <div className="text-sm text-slate-500">Day 7-14 (96 interactions)</div>
             </div>
             <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
               <table className="w-full text-sm">
@@ -197,7 +197,7 @@ export default function UnifiedDriftDetectionDashboardPage() {
                 Lumen logs drift type, severity, and removal judgment. Tree decides whether rollback is needed.
               </p>
             </div>
-            <div className="text-sm text-slate-500">Live sample view</div>
+            <div className="text-sm text-slate-500">Hosted Day 7-14 sample view</div>
           </div>
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
             {recentCases.map((item) => (
