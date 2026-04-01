@@ -343,6 +343,11 @@ export function hasReflectiveFirstPersonAnchor(message: string): boolean {
       /(我觉得|我感到|我想|我总|我的|我自己|我有一部分|另一部分|只要我|只要我一|我总觉得|我就觉得|我总会|我一慢|我慢下来)/.test(t)
     )
       return true;
+    // Narrow Lane-A fix: common reflective first-person progression that appeared in failing rows.
+    if (/(我就开始|我就会|我就容易|我就变得)/.test(t)) return true;
+    // Chinese reflective substrate can be explicit feeling language even when "我" is omitted.
+    if (/(还是觉得|总觉得|会觉得|觉得).{0,16}(很急|着急|焦虑|不安|绷紧|发紧|慌|来不及|不能出错)/.test(t))
+      return true;
     // 我… after sentence break (mid-message first person)
     if (/[，。！？、][\s]*我[^。！？]{0,24}(觉得|感到|想|总|会|有|在|也|只|能|的|一)/.test(t)) return true;
   }
