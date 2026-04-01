@@ -459,6 +459,53 @@ export default function UnifiedDriftDetectionDashboardPage() {
         <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
+              <h2 className="text-xl font-semibold">Phase 2 Language Grounding Read</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Detection-only snapshot from hosted Day 10-12 first-pass language grounding review.
+              </p>
+            </div>
+            <div className="text-sm text-slate-500">22 observation units</div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Level 0</div>
+              <div className="mt-1 text-2xl font-semibold">8</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Level 1</div>
+              <div className="mt-1 text-2xl font-semibold">10</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Level 2</div>
+              <div className="mt-1 text-2xl font-semibold">4</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Level 3</div>
+              <div className="mt-1 text-2xl font-semibold">0</div>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3 text-sm">
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="font-medium">L0/1 bar (>=80%)</div>
+              <div className="mt-1 text-slate-600">18/22 = 81.8% (pass)</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="font-medium">L3 bar (=0)</div>
+              <div className="mt-1 text-slate-600">0 (pass)</div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="font-medium">L2 bar (<=2)</div>
+              <div className="mt-1 text-slate-600">4 (not met)</div>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-slate-600">
+            Provisional result: <span className="font-medium">Pass with watchpoints</span>. Primary risk remains ZH optional/additional-line territory (Type B/C/D concentration). Logged as Phase 2 detection-only evidence, not an automatic rewrite request.
+          </p>
+        </div>
+
+        <div className="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
               <h2 className="text-xl font-semibold">Recent Drift Cases</h2>
               <p className="mt-1 text-sm text-slate-600">
                 Full board (open + closed). Lumen logs drift; Tree decides whether rollback is needed.
