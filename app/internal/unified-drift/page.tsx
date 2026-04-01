@@ -486,7 +486,7 @@ export default function UnifiedDriftDetectionDashboardPage() {
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3 text-sm">
             <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="font-medium">L0/1 bar (>=80%)</div>
+              <div className="font-medium">L0/1 bar (&gt;=80%)</div>
               <div className="mt-1 text-slate-600">18/22 = 81.8% (pass)</div>
             </div>
             <div className="rounded-2xl border border-slate-200 p-4">
@@ -494,7 +494,7 @@ export default function UnifiedDriftDetectionDashboardPage() {
               <div className="mt-1 text-slate-600">0 (pass)</div>
             </div>
             <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="font-medium">L2 bar (<=2)</div>
+              <div className="font-medium">L2 bar (&lt;=2)</div>
               <div className="mt-1 text-slate-600">4 (not met)</div>
             </div>
           </div>
