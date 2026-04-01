@@ -773,6 +773,59 @@ function hasCjkContent(text: string): boolean {
   return /[\u4E00-\u9FFF]/.test(text);
 }
 
+function tryRepairMojibakeToUtf8(text: string): string | null {
+  try {
+    const repaired = Buffer.from(text, "latin1").toString("utf8");
+    if (!repaired || repaired === text) return null;
+    return repaired;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeIncomingUserMessage(text: string): {
+  text: string;
+  rawHasCjk: boolean;
+  repairedApplied: boolean;
+  repairedHasCjk: boolean;
+  suspectedMojibake: boolean;
+} {
+  const nfc = text.normalize("NFC");
+  const rawHasCjk = hasCjkContent(nfc);
+
+  // Common UTF-8->latin1 mojibake signatures seen when transport/client encoding drifts.
+  const suspectedMojibake = /Ã.|Â.|æ.|ä.|å.|ç.|é.|è.|ê.|ï.|ð./.test(nfc);
+
+  if (rawHasCjk) {
+    return {
+      text: nfc,
+      rawHasCjk,
+      repairedApplied: false,
+      repairedHasCjk: rawHasCjk,
+      suspectedMojibake,
+    };
+  }
+
+  const repaired = tryRepairMojibakeToUtf8(nfc);
+  if (repaired && hasCjkContent(repaired)) {
+    return {
+      text: repaired,
+      rawHasCjk,
+      repairedApplied: true,
+      repairedHasCjk: true,
+      suspectedMojibake: true,
+    };
+  }
+
+  return {
+    text: nfc,
+    rawHasCjk,
+    repairedApplied: false,
+    repairedHasCjk: false,
+    suspectedMojibake,
+  };
+}
+
 async function rewriteAssistantToChinese(params: {
   apiKey: string;
   model: string;
@@ -910,7 +963,7 @@ export async function POST(request: Request) {
   }
 
   const sessionId = body.session_id;
-  const message = body.message;
+  const rawMessage = body.message;
 
   if (!sessionId || typeof sessionId !== "string") {
     return NextResponse.json(
@@ -918,12 +971,14 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (message === undefined || typeof message !== "string" || !message.trim()) {
+  if (rawMessage === undefined || typeof rawMessage !== "string" || !rawMessage.trim()) {
     return NextResponse.json(
       { error: "Missing or invalid message" },
       { status: 400 }
     );
   }
+  const inputNorm = normalizeIncomingUserMessage(rawMessage);
+  const message = inputNorm.text;
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: sessionId, userId },
@@ -1065,7 +1120,7 @@ export async function POST(request: Request) {
 
   // Minimal bilingual baseline: detect input language and instruct the model output language.
   // Canonical continuity meaning remains language-neutral (extraction returns English corePattern).
-  const wantsChinese = /[\u4E00-\u9FFF]/.test(message);
+  const wantsChinese = hasCjkContent(message);
   const languageInstruction = wantsChinese
     ? "\n\nLanguage rule: Respond in Chinese only. Do not include English words."
     : "\n\nLanguage rule: Respond in English only. Do not include Chinese characters.";
@@ -2496,6 +2551,14 @@ export async function POST(request: Request) {
     debug_milestone_h_kind: responseAwarenessCue?.kind ?? null,
     debug_milestone_h_input_has_reflective_anchor: hasReflectiveFirstPersonAnchor(message),
     debug_milestone_h_input_looks_utilitarian_or_factual: looksUtilitarianOrFactual(message),
+    debug_input_raw_has_reflective_anchor:
+      typeof rawMessage === "string" ? hasReflectiveFirstPersonAnchor(rawMessage) : null,
+    debug_input_raw_looks_utilitarian_or_factual:
+      typeof rawMessage === "string" ? looksUtilitarianOrFactual(rawMessage) : null,
+    debug_input_raw_has_cjk: inputNorm.rawHasCjk,
+    debug_input_norm_repaired_applied: inputNorm.repairedApplied,
+    debug_input_norm_repaired_has_cjk: inputNorm.repairedHasCjk,
+    debug_input_norm_suspected_mojibake: inputNorm.suspectedMojibake,
     debug_language_wants_chinese: wantsChinese,
     debug_language_has_cjk_before_rewrite: debugZhHasCjkBeforeRewrite,
     debug_language_rewrite_attempted: debugZhRewriteAttempted,
