@@ -525,6 +525,9 @@ export default function UnifiedDriftDetectionDashboardPage() {
             but ZH additional-line H1/H4 behavior is not yet a clean hold (especially when main reflection already lands and
             in low-signal/factual-adjacent rows). Keep Phase 2 direction; no broad rewrite or architecture reopen.
           </p>
+          <p className="mt-2 text-sm text-slate-600">
+            Board label remains: <span className="font-medium">Pass with watchpoints</span>.
+          </p>
           <div className="mt-4 rounded-2xl border border-slate-200 p-4 text-sm text-slate-700">
             <div className="font-medium">Next detection-only step: one more narrow optional-line suppression tighten</div>
             <div className="mt-1">
@@ -532,7 +535,8 @@ export default function UnifiedDriftDetectionDashboardPage() {
               already sufficient, plus low-signal/factual/near-factual rows. Detection-only; no broad Phase 2 reopen.
             </div>
             <div className="mt-2 text-xs text-slate-500">
-              Lumen result artifact: `docs/HC_OS_V1_Phase_2_Narrow_Confirmation_Pass_Results_2026-04-02.md`
+              Lumen result artifact: `docs/HC_OS_V1_Phase_2_Narrow_Confirmation_Pass_Results_2026-04-02.md` ·
+              Next recheck packet: `docs/HC_OS_V1_Phase_2_Narrow_Recheck_Packet_2026-04-02_v2.md`
             </div>
           </div>
         </div>

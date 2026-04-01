@@ -28,7 +28,7 @@ import {
  */
 
 /** Bump when H engine semantics change (QA: confirm hosted marker matches repo). */
-const BUILD_MARKER = "milestone_h_v20";
+const BUILD_MARKER = "milestone_h_v21";
 
 /** Global kill switch: H only when explicitly enabled. */
 export function isMilestoneHCueEnabled(): boolean {
@@ -99,6 +99,8 @@ export type MilestoneHSuppressedReason =
   | "h4_zh_comparison_keepup_corridor_main_reflection_sufficient"
   /** v19 Post-H Day 7: ZH insight already states avoidance/return-loop / wise-vs-fear / unresolved put-down — H1 duplicate. */
   | "h1_zh_avoidance_return_insight_sufficient"
+  /** v21 narrow tighten: ZH H1/H4 optional line when main reflection already lands in low-signal/factual-adjacent lanes. */
+  | "h_zh_optional_line_main_reflection_sufficient"
   /** Wisewave Kill List: banned guidance/coaching/identity/over-explanation phrases detected. */
   | "wisewave_kill_list_blacklisted_text"
   /** Structural error: more than one sentence detected in the emitted H cue. */
@@ -516,6 +518,34 @@ function isZhPressurePerfectionRestPermissionShape(text: string): boolean {
   return /(压力|完美|不够好|证明|配不配|值不值得|值得|不值得|休息.{0,8}(愧疚|不配)|应该.{0,8}(更多|更努力)|停下来.{0,8}(不安|焦虑|内疚))/i.test(
     text
   );
+}
+
+/**
+ * v21 (Tree locked narrow tighten):
+ * Target only ZH weak-cluster lanes where optional H1/H4 lines tend to appear
+ * despite main reflection already landing.
+ */
+function isZhLowSignalOrFactualAdjacentForOptionalLine(userMessage: string): boolean {
+  if (!hasCjkText(userMessage)) return false;
+  const t = normalizeApostrophesForHeuristics(userMessage.trim().toLowerCase());
+  const raw = userMessage.trim();
+
+  // Low-signal shape: short, no clear reflective structure, no moment-level activation.
+  const lowSignal =
+    raw.length < 120 &&
+    !userHasReflectiveStructureForNarrowing(userMessage) &&
+    !hasClearMomentLevelActivation(userMessage);
+
+  // Near-factual / operational lane with little emotional substrate.
+  const factualAdjacent =
+    /(会议|开会|项目|任务|进度|安排|计划|汇报|报告|工作|邮件|消息|回复|截止|deadline|schedule|report|task|project|update)/i.test(
+      raw
+    ) && !/(我觉得|我感到|我害怕|我焦虑|我不安|难受|慌|紧张|压得|拉扯|胸口|胃里|呼吸|停不下来|停不住)/.test(raw);
+
+  // Softening/echo tendency in line with Lumen weak-cluster read.
+  const softEcho = /(也许|或许|可能|一点点|稍微|先|不必|不用|先不用|可以先|轻轻)/.test(raw) || /\b(maybe|perhaps|a little|slightly)\b/.test(t);
+
+  return lowSignal || factualAdjacent || softEcho;
 }
 
 function isMainReflectionMateriallySufficientGlobal(insight: string): boolean {
@@ -1392,6 +1422,20 @@ export function computeMicroAwarenessCue(params: {
     return {
       status: "suppressed",
       reason: "h1_zh_avoidance_return_insight_sufficient",
+    };
+  }
+
+  // v21 narrow tighten (Tree locked): if the main reflection already lands, suppress optional
+  // ZH H1/H4 softening lines in low-signal/factual-adjacent weak-cluster lanes.
+  if (
+    (kind === "H1" || kind === "H4") &&
+    hasCjkText(userMessage) &&
+    isMainReflectionMateriallySufficientGlobal(insight) &&
+    isZhLowSignalOrFactualAdjacentForOptionalLine(userMessage)
+  ) {
+    return {
+      status: "suppressed",
+      reason: "h_zh_optional_line_main_reflection_sufficient",
     };
   }
 
