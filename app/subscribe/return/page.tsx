@@ -45,7 +45,7 @@ function ReturnContent() {
         const base = (typeof process !== "undefined" && process.env.NEXT_PUBLIC_APP_URL)
           ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
           : "";
-        window.location.href = `${base}/embed?token=${encodeURIComponent(state)}`;
+        window.location.href = `${base}/chat?token=${encodeURIComponent(state)}`;
       } catch {
         if (!cancelled) {
           setStatus("error");

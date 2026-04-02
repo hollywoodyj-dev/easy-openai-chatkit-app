@@ -155,7 +155,10 @@ function SubscribeContent() {
               process.env.NEXT_PUBLIC_APP_URL)
               ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
               : "";
-          window.location.href = `${base}/embed?token=${encodeURIComponent(token ?? "")}`;
+          const nextPath = isEmbedMobile
+            ? `/embed?token=${encodeURIComponent(token ?? "")}&embed=mobile`
+            : `/chat?token=${encodeURIComponent(token ?? "")}`;
+          window.location.href = `${base}${nextPath}`;
         } else {
           setError(json.error ?? "Activation failed");
         }
@@ -211,9 +214,13 @@ function SubscribeContent() {
     [token, isEmbedMobile]
   );
 
-  const chatHref = token
-    ? `/embed?token=${encodeURIComponent(token)}`
-    : "/embed";
+  const chatHref = isEmbedMobile
+    ? token
+      ? `/embed?token=${encodeURIComponent(token)}&embed=mobile`
+      : "/embed?embed=mobile"
+    : token
+      ? `/chat?token=${encodeURIComponent(token)}`
+      : "/chat";
 
   return (
     <main
