@@ -544,7 +544,6 @@ function ChatContent() {
   const [checkpointLoading, setCheckpointLoading] = useState(false);
   const [showCheckpointForm, setShowCheckpointForm] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const [thinkingDots, setThinkingDots] = useState(0);
   const [continuity, setContinuity] = useState<ContinuityInsight | null>(null);
   const [hadContinuityAtSessionStart, setHadContinuityAtSessionStart] = useState(false);
   const [feedbackDraft, setFeedbackDraft] = useState("");
@@ -882,20 +881,6 @@ function ChatContent() {
     listRef.current?.scrollTo(0, listRef.current.scrollHeight);
   }, [messages]);
 
-  // Simple animated "Thinking.", "Thinking..", "Thinking..." indicator while waiting for a response.
-  useEffect(() => {
-    if (!loading) {
-      setThinkingDots(0);
-      return;
-    }
-    const id = setInterval(() => {
-      setThinkingDots((prev) => (prev + 1) % 3);
-    }, 500);
-    return () => {
-      clearInterval(id);
-    };
-  }, [loading]);
-
   useEffect(() => {
     if (!sessionId) {
       setCheckpoints([]);
@@ -946,6 +931,7 @@ function ChatContent() {
         credentials: "include",
         body: JSON.stringify({
           session_id: sessionId,
+          conversation_id: sessionId,
           message: text,
           ...(feedbackDraft.trim()
             ? {
@@ -963,7 +949,13 @@ function ChatContent() {
         setInput(text);
         return;
       }
-      const assistantMessage = (data.assistant_message as string) ?? "";
+      const responseObj =
+        data.response && typeof data.response === "object"
+          ? (data.response as Record<string, unknown>)
+          : null;
+      const assistantMessage =
+        (typeof responseObj?.main_reflection === "string" ? responseObj.main_reflection : null) ??
+        ((data.assistant_message as string) ?? "");
       const rs = data.reflection_state as ReflectionMetadata | null | undefined;
       const recurrenceCue = (data.recurrence_cue ?? null) as RecurrenceCue | null;
       const embodimentCueRaw = data.embodiment_cue as EmbodimentCue | null | undefined;
@@ -1587,8 +1579,13 @@ function ChatContent() {
           );
         })}
         {loading && (
-          <div className="ml-4 text-left text-xs text-slate-400 dark:text-slate-500">
-            Thinking{"." + ".".repeat(thinkingDots)}
+          <div className="ml-4 text-left text-xs text-slate-400 dark:text-slate-500 inline-flex items-center gap-2">
+            <span className="inline-flex gap-1">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400/70" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400/50 [animation-delay:150ms]" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400/35 [animation-delay:300ms]" />
+            </span>
+            <span>response continues quietly</span>
           </div>
         )}
         </div>

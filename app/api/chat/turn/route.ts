@@ -969,7 +969,13 @@ export async function POST(request: Request) {
   const { userId, sessionCookie } = await resolveChatUserId(request);
   let body: {
     session_id?: string;
+    conversation_id?: string;
     message?: string;
+    lang?: "en" | "zh";
+    debug?: boolean;
+    client_context?: {
+      last_insight_seen?: boolean;
+    };
     metadata?: unknown;
     insight_tags?: unknown;
     feedback?: unknown;
@@ -983,12 +989,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const sessionId = body.session_id;
+  const sessionId = body.session_id ?? body.conversation_id;
   const rawMessage = body.message;
 
   if (!sessionId || typeof sessionId !== "string") {
     return NextResponse.json(
-      { error: "Missing or invalid session_id" },
+      { error: "Missing or invalid session_id/conversation_id" },
       { status: 400 }
     );
   }
@@ -2476,7 +2482,46 @@ export async function POST(request: Request) {
     }
   }
 
+  const requestedLang = body.lang === "zh" || body.lang === "en" ? body.lang : undefined;
+  const responseLang: "en" | "zh" = requestedLang ?? (wantsChinese ? "zh" : "en");
+  const responsePayload = {
+    main_reflection: assistantContent,
+    ...(responseContinuityInsight?.continuityText
+      ? { last_insight: responseContinuityInsight.continuityText }
+      : {}),
+    ...(responseRecurrenceCue
+      ? {
+          pattern_surfacing:
+            responseLang === "zh" ? responseRecurrenceCue.textZh : responseRecurrenceCue.textEn,
+        }
+      : {}),
+    ...(responseAwarenessCue
+      ? {
+          micro_awareness:
+            responseLang === "zh" ? responseAwarenessCue.textZh : responseAwarenessCue.textEn,
+        }
+      : {}),
+    ...((responseLang === "zh" ? debugMilestoneICueTextZh : debugMilestoneICueTextEn)
+      ? {
+          soft_continuity:
+            responseLang === "zh" ? debugMilestoneICueTextZh : debugMilestoneICueTextEn,
+        }
+      : {}),
+    ...(responseMicroshiftCue
+      ? {
+          micro_shift:
+            responseLang === "zh" ? responseMicroshiftCue.textZh : responseMicroshiftCue.textEn,
+        }
+      : {}),
+  };
+
   const res = NextResponse.json({
+    conversation_id: sessionId,
+    response: responsePayload,
+    meta: {
+      lang: responseLang,
+      timestamp: new Date().toISOString(),
+    },
     assistant_message: assistantContent,
     ...(assistantMsgId ? { assistant_message_id: assistantMsgId } : {}),
     ...(reflectionState && { reflection_state: reflectionState }),
@@ -2663,6 +2708,32 @@ export async function POST(request: Request) {
     debug_milestone_j_allow_render_mode: debugMilestoneJAllowRenderMode,
     debug_milestone_j_reasons: debugMilestoneJReasons,
     debug_milestone_j_rollback_risk: debugMilestoneJRollbackRisk,
+    ...(body.debug
+      ? {
+          debug: {
+            layers: {
+              D_reflection: Boolean(reflectionState),
+              E_pattern: Boolean(responseRecurrenceCue),
+              H_micro_awareness: Boolean(responseAwarenessCue),
+              I_continuity: Boolean(
+                (responseLang === "zh" ? debugMilestoneICueTextZh : debugMilestoneICueTextEn) ??
+                  responseContinuityInsight?.continuityText
+              ),
+              J_micro_shift: Boolean(responseMicroshiftCue),
+            },
+            suppression: {
+              E_suppressed: !Boolean(responseRecurrenceCue),
+              H_suppressed: debugMilestoneHOutcome === "suppressed",
+              I_suppressed: debugMilestoneIOutcome === "suppressed",
+            },
+            reasoning_tags: [
+              debugMilestoneHSuppressedReason,
+              debugMilestoneISuppressedReason,
+              debugMilestoneJSuppressedReason,
+            ].filter((v): v is string => typeof v === "string" && v.length > 0),
+          },
+        }
+      : {}),
     feedback_saved: feedbackSaved,
   });
   if (sessionCookie) {
