@@ -11,6 +11,7 @@ interface AdminUser {
   email: string;
   createdAt: string;
   country?: string | null;
+  effectiveStatus?: SubscriptionStatus | "none";
   subscription: {
     id: string;
     status: SubscriptionStatus;
@@ -273,7 +274,9 @@ const AdminPage: NextPage = () => {
                 {users.map((user) => {
                   const sub = user.subscription;
                   const defaultStatus: SubscriptionStatus =
-                    sub?.status ?? "trialing";
+                    (user.effectiveStatus === "none" ? "trialing" : user.effectiveStatus) ??
+                    sub?.status ??
+                    "trialing";
                   const defaultDate = sub?.currentPeriodEnd
                     ? new Date(sub.currentPeriodEnd)
                         .toISOString()
@@ -319,6 +322,11 @@ const AdminPage: NextPage = () => {
                           <option value="canceled">canceled</option>
                           <option value="expired">expired</option>
                         </select>
+                        {sub?.status && user.effectiveStatus && sub.status !== user.effectiveStatus && (
+                          <div style={{ fontSize: 10, color: "#C05621", marginTop: 4 }}>
+                            effective: {user.effectiveStatus}
+                          </div>
+                        )}
                       </td>
                       <td style={styles.td}>
                         <input

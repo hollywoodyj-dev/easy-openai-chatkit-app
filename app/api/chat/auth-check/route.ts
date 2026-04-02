@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyUserToken } from "@/lib/auth";
+import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,17 @@ export async function GET(request: Request) {
 
   const userId = verifyUserToken(token);
   if (userId) {
+    const access = await checkUserSubscriptionAccess(userId);
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        {
+          error: "Subscription required",
+          code: "subscription_required",
+          effective_status: access.effectiveStatus,
+        },
+        { status: 402 }
+      );
+    }
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CHAT_AUTH_CHECK_ENDPOINT, CHAT_SESSION_ENDPOINT, CHAT_TURN_ENDPOINT } from "@/lib/config";
 
 type AssistantPayload = {
@@ -191,6 +191,7 @@ function InputBar({
 }
 
 function ChatContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams?.get("token")?.trim() || null, [searchParams]);
 
@@ -200,6 +201,7 @@ function ChatContent() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenInvalid, setTokenInvalid] = useState(false);
+  const [subscriptionRequired, setSubscriptionRequired] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [minAnchorUntil, setMinAnchorUntil] = useState(0);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -216,6 +218,28 @@ function ChatContent() {
     const suffix = token ? token.slice(0, 24) : "anon";
     return `chat_session_id:${suffix}`;
   }, [token]);
+
+  const handleAuthExpired = useCallback(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(storageKey);
+    }
+    setConversationId(undefined);
+    setIsWaiting(false);
+    setTokenInvalid(true);
+    setSubscriptionRequired(false);
+    setError(null);
+  }, [storageKey]);
+
+  const handleSubscriptionRequired = useCallback(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(storageKey);
+    }
+    setConversationId(undefined);
+    setIsWaiting(false);
+    setSubscriptionRequired(true);
+    setTokenInvalid(false);
+    setError(null);
+  }, [storageKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -235,6 +259,11 @@ function ChatContent() {
             setSessionLoading(false);
             return;
           }
+          if (!cancelled && authRes.status === 402) {
+            handleSubscriptionRequired();
+            setSessionLoading(false);
+            return;
+          }
         }
         const existing = typeof window !== "undefined" ? sessionStorage.getItem(storageKey) : null;
         if (existing && !cancelled) {
@@ -248,6 +277,14 @@ function ChatContent() {
           credentials: "include",
           body: "{}",
         });
+        if (!cancelled && s.status === 401) {
+          handleAuthExpired();
+          return;
+        }
+        if (!cancelled && s.status === 402) {
+          handleSubscriptionRequired();
+          return;
+        }
         const sj = await s.json();
         if (!cancelled && typeof sj.session_id === "string") {
           setConversationId(sj.session_id);
@@ -262,7 +299,7 @@ function ChatContent() {
     return () => {
       cancelled = true;
     };
-  }, [authHeaders, storageKey, token]);
+  }, [authHeaders, handleAuthExpired, handleSubscriptionRequired, storageKey, token]);
 
   async function handleSubmit() {
     if (!canSend || !conversationId) return;
@@ -291,6 +328,14 @@ function ChatContent() {
           message: text,
         }),
       });
+      if (response.status === 401) {
+        handleAuthExpired();
+        return;
+      }
+      if (response.status === 402) {
+        handleSubscriptionRequired();
+        return;
+      }
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
@@ -319,15 +364,28 @@ function ChatContent() {
     }
   }
 
+  useEffect(() => {
+    if (!tokenInvalid) return;
+    router.replace("/subscribe");
+  }, [tokenInvalid, router]);
+
   if (tokenInvalid) {
     return (
       <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4 items-center justify-center">
-        <div className="max-w-md text-center space-y-4">
-          <h1 className="text-lg font-semibold text-[#1F1F1F]">Invalid or expired sign-in link</h1>
-          <p className="text-sm text-[#5E5E5E]">
-            Your link may be invalid or expired. Please sign in again or continue without account.
-          </p>
-        </div>
+        <p className="text-sm text-[#5E5E5E]">Session expired. Redirecting to subscriptions...</p>
+      </main>
+    );
+  }
+
+  useEffect(() => {
+    if (!subscriptionRequired) return;
+    router.replace("/subscribe");
+  }, [subscriptionRequired, router]);
+
+  if (subscriptionRequired) {
+    return (
+      <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4 items-center justify-center">
+        <p className="text-sm text-[#5E5E5E]">Subscription required. Redirecting...</p>
       </main>
     );
   }

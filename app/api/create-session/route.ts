@@ -1,6 +1,8 @@
 import { WORKFLOW_ID } from "@/lib/config";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { prisma } from "@/lib/prisma";
+import { verifyUserToken } from "@/lib/auth";
+import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
 
 // Note: Using Node.js runtime (not Edge) because verifyUserToken uses jsonwebtoken which requires Node.js crypto
 
@@ -23,6 +25,35 @@ export async function POST(request: Request): Promise<Response> {
   }
   let sessionCookie: string | null = null;
   try {
+    const authHeader = request.headers.get("authorization") ?? "";
+    const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : null;
+    if (bearerToken) {
+      const verifiedUserId = verifyUserToken(bearerToken);
+      if (!verifiedUserId) {
+        return buildJsonResponse(
+          { error: "Invalid or expired token" },
+          401,
+          { "Content-Type": "application/json" },
+          sessionCookie
+        );
+      }
+      const access = await checkUserSubscriptionAccess(verifiedUserId);
+      if (!access.hasAccess) {
+        return buildJsonResponse(
+          {
+            error: "Subscription required",
+            code: "subscription_required",
+            effective_status: access.effectiveStatus,
+          },
+          402,
+          { "Content-Type": "application/json" },
+          sessionCookie
+        );
+      }
+    }
+
     const openaiApiKey = process.env.OPENAI_API_KEY;
     if (!openaiApiKey) {
       return new Response(

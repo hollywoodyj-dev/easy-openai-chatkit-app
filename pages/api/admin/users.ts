@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { verifyUserToken } from "@/lib/auth";
+import { computeEffectiveSubscriptionStatus } from "@/lib/subscription-access";
 
 type AdminCheckResult =
   | { ok: true; adminUserId: string }
@@ -65,11 +66,13 @@ export default async function handler(
 
     const result = users.map((u) => {
       const sub = u.subscriptions[0] ?? null;
+      const effectiveStatus = computeEffectiveSubscriptionStatus(sub);
       return {
         id: u.id,
         email: u.email,
         country: u.country,
         createdAt: u.createdAt,
+        effectiveStatus,
         subscription: sub
           ? {
               id: sub.id,

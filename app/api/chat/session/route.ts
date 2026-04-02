@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
+import { verifyUserToken } from "@/lib/auth";
+import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +12,28 @@ export const dynamic = "force-dynamic";
  * Same identity as create-session (Bearer or cookie).
  */
 export async function POST(request: Request) {
+  const authHeader = request.headers.get("authorization") ?? "";
+  const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+  if (bearerToken) {
+    const verifiedUserId = verifyUserToken(bearerToken);
+    if (!verifiedUserId) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
+    }
+    const access = await checkUserSubscriptionAccess(verifiedUserId);
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        {
+          error: "Subscription required",
+          code: "subscription_required",
+          effective_status: access.effectiveStatus,
+        },
+        { status: 402 }
+      );
+    }
+  }
+
   const { userId, sessionCookie } = await resolveChatUserId(request);
   let conversation;
   try {
