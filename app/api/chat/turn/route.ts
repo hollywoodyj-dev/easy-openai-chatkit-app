@@ -420,6 +420,38 @@ function toContinuityReminderText(corePattern: string): string {
   return continuityReminderFromFamily(family, corePattern);
 }
 
+function normalizeInsightSimilarityText(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[\s\r\n\t]+/g, " ")
+    .replace(/[.,!?;:'"()[\]{}\-_/\\|`~@#$%^&*+=<>]+/g, " ")
+    .trim();
+}
+
+function isLastInsightTooSimilarToMainReflection(
+  lastInsight: string,
+  mainReflection: string
+): boolean {
+  const a = normalizeInsightSimilarityText(lastInsight);
+  const b = normalizeInsightSimilarityText(mainReflection);
+  if (!a || !b) return false;
+  if (a.length >= 16 && b.includes(a)) return true;
+  if (b.length >= 16 && a.includes(b)) return true;
+
+  const aWords = new Set(a.split(" ").filter((w) => w.length >= 3));
+  const bWords = new Set(b.split(" ").filter((w) => w.length >= 3));
+  if (aWords.size >= 3 && bWords.size >= 3) {
+    let overlap = 0;
+    for (const w of aWords) {
+      if (bWords.has(w)) overlap += 1;
+    }
+    const minSize = Math.min(aWords.size, bWords.size);
+    if (minSize > 0 && overlap / minSize >= 0.72) return true;
+  }
+
+  return false;
+}
+
 function mapContinuityFamilyToPatternId(
   family: ContinuityPatternFamily
 ): PatternId {
@@ -1364,6 +1396,9 @@ export async function POST(request: Request) {
   let debugIsTooShortAndFlat: boolean | null = null;
   let debugIsTooGeneric: boolean | null = null;
   let feedbackSaved: boolean = false;
+  let previousTurnLastInsightText: string | null = null;
+  let debugLastInsightSource: "previous_turn" | "current_generation" | null = null;
+  let debugLastInsightSuppressedReason: string | null = null;
   let responseContinuityInsight:
     | {
         id: string;
@@ -1508,6 +1543,45 @@ export async function POST(request: Request) {
   const debugMilestoneJEnabled = isMilestoneJMicroshiftEnabled();
 
   // Ticket 4: save one durable insight when we have a good candidate.
+  try {
+    const anyPrismaRead = prisma as unknown as {
+      insight?: {
+        findFirst: (args: {
+          where: {
+            userId: string;
+            conversationId: string;
+            status: string;
+            isContinuityEligible: boolean;
+            createdAt: { lt: Date };
+          };
+          orderBy: { createdAt: "desc" };
+          select: { continuityText: true };
+        }) => Promise<{ continuityText: string } | null>;
+      };
+    };
+    if (anyPrismaRead.insight && typeof anyPrismaRead.insight.findFirst === "function") {
+      const previousInsight = await anyPrismaRead.insight.findFirst({
+        where: {
+          userId,
+          conversationId: sessionId,
+          status: "active",
+          isContinuityEligible: true,
+          createdAt: { lt: userMsg.createdAt },
+        },
+        orderBy: { createdAt: "desc" },
+        select: { continuityText: true },
+      });
+      const candidateText = previousInsight?.continuityText?.trim() || null;
+      if (candidateText) {
+        previousTurnLastInsightText = candidateText;
+        debugLastInsightSource = "previous_turn";
+      }
+    }
+  } catch {
+    previousTurnLastInsightText = null;
+    debugLastInsightSource = null;
+  }
+
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
     const continuityText = toContinuityReminderText(corePattern);
@@ -2508,11 +2582,31 @@ export async function POST(request: Request) {
 
   const requestedLang = body.lang === "zh" || body.lang === "en" ? body.lang : undefined;
   const responseLang: "en" | "zh" = requestedLang ?? (wantsChinese ? "zh" : "en");
+  let responseLastInsight: string | null = previousTurnLastInsightText;
+  if (responseLastInsight) {
+    if (debugMilestoneIMainReflectionSufficient === true) {
+      debugLastInsightSuppressedReason = "main_reflection_already_sufficient";
+      responseLastInsight = null;
+    } else if (
+      debugMilestoneIThreadStrength === "none" ||
+      debugMilestoneIThreadStrength === "weak"
+    ) {
+      debugLastInsightSuppressedReason = "weak_or_unclear_thread";
+      responseLastInsight = null;
+    } else if (
+      debugMilestoneIFamilyMatched === false &&
+      debugMilestoneIFamilyCompatible === false
+    ) {
+      debugLastInsightSuppressedReason = "context_shifted";
+      responseLastInsight = null;
+    } else if (isLastInsightTooSimilarToMainReflection(responseLastInsight, assistantContent)) {
+      debugLastInsightSuppressedReason = "similar_to_main_reflection";
+      responseLastInsight = null;
+    }
+  }
   const responsePayload = {
     main_reflection: assistantContent,
-    ...(responseContinuityInsight?.continuityText
-      ? { last_insight: responseContinuityInsight.continuityText }
-      : {}),
+    ...(responseLastInsight ? { last_insight: responseLastInsight } : {}),
     ...(responseRecurrenceCue
       ? {
           pattern_surfacing:
@@ -2597,6 +2691,8 @@ export async function POST(request: Request) {
     // - full decision chain for that eligibility
     debug_insight_id: debugInsightId,
     debug_is_continuity_eligible: debugIsContinuityEligible,
+    debug_last_insight_source: debugLastInsightSource,
+    debug_last_insight_suppressed_reason: debugLastInsightSuppressedReason,
     debug_insight_core_pattern: debugInsightCorePattern,
     debug_has_strong_pattern_cue: debugHasStrongPatternCue,
     debug_is_flat_restatement: debugIsFlatRestatement,
