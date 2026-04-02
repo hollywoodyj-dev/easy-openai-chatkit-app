@@ -2,19 +2,21 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#F7F5F2] text-[#1F1F1F]">
-      <div className="mx-auto max-w-6xl px-6 py-10 md:px-10 lg:px-12">
+    <div className="relative min-h-screen overflow-hidden bg-[#F7F5F2] text-[#1F1F1F]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(200,220,255,0.15),transparent_60%)]" />
+      <div className="relative mx-auto max-w-6xl px-6 py-10 md:px-10 lg:px-12">
         <header className="mb-16 flex items-center justify-between">
           <div className="text-lg tracking-[0.18em] text-[#5E5E5E]">WISEWAVE</div>
-          <div className="rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm text-[#5E5E5E] backdrop-blur-sm">
-            quiet intelligence
+          <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm text-[#5E5E5E] backdrop-blur-sm">
+            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#A8C3A0]" />
+            present
           </div>
         </header>
 
         <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="max-w-2xl">
-            <div className="mb-5 inline-flex items-center rounded-full border border-[#6F8596]/20 bg-white/70 px-4 py-2 text-sm text-[#6F8596] shadow-sm">
-              Warm minimalism · Human-tech presence
+            <div className="mb-5 inline-flex items-center rounded-full border border-[#6F8596]/20 bg-white/70 px-4 py-2 text-[12px] tracking-[0.16em] text-[#6F8596] shadow-sm">
+              low presence · human-tech · warm minimal
             </div>
             <h1 className="max-w-3xl text-5xl font-medium leading-[1.06] tracking-[-0.03em] md:text-7xl">
               A quieter kind of intelligence

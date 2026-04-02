@@ -65,7 +65,13 @@ function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
   };
 }
 
-function Header() {
+function Header({
+  threadsOpen,
+  onToggleThreads,
+}: {
+  threadsOpen: boolean;
+  onToggleThreads: () => void;
+}) {
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 md:px-8">
@@ -76,9 +82,31 @@ function Header() {
         <div className="flex items-center gap-3">
           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
           <span className="text-sm text-[#7A7A7A]">present</span>
+          <button
+            onClick={onToggleThreads}
+            type="button"
+            className={cn(
+              "ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#777] transition",
+              threadsOpen ? "bg-white" : "bg-white/65 hover:bg-white"
+            )}
+            aria-label={threadsOpen ? "Close recent threads" : "Open recent threads"}
+            aria-expanded={threadsOpen}
+          >
+            ...
+          </button>
         </div>
       </div>
     </header>
+  );
+}
+
+function InsightAnchor({ text }: { text?: string }) {
+  if (!text) return null;
+  return (
+    <section className="mb-6 max-w-[46rem] rounded-[22px] border border-black/5 bg-white/55 px-4 py-4 shadow-[0_8px_22px_rgba(0,0,0,0.03)] backdrop-blur-sm md:px-5">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E8E8E]">- last insight -</p>
+      <p className="mt-2 text-[13px] leading-6 text-[#666666]">{text}</p>
+    </section>
   );
 }
 
@@ -112,6 +140,58 @@ function UserMessage({ text }: { text: string }) {
         {text}
       </div>
     </div>
+  );
+}
+
+function ThreadDrawer({
+  open,
+  onClose,
+  threads,
+}: {
+  open: boolean;
+  onClose: () => void;
+  threads: string[];
+}) {
+  return (
+    <>
+      <button
+        onClick={onClose}
+        className={cn(
+          "fixed inset-0 z-30 bg-black/10 transition-opacity md:hidden",
+          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        )}
+        aria-hidden={!open}
+      />
+      <aside
+        className={cn(
+          "fixed right-0 top-0 z-40 h-full w-[84vw] max-w-[22rem] border-l border-black/6 bg-[#F8F6F2]/95 p-5 shadow-[-16px_0_40px_rgba(0,0,0,0.10)] backdrop-blur-xl transition-transform",
+          open ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Recent threads</p>
+          <button onClick={onClose} className="text-sm text-[#7D7D7D] md:hidden" type="button">
+            Close
+          </button>
+        </div>
+        <ul className="space-y-3">
+          {threads.length > 0 ? (
+            threads.map((thread) => (
+              <li
+                key={thread}
+                className="rounded-2xl border border-black/5 bg-white/78 px-3 py-2 text-sm leading-6 text-[#545454]"
+              >
+                {thread}
+              </li>
+            ))
+          ) : (
+            <li className="rounded-2xl border border-black/5 bg-white/78 px-3 py-2 text-sm text-[#868686]">
+              No recent thread yet.
+            </li>
+          )}
+        </ul>
+      </aside>
+    </>
   );
 }
 
@@ -204,9 +284,25 @@ function ChatContent() {
   const [subscriptionRequired, setSubscriptionRequired] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [minAnchorUntil, setMinAnchorUntil] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
+  const anchorText = useMemo(() => {
+    const assistants = messages.filter((m): m is Extract<ChatMessage, { role: "assistant" }> => m.role === "assistant");
+    for (let i = assistants.length - 1; i >= 0; i -= 1) {
+      const payload = assistants[i].payload;
+      if (payload.last_insight) return payload.last_insight;
+    }
+    return undefined;
+  }, [messages]);
+  const recentThreads = useMemo(() => {
+    const users = messages.filter((m): m is Extract<ChatMessage, { role: "user" }> => m.role === "user");
+    return users
+      .slice(-3)
+      .reverse()
+      .map((u) => (u.text.length > 42 ? `${u.text.slice(0, 42).trim()}...` : u.text));
+  }, [messages]);
 
   const authHeaders = useMemo(() => {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -401,34 +497,42 @@ function ChatContent() {
   return (
     <div className="min-h-screen bg-[#F7F5F2] text-[#1F1F1F]">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(200,220,255,0.15),transparent_60%)]" />
         <div className="absolute left-[8%] top-[12%] h-56 w-56 rounded-full bg-[#7C9082]/10 blur-3xl" />
         <div className="absolute bottom-[10%] right-[8%] h-72 w-72 rounded-full bg-[#6F8596]/10 blur-3xl" />
       </div>
 
-      <Header />
+      <Header
+        threadsOpen={drawerOpen}
+        onToggleThreads={() => setDrawerOpen((prev) => !prev)}
+      />
 
       <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
-        <div className="mb-8 max-w-2xl">
+        <div>
+          <div className="mb-8 max-w-2xl">
           <div className="inline-flex rounded-full border border-black/6 bg-white/60 px-4 py-2 text-[12px] tracking-[0.16em] text-[#7A7A7A] backdrop-blur-sm">
             low presence · human-tech · warm minimal
           </div>
         </div>
 
         {error ? <ErrorBanner message={error} /> : null}
+          <InsightAnchor text={anchorText} />
 
-        <div className="space-y-6 md:space-y-8">
-          {messages.map((message) =>
-            message.role === "user" ? (
-              <UserMessage key={message.id} text={message.text} />
-            ) : (
-              <AssistantMessage key={message.id} payload={message.payload} />
-            )
-          )}
+          <div className="space-y-6 md:space-y-8">
+            {messages.map((message) =>
+              message.role === "user" ? (
+                <UserMessage key={message.id} text={message.text} />
+              ) : (
+                <AssistantMessage key={message.id} payload={message.payload} />
+              )
+            )}
 
-          {isWaiting ? <WaitingPulse /> : null}
-          <div ref={bottomRef} />
+            {isWaiting ? <WaitingPulse /> : null}
+            <div ref={bottomRef} />
+          </div>
         </div>
       </main>
+      <ThreadDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} threads={recentThreads} />
 
       <InputBar value={input} onChange={setInput} onSubmit={handleSubmit} disabled={isWaiting} />
     </div>
