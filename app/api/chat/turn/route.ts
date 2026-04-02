@@ -452,6 +452,51 @@ function isLastInsightTooSimilarToMainReflection(
   return false;
 }
 
+function computeSecondaryOverlapScore(a: string, b: string): number {
+  const na = normalizeInsightSimilarityText(a);
+  const nb = normalizeInsightSimilarityText(b);
+  if (!na || !nb) return 0;
+
+  const aHasCjk = /[\u4e00-\u9fff]/.test(na);
+  const bHasCjk = /[\u4e00-\u9fff]/.test(nb);
+  const aTokens = aHasCjk ? na.replace(/\s+/g, "").split("") : na.split(" ").filter((w) => w.length >= 3);
+  const bTokens = bHasCjk ? nb.replace(/\s+/g, "").split("") : nb.split(" ").filter((w) => w.length >= 3);
+  const A = new Set(aTokens);
+  const B = new Set(bTokens);
+  if (A.size === 0 || B.size === 0) return 0;
+
+  let inter = 0;
+  for (const t of A) if (B.has(t)) inter += 1;
+  const union = A.size + B.size - inter;
+  if (union <= 0) return 0;
+  return inter / union;
+}
+
+const REJECTED_SPACE_PHRASE_RULES: Array<{ re: RegExp; replacement: string }> = [
+  // Chinese: forbidden grounding phrase family
+  { re: /一点空间/g, replacement: "有一瞬没有跟上" },
+  { re: /留一点空间/g, replacement: "不要马上跳进去" },
+  { re: /有空间了/g, replacement: "没有那么快被带走" },
+  { re: /还留着一点空间/g, replacement: "中间好像停了一下" },
+  { re: /多一点点空间/g, replacement: "好像没那么紧了" },
+
+  // English: forbidden continuity softening phrases
+  { re: /a little more space/gi, replacement: "a little less tight" },
+  { re: /some space around this/gi, replacement: "a softer gap around this" },
+];
+
+function sanitizeRejectedSpacePhrases(text: string): { text: string; hit: boolean } {
+  let out = text;
+  let hit = false;
+  for (const rule of REJECTED_SPACE_PHRASE_RULES) {
+    if (rule.re.test(out)) hit = true;
+    // Reset lastIndex because RegExp may be global.
+    rule.re.lastIndex = 0;
+    out = out.replace(rule.re, rule.replacement);
+  }
+  return { text: out, hit };
+}
+
 type ThreadState = "same_thread" | "new_thread" | "borderline";
 
 type ThreadStructure = {
@@ -1520,6 +1565,15 @@ export async function POST(request: Request) {
   let debugWeightedThreadScore = 0;
   let debugSoftContinuitySuppressedReason: string | null = null;
   let debugOverlapWithMainReflection = false;
+  // Secondary-layer collision / rejected-phrase debug (temporary, Lumen verification).
+  let debugMainReflectionTemplateId: string | null = null;
+  let debugSecondaryLayerType: "soft_continuity" | "last_insight" | "none" = "none";
+  let debugSecondaryTemplateId: string | null = null;
+  let debugSecondarySource: "soft_continuity" | "last_insight" | "none" = "none";
+  let debugSecondarySourceValid = false;
+  let debugSecondaryOverlapScore = 0;
+  let debugSecondarySuppressedReason: string | null = null;
+  let debugRejectedPhraseHit = false;
   let responseContinuityInsight:
     | {
         id: string;
@@ -2720,6 +2774,14 @@ export async function POST(request: Request) {
   const responseLang: "en" | "zh" = requestedLang ?? (wantsChinese ? "zh" : "en");
   let responseLastInsight: string | null = previousTurnLastInsightText;
   const allowContinuityLayers = threadState === "same_thread";
+
+  // Hard block: remove previously QA-rejected "space" phrasing from main reflection.
+  // (Secondary layers are suppressed instead of replaced to keep separation strict.)
+  const mainSanitized = sanitizeRejectedSpacePhrases(assistantContent);
+  assistantContent = mainSanitized.text;
+  debugRejectedPhraseHit = mainSanitized.hit;
+  debugMainReflectionTemplateId = reflectionState?.trigger_label ?? null;
+
   if (responseLastInsight) {
     if (debugMilestoneIMainReflectionSufficient === true) {
       debugLastInsightSuppressedReason = "main_reflection_already_sufficient";
@@ -2755,28 +2817,120 @@ export async function POST(request: Request) {
     debugSoftContinuitySuppressedReason = `thread_${threadState}`;
     responseSoftContinuity = null;
   }
+
+  // Secondary de-duplication and rejected-phrase suppression (generation-contract level).
+  const SECONDARY_OVERLAP_THRESHOLD = 0.55;
+  let keptLastInsight: string | null = responseLastInsight;
+  let keptSoftContinuity: string | null = responseSoftContinuity;
+
+  // Validate last_insight: reject if overlaps main reflection or contains rejected phrasing.
+  if (keptLastInsight) {
+    const secSan = sanitizeRejectedSpacePhrases(keptLastInsight);
+    if (secSan.hit) {
+      debugRejectedPhraseHit = true;
+      debugLastInsightSuppressedReason = "rejected_phrase_hit";
+      debugSecondarySuppressedReason = "last_insight_rejected_phrase_hit";
+      keptLastInsight = null;
+    } else {
+      const overlap = computeSecondaryOverlapScore(keptLastInsight, assistantContent);
+      debugSecondaryOverlapScore = overlap;
+      if (overlap > SECONDARY_OVERLAP_THRESHOLD) {
+        debugOverlapWithMainReflection = true;
+        debugLastInsightSuppressedReason = "secondary_overlap_with_main_reflection";
+        debugSecondarySuppressedReason = "last_insight_overlap_with_main_reflection";
+        keptLastInsight = null;
+      }
+    }
+  }
+
+  // Validate soft_continuity similarly.
+  if (keptSoftContinuity) {
+    const secSan = sanitizeRejectedSpacePhrases(keptSoftContinuity);
+    if (secSan.hit) {
+      debugRejectedPhraseHit = true;
+      debugSoftContinuitySuppressedReason = "rejected_phrase_hit";
+      debugSecondarySuppressedReason = "soft_continuity_rejected_phrase_hit";
+      keptSoftContinuity = null;
+    } else {
+      const overlap = computeSecondaryOverlapScore(keptSoftContinuity, assistantContent);
+      if (overlap > SECONDARY_OVERLAP_THRESHOLD) {
+        debugSoftContinuitySuppressedReason = "secondary_overlap_with_main_reflection";
+        debugSecondarySuppressedReason = "soft_continuity_overlap_with_main_reflection";
+        keptSoftContinuity = null;
+      }
+    }
+  }
+
+  // One-thought / one-secondary-layer rule:
+  // - Keep last_insight if present; suppress soft_continuity entirely to avoid collisions.
+  if (keptLastInsight) {
+    keptSoftContinuity = null;
+  }
+
+  // Single-secondary rendering rule in response payload:
+  // if we keep either last_insight or soft_continuity, suppress other optional secondary-like layers.
+  const willRenderSecondaryFromLastOrSoft = Boolean(keptLastInsight || keptSoftContinuity);
+
+  let keptPatternSurfacing: string | null = null;
+  if (!willRenderSecondaryFromLastOrSoft && allowContinuityLayers && responseRecurrenceCue) {
+    const t = responseLang === "zh" ? responseRecurrenceCue.textZh : responseRecurrenceCue.textEn;
+    const san = sanitizeRejectedSpacePhrases(t);
+    if (!san.hit && computeSecondaryOverlapScore(t, assistantContent) <= SECONDARY_OVERLAP_THRESHOLD) {
+      keptPatternSurfacing = t;
+    } else {
+      // optional: also record a reason if needed later
+    }
+  }
+
+  let keptMicroAwareness: string | null = null;
+  if (!willRenderSecondaryFromLastOrSoft && responseAwarenessCue) {
+    const t = responseLang === "zh" ? responseAwarenessCue.textZh : responseAwarenessCue.textEn;
+    const san = sanitizeRejectedSpacePhrases(t);
+    if (!san.hit && computeSecondaryOverlapScore(t, assistantContent) <= SECONDARY_OVERLAP_THRESHOLD) {
+      keptMicroAwareness = t;
+    } else {
+      // suppressed
+    }
+  }
+
+  let keptMicroShift: string | null = null;
+  if (!willRenderSecondaryFromLastOrSoft && responseMicroshiftCue) {
+    const t = responseLang === "zh" ? responseMicroshiftCue.textZh : responseMicroshiftCue.textEn;
+    const san = sanitizeRejectedSpacePhrases(t);
+    if (!san.hit && computeSecondaryOverlapScore(t, assistantContent) <= SECONDARY_OVERLAP_THRESHOLD) {
+      keptMicroShift = t;
+    } else {
+      // suppressed
+    }
+  }
+
+  // Debug: indicate which secondary layer survives de-dup + suppression-first.
+  if (keptLastInsight) {
+    debugSecondaryLayerType = "last_insight";
+    debugSecondarySource = "last_insight";
+    debugSecondarySourceValid = debugLastInsightSource === "previous_turn";
+    debugSecondaryOverlapScore = computeSecondaryOverlapScore(keptLastInsight, assistantContent);
+    debugSecondaryTemplateId = debugMilestoneICueFamily ?? null;
+  } else if (keptSoftContinuity) {
+    debugSecondaryLayerType = "soft_continuity";
+    debugSecondarySource = "soft_continuity";
+    debugSecondarySourceValid = debugMilestoneIOutcome === "emitted";
+    debugSecondaryOverlapScore = computeSecondaryOverlapScore(keptSoftContinuity, assistantContent);
+    debugSecondaryTemplateId = debugMilestoneICueFamily ?? null;
+  } else {
+    debugSecondaryLayerType = "none";
+    debugSecondarySource = "none";
+    debugSecondarySourceValid = false;
+  }
+
+  // Final response payload: strictly separated layers.
   const responsePayload = {
     main_reflection: assistantContent,
-    ...(responseLastInsight ? { last_insight: responseLastInsight } : {}),
-    ...(allowContinuityLayers && responseRecurrenceCue
-      ? {
-          pattern_surfacing:
-            responseLang === "zh" ? responseRecurrenceCue.textZh : responseRecurrenceCue.textEn,
-        }
-      : {}),
-    ...(responseAwarenessCue
-      ? {
-          micro_awareness:
-            responseLang === "zh" ? responseAwarenessCue.textZh : responseAwarenessCue.textEn,
-        }
-      : {}),
-    ...(responseSoftContinuity ? { soft_continuity: responseSoftContinuity } : {}),
-    ...(responseMicroshiftCue
-      ? {
-          micro_shift:
-            responseLang === "zh" ? responseMicroshiftCue.textZh : responseMicroshiftCue.textEn,
-        }
-      : {}),
+    ...(keptLastInsight ? { last_insight: keptLastInsight } : {}),
+    ...(keptPatternSurfacing ? { pattern_surfacing: keptPatternSurfacing } : {}),
+    ...(keptMicroAwareness ? { micro_awareness: keptMicroAwareness } : {}),
+    ...(keptSoftContinuity ? { soft_continuity: keptSoftContinuity } : {}),
+    ...(keptMicroShift ? { micro_shift: keptMicroShift } : {}),
   };
 
   const res = NextResponse.json({
@@ -2847,6 +3001,14 @@ export async function POST(request: Request) {
     debug_soft_continuity_suppressed_reason: debugSoftContinuitySuppressedReason,
     debug_main_reflection_sufficient: debugMilestoneIMainReflectionSufficient === true,
     debug_overlap_with_main_reflection: debugOverlapWithMainReflection,
+    debug_main_reflection_template_id: debugMainReflectionTemplateId,
+    debug_secondary_layer_type: debugSecondaryLayerType,
+    debug_secondary_template_id: debugSecondaryTemplateId,
+    debug_secondary_source: debugSecondarySource,
+    debug_secondary_source_valid: debugSecondarySourceValid,
+    debug_secondary_overlap_score: debugSecondaryOverlapScore,
+    debug_secondary_suppressed_reason: debugSecondarySuppressedReason,
+    debug_rejected_phrase_hit: debugRejectedPhraseHit,
     debug_insight_core_pattern: debugInsightCorePattern,
     debug_has_strong_pattern_cue: debugHasStrongPatternCue,
     debug_is_flat_restatement: debugIsFlatRestatement,
