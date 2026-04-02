@@ -465,6 +465,11 @@ function ChatContent() {
     router.replace("/subscribe");
   }, [tokenInvalid, router]);
 
+  useEffect(() => {
+    if (!subscriptionRequired) return;
+    router.replace("/subscribe");
+  }, [subscriptionRequired, router]);
+
   if (tokenInvalid) {
     return (
       <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4 items-center justify-center">
@@ -472,11 +477,6 @@ function ChatContent() {
       </main>
     );
   }
-
-  useEffect(() => {
-    if (!subscriptionRequired) return;
-    router.replace("/subscribe");
-  }, [subscriptionRequired, router]);
 
   if (subscriptionRequired) {
     return (
