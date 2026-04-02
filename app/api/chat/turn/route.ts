@@ -457,6 +457,10 @@ function computeSecondaryOverlapScore(a: string, b: string): number {
   const nb = normalizeInsightSimilarityText(b);
   if (!na || !nb) return 0;
 
+  // Hard de-dup: if the normalized secondary string appears inside main reflection,
+  // treat as full overlap regardless of how much other main reflection text exists.
+  if (na.length >= 8 && nb.includes(na)) return 1;
+
   const aHasCjk = /[\u4e00-\u9fff]/.test(na);
   const bHasCjk = /[\u4e00-\u9fff]/.test(nb);
   const aTokens = aHasCjk ? na.replace(/\s+/g, "").split("") : na.split(" ").filter((w) => w.length >= 3);
