@@ -2471,7 +2471,7 @@ export async function POST(request: Request) {
       debugMilestoneHSuppressedReason = hResult.reason;
     }
 
-    // Milestone I: soft continuity carry-over (append subtle carry sentence to assistant_message)
+    // Milestone I: soft continuity carry-over (render as `soft_continuity` only; do NOT merge into main_reflection)
     if (reflectionState) {
       let previousUserMessageForI: string | null = null;
       try {
@@ -2501,19 +2501,6 @@ export async function POST(request: Request) {
       });
 
       if (iResult.status === "emitted") {
-        const cueText = wantsChinese ? iResult.textZh : iResult.textEn;
-        const merged = `${assistantContent?.trim() ?? ""} ${cueText}`.replace(/\s+/g, " ").trim();
-        // Update in-memory response + persisted assistant message for coherence.
-        assistantContent = normalizeModelTextForStorage(merged);
-        try {
-          await prisma.message.update({
-            where: { id: assistantMsgId },
-            data: { message: assistantContent },
-          });
-        } catch (e) {
-          console.warn("[chat/turn] assistant message update (milestone I) failed", e);
-        }
-
         debugMilestoneIOutcome = "emitted";
         debugMilestoneISuppressedReason = null;
         debugMilestoneICueFamily = iResult.cueFamily;
@@ -2643,7 +2630,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Milestone J — after I carry text is merged into assistantContent (order: main → I → J).
+    // Milestone J — render as `micro_shift` only; do NOT merge into main_reflection.
     if (!debugMilestoneJEnabled) {
       debugMilestoneJOutcome = "skipped_disabled";
     } else if (!reflectionState) {
@@ -2689,18 +2676,6 @@ export async function POST(request: Request) {
         });
         const line = wantsChinese ? lineZh ?? lineEn : lineEn ?? lineZh;
         if (line) {
-          const mergedJ = `${assistantContent.trim()} ${line}`
-            .replace(/\s+/g, " ")
-            .trim();
-          assistantContent = normalizeModelTextForStorage(mergedJ);
-          try {
-            await prisma.message.update({
-              where: { id: assistantMsgId },
-              data: { message: assistantContent },
-            });
-          } catch (e) {
-            console.warn("[chat/turn] assistant message update (milestone J) failed", e);
-          }
           responseMicroshiftCue = {
             textEn: lineEn ?? line,
             textZh: lineZh ?? line,
