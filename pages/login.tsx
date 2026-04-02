@@ -2,13 +2,10 @@ import { useState, FormEvent, useEffect } from "react";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 
-const API_BASE =
-  typeof window !== "undefined"
-    ? window.location.origin
-    : "";
+const API_BASE = typeof window !== "undefined" ? window.location.origin : "";
 
 /**
- * Web login page with calming design matching SeeSoul Psychotherapy aesthetic.
+ * Web login/signup page aligned to Wisewave visual direction.
  * Supports email/password and social OAuth login.
  */
 const LoginPage: NextPage = () => {
@@ -65,10 +62,8 @@ const LoginPage: NextPage = () => {
         return;
       }
       const isAdmin = Boolean(data?.isAdmin);
-      const target = isAdmin ? "/admin" : "/embed";
-      await router.replace(
-        `${target}?token=${encodeURIComponent(token)}`
-      );
+      const target = isAdmin ? "/admin" : "/chat";
+      await router.replace(`${target}?token=${encodeURIComponent(token)}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -82,105 +77,98 @@ const LoginPage: NextPage = () => {
   };
 
   return (
-    <main style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>
+    <main className="min-h-screen bg-[#F7F5F2] px-4 py-10">
+      <div className="mx-auto max-w-md">
+        <div className="mb-8 text-center">
+          <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">WISEWAVE</div>
+          <h1 className="mt-3 text-3xl font-medium tracking-[-0.02em] text-[#1F1F1F]">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>
-          <p style={styles.subtitle}>
+          <p className="mt-2 text-sm text-[#5E5E5E]">
             {mode === "login"
-              ? "A space to pause, breathe, and return to yourself"
-              : "Start your journey with a calm, focused chat space."}
+              ? "A calmer way to continue the conversation."
+              : "Start with one honest line, then keep going."}
           </p>
         </div>
 
-        <div style={styles.socialContainer}>
-          <button
-            type="button"
-            onClick={() => handleOAuth("google")}
-            disabled={!!loading || !!oauthLoading}
-            style={{
-              ...styles.socialButton,
-              ...styles.googleButton,
-              ...(oauthLoading === "google" || loading ? styles.buttonDisabled : {}),
-            }}
-          >
-            {oauthLoading === "google" ? "Signing in..." : "Continue with Google"}
-          </button>
+        <div className="rounded-[28px] border border-black/8 bg-white/75 p-6 shadow-[0_16px_50px_rgba(0,0,0,0.05)] backdrop-blur-sm md:p-7">
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => handleOAuth("google")}
+              disabled={!!loading || !!oauthLoading}
+              className="w-full rounded-2xl bg-[#4285F4] px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {oauthLoading === "google" ? "Signing in..." : "Continue with Google"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOAuth("facebook")}
+              disabled={!!loading || !!oauthLoading}
+              className="w-full rounded-2xl bg-[#1877F2] px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {oauthLoading === "facebook" ? "Signing in..." : "Continue with Facebook"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOAuth("x")}
+              disabled={!!loading || !!oauthLoading}
+              className="w-full rounded-2xl bg-black px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {oauthLoading === "x" ? "Signing in..." : "Continue with X"}
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => handleOAuth("facebook")}
-            disabled={!!loading || !!oauthLoading}
-            style={{
-              ...styles.socialButton,
-              ...styles.facebookButton,
-              ...(oauthLoading === "facebook" || loading ? styles.buttonDisabled : {}),
-            }}
-          >
-            {oauthLoading === "facebook" ? "Signing in..." : "Continue with Facebook"}
-          </button>
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-black/10" />
+            <span className="text-xs text-[#7A7A7A]">or</span>
+            <div className="h-px flex-1 bg-black/10" />
+          </div>
 
-          <button
-            type="button"
-            onClick={() => handleOAuth("x")}
-            disabled={!!loading || !!oauthLoading}
-            style={{
-              ...styles.socialButton,
-              ...styles.xButton,
-              ...(oauthLoading === "x" || loading ? styles.buttonDisabled : {}),
-            }}
-          >
-            {oauthLoading === "x" ? "Signing in..." : "Continue with X"}
-          </button>
-        </div>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-[#5E5E5E]">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                disabled={loading || !!oauthLoading}
+                className="w-full rounded-2xl border border-black/10 bg-white/80 px-4 py-3 text-sm text-[#1F1F1F] outline-none transition focus:border-[#6F8596]/40 focus:ring-2 focus:ring-[#6F8596]/15 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-[#5E5E5E]">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                disabled={loading || !!oauthLoading}
+                className="w-full rounded-2xl border border-black/10 bg-white/80 px-4 py-3 text-sm text-[#1F1F1F] outline-none transition focus:border-[#6F8596]/40 focus:ring-2 focus:ring-[#6F8596]/15 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
 
-        <div style={styles.divider}>
-          <div style={styles.dividerLine} />
-          <span style={styles.dividerText}>or</span>
-          <div style={styles.dividerLine} />
-        </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <form onSubmit={handleSubmit}>
-          <label style={styles.label}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            disabled={loading || !!oauthLoading}
-            style={styles.input}
-          />
-          <label style={styles.label}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            disabled={loading || !!oauthLoading}
-            style={styles.input}
-          />
-          {error && <p style={styles.error}>{error}</p>}
-          <button
-            type="submit"
-            disabled={loading || !!oauthLoading}
-            style={{
-              ...styles.button,
-              ...(loading || oauthLoading ? styles.buttonDisabled : {}),
-            }}
-          >
-            {loading
-              ? mode === "login"
-                ? "Signing in…"
-                : "Creating account…"
-              : mode === "login"
-                ? "Sign in"
-                : "Sign up"}
-          </button>
-          <p style={styles.switchText}>
+            <button
+              type="submit"
+              disabled={loading || !!oauthLoading}
+              className="w-full rounded-2xl bg-[#6F8596] px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading
+                ? mode === "login"
+                  ? "Signing in..."
+                  : "Creating account..."
+                : mode === "login"
+                  ? "Sign in"
+                  : "Sign up"}
+            </button>
+          </form>
+
+          <p className="mt-4 text-center text-sm text-[#5E5E5E]">
             {mode === "login" ? "No account yet?" : "Already have an account?"}{" "}
             <button
               type="button"
@@ -188,152 +176,15 @@ const LoginPage: NextPage = () => {
                 setError("");
                 setMode(mode === "login" ? "signup" : "login");
               }}
-              style={styles.switchLink}
+              className="font-medium text-[#4F6677] underline underline-offset-2"
               disabled={loading || !!oauthLoading}
             >
               {mode === "login" ? "Sign up" : "Sign in"}
             </button>
           </p>
-        </form>
+        </div>
       </div>
     </main>
   );
 };
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-    fontFamily: "system-ui, -apple-system, sans-serif",
-    background: "#FAF9F6", // Soft beige/cream
-  },
-  card: {
-    width: "100%",
-    maxWidth: 420,
-    background: "#FFFFFF",
-    padding: 40,
-    borderRadius: 16,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-  },
-  header: {
-    marginBottom: 32,
-    textAlign: "center" as const,
-  },
-  title: {
-    margin: "0 0 8px",
-    fontSize: 28,
-    fontWeight: 300,
-    color: "#2D3748",
-    letterSpacing: "0.5px",
-  },
-  subtitle: {
-    margin: 0,
-    color: "#718096",
-    fontSize: 15,
-    lineHeight: "22px",
-    fontStyle: "italic" as const,
-  },
-  socialContainer: {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: 12,
-    marginBottom: 24,
-  },
-  socialButton: {
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: 12,
-    border: "none",
-    fontSize: 16,
-    fontWeight: 500,
-    cursor: "pointer",
-    color: "#fff",
-    transition: "opacity 0.2s",
-  },
-  googleButton: {
-    background: "#4285F4",
-  },
-  facebookButton: {
-    background: "#1877F2",
-  },
-  xButton: {
-    background: "#000000",
-  },
-  divider: {
-    display: "flex",
-    flexDirection: "row" as const,
-    alignItems: "center",
-    margin: "24px 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: "#E2E8F0",
-  },
-  dividerText: {
-    margin: "0 16px",
-    color: "#9CA3AF",
-    fontSize: 14,
-  },
-  label: {
-    display: "block",
-    marginBottom: 8,
-    fontWeight: 500,
-    color: "#4A5568",
-    fontSize: 14,
-  },
-  input: {
-    width: "100%",
-    padding: "14px 16px",
-    marginBottom: 16,
-    border: "1px solid #E2E8F0",
-    borderRadius: 12,
-    fontSize: 16,
-    boxSizing: "border-box" as const,
-    color: "#2D3748",
-    background: "#FFFFFF",
-  },
-  error: {
-    margin: "0 0 16px",
-    color: "#DC2626",
-    fontSize: 14,
-  },
-  switchText: {
-    marginTop: 12,
-    fontSize: 13,
-    color: "#4A5568",
-    textAlign: "center" as const,
-  },
-  switchLink: {
-    border: "none",
-    padding: 0,
-    margin: 0,
-    background: "none",
-    color: "#2B6CB0",
-    cursor: "pointer",
-    fontSize: 13,
-    textDecoration: "underline",
-  },
-  button: {
-    width: "100%",
-    padding: "14px 16px",
-    background: "#4A5568",
-    color: "white",
-    border: "none",
-    borderRadius: 12,
-    fontSize: 16,
-    fontWeight: 500,
-    cursor: "pointer",
-    letterSpacing: "0.3px",
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-    cursor: "not-allowed",
-  },
-};
-
 export default LoginPage;

@@ -1,1647 +1,379 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  CHAT_SESSION_ENDPOINT,
-  CHAT_AUTH_CHECK_ENDPOINT,
-  CHAT_SESSIONS_LIST_ENDPOINT,
-  CHAT_MESSAGES_ENDPOINT,
-  CHAT_TURN_ENDPOINT,
-  CHAT_REFLECTION_ENDPOINT,
-  CHAT_CONTINUITY_ENDPOINT,
-} from "@/lib/config";
+import { CHAT_AUTH_CHECK_ENDPOINT, CHAT_SESSION_ENDPOINT, CHAT_TURN_ENDPOINT } from "@/lib/config";
 
-const CHAT_SESSION_STORAGE_KEY_PREFIX = "chat_session_id";
-
-type MessageRow = {
-  id: string;
-  role: string;
-  message: string;
-  created_at: string;
-  /** Server persistence (wisewave_*); used to rehydrate Pattern / Optional response strips after reload. */
-  metadata?: unknown;
+type AssistantPayload = {
+  main_reflection: string;
+  last_insight?: string;
+  pattern_surfacing?: string;
+  micro_awareness?: string;
+  soft_continuity?: string;
+  micro_shift?: string;
 };
 
-type SessionItem = {
-  id: string;
-  created_at: string;
-  topic: string;
-};
-
-type CheckpointRow = {
-  id: string;
-  summary: string;
-  user_input: string | null;
-  created_at: string;
-};
-
-type ContinuityInsight = {
-  id: string;
-  core_pattern: string;
-  continuity_text: string;
-  continuity_key?: string;
-  created_at: string;
-};
-
-type ReflectionMetadata = {
-  trigger_label: string;
-  emotion_label: string;
-  interpretation_label: string;
-  regulation_label: string;
-  choice_label: string;
-  insight_candidate: string;
-};
-
-type RecurrenceCue = {
-  pattern_key: string;
-  confidence: "low" | "medium" | "high";
-  confidence_score: number;
-  text_en: string;
-  text_zh: string;
-  /** Milestone E2: first recurrence vs ongoing legibility wording */
-  phase?: "recurrence" | "persistence";
-};
-
-/** Milestone F: optional grounded response opening (tertiary to recurrence_cue). */
-type EmbodimentCue = {
-  pattern_key: string;
-  response_state: "light" | "clear";
-  text_en: string;
-  text_zh: string;
-};
-
-/** Milestone H: optional micro awareness line (quaternary; after pattern/optional response). */
-type AwarenessCue = {
-  kind: "H1" | "H3" | "H4" | "H5";
-  text_en: string;
-  text_zh: string;
-};
-
-function shortenCueText(
-  text: string,
-  uiLang: "en" | "zh",
-  confidence: RecurrenceCue["confidence"]
-): string {
-  const raw = (text || "").replace(/\s+/g, " ").trim();
-  if (!raw) return "";
-
-  // Milestone E non-competition safeguard:
-  // Pattern cues must stay lightweight enough for one-pass reading.
-  // Even medium/high must usually remain a "tag-like" single sentence in UI.
-  if (confidence === "low" || confidence === "medium") {
-    if (uiLang === "zh") {
-      const m = raw.match(/^(.+?[。！？])\s*/);
-      return (m?.[1] ?? raw).trim();
+type ChatMessage =
+  | {
+      id: string;
+      role: "user";
+      text: string;
+      createdAt: string;
     }
-    const parts = raw.split(/(?<=[.!?])\s+/);
-    return (parts[0] ?? raw).trim();
-  }
-
-  // High: still keep it to one sentence to avoid expanding into a second reflection.
-  if (uiLang === "zh") {
-    const m = raw.match(/^(.+?[。！？])\s*/);
-    return (m?.[1] ?? raw).trim();
-  }
-  const parts = raw.split(/(?<=[.!?])\s+/);
-  return (parts[0] ?? raw).trim();
-}
-
-/** Mirror server assistant metadata so live turns and GET /messages agree (refresh-safe). */
-function buildStripMetadataFromTurnResponse(
-  data: Record<string, unknown>
-): Record<string, unknown> | undefined {
-  const out: Record<string, unknown> = {};
-  const rs = data.reflection_state;
-  if (rs && typeof rs === "object" && rs !== null && "trigger_label" in rs) {
-    out.wisewave_reflection_state = rs;
-    out.wisewave_is_vague_source = Boolean(data.debug_is_vague_source);
-  }
-  const rc = data.recurrence_cue;
-  if (
-    rc &&
-    typeof rc === "object" &&
-    rc !== null &&
-    typeof (rc as { text_en?: unknown }).text_en === "string" &&
-    typeof (rc as { text_zh?: unknown }).text_zh === "string"
-  ) {
-    const r = rc as {
-      pattern_key: string;
-      confidence: string;
-      confidence_score?: number;
-      text_en: string;
-      text_zh: string;
-      phase?: string;
+  | {
+      id: string;
+      role: "assistant";
+      payload: AssistantPayload;
+      createdAt: string;
     };
-    out.wisewave_recurrence = {
-      pattern_key: r.pattern_key,
-      confidence: r.confidence,
-      confidence_score:
-        typeof r.confidence_score === "number" ? r.confidence_score : undefined,
-      text_en: r.text_en,
-      text_zh: r.text_zh,
-      phase: r.phase,
-    };
-  }
-  const ec = data.embodiment_cue;
-  if (
-    ec &&
-    typeof ec === "object" &&
-    ec !== null &&
-    typeof (ec as { text_en?: unknown }).text_en === "string" &&
-    typeof (ec as { text_zh?: unknown }).text_zh === "string" &&
-    typeof (ec as { pattern_key?: unknown }).pattern_key === "string" &&
-    ((ec as { response_state?: unknown }).response_state === "light" ||
-      (ec as { response_state?: unknown }).response_state === "clear")
-  ) {
-    const e = ec as {
-      pattern_key: string;
-      response_state: "light" | "clear";
-      text_en: string;
-      text_zh: string;
-    };
-    out.wisewave_embodiment = {
-      pattern_key: e.pattern_key,
-      response_state: e.response_state,
-      text_en: e.text_en,
-      text_zh: e.text_zh,
-    };
-  }
-  const ac = data.awareness_cue;
-  if (
-    ac &&
-    typeof ac === "object" &&
-    ac !== null &&
-    typeof (ac as { text_en?: unknown }).text_en === "string" &&
-    typeof (ac as { text_zh?: unknown }).text_zh === "string" &&
-    typeof (ac as { kind?: unknown }).kind === "string"
-  ) {
-    const k = (ac as { kind: string }).kind;
-    if (k === "H1" || k === "H3" || k === "H4" || k === "H5") {
-      out.wisewave_micro_awareness = {
-        kind: k,
-        text_en: (ac as { text_en: string }).text_en,
-        text_zh: (ac as { text_zh: string }).text_zh,
-      };
-    }
-  }
-  return Object.keys(out).length > 0 ? out : undefined;
+
+type TurnResponseBody = {
+  conversation_id?: string;
+  assistant_message?: string;
+  response?: AssistantPayload;
+};
+
+const INITIAL_MESSAGES: ChatMessage[] = [
+  {
+    id: "welcome-1",
+    role: "assistant",
+    createdAt: new Date().toISOString(),
+    payload: {
+      main_reflection: "You can begin anywhere. Even one honest line is enough.",
+    },
+  },
+];
+
+function cn(...classes: Array<string | false | undefined>) {
+  return classes.filter(Boolean).join(" ");
 }
 
-/** Milestone F: allow up to two short sentences; keep tertiary layer visually light. */
-function shortenEmbodimentText(text: string, uiLang: "en" | "zh"): string {
-  const raw = (text || "").replace(/\s+/g, " ").trim();
-  if (!raw) return "";
-  if (uiLang === "zh") {
-    const parts = raw.split(/(?<=[。！？])\s*/).filter(Boolean);
-    if (parts.length <= 2) return raw;
-    return `${parts[0] ?? ""}${parts[1] ?? ""}`.trim();
+function safeId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
+  if (data.response?.main_reflection) {
+    return data.response;
   }
-  const parts = raw.split(/(?<=[.!?])\s+/).filter(Boolean);
-  if (parts.length <= 2) return raw;
-  return `${parts[0] ?? ""} ${parts[1] ?? ""}`.trim();
+  if (data.assistant_message) {
+    return { main_reflection: data.assistant_message };
+  }
+  return {
+    main_reflection: "Something here still feels present. You can stay with it one line at a time.",
+  };
 }
 
-function formatLabel(value: string): string {
-  if (!value || value === "—" || value === "unknown" || value === "uncertain") return "—";
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
-
-/** Render metadata only when it adds lightweight human-readable value. Hide when most fields are weak/fallback. */
-function isMetadataMeaningful(m: ReflectionMetadata): boolean {
-  const weak = new Set([
-    "unknown", "uncertain", "", "unclear", "unclear_reflection", "unclear reflection",
-    "unable_to_infer", "unable to infer",
-  ]);
-  const isWeak = (v: string) => !v || weak.has(v.toLowerCase().trim()) || /^unclear\b/i.test(v.trim());
-  const t = isWeak(m.trigger_label);
-  const e = isWeak(m.emotion_label);
-  const i = isWeak(m.interpretation_label);
-  const insight = (m.insight_candidate || "").trim().toLowerCase();
-  const insightFallback = /not enough|unable to identify|unclear reflection|insufficient|did not include enough|to identify a specific trigger|no.*pattern|insufficient signal|unclear trigger|too ambiguous|too unclear|ambiguous to infer/i.test(insight);
-  if (insightFallback && insight.length > 20) return false;
-  const meaningfulCount = [t, e, i].filter((x) => !x).length;
-  return meaningfulCount >= 2 || (meaningfulCount >= 1 && !insightFallback);
-}
-
-/** Stricter guard for regulation cue: cue is coaching-like, so require stronger signal than metadata. */
-function isRegulationCueMeaningful(m: ReflectionMetadata): boolean {
-  if (!isMetadataMeaningful(m)) return false;
-  const weak = new Set([
-    "unknown", "uncertain", "", "unclear", "unclear_reflection", "unclear reflection",
-    "unable_to_infer", "unable to infer",
-    "feeling_off", "feel_off", "vague_discomfort", "vague",
-    "something_feels_off", "something_feels_weird", "weird_feeling", "uneasy", "unsettled",
-  ]);
-  const weakTrigger = /^unclear\b|feeling_off|feel_off|vague|something_feels|weird|uncertain|unknown|uneasy|unsettled/i;
-  const isWeak = (v: string) =>
-    !v || weak.has(v.toLowerCase().trim()) || /^unclear\b/i.test(v.trim());
-
-  const triggerWeak = isWeak(m.trigger_label);
-  const emotionWeak = isWeak(m.emotion_label);
-  const interpretationWeak = isWeak(m.interpretation_label);
-
-  const meaningfulTrigger = !triggerWeak;
-  const meaningfulEmotion = !emotionWeak;
-  const meaningfulInterpretation = !interpretationWeak;
-
-  const triggerIsWeakState = weakTrigger.test(
-    (m.trigger_label || "").trim().toLowerCase().replace(/\s+/g, "_")
+function Header() {
+  return (
+    <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 md:px-8">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">Wisewave</div>
+          <div className="mt-1 text-sm text-[#4E4E4E]">A quieter kind of intelligence</div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
+          <span className="text-sm text-[#7A7A7A]">present</span>
+        </div>
+      </div>
+    </header>
   );
-  const insight = (m.insight_candidate || "").trim().toLowerCase();
-  const insightFallback = /not enough|unable to identify|unclear reflection|insufficient|did not include enough|to identify a specific trigger|no.*pattern|insufficient signal|unclear trigger|too ambiguous|too unclear|ambiguous to infer/i.test(insight);
-  const meaningfulCount = [meaningfulTrigger, meaningfulEmotion, meaningfulInterpretation].filter(Boolean).length;
-
-  // Require at least two strong fields overall, as before.
-  if (meaningfulCount < 2) return false;
-  if (triggerIsWeakState || insightFallback) return false;
-
-  // New tightening: regulation cue should only show when there's
-  // (a) at least one strong cognitive anchor (trigger or interpretation), and
-  // (b) a reasonably specific emotion, not just vague discomfort/uncertainty.
-  const hasStrongCognitive = meaningfulTrigger || meaningfulInterpretation;
-  const emotionLabel = (m.emotion_label || "").trim().toLowerCase().replace(/\s+/g, "_");
-  const emotionIsVague =
-    /feeling_off|feel_off|vague|something_feels|weird|uncertain|unknown|uneasy|unsettled/.test(
-      emotionLabel
-    );
-
-  if (!hasStrongCognitive) return false;
-  if (!meaningfulEmotion || emotionIsVague) return false;
-
-  return true;
 }
 
-/** Restore header strips from the last assistant row (after refresh or session switch). */
-function hydrateStripStateFromMessages(
-  messages: MessageRow[],
-  ops: {
-    setLatestMetadata: (v: ReflectionMetadata | null) => void;
-    setLatestIsVagueSource: (v: boolean) => void;
-    setLatestRegulationMetadata: (v: ReflectionMetadata | null) => void;
-    setLatestRecurrenceCue: (v: RecurrenceCue | null) => void;
-    setLatestRecurrenceCueAssistantId: (v: string | null) => void;
-    setLatestEmbodimentCue: (v: EmbodimentCue | null) => void;
-    setLatestEmbodimentCueAssistantId: (v: string | null) => void;
-    setLatestAwarenessCue: (v: AwarenessCue | null) => void;
-    setLatestAwarenessCueAssistantId: (v: string | null) => void;
-  }
-): void {
-  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
-  if (!lastAssistant) {
-    ops.setLatestMetadata(null);
-    ops.setLatestIsVagueSource(false);
-    ops.setLatestRegulationMetadata(null);
-    ops.setLatestRecurrenceCue(null);
-    ops.setLatestRecurrenceCueAssistantId(null);
-    ops.setLatestEmbodimentCue(null);
-    ops.setLatestEmbodimentCueAssistantId(null);
-    ops.setLatestAwarenessCue(null);
-    ops.setLatestAwarenessCueAssistantId(null);
-    return;
-  }
-  const raw = lastAssistant.metadata;
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    ops.setLatestMetadata(null);
-    ops.setLatestIsVagueSource(false);
-    ops.setLatestRegulationMetadata(null);
-    ops.setLatestRecurrenceCue(null);
-    ops.setLatestRecurrenceCueAssistantId(null);
-    ops.setLatestEmbodimentCue(null);
-    ops.setLatestEmbodimentCueAssistantId(null);
-    ops.setLatestAwarenessCue(null);
-    ops.setLatestAwarenessCueAssistantId(null);
-    return;
-  }
-  const meta = raw as Record<string, unknown>;
+function AssistantMessage({ payload }: { payload: AssistantPayload }) {
+  const secondaryLine =
+    payload.soft_continuity ??
+    payload.micro_awareness ??
+    payload.pattern_surfacing ??
+    payload.last_insight ??
+    payload.micro_shift;
 
-  const reflection = meta.wisewave_reflection_state;
-  if (
-    reflection &&
-    typeof reflection === "object" &&
-    reflection !== null &&
-    "trigger_label" in reflection
-  ) {
-    const rs = reflection as ReflectionMetadata;
-    ops.setLatestMetadata(rs);
-    const vague = Boolean(meta.wisewave_is_vague_source);
-    ops.setLatestIsVagueSource(vague);
-    const cueMeaningful =
-      rs && typeof rs === "object" && !vague ? isRegulationCueMeaningful(rs) : false;
-    ops.setLatestRegulationMetadata(cueMeaningful ? rs : null);
-  } else {
-    ops.setLatestMetadata(null);
-    ops.setLatestIsVagueSource(false);
-    ops.setLatestRegulationMetadata(null);
-  }
-
-  const wr = meta.wisewave_recurrence;
-  if (wr && typeof wr === "object" && wr !== null && !Array.isArray(wr)) {
-    const w = wr as Record<string, unknown>;
-    const textEn = w.text_en;
-    const textZh = w.text_zh;
-    const patternKey = w.pattern_key;
-    const conf = w.confidence;
-    if (
-      typeof textEn === "string" &&
-      typeof textZh === "string" &&
-      typeof patternKey === "string" &&
-      (conf === "low" || conf === "medium" || conf === "high")
-    ) {
-      ops.setLatestRecurrenceCue({
-        pattern_key: patternKey,
-        confidence: conf,
-        confidence_score:
-          typeof w.confidence_score === "number" ? w.confidence_score : 0.5,
-        text_en: textEn,
-        text_zh: textZh,
-        phase:
-          w.phase === "persistence" || w.phase === "recurrence"
-            ? w.phase
-            : undefined,
-      });
-      ops.setLatestRecurrenceCueAssistantId(lastAssistant.id);
-    } else {
-      ops.setLatestRecurrenceCue(null);
-      ops.setLatestRecurrenceCueAssistantId(null);
-    }
-  } else {
-    ops.setLatestRecurrenceCue(null);
-    ops.setLatestRecurrenceCueAssistantId(null);
-  }
-
-  const we = meta.wisewave_embodiment;
-  if (we && typeof we === "object" && we !== null && !Array.isArray(we)) {
-    const w = we as Record<string, unknown>;
-    if (
-      typeof w.text_en === "string" &&
-      typeof w.text_zh === "string" &&
-      typeof w.pattern_key === "string" &&
-      (w.response_state === "light" || w.response_state === "clear")
-    ) {
-      ops.setLatestEmbodimentCue({
-        pattern_key: w.pattern_key,
-        response_state: w.response_state,
-        text_en: w.text_en,
-        text_zh: w.text_zh,
-      });
-      ops.setLatestEmbodimentCueAssistantId(lastAssistant.id);
-    } else {
-      ops.setLatestEmbodimentCue(null);
-      ops.setLatestEmbodimentCueAssistantId(null);
-    }
-  } else {
-    ops.setLatestEmbodimentCue(null);
-    ops.setLatestEmbodimentCueAssistantId(null);
-  }
-
-  const wm = meta.wisewave_micro_awareness;
-  if (wm && typeof wm === "object" && wm !== null && !Array.isArray(wm)) {
-    const w = wm as Record<string, unknown>;
-    const kind = w.kind;
-    if (
-      typeof w.text_en === "string" &&
-      typeof w.text_zh === "string" &&
-      (kind === "H1" || kind === "H3" || kind === "H4" || kind === "H5")
-    ) {
-      ops.setLatestAwarenessCue({
-        kind,
-        text_en: w.text_en,
-        text_zh: w.text_zh,
-      });
-      ops.setLatestAwarenessCueAssistantId(lastAssistant.id);
-    } else {
-      ops.setLatestAwarenessCue(null);
-      ops.setLatestAwarenessCueAssistantId(null);
-    }
-  } else {
-    ops.setLatestAwarenessCue(null);
-    ops.setLatestAwarenessCueAssistantId(null);
-  }
+  return (
+    <div className="max-w-[46rem]">
+      <div className="rounded-[28px] bg-white/72 px-5 py-5 shadow-[0_10px_35px_rgba(0,0,0,0.04)] ring-1 ring-black/5 backdrop-blur-sm md:px-6 md:py-6">
+        <p className="text-[16px] leading-8 text-[#232323] md:text-[17px]">{payload.main_reflection}</p>
+        {secondaryLine ? (
+          <>
+            <div className="my-4 h-px w-12 bg-black/8" />
+            <p className="text-[14px] leading-7 text-[#6A6A6A] md:text-[15px]">{secondaryLine}</p>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
-const REGULATION_CUE_MAP: Record<string, string> = {
-  pause: "Pause and notice first",
-  pause_before_reacting: "Pause and notice before reacting",
-  name_emotion: "Name the emotion",
-  soften_urgency: "Soften the urgency",
-  wait_then_reassess: "Wait a little, then reassess",
-  check_facts_first: "Check the facts first",
-  wait_before_responding: "Wait before responding",
-  one_small_step: "Take one small step",
-  delay_reaction: "Delay the reaction",
-  reassess: "Reassess from a calmer place",
-};
-const REGULATION_CUE_MAP_ZH: Record<string, string> = {
-  pause: "先停一下，留意当下",
-  pause_before_reacting: "在反应前先停一下",
-  name_emotion: "先把情绪叫出来",
-  soften_urgency: "把紧迫感放轻一点",
-  wait_then_reassess: "等一会儿，再重新评估",
-  check_facts_first: "先核对事实",
-  wait_before_responding: "先别马上回应",
-  one_small_step: "只做一个小步骤",
-  delay_reaction: "稍微延后你的反应",
-  reassess: "从更平稳的角度再看一遍",
-};
-
-function regulationLabelToCue(label: string, uiLang: "en" | "zh"): string | null {
-  const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
-  if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
-  const map = uiLang === "zh" ? REGULATION_CUE_MAP_ZH : REGULATION_CUE_MAP;
-  if (uiLang === "zh") return map[v] ?? null; // avoid English fallback leakage in ZH
-  return map[v] ?? formatLabel(label);
+function UserMessage({ text }: { text: string }) {
+  return (
+    <div className="ml-auto max-w-[40rem]">
+      <div className="rounded-[24px] bg-[#EEEAE3] px-5 py-4 text-[15px] leading-7 text-[#343434] shadow-[0_8px_24px_rgba(0,0,0,0.03)] ring-1 ring-black/5">
+        {text}
+      </div>
+    </div>
+  );
 }
 
-/** Guard for action prompt: only show when overall reflection is meaningful and choice_label is a concrete alternative. */
-function isActionPromptMeaningful(m: ReflectionMetadata): boolean {
-  if (!isMetadataMeaningful(m)) return false;
-  const raw = (m.choice_label || "").trim().toLowerCase().replace(/\s+/g, "_");
-  if (!raw) return false;
-  const weak = new Set(["unknown", "uncertain", "unclear"]);
-  if (weak.has(raw)) return false;
-  // Tie action prompt to the same stronger-signal requirement as regulation cue,
-  // so we don't suggest actions off very weak / vague states.
-  if (!isRegulationCueMeaningful(m)) return false;
-  return true;
+function WaitingPulse() {
+  return (
+    <div className="max-w-[46rem] px-1 py-1">
+      <div className="inline-flex items-center gap-2 rounded-full bg-white/55 px-3 py-2 text-sm text-[#7A7A7A] ring-1 ring-black/5 backdrop-blur-sm">
+        <span className="flex gap-1.5">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#7C9082]/70" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#7C9082]/50 [animation-delay:160ms]" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-[#7C9082]/30 [animation-delay:320ms]" />
+        </span>
+        <span>response continues quietly</span>
+      </div>
+    </div>
+  );
 }
 
-const ACTION_PROMPT_MAP: Record<string, string> = {
-  wait_before_responding: "Wait a little before you respond.",
-  one_small_step: "Pick one small, concrete step you can take.",
-  check_facts_first: "Check the concrete facts before you decide what to do.",
-  wait_then_reassess: "Give it a bit of time, then reassess.",
-  acknowledge_existing_effort: "Notice what you have already done before pushing for more.",
-  acknowledge_done_work: "Notice what you have already done before pushing for more.",
-  reassess: "Step back for a moment and reassess what feels most important right now.",
-};
-const ACTION_PROMPT_MAP_ZH: Record<string, string> = {
-  wait_before_responding: "先等一等再回应。",
-  one_small_step: "挑一个你能做的小、具体步骤。",
-  check_facts_first: "在你决定之前，先确认具体事实。",
-  wait_then_reassess: "给一点时间，然后再重新评估。",
-  acknowledge_existing_effort: "先注意到你已经做了什么，而不是立刻想要更多。",
-  acknowledge_done_work: "先注意到你已经完成了什么，而不是立刻想要更多。",
-  reassess: "退一步，先看看此刻更重要的是什么。",
-};
-
-function choiceLabelToActionPrompt(
-  label: string,
-  uiLang: "en" | "zh"
-): string | null {
-  const v = (label || "").trim().toLowerCase().replace(/\s+/g, "_");
-  if (!v || ["unknown", "uncertain", "unclear"].includes(v)) return null;
-  // Only show when we have a deliberately written, user-facing sentence.
-  const map = uiLang === "zh" ? ACTION_PROMPT_MAP_ZH : ACTION_PROMPT_MAP;
-  return map[v] ?? null;
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {message}
+    </div>
+  );
 }
 
-const CONTINUITY_REMINDER_ZH_MAP: Record<string, string> = {
-  earned_value_after_effort: "即使你做完了重要的事，你也仍会觉得：休息好像还不算“应得”。",
-  delayed_reply_means_i_did_something_wrong:
-    "对方回得很快/很慢时，你可能会把它读成：你是不是哪里做错了。",
-  rest_must_be_earned: "休息很快会让你觉得：你还得先证明些什么才配停下来。",
-  constant_pressure_keep_up: "你可能会觉得，只有一直跟上，你才允许放松。",
-  replay_for_mistakes: "不清楚的时候，你很容易开始反复检查自己可能做错了什么。",
-  fallback_generic: "当事情不确定时，这个模式会很快又回来。",
-};
+function InputBar({
+  value,
+  onChange,
+  onSubmit,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="sticky bottom-0 z-20 border-t border-black/5 bg-[#F7F5F2]/90 backdrop-blur-xl">
+      <div className="mx-auto max-w-4xl px-5 py-4 md:px-8 md:py-5">
+        <div className="rounded-[30px] bg-white/78 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.05)] ring-1 ring-black/5 backdrop-blur-sm">
+          <div className="flex items-end gap-2 rounded-[24px] px-3 py-2 md:px-4 md:py-3">
+            <textarea
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  onSubmit();
+                }
+              }}
+              disabled={disabled}
+              rows={1}
+              placeholder="Speak freely."
+              className="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-1 py-2 text-[15px] leading-7 text-[#232323] outline-none placeholder:text-[#8B8B8B]"
+            />
 
-function continuityKeyToReminderTextZh(key?: string | null): string | null {
-  if (!key) return null;
-  // Do not force a generic fallback line in ZH when family detection is uncertain.
-  // Returning null here lets the caller use the persisted reminder text instead.
-  if (key === "fallback_generic") return null;
-  return CONTINUITY_REMINDER_ZH_MAP[key] ?? null;
+            <button
+              onClick={onSubmit}
+              disabled={disabled || !value.trim()}
+              className={cn(
+                "inline-flex h-11 w-11 items-center justify-center rounded-full transition",
+                disabled || !value.trim()
+                  ? "bg-[#D9D4CC] text-white"
+                  : "bg-[#6F8596] text-white hover:translate-y-[-1px] hover:shadow-md"
+              )}
+              aria-label="Send message"
+              type="button"
+            >
+              <span className="text-base">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-/**
- * Preferred persisted chat: session_id from POST /api/chat/session or resumed from sessionStorage.
- * All turns saved via POST /api/chat/turn; messages loaded by user_id + session_id (GET /api/chat/messages).
- */
 function ChatContent() {
   const searchParams = useSearchParams();
-  const token = useMemo(
-    () => searchParams?.get("token")?.trim() || null,
-    [searchParams]
-  );
+  const token = useMemo(() => searchParams?.get("token")?.trim() || null, [searchParams]);
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<MessageRow[]>([]);
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
-  const [historySessions, setHistorySessions] = useState<SessionItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [tokenInvalid, setTokenInvalid] = useState(false);
-  const [mobileConversationsOpen, setMobileConversationsOpen] = useState(false);
-  const [checkpoints, setCheckpoints] = useState<CheckpointRow[]>([]);
-  const [checkpointInput, setCheckpointInput] = useState("");
-  const [checkpointLoading, setCheckpointLoading] = useState(false);
-  const [showCheckpointForm, setShowCheckpointForm] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
-  const [continuity, setContinuity] = useState<ContinuityInsight | null>(null);
-  const [hadContinuityAtSessionStart, setHadContinuityAtSessionStart] = useState(false);
-  const [feedbackDraft, setFeedbackDraft] = useState("");
-  const [feedbackVisible, setFeedbackVisible] = useState(false);
-  const [latestMetadata, setLatestMetadata] = useState<ReflectionMetadata | null>(null);
-  const [latestRegulationMetadata, setLatestRegulationMetadata] = useState<ReflectionMetadata | null>(null);
-  const [latestIsVagueSource, setLatestIsVagueSource] = useState(false);
-  const [latestRecurrenceCue, setLatestRecurrenceCue] = useState<RecurrenceCue | null>(null);
-  const [latestRecurrenceCueAssistantId, setLatestRecurrenceCueAssistantId] = useState<
-    string | null
-  >(null);
-  const [latestEmbodimentCue, setLatestEmbodimentCue] = useState<EmbodimentCue | null>(null);
-  const [latestEmbodimentCueAssistantId, setLatestEmbodimentCueAssistantId] = useState<
-    string | null
-  >(null);
-  const [latestAwarenessCue, setLatestAwarenessCue] = useState<AwarenessCue | null>(null);
-  const [latestAwarenessCueAssistantId, setLatestAwarenessCueAssistantId] = useState<
-    string | null
-  >(null);
-  // Prevent stale recurrence / embodiment cues from flashing when multiple requests overlap.
-  const recurrenceCueRequestIdRef = useRef(0);
-  const messageSeqRef = useRef(0);
-  const [metadataExpanded, setMetadataExpanded] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [minAnchorUntil, setMinAnchorUntil] = useState(0);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const uiLang: "en" | "zh" = useMemo(() => {
-    // Milestone D baseline: the user-facing language follows the last user input.
-    const lastUser = [...messages].reverse().find((m) => m.role === "user");
-    if (!lastUser) return "en";
-    return /[\u4E00-\u9FFF]/.test(lastUser.message) ? "zh" : "en";
-  }, [messages]);
+  const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
 
-  const lastAssistantId = useMemo(() => {
-    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
-    return lastAssistant?.id ?? null;
-  }, [messages]);
-
-  // Rehydrate Pattern / Optional response / regulation-related state from persisted assistant metadata
-  // (fixes refresh and session switch; live turns also attach metadata on the assistant row).
-  useEffect(() => {
-    hydrateStripStateFromMessages(messages, {
-      setLatestMetadata,
-      setLatestIsVagueSource,
-      setLatestRegulationMetadata,
-      setLatestRecurrenceCue,
-      setLatestRecurrenceCueAssistantId,
-      setLatestEmbodimentCue,
-      setLatestEmbodimentCueAssistantId,
-      setLatestAwarenessCue,
-      setLatestAwarenessCueAssistantId,
-    });
-  }, [messages]);
-
-  // Temporary internal visibility layer:
-  // - Keep visible by default for QA/debug efficiency (Milestone D).
-  // - Before publish, flip NEXT_PUBLIC_SHOW_WHAT_WAS_NOTICED_DEFAULT to "0"
-  //   (or gate behind a debug token / settings UI once redesigned).
-  const showWhatWasNoticedDefault =
-    (process.env.NEXT_PUBLIC_SHOW_WHAT_WAS_NOTICED_DEFAULT ?? "1") !== "0";
-  const showWhatWasNoticed = useMemo(() => {
-    const v = searchParams?.get("noticed")?.trim();
-    if (v === "1") return true;
-    if (v === "0") return false;
-    return showWhatWasNoticedDefault;
-  }, [searchParams, showWhatWasNoticedDefault]);
-
-  /** Milestone H stabilization: Awareness strip is visible for the latest assistant message. */
-  const awarenessVisibleForLastAssistant = useMemo(
-    () =>
-      !!latestAwarenessCue &&
-      !latestIsVagueSource &&
-      !!latestAwarenessCueAssistantId &&
-      latestAwarenessCueAssistantId === lastAssistantId,
-    [
-      latestAwarenessCue,
-      latestIsVagueSource,
-      latestAwarenessCueAssistantId,
-      lastAssistantId,
-    ]
-  );
-
-  /**
-   * H-UI-2 (Lumen): hide "What was noticed" when Awareness is on — thinner stack than Awareness+noticed+main.
-   * Override: `?noticed=1` still shows the block (QA / power users).
-   */
-  const showWhatWasNoticedEffective = useMemo(() => {
-    if (!showWhatWasNoticed) return false;
-    if (!awarenessVisibleForLastAssistant) return true;
-    return searchParams?.get("noticed")?.trim() === "1";
-  }, [showWhatWasNoticed, awarenessVisibleForLastAssistant, searchParams]);
-
-  const authHeaders = useCallback((): HeadersInit => {
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+  const authHeaders = useMemo(() => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
     return headers;
   }, [token]);
 
-  const sessionStorageKey = useCallback(() => {
-    // Scope per account so switching users doesn't reuse the same session_id.
+  const storageKey = useMemo(() => {
     const suffix = token ? token.slice(0, 24) : "anon";
-    return `${CHAT_SESSION_STORAGE_KEY_PREFIX}:${suffix}`;
+    return `chat_session_id:${suffix}`;
   }, [token]);
 
-  const fetchMessages = useCallback(async (sid: string): Promise<MessageRow[]> => {
-    const res = await fetch(
-      `${CHAT_MESSAGES_ENDPOINT}?session_id=${encodeURIComponent(sid)}`,
-      { credentials: "include", headers: authHeaders() }
-    );
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error((data.error as string) || res.statusText);
-    }
-    const data = await res.json();
-    return (data.messages ?? []) as MessageRow[];
-  }, [authHeaders]);
-
-  const createSession = useCallback(async (): Promise<string> => {
-    const res = await fetch(CHAT_SESSION_ENDPOINT, {
-      method: "POST",
-      headers: authHeaders(),
-      credentials: "include",
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error((data.error as string) || res.statusText);
-    }
-    const data = await res.json();
-    const sid = data.session_id;
-    if (!sid || typeof sid !== "string") throw new Error("No session_id in response");
-    return sid;
-  }, [authHeaders]);
-
-  const fetchSessionsList = useCallback(async (): Promise<SessionItem[]> => {
-    const res = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
-      credentials: "include",
-      headers: authHeaders(),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error((data.error as string) || res.statusText);
-    }
-    const data = await res.json();
-    return (data.sessions ?? []) as SessionItem[];
-  }, [authHeaders]);
-
-  /** Refresh sidebar conversation list; safe to call on load and after turns. */
-  const refreshHistorySessions = useCallback(async () => {
-    try {
-      const list = await fetchSessionsList();
-      setHistorySessions(list);
-    } catch {
-      setHistorySessions([]);
-    }
-  }, [fetchSessionsList]);
-
-  const initOrResumeSession = useCallback(async () => {
-    if (typeof window === "undefined") return;
-    if (token) {
-      const res = await fetch(CHAT_AUTH_CHECK_ENDPOINT, {
-        credentials: "include",
-        headers: authHeaders(),
-      });
-      if (res.status === 401) {
-        setTokenInvalid(true);
-        setSessionLoading(false);
-        return;
-      }
-    }
-    const stored = sessionStorage.getItem(sessionStorageKey());
-    if (stored) {
-      try {
-        const list = await fetchMessages(stored);
-        setSessionId(stored);
-        setMessages(list);
-        setError(null);
-        setSessionLoading(false);
-        await refreshHistorySessions();
-        return;
-      } catch {
-        sessionStorage.removeItem(sessionStorageKey());
-      }
-    }
-    try {
-      const sid = await createSession();
-      sessionStorage.setItem(sessionStorageKey(), sid);
-      setSessionId(sid);
-      const list = await fetchMessages(sid);
-      setMessages(list);
-      setError(null);
-      await refreshHistorySessions();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create session");
-    } finally {
-      setSessionLoading(false);
-    }
-  }, [token, authHeaders, createSession, fetchMessages, sessionStorageKey, refreshHistorySessions]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isWaiting]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      await initOrResumeSession();
-      if (cancelled) return;
-    })();
-    return () => { cancelled = true; };
-  }, [initOrResumeSession]);
-
-  const startNewChat = useCallback(async () => {
-    setMobileConversationsOpen(false);
-    if (typeof window !== "undefined") sessionStorage.removeItem(sessionStorageKey());
-    setSessionId(null);
-    setMessages([]);
-    setLatestMetadata(null);
-    setLatestRecurrenceCue(null);
-    setLatestRecurrenceCueAssistantId(null);
-    setLatestEmbodimentCue(null);
-    setLatestEmbodimentCueAssistantId(null);
-    setLatestAwarenessCue(null);
-    setLatestAwarenessCueAssistantId(null);
-    setError(null);
-    setSessionLoading(true);
-    try {
-      const sid = await createSession();
-      if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
-      setSessionId(sid);
-      const list = await fetchMessages(sid);
-      setMessages(list);
-      await refreshHistorySessions();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create session");
-    } finally {
-      setSessionLoading(false);
-    }
-  }, [createSession, fetchMessages, sessionStorageKey, refreshHistorySessions]);
-
-  const openSession = useCallback(
-    async (sid: string) => {
-      setMobileConversationsOpen(false);
-      setSessionLoading(true);
-      setLatestMetadata(null);
-      setLatestRecurrenceCue(null);
-      setLatestRecurrenceCueAssistantId(null);
-      setLatestEmbodimentCue(null);
-      setLatestEmbodimentCueAssistantId(null);
-      setLatestAwarenessCue(null);
-      setLatestAwarenessCueAssistantId(null);
       try {
-        if (typeof window !== "undefined") sessionStorage.setItem(sessionStorageKey(), sid);
-        setSessionId(sid);
-        const list = await fetchMessages(sid);
-        setMessages(list);
-        setError(null);
+        if (token) {
+          const authRes = await fetch(CHAT_AUTH_CHECK_ENDPOINT, {
+            credentials: "include",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          if (!cancelled && authRes.status === 401) {
+            setTokenInvalid(true);
+            setSessionLoading(false);
+            return;
+          }
+        }
+        const existing = typeof window !== "undefined" ? sessionStorage.getItem(storageKey) : null;
+        if (existing && !cancelled) {
+          setConversationId(existing);
+          setSessionLoading(false);
+          return;
+        }
+        const s = await fetch(CHAT_SESSION_ENDPOINT, {
+          method: "POST",
+          headers: authHeaders,
+          credentials: "include",
+          body: "{}",
+        });
+        const sj = await s.json();
+        if (!cancelled && typeof sj.session_id === "string") {
+          setConversationId(sj.session_id);
+          if (typeof window !== "undefined") sessionStorage.setItem(storageKey, sj.session_id);
+        }
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load conversation");
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to initialize chat");
       } finally {
-        setSessionLoading(false);
+        if (!cancelled) setSessionLoading(false);
       }
-    },
-    [fetchMessages, sessionStorageKey]
-  );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authHeaders, storageKey, token]);
 
-  const handleNewChatClick = useCallback(async () => {
-    setHistoryLoading(true);
-    try {
-      const list = await fetchSessionsList();
-      setHistorySessions(list);
-    } catch {
-      setHistorySessions([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [fetchSessionsList]);
+  async function handleSubmit() {
+    if (!canSend || !conversationId) return;
 
-  const fetchCheckpoints = useCallback(async (sid: string): Promise<CheckpointRow[]> => {
-    const res = await fetch(
-      `${CHAT_REFLECTION_ENDPOINT}?session_id=${encodeURIComponent(sid)}`,
-      { credentials: "include", headers: authHeaders() }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.checkpoints ?? []) as CheckpointRow[];
-  }, [authHeaders]);
-
-  const fetchContinuity = useCallback(async (sid?: string | null): Promise<ContinuityInsight | null> => {
-    const query = sid ? `?session_id=${encodeURIComponent(sid)}` : "";
-    const res = await fetch(`${CHAT_CONTINUITY_ENDPOINT}${query}`, {
-      credentials: "include",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return null;
-    const data = await res.json().catch(() => ({}));
-    const insight = (data.insight ?? null) as
-      | {
-          id: string;
-          core_pattern: string;
-          continuity_text: string;
-          continuity_key?: string;
-          created_at: string;
-        }
-      | null;
-    return insight;
-  }, [authHeaders]);
-
-  const saveCheckpoint = useCallback(async () => {
-    if (!sessionId || checkpointLoading) return;
-    setCheckpointLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(CHAT_REFLECTION_ENDPOINT, {
-        method: "POST",
-        headers: authHeaders(),
-        credentials: "include",
-        body: JSON.stringify({
-          session_id: sessionId,
-          user_reflection: checkpointInput.trim() || undefined,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError((data.details as string) || (data.error as string) || res.statusText);
-        return;
-      }
-      setCheckpointInput("");
-      setShowCheckpointForm(false);
-      const list = await fetchCheckpoints(sessionId);
-      setCheckpoints(list);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Reflection failed");
-    } finally {
-      setCheckpointLoading(false);
-    }
-  }, [sessionId, checkpointInput, checkpointLoading, authHeaders, fetchCheckpoints]);
-
-  useEffect(() => {
-    listRef.current?.scrollTo(0, listRef.current.scrollHeight);
-  }, [messages]);
-
-  useEffect(() => {
-    if (!sessionId) {
-      setCheckpoints([]);
-      setContinuity(null);
-      setHadContinuityAtSessionStart(false);
-      return;
-    }
-    let cancelled = false;
-    fetchCheckpoints(sessionId).then((list) => {
-      if (!cancelled) setCheckpoints(list);
-    });
-    fetchContinuity(sessionId).then((insight) => {
-      if (cancelled) return;
-      setContinuity(insight);
-      setHadContinuityAtSessionStart(!!insight);
-    });
-    return () => { cancelled = true; };
-  }, [sessionId, fetchCheckpoints, fetchContinuity]);
-
-  const send = useCallback(async () => {
     const text = input.trim();
-    if (!text || !sessionId || loading) return;
+    const userMessage: ChatMessage = {
+      id: safeId(),
+      role: "user",
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setLoading(true);
     setError(null);
-    // Milestone E parity protection: clear any previous recurrence cue
-    // before we fetch the next turn so stale cue state cannot display
-    // when the server returns `recurrence_cue: null`.
-    recurrenceCueRequestIdRef.current += 1;
-    const requestId = recurrenceCueRequestIdRef.current;
-    setLatestRecurrenceCue(null);
-    setLatestRecurrenceCueAssistantId(null);
-    setLatestEmbodimentCue(null);
-    setLatestEmbodimentCueAssistantId(null);
-    setLatestAwarenessCue(null);
-    setLatestAwarenessCueAssistantId(null);
+    setIsWaiting(true);
+    setMinAnchorUntil(Date.now() + 700);
+
     try {
-      // Live-path debug for regulation cue behavior.
-      // Helpful when inspecting weak follow-up turns like "I feel off".
-      // Safe to remove once Ticket 9 is fully verified.
-      console.debug("[chat/send] before turn", {
-        input: text,
-        latestRegulationMetadataBefore: latestRegulationMetadata,
-      });
-      const res = await fetch(CHAT_TURN_ENDPOINT, {
+      const response = await fetch(CHAT_TURN_ENDPOINT, {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders,
         credentials: "include",
         body: JSON.stringify({
-          session_id: sessionId,
-          conversation_id: sessionId,
+          session_id: conversationId,
+          conversation_id: conversationId,
           message: text,
-          ...(feedbackDraft.trim()
-            ? {
-                feedback: {
-                  note: feedbackDraft.trim(),
-                },
-              }
-            : {}),
         }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = (data.details as string) || (data.error as string) || res.statusText;
-        setError(msg);
-        setInput(text);
-        return;
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
       }
-      const responseObj =
-        data.response && typeof data.response === "object"
-          ? (data.response as Record<string, unknown>)
-          : null;
-      const assistantMessage =
-        (typeof responseObj?.main_reflection === "string" ? responseObj.main_reflection : null) ??
-        ((data.assistant_message as string) ?? "");
-      const rs = data.reflection_state as ReflectionMetadata | null | undefined;
-      const recurrenceCue = (data.recurrence_cue ?? null) as RecurrenceCue | null;
-      const embodimentCueRaw = data.embodiment_cue as EmbodimentCue | null | undefined;
-      const embodimentCue =
-        embodimentCueRaw &&
-        typeof embodimentCueRaw === "object" &&
-        typeof embodimentCueRaw.text_en === "string" &&
-        typeof embodimentCueRaw.text_zh === "string" &&
-        typeof embodimentCueRaw.pattern_key === "string" &&
-        (embodimentCueRaw.response_state === "light" ||
-          embodimentCueRaw.response_state === "clear")
-          ? embodimentCueRaw
-          : null;
-      const awarenessRaw = (data as Record<string, unknown>).awareness_cue;
-      const awarenessCue: AwarenessCue | null =
-        awarenessRaw &&
-        typeof awarenessRaw === "object" &&
-        awarenessRaw !== null &&
-        typeof (awarenessRaw as { text_en?: unknown }).text_en === "string" &&
-        typeof (awarenessRaw as { text_zh?: unknown }).text_zh === "string"
-          ? (() => {
-              const k = (awarenessRaw as { kind?: unknown }).kind;
-              if (k === "H1" || k === "H3" || k === "H4" || k === "H5") {
-                return {
-                  kind: k,
-                  text_en: (awarenessRaw as { text_en: string }).text_en,
-                  text_zh: (awarenessRaw as { text_zh: string }).text_zh,
-                };
-              }
-              return null;
-            })()
-          : null;
-      const isVagueSource = Boolean(data.debug_is_vague_source);
-      const cueMeaningful =
-        rs && typeof rs === "object" && !isVagueSource
-          ? isRegulationCueMeaningful(rs)
-          : false;
-      const choiceLabel = rs && typeof rs === "object" ? rs.choice_label : null;
-      const actionPrompt =
-        rs && typeof rs === "object" ? choiceLabelToActionPrompt(rs.choice_label, "en") : null;
-      const actionMeaningful =
-        rs && typeof rs === "object" ? isActionPromptMeaningful(rs) : false;
-      console.debug("[chat/send] after turn", {
-        input: text,
-        reflectionState: rs,
-        choiceLabel,
-        actionPrompt,
-        isRegulationCueMeaningful: cueMeaningful,
-        isActionPromptMeaningful: actionMeaningful,
-      });
-      if (rs && typeof rs === "object" && rs.trigger_label != null) {
-        setLatestMetadata(rs);
-        setLatestIsVagueSource(isVagueSource);
-        if (cueMeaningful) {
-          setLatestRegulationMetadata(rs);
-        } else {
-          setLatestRegulationMetadata(null);
-        }
-      } else {
-        setLatestMetadata(null);
-        setLatestRegulationMetadata(null);
-        setLatestIsVagueSource(false);
+      const data = (await response.json()) as TurnResponseBody;
+      const payload = extractAssistantPayload(data);
+      if (data.conversation_id) {
+        setConversationId(data.conversation_id);
+        if (typeof window !== "undefined") sessionStorage.setItem(storageKey, data.conversation_id);
       }
-
-      const nowTs = Date.now();
-      const seq = (messageSeqRef.current += 1);
-      const now = new Date(nowTs).toISOString();
-      // Use monotonic sequence to avoid id collisions when turns are fast.
-      const userMsgId = `user-${nowTs}-${seq}`;
-      const serverAssistantIdRaw = (data as { assistant_message_id?: unknown })
-        .assistant_message_id;
-      const assistantMsgId =
-        typeof serverAssistantIdRaw === "string" && serverAssistantIdRaw.length > 0
-          ? serverAssistantIdRaw
-          : `assistant-${nowTs}-${seq}`;
-      const stripMeta = buildStripMetadataFromTurnResponse(
-        data as Record<string, unknown>
-      );
+      const delay = Math.max(0, minAnchorUntil - Date.now());
+      if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
       setMessages((prev) => [
         ...prev,
-        { id: userMsgId, role: "user", message: text, created_at: now },
         {
-          id: assistantMsgId,
+          id: safeId(),
           role: "assistant",
-          message: assistantMessage,
-          created_at: now,
-          ...(stripMeta ? { metadata: stripMeta } : {}),
+          payload,
+          createdAt: new Date().toISOString(),
         },
       ]);
-      // Bind cue + assistant id after we know assistantMsgId (DB id when server returns it).
-      // Update both together so there is no intermediate render window
-      // where stale cue state can appear.
-      if (requestId === recurrenceCueRequestIdRef.current) {
-        const nextCue = recurrenceCue && !isVagueSource ? recurrenceCue : null;
-        setLatestRecurrenceCue(nextCue);
-        setLatestRecurrenceCueAssistantId(nextCue ? assistantMsgId : null);
-        const nextEmb =
-          nextCue && embodimentCue && !isVagueSource ? embodimentCue : null;
-        setLatestEmbodimentCue(nextEmb);
-        setLatestEmbodimentCueAssistantId(nextEmb ? assistantMsgId : null);
-        const nextAware =
-          awarenessCue && !isVagueSource ? awarenessCue : null;
-        setLatestAwarenessCue(nextAware);
-        setLatestAwarenessCueAssistantId(nextAware ? assistantMsgId : null);
-      }
-      refreshHistorySessions();
-      // Continuity timing (Ibu memo): for first-time users, avoid showing "Last insight"
-      // immediately on the same turn that creates the first continuity insight.
-      // If continuity existed at session start, keep continuity anchored to prior sessions only.
-      if (hadContinuityAtSessionStart) {
-        // Always refetch with session exclusion rules so current-session insights
-        // do not replace the surfaced "last" continuity context.
-        fetchContinuity(sessionId).then((insight) => {
-          setContinuity(insight);
-        });
-      }
-      // Clear feedback draft after a successful send, so feedback remains opt-in per turn.
-      setFeedbackDraft("");
-      setFeedbackVisible(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Request failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The response did not come through cleanly.");
       setInput(text);
     } finally {
-      setLoading(false);
+      setIsWaiting(false);
     }
-  }, [
-    input,
-    sessionId,
-    loading,
-    authHeaders,
-    refreshHistorySessions,
-    hadContinuityAtSessionStart,
-    fetchContinuity,
-  ]);
-
-  if (sessionLoading) {
-    return (
-      <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4">
-        <p className="text-slate-500">Loading session...</p>
-      </main>
-    );
   }
 
   if (tokenInvalid) {
     return (
-      <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4 items-center justify-center">
+      <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4 items-center justify-center">
         <div className="max-w-md text-center space-y-4">
-          <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-            Invalid or expired sign-in link
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Your sign-in link may be invalid or expired. Sign in again to use chat with your account, or continue without an account.
+          <h1 className="text-lg font-semibold text-[#1F1F1F]">Invalid or expired sign-in link</h1>
+          <p className="text-sm text-[#5E5E5E]">
+            Your link may be invalid or expired. Please sign in again or continue without account.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/login"
-              className="rounded-lg bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 px-4 py-2 text-sm font-medium"
-            >
-              Sign in again
-            </Link>
-            <Link
-              href="/chat"
-              className="rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              Continue without account
-            </Link>
-          </div>
         </div>
       </main>
     );
   }
 
-  if (error && !sessionId) {
+  if (sessionLoading) {
     return (
-      <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
-        <div className="mt-4 flex gap-3">
-          <button
-            type="button"
-            onClick={() => { setError(null); setSessionLoading(true); initOrResumeSession(); }}
-            className="text-slate-700 dark:text-slate-300 underline"
-          >
-            Try again
-          </button>
-          <Link href="/embed" className="text-slate-600 dark:text-slate-400 underline">Back</Link>
-        </div>
+      <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4">
+        <p className="text-[#7A7A7A]">Loading session...</p>
       </main>
     );
   }
 
   return (
-    <main className="flex h-[100dvh] bg-white dark:bg-slate-900">
-      {/* Mobile: conversation list drawer */}
-      {mobileConversationsOpen && (
-        <div className="fixed inset-0 z-50 sm:hidden" aria-modal="true" role="dialog">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMobileConversationsOpen(false)}
-            aria-label="Close conversations"
-          />
-          <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] flex flex-col bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-xl">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Conversations
-              </span>
-              <button
-                type="button"
-                onClick={() => setMobileConversationsOpen(false)}
-                className="text-sm font-medium text-slate-700 dark:text-slate-200 hover:underline"
-              >
-                Close
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-              {historyLoading ? (
-                <p className="px-2 py-1 text-xs text-slate-500">Loading…</p>
-              ) : historySessions.length === 0 ? (
-                <p className="px-2 py-1 text-xs text-slate-500">No saved conversations yet.</p>
-              ) : (
-                historySessions.map((s) => {
-                  const isActive = s.id === sessionId;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => openSession(s.id)}
-                      className={`w-full text-left rounded-lg px-3 py-2 text-xs ${
-                        isActive
-                          ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      }`}
-                      title={s.topic}
-                    >
-                      <span className="block truncate">{s.topic}</span>
-                      <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                        {new Date(s.created_at).toLocaleDateString()}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => startNewChat()}
-                className="w-full text-left text-xs font-medium text-slate-700 dark:text-slate-200 hover:underline py-1"
-              >
-                New conversation
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#F7F5F2] text-[#1F1F1F]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[8%] top-[12%] h-56 w-56 rounded-full bg-[#7C9082]/10 blur-3xl" />
+        <div className="absolute bottom-[10%] right-[8%] h-72 w-72 rounded-full bg-[#6F8596]/10 blur-3xl" />
+      </div>
+
+      <Header />
+
+      <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
+        <div className="mb-8 max-w-2xl">
+          <div className="inline-flex rounded-full border border-black/6 bg-white/60 px-4 py-2 text-[12px] tracking-[0.16em] text-[#7A7A7A] backdrop-blur-sm">
+            low presence · human-tech · warm minimal
           </div>
         </div>
-      )}
 
-      {/* Left: conversation list (desktop) */}
-      <aside className="hidden sm:flex w-72 flex-col border-r border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Conversations
-          </h2>
-          <button
-            type="button"
-            onClick={() => startNewChat()}
-            className="text-xs font-medium text-slate-700 dark:text-slate-200 hover:underline"
-          >
-            New
-          </button>
-        </header>
-        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-          {historyLoading ? (
-            <p className="px-2 py-1 text-xs text-slate-500">Loading…</p>
-          ) : historySessions.length === 0 ? (
-            <p className="px-2 py-1 text-xs text-slate-500">No saved conversations yet.</p>
-          ) : (
-            historySessions.map((s) => {
-              const isActive = s.id === sessionId;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => openSession(s.id)}
-                  className={`w-full text-left rounded-lg px-3 py-2 text-xs ${
-                    isActive
-                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
-                  title={s.topic}
-                >
-                  <span className="block truncate">{s.topic}</span>
-                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                    {new Date(s.created_at).toLocaleDateString()}
-                  </span>
-                </button>
-              );
-            })
+        {error ? <ErrorBanner message={error} /> : null}
+
+        <div className="space-y-6 md:space-y-8">
+          {messages.map((message) =>
+            message.role === "user" ? (
+              <UserMessage key={message.id} text={message.text} />
+            ) : (
+              <AssistantMessage key={message.id} payload={message.payload} />
+            )
           )}
-        </div>
-        <footer className="px-3 py-2 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-500">
-          <Link
-            href={token ? `/embed?token=${encodeURIComponent(token)}` : "/embed"}
-            className="hover:underline"
-          >
-            Legacy (ChatKit)
-          </Link>
-        </footer>
-      </aside>
 
-      {/* Right: active chat */}
-      <section className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between gap-2 px-4 py-2 border-b border-slate-200 dark:border-slate-800 shrink-0 flex-wrap">
-          <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-            Chat
-          </h1>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:underline"
-              onClick={() => setShowCheckpointForm((v) => !v)}
-              disabled={!sessionId}
-              title="Save a reflection checkpoint"
-            >
-              Checkpoint
-            </button>
-            <button
-              type="button"
-              className="text-xs text-slate-600 dark:text-slate-400 hover:underline sm:hidden"
-              onClick={() => {
-                setMobileConversationsOpen(true);
-                handleNewChatClick();
-              }}
-            >
-              Conversations
-            </button>
-          </div>
-        </header>
-        {showCheckpointForm && sessionId && (
-          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Optional: add a note for this reflection</p>
-            <textarea
-              value={checkpointInput}
-              onChange={(e) => setCheckpointInput(e.target.value)}
-              placeholder="What stands out to you right now?"
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 mb-2"
-              rows={2}
-              disabled={checkpointLoading}
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={saveCheckpoint}
-                disabled={checkpointLoading}
-                className="rounded-lg bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900 px-3 py-1.5 text-xs font-medium disabled:opacity-50"
-              >
-                {checkpointLoading ? "Saving…" : "Save reflection"}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowCheckpointForm(false); setCheckpointInput(""); }}
-                className="text-xs text-slate-500 hover:underline"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-        {error && (
-        <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm flex items-center justify-between gap-2">
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={() => setError(null)}
-            className="shrink-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
-          >
-            Dismiss
-          </button>
+          {isWaiting ? <WaitingPulse /> : null}
+          <div ref={bottomRef} />
         </div>
-        )}
-        {/* Milestone G: semantic grouping for continuity + pattern + embodiment (display:contents = no layout mass). */}
-        <div
-          role="group"
-          aria-label={
-            uiLang === "zh"
-              ? "本回合的支持提示（连续性、模式、可选回应、轻量觉察）"
-              : "Support cues for this turn (continuity, pattern, optional response, awareness)"
-          }
-          className="contents"
-        >
-        {(() => {
-          if (!continuity) return null;
-          if (uiLang === "zh") {
-            const zhText =
-              continuityKeyToReminderTextZh(continuity.continuity_key) ??
-              continuity.continuity_text?.trim() ??
-              null;
-            if (!zhText) return null;
-            return (
-              <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  上一次洞见
-                </p>
-                <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                  {zhText}
-                </p>
-              </div>
-            );
-          }
-          return (
-            <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                Last insight
-              </p>
-              <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                {continuity.continuity_text}
-              </p>
-            </div>
-          );
-        })()}
-        {/* Pattern / embodiment: trust server recurrence + vague-source gate. Do not require
-            isMetadataMeaningful — weak reflection labels are common when continuity is still true,
-            and hiding strips here caused API-emitted recurrence_cue to never render. */}
-        {latestRecurrenceCue &&
-          !latestIsVagueSource &&
-          !!latestRecurrenceCueAssistantId &&
-          latestRecurrenceCueAssistantId === lastAssistantId && (
-          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-violet-50/60 dark:bg-violet-900/20">
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
-              {uiLang === "zh" ? "重复模式提示" : "Pattern cue"}
-            </p>
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              {uiLang === "zh"
-                ? shortenCueText(latestRecurrenceCue.text_zh, uiLang, latestRecurrenceCue.confidence)
-                : shortenCueText(latestRecurrenceCue.text_en, uiLang, latestRecurrenceCue.confidence)}
-            </p>
-          </div>
-        )}
-        {latestEmbodimentCue &&
-          !latestIsVagueSource &&
-          !!latestEmbodimentCueAssistantId &&
-          latestEmbodimentCueAssistantId === lastAssistantId &&
-          !!latestRecurrenceCue &&
-          latestRecurrenceCueAssistantId === lastAssistantId && (
-          <div className="px-4 py-1.5 border-b border-slate-200 dark:border-slate-800 border-l-2 border-l-teal-500/70 dark:border-l-teal-400/60 bg-teal-50/50 dark:bg-teal-950/25">
-            <p className="text-[11px] font-medium text-teal-800/90 dark:text-teal-200/90 mb-0.5">
-              {uiLang === "zh" ? "可选回应提示" : "Optional response"}
-            </p>
-            <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">
-              {uiLang === "zh"
-                ? shortenEmbodimentText(latestEmbodimentCue.text_zh, uiLang)
-                : shortenEmbodimentText(latestEmbodimentCue.text_en, uiLang)}
-            </p>
-          </div>
-        )}
-        {latestAwarenessCue &&
-          !latestIsVagueSource &&
-          !!latestAwarenessCueAssistantId &&
-          latestAwarenessCueAssistantId === lastAssistantId && (
-          <div className="px-4 py-1.5 border-b border-slate-200 dark:border-slate-800 border-l-2 border-l-amber-400/60 dark:border-l-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20">
-            <p className="text-[11px] font-medium text-amber-900/90 dark:text-amber-200/85 mb-0.5">
-              {uiLang === "zh" ? "轻量觉察" : "Awareness"}
-            </p>
-            <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">
-              {uiLang === "zh"
-                ? shortenEmbodimentText(latestAwarenessCue.text_zh, uiLang)
-                : shortenEmbodimentText(latestAwarenessCue.text_en, uiLang)}
-            </p>
-          </div>
-        )}
-        </div>
-        {(() => {
-          // Milestone H stabilization (Lumen): regulation is coaching-like; do not stack with
-          // micro-awareness on the same turn — reduces visible "managed product" feel.
-          const shouldShowRegulationCue =
-            !!latestRegulationMetadata &&
-            isRegulationCueMeaningful(latestRegulationMetadata) &&
-            !!regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang) &&
-            !awarenessVisibleForLastAssistant;
-          if (!shouldShowRegulationCue) return null;
-          return (
-          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
-              {uiLang === "zh" ? "调节提示" : "Regulation cue"}
-            </p>
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              {uiLang === "zh"
-                ? `试试：${regulationLabelToCue(
-                    latestRegulationMetadata.regulation_label,
-                    uiLang
-                  )}`
-                : `Try: ${regulationLabelToCue(latestRegulationMetadata.regulation_label, uiLang)}`}
-            </p>
-          </div>
-          );
-        })()}
-        {(() => {
-          if (!latestMetadata) return null;
-          const actionPrompt = choiceLabelToActionPrompt(latestMetadata.choice_label, uiLang);
-          const shouldShowAction =
-            !!actionPrompt &&
-            isActionPromptMeaningful(latestMetadata) &&
-            !latestIsVagueSource;
-          console.debug("[chat/render] action prompt", {
-            reflectionState: latestMetadata,
-            choiceLabel: latestMetadata.choice_label,
-            actionPrompt,
-            shouldShowAction,
-          });
-          if (!shouldShowAction) return null;
-          return (
-            <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-sky-50/60 dark:bg-sky-900/20">
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-0.5">
-                {uiLang === "zh" ? "下一步" : "Next step"}
-              </p>
-              <p className="text-sm text-slate-700 dark:text-slate-300">
-                {uiLang === "zh" ? `你可以试试：${actionPrompt}` : `You might try: ${actionPrompt}`}
-              </p>
-            </div>
-          );
-        })()}
-        {showWhatWasNoticedEffective &&
-          latestMetadata &&
-          isMetadataMeaningful(latestMetadata) &&
-          !latestIsVagueSource && (
-          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/30">
-            <button
-              type="button"
-              onClick={() => setMetadataExpanded((v) => !v)}
-              className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1"
-            >
-              {uiLang === "zh" ? "你注意到了什么" : "What was noticed"}
-              <span className="text-[10px]">{metadataExpanded ? "▼" : "▶"}</span>
-            </button>
-            {metadataExpanded && (
-              <div className="mt-1.5 space-y-1 text-[11px] text-slate-600 dark:text-slate-400 font-sans">
-                <div><span className="text-slate-500 dark:text-slate-500">Event</span> {formatLabel(latestMetadata.trigger_label)}</div>
-                <div><span className="text-slate-500 dark:text-slate-500">Feeling</span> {formatLabel(latestMetadata.emotion_label)}</div>
-                <div><span className="text-slate-500 dark:text-slate-500">Interpretation</span> {formatLabel(latestMetadata.interpretation_label)}</div>
-                <div><span className="text-slate-500 dark:text-slate-500">Regulation</span> {formatLabel(latestMetadata.regulation_label)}</div>
-                <div><span className="text-slate-500 dark:text-slate-500">Next step</span> {formatLabel(latestMetadata.choice_label)}</div>
-                {latestMetadata.insight_candidate?.trim() && (
-                  <div className="pt-1 border-t border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300">
-                    <span className="text-slate-500 dark:text-slate-500">Insight</span> {latestMetadata.insight_candidate}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-        {checkpoints.length > 0 && (
-          <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-              Reflection checkpoints
-            </p>
-            <div className="space-y-2">
-              {checkpoints.slice(0, 5).map((c) => (
-                <div
-                  key={c.id}
-                  className="rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-300"
-                >
-                  <p className="whitespace-pre-wrap">{c.summary}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                    {new Date(c.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-              {checkpoints.length > 5 && (
-                <p className="text-xs text-slate-400">
-                  + {checkpoints.length - 5} more
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-        <div
-          ref={listRef}
-          className="flex-1 overflow-y-auto p-4 space-y-3"
-        >
-        {messages.length === 0 && (
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            {uiLang === "zh"
-              ? "从这里继续，我们会帮你保留这段对话，方便下次接着聊。"
-              : "Continue here. This conversation is saved so you can pick up later."}
-          </p>
-        )}
-        {messages.length === 1 && messages[0]?.role === "user" && !loading && (
-          <div className="rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-900/20 px-3 py-2 text-[11px] text-amber-800 dark:text-amber-200">
-            Your last message was saved, but the response may not have finished. You can send a new message or resend what you wrote.
-          </div>
-        )}
-        {messages.map((m) => {
-          const label =
-            m.role === "user"
-              ? uiLang === "zh"
-                ? "你"
-                : "You"
-              : m.role === "assistant"
-              ? uiLang === "zh"
-                ? "玄微"
-                : "Wisewave"
-              : m.role;
-          const isUser = m.role === "user";
-          return (
-            <div
-              key={m.id}
-              className={isUser ? "ml-4 text-right" : "mr-4 text-left"}
-            >
-              <span className="text-xs text-slate-400 dark:text-slate-500 mr-2">
-                {label}
-              </span>
-              <div
-                className={
-                  isUser
-                    ? "inline-block rounded-lg bg-slate-200 dark:bg-slate-700 px-3 py-2 text-sm"
-                    : "rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm whitespace-pre-wrap"
-                }
-              >
-                {m.message}
-              </div>
-            </div>
-          );
-        })}
-        {loading && (
-          <div className="ml-4 text-left text-xs text-slate-400 dark:text-slate-500 inline-flex items-center gap-2">
-            <span className="inline-flex gap-1">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400/70" />
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400/50 [animation-delay:150ms]" />
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400/35 [animation-delay:300ms]" />
-            </span>
-            <span>response continues quietly</span>
-          </div>
-        )}
-        </div>
-        <form
-          className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send();
-          }}
-        >
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message..."
-              className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="rounded-lg bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              {loading ? "…" : "Send"}
-            </button>
-          </div>
-          <div className="flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={() => setFeedbackVisible((v) => !v)}
-              className="self-start text-[11px] text-slate-500 dark:text-slate-400 hover:underline"
-            >
-              {feedbackVisible ? "Hide feedback about last suggestion" : "Add feedback about what happened after the last suggestion"}
-            </button>
-            {feedbackVisible && (
-              <>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {uiLang === "zh"
-                    ? "这段反馈会在你下一次发送消息时一起提交。"
-                    : "This feedback will be sent with your next message."}
-                </p>
-                <textarea
-                  value={feedbackDraft}
-                  onChange={(e) => setFeedbackDraft(e.target.value)}
-                  placeholder="Optional: how did the last suggestion or regulation cue land for you?"
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 resize-none"
-                  rows={2}
-                  disabled={loading}
-                />
-              </>
-            )}
-          </div>
-        </form>
-      </section>
-    </main>
+      </main>
+
+      <InputBar value={input} onChange={setInput} onSubmit={handleSubmit} disabled={isWaiting} />
+    </div>
   );
 }
 
@@ -1649,8 +381,8 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen flex-col bg-white dark:bg-slate-900 p-4">
-          <p className="text-slate-500">Loading…</p>
+        <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4">
+          <p className="text-[#7A7A7A]">Loading…</p>
         </main>
       }
     >
