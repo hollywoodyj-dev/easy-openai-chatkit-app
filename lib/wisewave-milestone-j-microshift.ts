@@ -29,11 +29,11 @@ export type JDisplayLang = "en" | "zh";
 export const J_MICROSHIFT_TEMPLATE_PACK_MARKER = "j_microshift_template_pack_v1";
 
 export const J_MICROSHIFT_DEFAULT_FAMILY_ORDER = [
-  "room_opening",
   "tightness_softening",
   "pressure_release",
   "non_compulsory_permission",
   "micro_stabilization",
+  "room_opening",
 ] as const;
 
 export type JTemplateFamilyKey = (typeof J_MICROSHIFT_DEFAULT_FAMILY_ORDER)[number];

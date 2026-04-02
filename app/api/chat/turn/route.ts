@@ -483,10 +483,19 @@ const REJECTED_SPACE_PHRASE_RULES: Array<{ re: RegExp; replacement: string }> = 
   { re: /有空间了/g, replacement: "没有那么快被带走" },
   { re: /还留着一点空间/g, replacement: "中间好像停了一下" },
   { re: /多一点点空间/g, replacement: "好像没那么紧了" },
+  { re: /也许没有一开始那么收紧/g, replacement: "有一瞬没有跟上" },
+  { re: /没有一开始那么收紧/g, replacement: "有一瞬没有跟上" },
+  { re: /这当中也许没有一开始那么收紧/g, replacement: "有一瞬没有跟上" },
+  { re: /这里可能已经有一点点空间了。?/g, replacement: "这里可能已经没那么紧了。" },
+  { re: /这里也许比一开始感觉到的，多一点点空间。?/g, replacement: "这里也许比一开始感觉到的，没那么紧一点。" },
+  { re: /这件事周围也许还留着一点点空间。?/g, replacement: "这件事周围也许没有一开始那么紧。" },
 
-  // English: forbidden continuity softening phrases
+  // English: forbidden continuity softening phrases + close variants seen in hosted output
   { re: /a little more space/gi, replacement: "a little less tight" },
   { re: /some space around this/gi, replacement: "a softer gap around this" },
+  { re: /a little more room here than it first seems/gi, replacement: "a little less tight here than it first seems" },
+  { re: /a small amount of room around this/gi, replacement: "a slightly softer edge around this" },
+  { re: /something here may be less closed than it first felt/gi, replacement: "something here may be a little less tight than it first felt" },
 ];
 
 function sanitizeRejectedSpacePhrases(text: string): { text: string; hit: boolean } {
@@ -499,6 +508,42 @@ function sanitizeRejectedSpacePhrases(text: string): { text: string; hit: boolea
     out = out.replace(rule.re, rule.replacement);
   }
   return { text: out, hit };
+}
+
+function normalizeSecondaryComparisonText(text: string): string {
+  return text
+    .trim()
+    .replace(/[“”"']/g, "")
+    .replace(/[。.!?]+$/g, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+function stripSecondaryEchoFromMain(main: string, secondary: string | null | undefined): string {
+  if (!main || !secondary) return main;
+  const secondaryTrimmed = secondary.trim();
+  if (!secondaryTrimmed) return main;
+
+  const normalizedSecondary = normalizeSecondaryComparisonText(secondaryTrimmed);
+  if (!normalizedSecondary) return main;
+
+  // Remove sentence-ish segments that strongly overlap the secondary text.
+  // This avoids relying on exact substring matching (punctuation/spacing can differ).
+  const segments = main.match(/[^.!?。！？\n]+[.!?。！？]?/g) ?? [main];
+  const kept: string[] = [];
+  for (const seg of segments) {
+    const s = seg.trim();
+    if (!s) continue;
+
+    const normalizedSeg = normalizeSecondaryComparisonText(s);
+    const containsNormalized = normalizedSeg.includes(normalizedSecondary);
+    const overlap = computeSecondaryOverlapScore(s, secondaryTrimmed);
+
+    if (containsNormalized || overlap > 0.55) continue;
+    kept.push(s);
+  }
+
+  return kept.join(" ").replace(/\s{2,}/g, " ").replace(/\s+([。.!?,;:])/g, "$1").trim();
 }
 
 type ThreadState = "same_thread" | "new_thread" | "borderline";
@@ -2882,6 +2927,21 @@ export async function POST(request: Request) {
       // suppressed
     }
   }
+
+  // Final boundary lock: if any kept secondary line accidentally appears inside the
+  // generated main reflection, strip it from main so the UI cannot render the same
+  // support move twice.
+  assistantContent = stripSecondaryEchoFromMain(assistantContent, keptLastInsight);
+  assistantContent = stripSecondaryEchoFromMain(assistantContent, keptSoftContinuity);
+  assistantContent = stripSecondaryEchoFromMain(assistantContent, keptPatternSurfacing);
+  assistantContent = stripSecondaryEchoFromMain(assistantContent, keptMicroAwareness);
+  assistantContent = stripSecondaryEchoFromMain(assistantContent, keptMicroShift);
+
+  // Re-run the rejected-phrase sanitizer after secondary stripping so the final main
+  // reflection is the actual source of truth sent to the UI.
+  const finalMainSanitized = sanitizeRejectedSpacePhrases(assistantContent);
+  assistantContent = finalMainSanitized.text;
+  debugRejectedPhraseHit = debugRejectedPhraseHit || finalMainSanitized.hit;
 
   // Debug: indicate which secondary layer survives de-dup + suppression-first.
   if (keptLastInsight) {
