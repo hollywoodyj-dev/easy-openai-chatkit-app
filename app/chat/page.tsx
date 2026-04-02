@@ -2,7 +2,13 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CHAT_AUTH_CHECK_ENDPOINT, CHAT_SESSION_ENDPOINT, CHAT_TURN_ENDPOINT } from "@/lib/config";
+import {
+  CHAT_AUTH_CHECK_ENDPOINT,
+  CHAT_MESSAGES_ENDPOINT,
+  CHAT_SESSION_ENDPOINT,
+  CHAT_SESSIONS_LIST_ENDPOINT,
+  CHAT_TURN_ENDPOINT,
+} from "@/lib/config";
 
 type AssistantPayload = {
   main_reflection: string;
@@ -51,6 +57,56 @@ function cn(...classes: Array<string | false | undefined>) {
 function safeId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function summarizeThreadLabel(text: string): string {
+  const t = text.trim();
+  if (!t) return "Quiet trace";
+  const hasCjk = /[\u4e00-\u9fff]/.test(t);
+  if (hasCjk) {
+    if (/(做对|出错|不能错|完美|证明)/.test(t)) return "想把事情做对的压力";
+    if (/(怀疑|不够好|价值|拉扯)/.test(t)) return "自我价值拉扯";
+    if (/(迟疑|犹豫|不敢|停不下)/.test(t)) return "一点内在迟疑";
+    if (/(工作|事情不顺|受挫|低落)/.test(t)) return "工作受挫后的低落";
+    if (/(很急|来不及|绷紧|焦虑|压力)/.test(t)) return "事情节奏带来的压力";
+    return "一段最近的内在线索";
+  }
+  const lower = t.toLowerCase();
+  if (/(get it right|perfect|mistake|prove)/.test(lower)) return "Getting it right";
+  if (/(self-worth|not enough|doubt myself|worth)/.test(lower)) return "Self-worth tension";
+  if (/(hesitat|hold back|uncertain|freeze)/.test(lower)) return "Inner hesitation";
+  if (/(work|discourag|setback|drained)/.test(lower)) return "Work discouragement";
+  if (/(pressure|urgent|rush|tight)/.test(lower)) return "Quiet pressure around work";
+  return "A recent inner thread";
+}
+
+type ApiChatMessage = {
+  id: string;
+  role: string;
+  message: string;
+  created_at: string;
+};
+
+function mapApiMessagesToState(rows: ApiChatMessage[]): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  for (const m of rows) {
+    if (m.role === "user") {
+      out.push({
+        id: m.id,
+        role: "user",
+        text: m.message,
+        createdAt: m.created_at,
+      });
+    } else if (m.role === "assistant") {
+      out.push({
+        id: m.id,
+        role: "assistant",
+        payload: { main_reflection: m.message },
+        createdAt: m.created_at,
+      });
+    }
+  }
+  return out;
 }
 
 function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
@@ -157,35 +213,38 @@ function ThreadDrawer({
       <button
         onClick={onClose}
         className={cn(
-          "fixed inset-0 z-30 bg-black/10 transition-opacity md:hidden",
+          "fixed inset-0 z-30 bg-black/10 transition-opacity",
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         )}
         aria-hidden={!open}
       />
       <aside
         className={cn(
-          "fixed right-0 top-0 z-40 h-full w-[84vw] max-w-[22rem] border-l border-black/6 bg-[#F8F6F2]/95 p-5 shadow-[-16px_0_40px_rgba(0,0,0,0.10)] backdrop-blur-xl transition-transform",
-          open ? "translate-x-0" : "translate-x-full"
+          "fixed z-40 rounded-[24px] border border-black/5 bg-[#F8F6F2]/96 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl transition duration-200",
+          "left-1/2 top-[78px] w-[84vw] max-w-[24rem] -translate-x-1/2 md:left-auto md:right-8 md:top-[72px] md:w-[22rem] md:-translate-x-0",
+          open
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-1 opacity-0"
         )}
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Recent threads</p>
-          <button onClick={onClose} className="text-sm text-[#7D7D7D] md:hidden" type="button">
+          <button onClick={onClose} className="text-sm text-[#7D7D7D]" type="button">
             Close
           </button>
         </div>
-        <ul className="space-y-3">
+        <ul className="space-y-2.5">
           {threads.length > 0 ? (
             threads.map((thread) => (
               <li
                 key={thread}
-                className="rounded-2xl border border-black/5 bg-white/78 px-3 py-2 text-sm leading-6 text-[#545454]"
+                className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm leading-6 text-[#545454] ring-1 ring-black/4"
               >
                 {thread}
               </li>
             ))
           ) : (
-            <li className="rounded-2xl border border-black/5 bg-white/78 px-3 py-2 text-sm text-[#868686]">
+            <li className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm text-[#868686] ring-1 ring-black/4">
               No recent thread yet.
             </li>
           )}
@@ -298,10 +357,8 @@ function ChatContent() {
   }, [messages]);
   const recentThreads = useMemo(() => {
     const users = messages.filter((m): m is Extract<ChatMessage, { role: "user" }> => m.role === "user");
-    return users
-      .slice(-3)
-      .reverse()
-      .map((u) => (u.text.length > 42 ? `${u.text.slice(0, 42).trim()}...` : u.text));
+    const labels = users.slice(-5).reverse().map((u) => summarizeThreadLabel(u.text));
+    return Array.from(new Set(labels)).slice(0, 5);
   }, [messages]);
 
   const authHeaders = useMemo(() => {
@@ -361,30 +418,121 @@ function ChatContent() {
             return;
           }
         }
-        const existing = typeof window !== "undefined" ? sessionStorage.getItem(storageKey) : null;
-        if (existing && !cancelled) {
-          setConversationId(existing);
-          setSessionLoading(false);
+
+        let sessionId: string | null =
+          typeof window !== "undefined" ? sessionStorage.getItem(storageKey) : null;
+
+        if (!sessionId && token) {
+          try {
+            const listRes = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
+              credentials: "include",
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+            if (!cancelled && listRes.ok) {
+              const data = (await listRes.json()) as {
+                sessions?: Array<{ id: string; topic: string }>;
+              };
+              const sessions = data.sessions ?? [];
+              const withUserTurn = sessions.find((s) => s.topic !== "New conversation");
+              if (withUserTurn?.id) {
+                sessionId = withUserTurn.id;
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem(storageKey, sessionId);
+                }
+              }
+            }
+          } catch {
+            /* fall through to create session */
+          }
+        }
+
+        if (!sessionId) {
+          const s = await fetch(CHAT_SESSION_ENDPOINT, {
+            method: "POST",
+            headers: authHeaders,
+            credentials: "include",
+            body: "{}",
+          });
+          if (!cancelled && s.status === 401) {
+            handleAuthExpired();
+            return;
+          }
+          if (!cancelled && s.status === 402) {
+            handleSubscriptionRequired();
+            return;
+          }
+          const sj = await s.json();
+          if (!cancelled && typeof sj.session_id === "string") {
+            sessionId = sj.session_id;
+            if (typeof window !== "undefined" && sessionId) {
+              sessionStorage.setItem(storageKey, sessionId);
+            }
+          }
+        }
+
+        if (!sessionId || cancelled) {
+          if (!cancelled) setSessionLoading(false);
           return;
         }
-        const s = await fetch(CHAT_SESSION_ENDPOINT, {
-          method: "POST",
-          headers: authHeaders,
-          credentials: "include",
-          body: "{}",
-        });
-        if (!cancelled && s.status === 401) {
+
+        setConversationId(sessionId);
+
+        const msgRes = await fetch(
+          `${CHAT_MESSAGES_ENDPOINT}?session_id=${encodeURIComponent(sessionId)}`,
+          {
+            credentials: "include",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
+        if (!cancelled && msgRes.status === 401) {
           handleAuthExpired();
           return;
         }
-        if (!cancelled && s.status === 402) {
+        if (!cancelled && msgRes.status === 402) {
           handleSubscriptionRequired();
           return;
         }
-        const sj = await s.json();
-        if (!cancelled && typeof sj.session_id === "string") {
-          setConversationId(sj.session_id);
-          if (typeof window !== "undefined") sessionStorage.setItem(storageKey, sj.session_id);
+
+        if (!cancelled && msgRes.ok) {
+          const body = (await msgRes.json()) as { messages?: ApiChatMessage[] };
+          const loaded = mapApiMessagesToState(body.messages ?? []);
+          if (loaded.length > 0) {
+            setMessages(loaded);
+          } else {
+            setMessages(INITIAL_MESSAGES);
+          }
+        } else if (!cancelled && msgRes.status === 404) {
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem(storageKey);
+          }
+          const s2 = await fetch(CHAT_SESSION_ENDPOINT, {
+            method: "POST",
+            headers: authHeaders,
+            credentials: "include",
+            body: "{}",
+          });
+          if (!cancelled && s2.status === 401) {
+            handleAuthExpired();
+            return;
+          }
+          if (!cancelled && s2.status === 402) {
+            handleSubscriptionRequired();
+            return;
+          }
+          if (!cancelled && s2.ok) {
+            const sj2 = await s2.json();
+            const freshId = typeof sj2.session_id === "string" ? sj2.session_id : null;
+            if (freshId) {
+              if (typeof window !== "undefined") {
+                sessionStorage.setItem(storageKey, freshId);
+              }
+              setConversationId(freshId);
+            }
+          }
+          setMessages(INITIAL_MESSAGES);
+        } else if (!cancelled) {
+          setMessages(INITIAL_MESSAGES);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to initialize chat");
