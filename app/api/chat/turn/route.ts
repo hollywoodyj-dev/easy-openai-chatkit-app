@@ -452,6 +452,120 @@ function isLastInsightTooSimilarToMainReflection(
   return false;
 }
 
+type ThreadState = "same_thread" | "new_thread" | "borderline";
+
+type ThreadStructure = {
+  emotion_signal: string | null;
+  interpretation_pattern: string | null;
+  tension_direction: string | null;
+  intensity: "low" | "medium" | "high";
+};
+
+function labelTokens(label: string | null): string[] {
+  const t = (label ?? "").toLowerCase().trim();
+  if (!t) return [];
+  const normalized = t.replace(/[^a-z0-9_]+/g, "_").replace(/_+/g, "_");
+  return normalized
+    .split("_")
+    .map((x) => x.trim())
+    .filter((x) => x.length >= 3);
+}
+
+function tokenJaccard(a: string | null, b: string | null): number {
+  const A = new Set(labelTokens(a));
+  const B = new Set(labelTokens(b));
+  if (A.size === 0 || B.size === 0) return 0;
+  if (a && b && a.trim().toLowerCase() === b.trim().toLowerCase()) return 1;
+  let inter = 0;
+  for (const w of A) if (B.has(w)) inter += 1;
+  const union = A.size + B.size - inter;
+  if (union <= 0) return 0;
+  return inter / union;
+}
+
+function extractThreadStructureFromReflectionState(
+  reflection: ExtractedReflectionState | null
+): ThreadStructure | null {
+  if (!reflection) return null;
+  const emotion = reflection.emotion_label?.trim() || null;
+  const interpretation = reflection.interpretation_label?.trim() || null;
+  const tension = `${reflection.regulation_label ?? ""}_${reflection.choice_label ?? ""}`.trim() || null;
+
+  const intensity: ThreadStructure["intensity"] =
+    emotion && /(anxiety|overwhelm|frustration|shame|anger|panic)/i.test(emotion)
+      ? "high"
+      : emotion && /(sad|uncertain|doubt|uncertainty|worry)/i.test(emotion)
+        ? "medium"
+        : "low";
+
+  return {
+    emotion_signal: emotion,
+    interpretation_pattern: interpretation,
+    tension_direction: tension,
+    intensity,
+  };
+}
+
+function decideThreadState(
+  current: ThreadStructure | null,
+  previous: ThreadStructure | null
+): {
+  state: ThreadState;
+  emotionSimilarity: number;
+  interpretationSimilarity: number;
+  tensionSimilarity: number;
+  weightedScore: number;
+} {
+  if (!current || !previous) {
+    return {
+      state: "borderline",
+      emotionSimilarity: 0,
+      interpretationSimilarity: 0,
+      tensionSimilarity: 0,
+      weightedScore: 0,
+    };
+  }
+
+  const emotionSimilarity = tokenJaccard(current.emotion_signal, previous.emotion_signal);
+  const interpretationSimilarity = tokenJaccard(
+    current.interpretation_pattern,
+    previous.interpretation_pattern
+  );
+  const tensionSimilarity = tokenJaccard(current.tension_direction, previous.tension_direction);
+
+  const weightedScore =
+    interpretationSimilarity * 0.5 +
+    emotionSimilarity * 0.3 +
+    tensionSimilarity * 0.2;
+
+  if (weightedScore >= 0.68) {
+    return {
+      state: "same_thread",
+      emotionSimilarity,
+      interpretationSimilarity,
+      tensionSimilarity,
+      weightedScore,
+    };
+  }
+  if (weightedScore <= 0.42) {
+    return {
+      state: "new_thread",
+      emotionSimilarity,
+      interpretationSimilarity,
+      tensionSimilarity,
+      weightedScore,
+    };
+  }
+
+  return {
+    state: "borderline",
+    emotionSimilarity,
+    interpretationSimilarity,
+    tensionSimilarity,
+    weightedScore,
+  };
+}
+
 function mapContinuityFamilyToPatternId(
   family: ContinuityPatternFamily
 ): PatternId {
@@ -1397,8 +1511,15 @@ export async function POST(request: Request) {
   let debugIsTooGeneric: boolean | null = null;
   let feedbackSaved: boolean = false;
   let previousTurnLastInsightText: string | null = null;
-  let debugLastInsightSource: "previous_turn" | "current_generation" | null = null;
+  let debugLastInsightSource: "previous_turn" | "none" | "invalid_current_turn" = "none";
   let debugLastInsightSuppressedReason: string | null = null;
+  let threadState: ThreadState = "borderline";
+  let debugEmotionSimilarity = 0;
+  let debugInterpretationSimilarity = 0;
+  let debugTensionSimilarity = 0;
+  let debugWeightedThreadScore = 0;
+  let debugSoftContinuitySuppressedReason: string | null = null;
+  let debugOverlapWithMainReflection = false;
   let responseContinuityInsight:
     | {
         id: string;
@@ -1579,7 +1700,7 @@ export async function POST(request: Request) {
     }
   } catch {
     previousTurnLastInsightText = null;
-    debugLastInsightSource = null;
+    debugLastInsightSource = "none";
   }
 
   if (reflectionState && reflectionState.insight_candidate.trim()) {
@@ -2250,6 +2371,21 @@ export async function POST(request: Request) {
       previousAssistantHadAwarenessCue = false;
     }
 
+    // Runtime inner-thread detection (emotional + interpretive + tension structure).
+    // Continuity layers must be reset when the thread shifts.
+    const currentThreadStructure = extractThreadStructureFromReflectionState(
+      reflectionState
+    );
+    const previousThreadStructure = extractThreadStructureFromReflectionState(
+      previousAssistantReflectionState
+    );
+    const threadDecision = decideThreadState(currentThreadStructure, previousThreadStructure);
+    threadState = threadDecision.state;
+    debugEmotionSimilarity = threadDecision.emotionSimilarity;
+    debugInterpretationSimilarity = threadDecision.interpretationSimilarity;
+    debugTensionSimilarity = threadDecision.tensionSimilarity;
+    debugWeightedThreadScore = threadDecision.weightedScore;
+
     const insightCoreForH =
       debugInsightCorePattern ??
       (reflectionState?.insight_candidate?.trim() || null);
@@ -2583,6 +2719,7 @@ export async function POST(request: Request) {
   const requestedLang = body.lang === "zh" || body.lang === "en" ? body.lang : undefined;
   const responseLang: "en" | "zh" = requestedLang ?? (wantsChinese ? "zh" : "en");
   let responseLastInsight: string | null = previousTurnLastInsightText;
+  const allowContinuityLayers = threadState === "same_thread";
   if (responseLastInsight) {
     if (debugMilestoneIMainReflectionSufficient === true) {
       debugLastInsightSuppressedReason = "main_reflection_already_sufficient";
@@ -2600,14 +2737,28 @@ export async function POST(request: Request) {
       debugLastInsightSuppressedReason = "context_shifted";
       responseLastInsight = null;
     } else if (isLastInsightTooSimilarToMainReflection(responseLastInsight, assistantContent)) {
+      debugOverlapWithMainReflection = true;
       debugLastInsightSuppressedReason = "similar_to_main_reflection";
       responseLastInsight = null;
     }
+
+    if (responseLastInsight && !allowContinuityLayers) {
+      debugLastInsightSuppressedReason = `thread_${threadState}`;
+      responseLastInsight = null;
+    }
+  }
+
+  const proposedSoftContinuity =
+    responseLang === "zh" ? debugMilestoneICueTextZh : debugMilestoneICueTextEn;
+  let responseSoftContinuity: string | null = proposedSoftContinuity ?? null;
+  if (responseSoftContinuity && !allowContinuityLayers) {
+    debugSoftContinuitySuppressedReason = `thread_${threadState}`;
+    responseSoftContinuity = null;
   }
   const responsePayload = {
     main_reflection: assistantContent,
     ...(responseLastInsight ? { last_insight: responseLastInsight } : {}),
-    ...(responseRecurrenceCue
+    ...(allowContinuityLayers && responseRecurrenceCue
       ? {
           pattern_surfacing:
             responseLang === "zh" ? responseRecurrenceCue.textZh : responseRecurrenceCue.textEn,
@@ -2619,12 +2770,7 @@ export async function POST(request: Request) {
             responseLang === "zh" ? responseAwarenessCue.textZh : responseAwarenessCue.textEn,
         }
       : {}),
-    ...((responseLang === "zh" ? debugMilestoneICueTextZh : debugMilestoneICueTextEn)
-      ? {
-          soft_continuity:
-            responseLang === "zh" ? debugMilestoneICueTextZh : debugMilestoneICueTextEn,
-        }
-      : {}),
+    ...(responseSoftContinuity ? { soft_continuity: responseSoftContinuity } : {}),
     ...(responseMicroshiftCue
       ? {
           micro_shift:
@@ -2693,6 +2839,14 @@ export async function POST(request: Request) {
     debug_is_continuity_eligible: debugIsContinuityEligible,
     debug_last_insight_source: debugLastInsightSource,
     debug_last_insight_suppressed_reason: debugLastInsightSuppressedReason,
+    debug_thread_state: threadState,
+    debug_emotion_similarity: debugEmotionSimilarity,
+    debug_interpretation_similarity: debugInterpretationSimilarity,
+    debug_tension_similarity: debugTensionSimilarity,
+    debug_weighted_thread_score: debugWeightedThreadScore,
+    debug_soft_continuity_suppressed_reason: debugSoftContinuitySuppressedReason,
+    debug_main_reflection_sufficient: debugMilestoneIMainReflectionSufficient === true,
+    debug_overlap_with_main_reflection: debugOverlapWithMainReflection,
     debug_insight_core_pattern: debugInsightCorePattern,
     debug_has_strong_pattern_cue: debugHasStrongPatternCue,
     debug_is_flat_restatement: debugIsFlatRestatement,
