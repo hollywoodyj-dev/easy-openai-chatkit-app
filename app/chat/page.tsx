@@ -189,23 +189,25 @@ function ThreadDrawer({
   onClose: () => void;
   threads: string[];
 }) {
+  // V3 presence rule: Recent threads must be hidden by default.
+  // Render nothing when closed so it can't accidentally remain visible due to CSS/opacity quirks.
+  if (!open) return null;
+
   return (
     <>
       <button
         onClick={onClose}
         className={cn(
           "fixed inset-0 z-30 bg-black/10 transition-opacity",
-          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          "pointer-events-auto opacity-100"
         )}
-        aria-hidden={!open}
+        aria-hidden="true"
       />
       <aside
         className={cn(
           "fixed z-40 rounded-[24px] border border-black/5 bg-[#F8F6F2]/96 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl transition duration-200",
           "left-1/2 top-[78px] w-[84vw] max-w-[24rem] -translate-x-1/2 md:left-auto md:right-8 md:top-[72px] md:w-[22rem] md:-translate-x-0",
-          open
-            ? "pointer-events-auto translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-1 opacity-0"
+          "pointer-events-auto translate-y-0 opacity-100"
         )}
       >
         <div className="mb-3 flex items-center justify-between">
