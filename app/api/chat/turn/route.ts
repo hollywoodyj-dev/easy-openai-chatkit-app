@@ -51,6 +51,7 @@ import {
   evaluateMilestoneJBoundary,
 } from "@/lib/wisewave-milestone-j-microshift-boundary";
 import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
+import { summarizeThreadLabelFromUserMessage } from "@/lib/wisewave-thread-label";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -657,6 +658,48 @@ function decideThreadState(
     interpretationSimilarity,
     tensionSimilarity,
     weightedScore,
+  };
+}
+
+function threadRowToThreadStructure(row: {
+  emotionSignal: string | null;
+  interpretationPattern: string | null;
+  tensionDirection: string | null;
+  intensity: string | null;
+}): ThreadStructure | null {
+  if (!row.emotionSignal && !row.interpretationPattern && !row.tensionDirection) {
+    return null;
+  }
+  const int = row.intensity;
+  const intensity: ThreadStructure["intensity"] =
+    int === "high" || int === "medium" || int === "low" ? int : "low";
+  return {
+    emotion_signal: row.emotionSignal,
+    interpretation_pattern: row.interpretationPattern,
+    tension_direction: row.tensionDirection,
+    intensity,
+  };
+}
+
+function threadStructureToThreadRowFields(s: ThreadStructure | null): {
+  emotionSignal: string | null;
+  interpretationPattern: string | null;
+  tensionDirection: string | null;
+  intensity: string;
+} {
+  if (!s) {
+    return {
+      emotionSignal: null,
+      interpretationPattern: null,
+      tensionDirection: null,
+      intensity: "low",
+    };
+  }
+  return {
+    emotionSignal: s.emotion_signal,
+    interpretationPattern: s.interpretation_pattern,
+    tensionDirection: s.tension_direction,
+    intensity: s.intensity,
   };
 }
 
@@ -1605,13 +1648,22 @@ export async function POST(request: Request) {
   let debugIsTooGeneric: boolean | null = null;
   let feedbackSaved: boolean = false;
   let previousTurnLastInsightText: string | null = null;
-  let debugLastInsightSource: "previous_turn" | "none" | "invalid_current_turn" = "none";
+  let debugLastInsightSource:
+    | "same_thread_stable_insight"
+    | "none"
+    | "invalid_current_turn" = "none";
   let debugLastInsightSuppressedReason: string | null = null;
   let threadState: ThreadState = "borderline";
   let debugEmotionSimilarity = 0;
   let debugInterpretationSimilarity = 0;
   let debugTensionSimilarity = 0;
   let debugWeightedThreadScore = 0;
+  /** Prior assistant metadata (H/I + thread); loaded once when assistantMsgId is set. */
+  let previousAssistantReflectionState: ExtractedReflectionState | null = null;
+  let previousAssistantHadAwarenessCue = false;
+  /** Active inner thread for this conversation after this turn's resolution. */
+  let activeThreadId: string | null = null;
+  let debugActiveThreadId: string | null = null;
   let debugSoftContinuitySuppressedReason: string | null = null;
   let debugOverlapWithMainReflection = false;
   // Secondary-layer collision / rejected-phrase debug (temporary, Lumen verification).
@@ -1766,46 +1818,149 @@ export async function POST(request: Request) {
   let debugMilestoneJRollbackRisk: boolean | null = null;
   const debugMilestoneJEnabled = isMilestoneJMicroshiftEnabled();
 
-  // Ticket 4: save one durable insight when we have a good candidate.
-  try {
-    const anyPrismaRead = prisma as unknown as {
-      insight?: {
-        findFirst: (args: {
-          where: {
-            userId: string;
-            conversationId: string;
-            status: string;
-            isContinuityEligible: boolean;
-            createdAt: { lt: Date };
-          };
-          orderBy: { createdAt: "desc" };
-          select: { continuityText: true };
-        }) => Promise<{ continuityText: string } | null>;
-      };
-    };
-    if (anyPrismaRead.insight && typeof anyPrismaRead.insight.findFirst === "function") {
-      const previousInsight = await anyPrismaRead.insight.findFirst({
+  // V3: inner Thread is the continuity unit. last_insight = prior stable insight in the same thread only (not conversation-wide).
+  if (assistantMsgId) {
+    try {
+      const priorAssistant = await prisma.message.findFirst({
         where: {
-          userId,
           conversationId: sessionId,
-          status: "active",
-          isContinuityEligible: true,
-          createdAt: { lt: userMsg.createdAt },
+          role: "assistant",
+          NOT: { id: assistantMsgId },
         },
         orderBy: { createdAt: "desc" },
-        select: { continuityText: true },
+        select: { metadata: true },
       });
-      const candidateText = previousInsight?.continuityText?.trim() || null;
-      if (candidateText) {
-        previousTurnLastInsightText = candidateText;
-        debugLastInsightSource = "previous_turn";
+      const pm = priorAssistant?.metadata;
+      if (pm && typeof pm === "object" && !Array.isArray(pm)) {
+        const w = (pm as Record<string, unknown>).wisewave_micro_awareness;
+        previousAssistantHadAwarenessCue =
+          w !== null &&
+          typeof w === "object" &&
+          !Array.isArray(w) &&
+          typeof (w as { kind?: unknown }).kind === "string";
+
+        const rs = (pm as Record<string, unknown>).wisewave_reflection_state;
+        if (rs && typeof rs === "object" && !Array.isArray(rs)) {
+          const r = rs as Record<string, unknown>;
+          if (
+            typeof r.trigger_label === "string" &&
+            typeof r.emotion_label === "string" &&
+            typeof r.interpretation_label === "string" &&
+            typeof r.regulation_label === "string" &&
+            typeof r.choice_label === "string" &&
+            typeof r.insight_candidate === "string"
+          ) {
+            previousAssistantReflectionState = {
+              trigger_label: r.trigger_label,
+              emotion_label: r.emotion_label,
+              interpretation_label: r.interpretation_label,
+              regulation_label: r.regulation_label,
+              choice_label: r.choice_label,
+              insight_candidate: r.insight_candidate,
+            } as ExtractedReflectionState;
+          }
+        }
       }
+
+      const currentThreadStructure =
+        extractThreadStructureFromReflectionState(reflectionState);
+      const previousFromAssistant = extractThreadStructureFromReflectionState(
+        previousAssistantReflectionState
+      );
+      const activeThreadRow = await prisma.thread.findFirst({
+        where: { conversationId: sessionId, isActive: true },
+      });
+      const previousForDecision =
+        previousFromAssistant ??
+        (activeThreadRow
+          ? threadRowToThreadStructure({
+              emotionSignal: activeThreadRow.emotionSignal,
+              interpretationPattern: activeThreadRow.interpretationPattern,
+              tensionDirection: activeThreadRow.tensionDirection,
+              intensity: activeThreadRow.intensity,
+            })
+          : null);
+
+      const threadDecision = decideThreadState(
+        currentThreadStructure,
+        previousForDecision
+      );
+      threadState = threadDecision.state;
+      debugEmotionSimilarity = threadDecision.emotionSimilarity;
+      debugInterpretationSimilarity = threadDecision.interpretationSimilarity;
+      debugTensionSimilarity = threadDecision.tensionSimilarity;
+      debugWeightedThreadScore = threadDecision.weightedScore;
+
+      const structFields = threadStructureToThreadRowFields(currentThreadStructure);
+      const label = summarizeThreadLabelFromUserMessage(message);
+
+      if (threadState === "new_thread" || threadState === "borderline") {
+        await prisma.thread.updateMany({
+          where: { conversationId: sessionId, isActive: true },
+          data: {
+            isActive: false,
+            status: threadState === "new_thread" ? "closed" : "soft_closed",
+            closedAt: new Date(),
+          },
+        });
+        const createdThread = await prisma.thread.create({
+          data: {
+            conversationId: sessionId,
+            isActive: true,
+            status: "active",
+            ...structFields,
+            label,
+          },
+        });
+        activeThreadId = createdThread.id;
+      } else if (activeThreadRow) {
+        await prisma.thread.update({
+          where: { id: activeThreadRow.id },
+          data: { ...structFields, label },
+        });
+        activeThreadId = activeThreadRow.id;
+      } else {
+        const createdThread = await prisma.thread.create({
+          data: {
+            conversationId: sessionId,
+            isActive: true,
+            status: "active",
+            ...structFields,
+            label,
+          },
+        });
+        activeThreadId = createdThread.id;
+      }
+      debugActiveThreadId = activeThreadId;
+
+      if (threadState === "same_thread" && activeThreadId) {
+        const previousInsight = await prisma.insight.findFirst({
+          where: {
+            userId,
+            conversationId: sessionId,
+            threadId: activeThreadId,
+            status: "active",
+            isContinuityEligible: true,
+            isStable: true,
+            createdAt: { lt: userMsg.createdAt },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { continuityText: true },
+        });
+        const candidateText = previousInsight?.continuityText?.trim() || null;
+        if (candidateText) {
+          previousTurnLastInsightText = candidateText;
+          debugLastInsightSource = "same_thread_stable_insight";
+        }
+      }
+    } catch (e) {
+      console.warn("[chat/turn] thread / last_insight resolution failed", e);
+      previousTurnLastInsightText = null;
+      debugLastInsightSource = "none";
     }
-  } catch {
-    previousTurnLastInsightText = null;
-    debugLastInsightSource = "none";
   }
 
+  // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
     const continuityText = toContinuityReminderText(corePattern);
@@ -1995,12 +2150,15 @@ export async function POST(request: Request) {
             data: {
               userId: string;
               conversationId: string;
+              threadId?: string | null;
               sourceMessageId: string;
               corePattern: string;
               continuityText: string;
               status: string;
               confidenceScore: number | null;
               isContinuityEligible: boolean;
+              isStable: boolean;
+              stabilityReason?: string | null;
             };
           }) => Promise<{ id: string; createdAt: Date }>;
         };
@@ -2015,12 +2173,17 @@ export async function POST(request: Request) {
           data: {
             userId,
             conversationId: sessionId,
+            ...(activeThreadId ? { threadId: activeThreadId } : {}),
             sourceMessageId: userMsg.id,
             corePattern,
             continuityText,
             status: "active",
             confidenceScore: null,
             isContinuityEligible,
+            isStable: isContinuityEligible,
+            stabilityReason: isContinuityEligible
+              ? null
+              : "not_continuity_eligible",
           },
         });
         debugInsightId = created?.id ?? null;
@@ -2044,6 +2207,7 @@ export async function POST(request: Request) {
                   userId: string;
                   status: string;
                   isContinuityEligible: boolean;
+                  threadId?: string;
                   id?: { not: string };
                 };
                 orderBy: { createdAt: "asc" | "desc" };
@@ -2058,6 +2222,7 @@ export async function POST(request: Request) {
               status: "active",
               isContinuityEligible: true,
               id: { not: created.id },
+              ...(activeThreadId ? { threadId: activeThreadId } : {}),
             },
             orderBy: { createdAt: "desc" },
             // Milestone E2: small rolling window (substrate, not archive).
@@ -2426,69 +2591,8 @@ export async function POST(request: Request) {
   }
 
   // Milestone H: micro awareness cue — after reflection + E strips; suppressed when E recurrence emitted.
+  // Thread state + prior assistant metadata were resolved earlier (V3 inner-thread model).
   if (assistantMsgId) {
-    let previousAssistantHadAwarenessCue = false;
-    let previousAssistantReflectionState: ExtractedReflectionState | null = null;
-    try {
-      const priorAssistant = await prisma.message.findFirst({
-        where: {
-          conversationId: sessionId,
-          role: "assistant",
-          NOT: { id: assistantMsgId },
-        },
-        orderBy: { createdAt: "desc" },
-        select: { metadata: true },
-      });
-      const pm = priorAssistant?.metadata;
-      if (pm && typeof pm === "object" && !Array.isArray(pm)) {
-        const w = (pm as Record<string, unknown>).wisewave_micro_awareness;
-        previousAssistantHadAwarenessCue =
-          w !== null &&
-          typeof w === "object" &&
-          !Array.isArray(w) &&
-          typeof (w as { kind?: unknown }).kind === "string";
-
-        const rs = (pm as Record<string, unknown>).wisewave_reflection_state;
-        if (rs && typeof rs === "object" && !Array.isArray(rs)) {
-          const r = rs as Record<string, unknown>;
-          if (
-            typeof r.trigger_label === "string" &&
-            typeof r.emotion_label === "string" &&
-            typeof r.interpretation_label === "string" &&
-            typeof r.regulation_label === "string" &&
-            typeof r.choice_label === "string" &&
-            typeof r.insight_candidate === "string"
-          ) {
-            previousAssistantReflectionState = {
-              trigger_label: r.trigger_label,
-              emotion_label: r.emotion_label,
-              interpretation_label: r.interpretation_label,
-              regulation_label: r.regulation_label,
-              choice_label: r.choice_label,
-              insight_candidate: r.insight_candidate,
-            } as ExtractedReflectionState;
-          }
-        }
-      }
-    } catch {
-      previousAssistantHadAwarenessCue = false;
-    }
-
-    // Runtime inner-thread detection (emotional + interpretive + tension structure).
-    // Continuity layers must be reset when the thread shifts.
-    const currentThreadStructure = extractThreadStructureFromReflectionState(
-      reflectionState
-    );
-    const previousThreadStructure = extractThreadStructureFromReflectionState(
-      previousAssistantReflectionState
-    );
-    const threadDecision = decideThreadState(currentThreadStructure, previousThreadStructure);
-    threadState = threadDecision.state;
-    debugEmotionSimilarity = threadDecision.emotionSimilarity;
-    debugInterpretationSimilarity = threadDecision.interpretationSimilarity;
-    debugTensionSimilarity = threadDecision.tensionSimilarity;
-    debugWeightedThreadScore = threadDecision.weightedScore;
-
     const insightCoreForH =
       debugInsightCorePattern ??
       (reflectionState?.insight_candidate?.trim() || null);
@@ -2947,7 +3051,7 @@ export async function POST(request: Request) {
   if (keptLastInsight) {
     debugSecondaryLayerType = "last_insight";
     debugSecondarySource = "last_insight";
-    debugSecondarySourceValid = debugLastInsightSource === "previous_turn";
+    debugSecondarySourceValid = debugLastInsightSource === "same_thread_stable_insight";
     debugSecondaryOverlapScore = computeSecondaryOverlapScore(keptLastInsight, assistantContent);
     debugSecondaryTemplateId = debugMilestoneICueFamily ?? null;
   } else if (keptSoftContinuity) {
@@ -3033,6 +3137,7 @@ export async function POST(request: Request) {
     debug_last_insight_source: debugLastInsightSource,
     debug_last_insight_suppressed_reason: debugLastInsightSuppressedReason,
     debug_thread_state: threadState,
+    debug_active_thread_id: debugActiveThreadId,
     debug_emotion_similarity: debugEmotionSimilarity,
     debug_interpretation_similarity: debugInterpretationSimilarity,
     debug_tension_similarity: debugTensionSimilarity,

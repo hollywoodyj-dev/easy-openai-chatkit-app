@@ -39,6 +39,7 @@ model Subscription {
 }
 
 /// Chat conversation (session). userId is either User.id or anonymous cookie-based id.
+/// V3: continuity for last_insight is scoped to inner Thread rows, not conversation id alone.
 model Conversation {
   id                  String    @id @default(cuid())
   userId              String    // User.id for authenticated; cookie/generated id for anonymous
@@ -49,6 +50,28 @@ model Conversation {
   reflectionCheckpoints ReflectionCheckpoint[]
   reflectionRuns       ReflectionRun[]
   insights             Insight[]
+  threads              Thread[]
+}
+
+/// Inner-thread continuity unit (V3). One active thread per conversation at a time.
+model Thread {
+  id                     String    @id @default(cuid())
+  conversationId         String    @map("conversation_id")
+  conversation           Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  isActive               Boolean   @default(true) @map("is_active")
+  status                 String    @default("active") // active | soft_closed | closed
+  emotionSignal          String?   @map("emotion_signal")
+  interpretationPattern  String?   @map("interpretation_pattern")
+  tensionDirection       String?   @map("tension_direction")
+  intensity              String? // low | medium | high
+  label                  String?
+  closedAt               DateTime? @map("closed_at")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  insights               Insight[]
+
+  @@index([conversationId, isActive])
 }
 
 /// User-triggered reflection checkpoint: optional user input + AI-generated summary. One per row; multiple per conversation.
@@ -96,11 +119,14 @@ model ReflectionRun {
 }
 
 /// Durable insight saved from a reflection cycle; used for continuity strip and memory.
+/// V3: last_insight reads only stable insights tied to the active inner thread.
 model Insight {
   id               String   @id @default(cuid())
   userId           String   @map("user_id")
   conversationId   String   @map("conversation_id")
   conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  threadId         String?  @map("thread_id")
+  thread           Thread?  @relation(fields: [threadId], references: [id], onDelete: SetNull)
   sourceMessageId  String   @map("source_message_id")
   corePattern      String   @map("core_pattern") @db.Text
   continuityText   String   @map("continuity_text") @db.Text
@@ -109,9 +135,13 @@ model Insight {
   createdAt        DateTime @default(now())
   lastSeenAt       DateTime @map("last_seen_at") @default(now())
   isContinuityEligible Boolean @map("is_continuity_eligible") @default(true)
+  /// True only when insight is durable enough to surface later as last_insight (mirrors strict eligibility).
+  isStable         Boolean  @default(false) @map("is_stable")
+  stabilityReason  String?  @map("stability_reason") @db.Text
 
   @@index([userId])
   @@index([conversationId])
+  @@index([threadId, isStable, createdAt])
   @@index([status])
   @@index([isContinuityEligible])
 }

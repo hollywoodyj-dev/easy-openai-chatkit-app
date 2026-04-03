@@ -7,8 +7,10 @@ import {
   CHAT_MESSAGES_ENDPOINT,
   CHAT_SESSION_ENDPOINT,
   CHAT_SESSIONS_LIST_ENDPOINT,
+  CHAT_THREADS_ENDPOINT,
   CHAT_TURN_ENDPOINT,
 } from "@/lib/config";
+import { summarizeThreadLabelFromUserMessage as summarizeThreadLabel } from "@/lib/wisewave-thread-label";
 
 type AssistantPayload = {
   main_reflection: string;
@@ -57,27 +59,6 @@ function cn(...classes: Array<string | false | undefined>) {
 function safeId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function summarizeThreadLabel(text: string): string {
-  const t = text.trim();
-  if (!t) return "Quiet trace";
-  const hasCjk = /[\u4e00-\u9fff]/.test(t);
-  if (hasCjk) {
-    if (/(做对|出错|不能错|完美|证明)/.test(t)) return "想把事情做对的压力";
-    if (/(怀疑|不够好|价值|拉扯)/.test(t)) return "自我价值拉扯";
-    if (/(迟疑|犹豫|不敢|停不下)/.test(t)) return "一点内在迟疑";
-    if (/(工作|事情不顺|受挫|低落)/.test(t)) return "工作受挫后的低落";
-    if (/(很急|来不及|绷紧|焦虑|压力)/.test(t)) return "事情节奏带来的压力";
-    return "一段最近的内在线索";
-  }
-  const lower = t.toLowerCase();
-  if (/(get it right|perfect|mistake|prove)/.test(lower)) return "Getting it right";
-  if (/(self-worth|not enough|doubt myself|worth)/.test(lower)) return "Self-worth tension";
-  if (/(hesitat|hold back|uncertain|freeze)/.test(lower)) return "Inner hesitation";
-  if (/(work|discourag|setback|drained)/.test(lower)) return "Work discouragement";
-  if (/(pressure|urgent|rush|tight)/.test(lower)) return "Quiet pressure around work";
-  return "A recent inner thread";
 }
 
 type ApiChatMessage = {
@@ -344,6 +325,7 @@ function ChatContent() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [minAnchorUntil, setMinAnchorUntil] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [threadDrawerLabels, setThreadDrawerLabels] = useState<string[]>([]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
@@ -356,10 +338,13 @@ function ChatContent() {
     return undefined;
   }, [messages]);
   const recentThreads = useMemo(() => {
+    if (threadDrawerLabels.length > 0) {
+      return Array.from(new Set(threadDrawerLabels)).slice(0, 5);
+    }
     const users = messages.filter((m): m is Extract<ChatMessage, { role: "user" }> => m.role === "user");
     const labels = users.slice(-5).reverse().map((u) => summarizeThreadLabel(u.text));
     return Array.from(new Set(labels)).slice(0, 5);
-  }, [messages]);
+  }, [messages, threadDrawerLabels]);
 
   const authHeaders = useMemo(() => {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -393,6 +378,31 @@ function ChatContent() {
     setTokenInvalid(false);
     setError(null);
   }, [storageKey]);
+
+  useEffect(() => {
+    if (!conversationId || sessionLoading) {
+      setThreadDrawerLabels([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${CHAT_THREADS_ENDPOINT}?session_id=${encodeURIComponent(conversationId)}`,
+          { credentials: "include", headers: authHeaders }
+        );
+        if (cancelled || !res.ok) return;
+        const data = (await res.json()) as { threads?: Array<{ label: string }> };
+        const labels = (data.threads ?? []).map((t) => t.label).filter(Boolean);
+        if (!cancelled) setThreadDrawerLabels(labels.slice(0, 8));
+      } catch {
+        if (!cancelled) setThreadDrawerLabels([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId, sessionLoading, messages.length, authHeaders]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });

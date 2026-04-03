@@ -8,6 +8,7 @@ export const CHAT_SESSION_ENDPOINT = "/api/chat/session";
 export const CHAT_AUTH_CHECK_ENDPOINT = "/api/chat/auth-check";
 export const CHAT_SESSIONS_LIST_ENDPOINT = "/api/chat/sessions";
 export const CHAT_MESSAGES_ENDPOINT = "/api/chat/messages";
+export const CHAT_THREADS_ENDPOINT = "/api/chat/threads";
 export const CHAT_TURN_ENDPOINT = "/api/chat/turn";
 export const CHAT_REFLECTION_ENDPOINT = "/api/chat/reflection";
 export const CHAT_CONTINUITY_ENDPOINT = "/api/chat/continuity";
