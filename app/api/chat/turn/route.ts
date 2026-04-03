@@ -497,6 +497,12 @@ const REJECTED_SPACE_PHRASE_RULES: Array<{ re: RegExp; replacement: string }> = 
   { re: /a little more room here than it first seems/gi, replacement: "a little less tight here than it first seems" },
   { re: /a small amount of room around this/gi, replacement: "a slightly softer edge around this" },
   { re: /something here may be less closed than it first felt/gi, replacement: "something here may be a little less tight than it first felt" },
+  // V3: J template-adjacent generic closure lines (Lumen hosted retest 2026-04-03)
+  { re: /something in this may be able to ease a little\.?/gi, replacement: "" },
+  { re: /there may be a little less holding here than it first felt\.?/gi, replacement: "" },
+  { re: /this may not need to remain so fully braced\.?/gi, replacement: "" },
+  { re: /something here may ease a little\.?/gi, replacement: "" },
+  { re: /something in this may be able to ease slightly\.?/gi, replacement: "" },
 ];
 
 function sanitizeRejectedSpacePhrases(text: string): { text: string; hit: boolean } {
@@ -1496,9 +1502,22 @@ export async function POST(request: Request) {
       conversationUpdated?.conversationSummary?.trim()
         ? `\n\nConversation summary:\n${conversationUpdated.conversationSummary.trim()}`
         : "";
+    const utilOrFactualTurn = looksUtilitarianOrFactual(message);
+    const briefNoncommittalTurn =
+      message.trim().length <= 28 &&
+      /\b(not sure|unsure|maybe|perhaps|idk|dunno|anything|either|whatever)\b/i.test(
+        message.trim().toLowerCase()
+      );
     const reflectionBlock =
-      reflectionState && reflectionState.insight_candidate.trim()
+      !utilOrFactualTurn &&
+      !briefNoncommittalTurn &&
+      reflectionState &&
+      reflectionState.insight_candidate.trim()
         ? `\n\nLatest reflection state (for this user message):\n- trigger_label: ${reflectionState.trigger_label}\n- emotion_label: ${reflectionState.emotion_label}\n- interpretation_label: ${reflectionState.interpretation_label}\n- regulation_label: ${reflectionState.regulation_label}\n- choice_label: ${reflectionState.choice_label}\n- insight_candidate: ${reflectionState.insight_candidate}`
+        : "";
+    const v3TurnFocusAppendix =
+      utilOrFactualTurn || briefNoncommittalTurn
+        ? "\n\nTurn focus (V3): The latest user message is practical, logistical, or very brief/non-committal. Reply in one coherent message that addresses only what they asked or signalled here. Do not reinterpret inner reluctance, avoidance, or emotion unless they clearly describe lived feeling in this turn. Do not merge or continue earlier conversation topics unless they explicitly connect them in this message."
         : "";
     const milestoneGAppendix = milestoneGSystemAppendix();
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
@@ -1513,6 +1532,7 @@ export async function POST(request: Request) {
         reflectionBlock +
         milestoneGAppendix +
         milestoneHLightAppendix +
+        v3TurnFocusAppendix +
         languageInstruction,
     });
   }
@@ -2131,6 +2151,10 @@ export async function POST(request: Request) {
       if (!strongOverride) {
         isContinuityEligible = false;
       }
+    }
+
+    if (looksUtilitarianOrFactual(message)) {
+      isContinuityEligible = false;
     }
 
     // Capture full decision chain for this turn (debug only).
@@ -2901,7 +2925,8 @@ export async function POST(request: Request) {
   const requestedLang = body.lang === "zh" || body.lang === "en" ? body.lang : undefined;
   const responseLang: "en" | "zh" = requestedLang ?? (wantsChinese ? "zh" : "en");
   let responseLastInsight: string | null = previousTurnLastInsightText;
-  const allowContinuityLayers = threadState === "same_thread";
+  const allowContinuityLayers =
+    threadState === "same_thread" && !looksUtilitarianOrFactual(message);
 
   // Hard block: remove previously QA-rejected "space" phrasing from main reflection.
   // (Secondary layers are suppressed instead of replaced to keep separation strict.)
@@ -3011,7 +3036,7 @@ export async function POST(request: Request) {
   }
 
   let keptMicroAwareness: string | null = null;
-  if (!willRenderSecondaryFromLastOrSoft && responseAwarenessCue) {
+  if (!willRenderSecondaryFromLastOrSoft && allowContinuityLayers && responseAwarenessCue) {
     const t = responseLang === "zh" ? responseAwarenessCue.textZh : responseAwarenessCue.textEn;
     const san = sanitizeRejectedSpacePhrases(t);
     if (!san.hit && computeSecondaryOverlapScore(t, assistantContent) <= SECONDARY_OVERLAP_THRESHOLD) {
@@ -3022,7 +3047,7 @@ export async function POST(request: Request) {
   }
 
   let keptMicroShift: string | null = null;
-  if (!willRenderSecondaryFromLastOrSoft && responseMicroshiftCue) {
+  if (!willRenderSecondaryFromLastOrSoft && allowContinuityLayers && responseMicroshiftCue) {
     const t = responseLang === "zh" ? responseMicroshiftCue.textZh : responseMicroshiftCue.textEn;
     const san = sanitizeRejectedSpacePhrases(t);
     if (!san.hit && computeSecondaryOverlapScore(t, assistantContent) <= SECONDARY_OVERLAP_THRESHOLD) {

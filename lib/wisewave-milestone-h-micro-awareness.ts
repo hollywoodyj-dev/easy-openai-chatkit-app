@@ -370,11 +370,38 @@ export function hasReflectiveFirstPersonAnchor(message: string): boolean {
   return false;
 }
 
+/**
+ * Strip leading topic pivots so `what is …` / utilitarian asks are detected even when
+ * prefixed with "Separate question:" (hosted V3 retest — J boundary used to miss these).
+ */
+function stripLeadingNonReflectiveTopicPivots(raw: string): string {
+  return raw
+    .trim()
+    .replace(
+      /^\s*(?:separate|different|another|new|other|side|quick|unrelated|random|off[\s-]?topic)\s+question\s*[:：]?\s*/i,
+      ""
+    )
+    .replace(/^\s*(?:different|new|another)\s+topic\s*[:：]?\s*/i, "")
+    .replace(/^\s*(?:just|quickly)\s+(?:wondering|asking)\s*[:：]?\s*/i, "")
+    .trim();
+}
+
 export function looksUtilitarianOrFactual(message: string): boolean {
-  const t = message.trim();
+  const trimmed = message.trim();
+  const t0 = stripLeadingNonReflectiveTopicPivots(trimmed);
+  const t = t0.length > 0 ? t0 : trimmed;
   if (t.length < 8) return true;
 
   if (looksTaskHelpOrUtilitarianRequest(t)) return true;
+
+  const lowerFull = trimmed.toLowerCase();
+  if (
+    /\b(recipe|pasta(\s+sauce)?|cook\s|ingredients?\b|cookbook|dinner\s+tonight|what\s+to\s+(?:eat|cook|make))\b/i.test(
+      lowerFull
+    )
+  ) {
+    return true;
+  }
 
   // Post-H hard kill: direct drafting / rewrite / summarize style asks must never emit H.
   // (Observed leak: "Rewrite this email in a more professional tone.")

@@ -9,6 +9,7 @@
  */
 
 import type { ExtractedReflectionState } from "@/lib/wisewave-extract";
+import { looksUtilitarianOrFactual } from "@/lib/wisewave-milestone-h-micro-awareness";
 import {
   detectContinuityPatternFamily,
   type ContinuityPatternFamily,
@@ -174,38 +175,7 @@ function normalizeApostrophesForHeuristics(s: string): string {
   return s.replace(/\u2019|\u2018/g, "'");
 }
 
-export function looksUtilitarianOrFactual(message: string): boolean {
-  const t = message.trim();
-  const lower = t.toLowerCase();
-  if (t.length < 8) return true;
-
-  // obvious homework / lookup patterns
-  if (/^(what|when|where|who|which|how)\s+(is|are|was|were|do|does|did|can|could|would|should)\b/i.test(lower)) {
-    return true;
-  }
-  if (
-    /^(define|explain|translate|calculate|list|give me|summarize|summarise|outline|paraphrase)\b/i.test(
-      lower
-    )
-  ) {
-    return true;
-  }
-  if (/^\d+[\s\+\-*\/=]/.test(t)) return true;
-  if (/^(http|https):\/\//i.test(lower)) return true;
-
-  // common EN task/help scaffolds
-  if (
-    /^(can|could|would)\s+you\s+(please\s+)?(help|write|draft|explain|proofread|translate|review|summarize)\b/i.test(lower)
-  ) {
-    return true;
-  }
-  if (/^please\s+(help|write|draft|summarize|translate|review)\b/i.test(lower)) return true;
-
-  // a small ZH utilitarian pattern set
-  if (/[请麻烦帮我]\s*(总结|写|起草|翻译)/.test(t)) return true;
-
-  return false;
-}
+export { looksUtilitarianOrFactual };
 
 function isVagueUserMessage(message: string): boolean {
   const sourceLower = message.trim().toLowerCase();
