@@ -1494,20 +1494,34 @@ export async function POST(request: Request) {
   }
   const openaiMessagesForApi: { role: "user" | "assistant" | "system"; content: string }[] = [];
   if (systemPrompt) {
+    const userRows = allMessages.filter((m) => m.role === "user");
+    const priorUserText =
+      userRows.length >= 2 ? (userRows[userRows.length - 2]?.message ?? "").trim() : "";
+    const priorUserWasUtilitarian =
+      priorUserText.length > 0 && looksUtilitarianOrFactual(priorUserText);
+
+    const msgNorm = message.trim();
+    const msgLower = msgNorm.toLowerCase();
+    const briefNoncommittalTurn =
+      msgNorm.length <= 36 &&
+      (/\b(not sure|unsure|maybe|perhaps|idk|dunno|anything|either|whatever)\b/i.test(
+        msgLower
+      ) ||
+        /^(i\s+(do\s+)?not\s+know|i\s+dk)\b/.test(msgLower) ||
+        /^(mm+|hm+|hmm+|uhm*|um+)\s*\.{0,3}\s*$/i.test(msgNorm));
+
+    const suppressBuildOnHistoryHint = briefNoncommittalTurn && priorUserWasUtilitarian;
     const continuationHint =
-      openaiMessages.length > 0
-        ? "\n\nThe following messages are part of an ongoing conversation. Continue naturally and build on what has already been discussed."
-        : "";
+      openaiMessages.length === 0
+        ? ""
+        : suppressBuildOnHistoryHint
+          ? "\n\nEarlier messages are background only. The latest user line is minimal; do not assume it continues the immediately prior topic unless they clearly say so."
+          : "\n\nThe following messages are part of an ongoing conversation. Continue naturally and build on what has already been discussed.";
     const summaryBlock =
       conversationUpdated?.conversationSummary?.trim()
         ? `\n\nConversation summary:\n${conversationUpdated.conversationSummary.trim()}`
         : "";
     const utilOrFactualTurn = looksUtilitarianOrFactual(message);
-    const briefNoncommittalTurn =
-      message.trim().length <= 28 &&
-      /\b(not sure|unsure|maybe|perhaps|idk|dunno|anything|either|whatever)\b/i.test(
-        message.trim().toLowerCase()
-      );
     const reflectionBlock =
       !utilOrFactualTurn &&
       !briefNoncommittalTurn &&
@@ -1518,6 +1532,10 @@ export async function POST(request: Request) {
     const v3TurnFocusAppendix =
       utilOrFactualTurn || briefNoncommittalTurn
         ? "\n\nTurn focus (V3): The latest user message is practical, logistical, or very brief/non-committal. Reply in one coherent message that addresses only what they asked or signalled here. Do not reinterpret inner reluctance, avoidance, or emotion unless they clearly describe lived feeling in this turn. Do not merge or continue earlier conversation topics unless they explicitly connect them in this message."
+        : "";
+    const v3BriefAfterPracticalAppendix =
+      briefNoncommittalTurn && priorUserWasUtilitarian
+        ? "\n\nFollow-up discipline: If their previous message was practical (recipe, how-to, fact-finding) and this one is only a hedge, do not extend or repeat that recommendation. Prefer one short clarifying question, or a brief neutral check-in—unless they explicitly continue that practical thread."
         : "";
     const milestoneGAppendix = milestoneGSystemAppendix();
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
@@ -1533,6 +1551,7 @@ export async function POST(request: Request) {
         milestoneGAppendix +
         milestoneHLightAppendix +
         v3TurnFocusAppendix +
+        v3BriefAfterPracticalAppendix +
         languageInstruction,
     });
   }
