@@ -1471,13 +1471,40 @@ export async function POST(request: Request) {
   let debugMilestoneGSystemAppendixApplied = false;
   /** Milestone H Wisewave Light Mode v2: whether main-reflection appendix was appended (QA / Lumen Pass 5). */
   let debugMilestoneHLightModeAppendixApplied = false;
-  const recent = allMessages.slice(-RECENT_MESSAGES_COUNT);
-  const openaiMessages: { role: "user" | "assistant" | "system"; content: string }[] = recent.map(
-    (m) => ({
+  const userMessagesForHeuristics = allMessages.filter((m) => m.role === "user");
+  const priorUserTextForHeuristics =
+    userMessagesForHeuristics.length >= 2
+      ? (userMessagesForHeuristics[userMessagesForHeuristics.length - 2]?.message ??
+          "").trim()
+      : "";
+  const priorUserWasUtilitarianForHeuristics =
+    priorUserTextForHeuristics.length > 0 &&
+    looksUtilitarianOrFactual(priorUserTextForHeuristics);
+
+  const msgNormForHeuristics = message.trim();
+  const msgLowerForHeuristics = msgNormForHeuristics.toLowerCase();
+  const briefHedgeAfterPracticalForHeuristics =
+    msgNormForHeuristics.length <= 36 &&
+    (/\b(not sure|unsure|maybe|perhaps|idk|dunno|anything|either|whatever)\b/i.test(
+      msgLowerForHeuristics
+    ) ||
+      /^i\s*(don'?t|do\s+not)\s*know\b/i.test(msgLowerForHeuristics) ||
+      /^i\s*dk\b/i.test(msgLowerForHeuristics) ||
+      /^(mm+|hm+|hmm+|uhm*|um+)\s*\.{0,3}\s*$/i.test(msgNormForHeuristics));
+
+  // Strict V3 stance: if current user line is a brief hedge immediately after a utilitarian/practical message,
+  // expose only user lines to the model (remove the prior assistant recommendation from context).
+  const hedgeAfterUtilitarian =
+    priorUserWasUtilitarianForHeuristics && briefHedgeAfterPracticalForHeuristics;
+
+  const recent = hedgeAfterUtilitarian
+    ? userMessagesForHeuristics.slice(-2)
+    : allMessages.slice(-RECENT_MESSAGES_COUNT);
+  const openaiMessages: { role: "user" | "assistant" | "system"; content: string }[] =
+    recent.map((m) => ({
       role: m.role as "user" | "assistant" | "system",
       content: m.message,
-    })
-  );
+    }));
 
   // Use Wisewave reflection-style prompt by default; override with OPENAI_CHAT_SYSTEM_PROMPT or OPENAI_CHAT_SYSTEM_PROMPT_FILE
   let systemPrompt = process.env.OPENAI_CHAT_SYSTEM_PROMPT?.trim();
@@ -1497,8 +1524,7 @@ export async function POST(request: Request) {
     const userRows = allMessages.filter((m) => m.role === "user");
     const priorUserText =
       userRows.length >= 2 ? (userRows[userRows.length - 2]?.message ?? "").trim() : "";
-    const priorUserWasUtilitarian =
-      priorUserText.length > 0 && looksUtilitarianOrFactual(priorUserText);
+    const priorUserWasUtilitarian = priorUserText.length > 0 && looksUtilitarianOrFactual(priorUserText);
 
     const msgNorm = message.trim();
     const msgLower = msgNorm.toLowerCase();
@@ -1507,21 +1533,26 @@ export async function POST(request: Request) {
       (/\b(not sure|unsure|maybe|perhaps|idk|dunno|anything|either|whatever)\b/i.test(
         msgLower
       ) ||
-        /^(i\s+(do\s+)?not\s+know|i\s+dk)\b/.test(msgLower) ||
+        /^i\s*(don'?t|do\s+not)\s*know\b/.test(msgLower) ||
+        /^i\s*dk\b/.test(msgLower) ||
         /^(mm+|hm+|hmm+|uhm*|um+)\s*\.{0,3}\s*$/i.test(msgNorm));
 
-    const suppressBuildOnHistoryHint = briefNoncommittalTurn && priorUserWasUtilitarian;
+    const hedgeAfterUtilitarianTurn = briefNoncommittalTurn && priorUserWasUtilitarian;
+
     const continuationHint =
       openaiMessages.length === 0
         ? ""
-        : suppressBuildOnHistoryHint
-          ? "\n\nEarlier messages are background only. The latest user line is minimal; do not assume it continues the immediately prior topic unless they clearly say so."
+        : hedgeAfterUtilitarianTurn
+          ? "\n\nBackground: Earlier messages may contain practical suggestions. Treat this hedge as a separate, low-signal line."
           : "\n\nThe following messages are part of an ongoing conversation. Continue naturally and build on what has already been discussed.";
-    const summaryBlock =
-      conversationUpdated?.conversationSummary?.trim()
+
+    const summaryBlock = !hedgeAfterUtilitarianTurn
+      ? conversationUpdated?.conversationSummary?.trim()
         ? `\n\nConversation summary:\n${conversationUpdated.conversationSummary.trim()}`
-        : "";
-    const utilOrFactualTurn = looksUtilitarianOrFactual(message);
+        : ""
+      : "";
+
+    const utilOrFactualTurn = looksUtilitarianOrFactual(message) || hedgeAfterUtilitarianTurn;
     const reflectionBlock =
       !utilOrFactualTurn &&
       !briefNoncommittalTurn &&
@@ -1529,13 +1560,11 @@ export async function POST(request: Request) {
       reflectionState.insight_candidate.trim()
         ? `\n\nLatest reflection state (for this user message):\n- trigger_label: ${reflectionState.trigger_label}\n- emotion_label: ${reflectionState.emotion_label}\n- interpretation_label: ${reflectionState.interpretation_label}\n- regulation_label: ${reflectionState.regulation_label}\n- choice_label: ${reflectionState.choice_label}\n- insight_candidate: ${reflectionState.insight_candidate}`
         : "";
-    const v3TurnFocusAppendix =
-      utilOrFactualTurn || briefNoncommittalTurn
+
+    const v3TurnFocusAppendix = hedgeAfterUtilitarianTurn
+      ? "\n\nV3 strict policy (hedge-after-practical):\n- Do NOT extend or repeat the prior practical recommendation.\n- Do NOT infer reflective/emotional interpretation from the hedge.\n- Output ONLY ONE of: (a) a short clarifying question, or (b) a brief neutral check-in.\n- Do NOT add any extra optional lines.\n- Keep it short and directly tied to what the user just hedged."
+      : utilOrFactualTurn || briefNoncommittalTurn
         ? "\n\nTurn focus (V3): The latest user message is practical, logistical, or very brief/non-committal. Reply in one coherent message that addresses only what they asked or signalled here. Do not reinterpret inner reluctance, avoidance, or emotion unless they clearly describe lived feeling in this turn. Do not merge or continue earlier conversation topics unless they explicitly connect them in this message."
-        : "";
-    const v3BriefAfterPracticalAppendix =
-      briefNoncommittalTurn && priorUserWasUtilitarian
-        ? "\n\nFollow-up discipline: If their previous message was practical (recipe, how-to, fact-finding) and this one is only a hedge, do not extend or repeat that recommendation. Prefer one short clarifying question, or a brief neutral check-in—unless they explicitly continue that practical thread."
         : "";
     const milestoneGAppendix = milestoneGSystemAppendix();
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
@@ -1551,7 +1580,6 @@ export async function POST(request: Request) {
         milestoneGAppendix +
         milestoneHLightAppendix +
         v3TurnFocusAppendix +
-        v3BriefAfterPracticalAppendix +
         languageInstruction,
     });
   }
