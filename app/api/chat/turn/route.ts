@@ -447,7 +447,7 @@ function isLastInsightTooSimilarToMainReflection(
       if (bWords.has(w)) overlap += 1;
     }
     const minSize = Math.min(aWords.size, bWords.size);
-    if (minSize > 0 && overlap / minSize >= 0.72) return true;
+    if (minSize > 0 && overlap / minSize >= 0.68) return true;
   }
 
   return false;
@@ -2947,7 +2947,7 @@ export async function POST(request: Request) {
   }
 
   // Secondary de-duplication and rejected-phrase suppression (generation-contract level).
-  const SECONDARY_OVERLAP_THRESHOLD = 0.55;
+  const SECONDARY_OVERLAP_THRESHOLD = 0.5;
   let keptLastInsight: string | null = responseLastInsight;
   let keptSoftContinuity: string | null = responseSoftContinuity;
 

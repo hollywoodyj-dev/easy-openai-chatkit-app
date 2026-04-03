@@ -6,70 +6,66 @@ import { detectContinuityPatternFamily } from "@/lib/wisewave-continuity-family"
 export const dynamic = "force-dynamic";
 
 /**
- * GET: Latest active insight (continuity) for the current user.
- * Returns { insight: { id, core_pattern, continuity_text, created_at } } or { insight: null }.
+ * GET: Latest stable continuity insight for the user's **active inner thread**
+ * within the given conversation (`session_id` = conversation id).
+ *
+ * V3: Same rules as `last_insight` sourcing on `POST /api/chat/turn` — no
+ * cross-thread carry, no cross-conversation strip. Without `session_id`, returns
+ * null (avoids conversation-wide memory-like continuity).
  */
 export async function GET(request: Request) {
   const { userId } = await resolveChatUserId(request);
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("session_id")?.trim() || null;
-  const sessionCreatedAt = sessionId
-    ? (
-        await prisma.conversation.findFirst({
-          where: { id: sessionId, userId },
-          select: { createdAt: true },
-        })
-      )?.createdAt ?? null
-    : null;
 
-  const anyPrisma = prisma as unknown as {
-    insight?: {
-      findFirst: (args: {
-        where: {
-          userId: string;
-          status: string;
-          isContinuityEligible?: boolean;
-          conversationId?: string | { not: string };
-          createdAt?: { lt: Date };
-        };
-        orderBy: { lastSeenAt: "asc" | "desc" };
-        select: {
-          id: true;
-          corePattern: true;
-          continuityText: true;
-          createdAt: true;
-        };
-      }) => Promise<{
-        id: string;
-        corePattern: string;
-        continuityText: string;
-        createdAt: Date;
-      } | null>;
-    };
-  };
-
-  if (!anyPrisma.insight || typeof anyPrisma.insight.findFirst !== "function") {
-    console.warn(
-      "[chat/continuity] prisma.insight delegate not available; returning null continuity"
-    );
+  if (!sessionId) {
     console.debug("[ticket7][chat/continuity] load", {
       userId,
       hasInsight: false,
-      reason: "delegate_missing",
+      reason: "session_id_required",
     });
     return NextResponse.json({ insight: null });
   }
 
-  const latest = await anyPrisma.insight
+  const conversation = await prisma.conversation.findFirst({
+    where: { id: sessionId, userId },
+    select: { id: true },
+  });
+
+  if (!conversation) {
+    console.debug("[ticket7][chat/continuity] load", {
+      userId,
+      hasInsight: false,
+      reason: "conversation_not_found",
+    });
+    return NextResponse.json({ insight: null });
+  }
+
+  const activeThread = await prisma.thread.findFirst({
+    where: { conversationId: sessionId, isActive: true },
+    select: { id: true },
+  });
+
+  if (!activeThread) {
+    console.debug("[ticket7][chat/continuity] load", {
+      userId,
+      hasInsight: false,
+      reason: "no_active_thread",
+    });
+    return NextResponse.json({ insight: null });
+  }
+
+  const latest = await prisma.insight
     .findFirst({
       where: {
         userId,
+        conversationId: sessionId,
+        threadId: activeThread.id,
         status: "active",
         isContinuityEligible: true,
-        ...(sessionId ? { conversationId: { not: sessionId } } : {}),
-        ...(sessionCreatedAt ? { createdAt: { lt: sessionCreatedAt } } : {}),
+        isStable: true,
       },
-      orderBy: { lastSeenAt: "desc" },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         corePattern: true,
@@ -112,4 +108,3 @@ export async function GET(request: Request) {
     },
   });
 }
-
