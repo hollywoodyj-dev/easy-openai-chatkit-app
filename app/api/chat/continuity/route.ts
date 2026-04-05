@@ -19,8 +19,10 @@ function hasCjkContent(text: string): boolean {
  * cross-thread carry, no cross-conversation strip. Without `session_id`, returns
  * null (avoids conversation-wide memory-like continuity).
  *
- * Optional `lang=zh|en` aligns Anchor Generator v2 thinning with UI language; if
- * omitted, language is inferred from the latest user message in the conversation.
+ * Optional `lang=zh|en` sets Anchor Generator v2 `responseLang` (template pools +
+ * **paired residue flip** for already-thinned stored lines). If omitted, language is
+ * inferred from the latest user message. Unknown / non-template `continuity_text`
+ * stays unchanged.
  */
 export async function GET(request: Request) {
   const { userId } = await resolveChatUserId(request);

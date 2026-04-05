@@ -68,6 +68,24 @@ describe("applyContinuityAnchorSemanticWeightV2", () => {
     expect(debug_anchor_semantic_weight_v2).toBe("unchanged");
     expect(text).toBe(raw);
   });
+
+  it("aligns already-thinned EN REST line to ZH when responseLang is zh", () => {
+    const { text, debug_anchor_semantic_weight_v2 } =
+      applyContinuityAnchorSemanticWeightV2("Stopping still feels far.", {
+        responseLang: "zh",
+      });
+    expect(debug_anchor_semantic_weight_v2).toBe("aligned_response_lang");
+    expect(text).toBe("停下来好像还远着一点。");
+  });
+
+  it("aligns already-thinned ZH REST line to EN when responseLang is en", () => {
+    const { text, debug_anchor_semantic_weight_v2 } =
+      applyContinuityAnchorSemanticWeightV2("还有一点没松下来。", {
+        responseLang: "en",
+      });
+    expect(debug_anchor_semantic_weight_v2).toBe("aligned_response_lang");
+    expect(text).toBe("Something still not eased.");
+  });
 });
 
 const REST_THIN = new Set([
@@ -95,6 +113,7 @@ const BARE_TRACE_ZH = new Set([
   "还没完全散开。",
   "这里还留着一点。",
   "好像还在附近一点。",
+  "下面似乎还有一点。",
 ]);
 
 const EARNED_FALLBACK_THIN = new Set([

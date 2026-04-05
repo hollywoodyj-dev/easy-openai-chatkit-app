@@ -42,6 +42,7 @@ const BARE_TRACE_ZH = [
   "还没完全散开。",
   "这里还留着一点。",
   "好像还在附近一点。",
+  "下面似乎还有一点。",
 ] as const;
 
 /** Level 4 / object-like substrings → bare trace (Wisewave §4–§8). */
@@ -171,12 +172,82 @@ function shouldUseZhResiduePools(
   return hasCjkInRaw(raw);
 }
 
+/** Paired EN/ZH residue lines (same index = same semantic slot for hash parity). */
+const RESIDUE_EN_ZH_PAIRS: ReadonlyArray<{ en: string; zh: string }> = (() => {
+  const pairs: { en: string; zh: string }[] = [];
+  const n = Math.min(BARE_TRACE_EN.length, BARE_TRACE_ZH.length);
+  for (let i = 0; i < n; i++) {
+    pairs.push({ en: BARE_TRACE_EN[i]!, zh: BARE_TRACE_ZH[i]! });
+  }
+  pairs.push({
+    en: "Something still tight there.",
+    zh: "安静里好像还紧着一点。",
+  });
+  for (let i = 0; i < DELAYED_THIN.length; i++) {
+    pairs.push({ en: DELAYED_THIN[i]!, zh: DELAYED_THIN_ZH[i]! });
+  }
+  for (let i = 0; i < REST_THIN.length; i++) {
+    pairs.push({ en: REST_THIN[i]!, zh: REST_THIN_ZH[i]! });
+  }
+  for (let i = 0; i < PRESSURE_THIN.length; i++) {
+    pairs.push({ en: PRESSURE_THIN[i]!, zh: PRESSURE_THIN_ZH[i]! });
+  }
+  for (let i = 0; i < REPLAY_THIN.length; i++) {
+    pairs.push({ en: REPLAY_THIN[i]!, zh: REPLAY_THIN_ZH[i]! });
+  }
+  for (let i = 0; i < EARNED_FALLBACK_THIN.length; i++) {
+    pairs.push({ en: EARNED_FALLBACK_THIN[i]!, zh: EARNED_FALLBACK_THIN_ZH[i]! });
+  }
+  return pairs;
+})();
+
+/**
+ * Map already-thinned stored lines to the other language when `responseLang`
+ * requests it (e.g. GET continuity ?lang=zh over EN DB row).
+ */
+function alignResidueToResponseLang(
+  text: string,
+  responseLang?: ContinuityAnchorResponseLang
+): string | null {
+  if (responseLang !== "zh" && responseLang !== "en") return null;
+  const norm = normalizeAnchorKey(text);
+  if (responseLang === "zh") {
+    for (const { en, zh } of RESIDUE_EN_ZH_PAIRS) {
+      if (normalizeAnchorKey(en) === norm) return zh;
+    }
+  } else {
+    for (const { en, zh } of RESIDUE_EN_ZH_PAIRS) {
+      if (normalizeAnchorKey(zh) === norm) return en;
+    }
+  }
+  return null;
+}
+
 export type AnchorSemanticWeightV2Debug =
   | "unchanged"
   | "thinned_template"
   | "thinned_earned_template"
   | "thinned_extractor_silence"
-  | "suppressed_level4_trace";
+  | "suppressed_level4_trace"
+  | "aligned_response_lang";
+
+function finalizeAnchorV2(
+  text: string,
+  debug: AnchorSemanticWeightV2Debug,
+  responseLang?: ContinuityAnchorResponseLang
+): {
+  text: string;
+  debug_anchor_semantic_weight_v2: AnchorSemanticWeightV2Debug;
+} {
+  const aligned = alignResidueToResponseLang(text, responseLang);
+  if (aligned !== null && aligned !== text) {
+    return {
+      text: aligned,
+      debug_anchor_semantic_weight_v2: "aligned_response_lang",
+    };
+  }
+  return { text, debug_anchor_semantic_weight_v2: debug };
+}
 
 export function applyContinuityAnchorSemanticWeightV2(
   raw: string,
@@ -190,59 +261,67 @@ export function applyContinuityAnchorSemanticWeightV2(
     return { text: t, debug_anchor_semantic_weight_v2: "unchanged" };
   }
 
-  const zh = shouldUseZhResiduePools(t, options?.responseLang);
+  const responseLang = options?.responseLang;
+  const zh = shouldUseZhResiduePools(t, responseLang);
   const level4ZhHit = LEVEL4_ZH_RE.test(t);
   const level4EnHit = LEVEL4_EN_RE.test(t);
   if (level4ZhHit || level4EnHit) {
     const traceZh = zh || level4ZhHit;
-    return {
-      text: pickVariant(t, traceZh ? BARE_TRACE_ZH : BARE_TRACE_EN),
-      debug_anchor_semantic_weight_v2: "suppressed_level4_trace",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, traceZh ? BARE_TRACE_ZH : BARE_TRACE_EN),
+      "suppressed_level4_trace",
+      responseLang
+    );
   }
 
   const norm = normalizeAnchorKey(t);
 
   if (isSilenceInterpretExtractorLine(t)) {
-    return {
-      text: zh ? "安静里好像还紧着一点。" : "Something still tight there.",
-      debug_anchor_semantic_weight_v2: "thinned_extractor_silence",
-    };
+    return finalizeAnchorV2(
+      zh ? "安静里好像还紧着一点。" : "Something still tight there.",
+      "thinned_extractor_silence",
+      responseLang
+    );
   }
 
   const earnedEvenAfter = t.match(
     /^Even after (.+), it can still feel like your value has to be earned again\.?$/i
   );
   if (earnedEvenAfter) {
-    return {
-      text: pickVariant(t, zh ? EARNED_FALLBACK_THIN_ZH : EARNED_FALLBACK_THIN),
-      debug_anchor_semantic_weight_v2: "thinned_earned_template",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, zh ? EARNED_FALLBACK_THIN_ZH : EARNED_FALLBACK_THIN),
+      "thinned_earned_template",
+      responseLang
+    );
   }
 
   if (DELAYED_FULL.has(norm)) {
-    return {
-      text: pickVariant(t, zh ? DELAYED_THIN_ZH : DELAYED_THIN),
-      debug_anchor_semantic_weight_v2: "thinned_template",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, zh ? DELAYED_THIN_ZH : DELAYED_THIN),
+      "thinned_template",
+      responseLang
+    );
   }
   if (REST_FULL.has(norm)) {
-    return {
-      text: pickVariant(t, zh ? REST_THIN_ZH : REST_THIN),
-      debug_anchor_semantic_weight_v2: "thinned_template",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, zh ? REST_THIN_ZH : REST_THIN),
+      "thinned_template",
+      responseLang
+    );
   }
   if (PRESSURE_FULL.has(norm)) {
-    return {
-      text: pickVariant(t, zh ? PRESSURE_THIN_ZH : PRESSURE_THIN),
-      debug_anchor_semantic_weight_v2: "thinned_template",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, zh ? PRESSURE_THIN_ZH : PRESSURE_THIN),
+      "thinned_template",
+      responseLang
+    );
   }
   if (REPLAY_FULL.has(norm)) {
-    return {
-      text: pickVariant(t, zh ? REPLAY_THIN_ZH : REPLAY_THIN),
-      debug_anchor_semantic_weight_v2: "thinned_template",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, zh ? REPLAY_THIN_ZH : REPLAY_THIN),
+      "thinned_template",
+      responseLang
+    );
   }
 
   const earnedDoing = normalizeAnchorKey(
@@ -255,11 +334,12 @@ export function applyContinuityAnchorSemanticWeightV2(
     "A full push can still feel like it left you short of enough."
   );
   if (norm === earnedDoing || norm === earnedHeavy || norm === earnedFull) {
-    return {
-      text: pickVariant(t, zh ? EARNED_FALLBACK_THIN_ZH : EARNED_FALLBACK_THIN),
-      debug_anchor_semantic_weight_v2: "thinned_template",
-    };
+    return finalizeAnchorV2(
+      pickVariant(t, zh ? EARNED_FALLBACK_THIN_ZH : EARNED_FALLBACK_THIN),
+      "thinned_template",
+      responseLang
+    );
   }
 
-  return { text: raw, debug_anchor_semantic_weight_v2: "unchanged" };
+  return finalizeAnchorV2(raw, "unchanged", responseLang);
 }
