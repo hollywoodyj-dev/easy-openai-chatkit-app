@@ -413,3 +413,9 @@
 ## 2026-02-08 — Nova: Milestone H observation queue + logging UI (v1)
 
 - **`docs/HC_OS_V1_Milestone_H_Nova_Observation_Queue_Tool.md`** — `lib/milestone-h-observation/*`, **`/internal/h-observation`**, **`/api/internal/h-observation/*`**, workspace store **`data/h-observation/`** (gitignored live JSON). Optional **`H_OBSERVATION_API_KEY`**. 30-scenario pack in code; real samples via `real-samples.json`. No auto milestone verdict.
+
+## 2026-04-05 — Wisewave: Anchor Generator v2 (continuity semantic weight)
+
+- **Spec:** `docs/hc-os-v1-phase-3-phase-4-shared-language-filter-wisewave.md` — narrow object/topic/sentence feel on **`continuity_text` / `last_insight`** without more visibility or length; Phase 4 markers unchanged (thread label + soft orientation still separate).
+- **Code:** `lib/wisewave-anchor-semantic-weight-v2.ts`; wired in **`app/api/chat/turn/route.ts`** (save + prior-thread read) and **`app/api/chat/continuity/route.ts`** (GET). Vitest: **`npm run test:anchor-v2`**.
+- **Lumen:** `docs/QA_HANDOFF.md` 2026-04-05 entry; use Wisewave §12 primary questions + instant-fail list.

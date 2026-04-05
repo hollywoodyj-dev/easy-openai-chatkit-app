@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { computePhase4SoftOrientation } from "@/lib/phase4-soft-orientation";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { detectContinuityPatternFamily } from "@/lib/wisewave-continuity-family";
+import { applyContinuityAnchorSemanticWeightV2 } from "@/lib/wisewave-anchor-semantic-weight-v2";
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +118,10 @@ export async function GET(request: Request) {
     insightId: latest.id,
   });
 
+  const continuityV2 = applyContinuityAnchorSemanticWeightV2(
+    latest.continuityText ?? ""
+  );
+
   return NextResponse.json({
     active_inner_thread_id: activeThread.id,
     phase_4: {
@@ -126,10 +131,11 @@ export async function GET(request: Request) {
     debug_phase_4_marker_shown: phase4Orientation.debug_phase_4_marker_shown,
     debug_phase_4_suppressed_reason: phase4Orientation.debug_phase_4_suppressed_reason,
     debug_phase_4_cleared_on_reset: phase4Orientation.debug_phase_4_cleared_on_reset,
+    debug_anchor_semantic_weight_v2_read: continuityV2.debug_anchor_semantic_weight_v2,
     insight: {
       id: latest.id,
       core_pattern: latest.corePattern,
-      continuity_text: latest.continuityText,
+      continuity_text: continuityV2.text,
       continuity_key: detectContinuityPatternFamily(latest.corePattern),
       created_at: latest.createdAt.toISOString(),
     },

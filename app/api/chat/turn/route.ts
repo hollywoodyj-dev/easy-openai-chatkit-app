@@ -57,6 +57,10 @@ import {
 } from "@/lib/wisewave-milestone-j-microshift-boundary";
 import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
 import { summarizeThreadLabelFromUserMessage } from "@/lib/wisewave-thread-label";
+import {
+  applyContinuityAnchorSemanticWeightV2,
+  type AnchorSemanticWeightV2Debug,
+} from "@/lib/wisewave-anchor-semantic-weight-v2";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -1845,6 +1849,8 @@ export async function POST(request: Request) {
   let debugSecondaryOverlapScore = 0;
   let debugSecondarySuppressedReason: string | null = null;
   let debugRejectedPhraseHit = false;
+  let debugAnchorV2ContinuitySave: AnchorSemanticWeightV2Debug | null = null;
+  let debugAnchorV2LastInsightRead: AnchorSemanticWeightV2Debug | null = null;
   let responseContinuityInsight:
     | {
         id: string;
@@ -2127,7 +2133,9 @@ export async function POST(request: Request) {
       });
       const candidateText = previousInsight?.continuityText?.trim() || null;
       if (candidateText) {
-        previousTurnLastInsightText = candidateText;
+        const v2 = applyContinuityAnchorSemanticWeightV2(candidateText);
+        previousTurnLastInsightText = v2.text;
+        debugAnchorV2LastInsightRead = v2.debug_anchor_semantic_weight_v2;
         debugLastInsightSource = "same_thread_stable_insight";
       }
     }
@@ -2142,7 +2150,10 @@ export async function POST(request: Request) {
   // Ticket 4: save one durable insight when we have a good candidate.
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
-    const continuityText = toContinuityReminderText(corePattern);
+    const rawContinuityText = toContinuityReminderText(corePattern);
+    const continuityV2 = applyContinuityAnchorSemanticWeightV2(rawContinuityText);
+    const continuityText = continuityV2.text;
+    debugAnchorV2ContinuitySave = continuityV2.debug_anchor_semantic_weight_v2;
 
     const sourceLower = message.trim().toLowerCase();
     const vagueSourcePatterns = [
@@ -3364,6 +3375,18 @@ export async function POST(request: Request) {
     debug_is_continuity_eligible: debugIsContinuityEligible,
     debug_last_insight_source: debugLastInsightSource,
     debug_last_insight_suppressed_reason: debugLastInsightSuppressedReason,
+    ...(debugAnchorV2ContinuitySave !== null
+      ? {
+          debug_anchor_semantic_weight_v2_continuity_save:
+            debugAnchorV2ContinuitySave,
+        }
+      : {}),
+    ...(debugAnchorV2LastInsightRead !== null
+      ? {
+          debug_anchor_semantic_weight_v2_last_insight_read:
+            debugAnchorV2LastInsightRead,
+        }
+      : {}),
     debug_thread_state: threadState,
     debug_phase_3_thread_reentry: phase3ThreadReentry,
     debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
