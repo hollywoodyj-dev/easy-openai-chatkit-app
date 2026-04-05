@@ -29,7 +29,21 @@ describe("summarizeThreadLabelFromUserMessage (narrowing / reach)", () => {
     expect(label).not.toBe("A recent inner thread");
     expect(GENERIC_SUPPRESSED.has(label.toLowerCase())).toBe(false);
     const words = label.split(/\s+/).filter(Boolean);
-    expect(words.length).toBeLessThanOrEqual(5);
+    expect(words.length).toBeLessThanOrEqual(6);
+  });
+
+  it("overwhelm path varies by labelEntropy (fewer repeated drawer rows)", () => {
+    const msg = "I am completely overwhelmed and cannot cope";
+    const labels = new Set<string>();
+    for (let i = 0; i < 48; i++) {
+      labels.add(
+        summarizeThreadLabelFromUserMessage(msg, `conv:thr${i}:same_thread`)
+      );
+    }
+    expect(labels.size).toBeGreaterThan(1);
+    for (const l of labels) {
+      expect(GENERIC_SUPPRESSED.has(l.toLowerCase())).toBe(false);
+    }
   });
 
   it("maps ZH stress to trace fragment, not 一段最近的内在线索", () => {

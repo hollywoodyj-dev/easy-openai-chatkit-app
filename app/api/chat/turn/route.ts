@@ -2069,7 +2069,8 @@ export async function POST(request: Request) {
     }
 
     const structFields = threadStructureToThreadRowFields(currentThreadStructure);
-    const label = summarizeThreadLabelFromUserMessage(message);
+    const labelEntropy = `${sessionId}:${activeThreadRow?.id ?? "none"}:${threadState}`;
+    const label = summarizeThreadLabelFromUserMessage(message, labelEntropy);
 
     if (threadState === "new_thread" || threadState === "borderline") {
       await prisma.thread.updateMany({

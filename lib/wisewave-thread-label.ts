@@ -1,8 +1,8 @@
 /**
  * Lightweight thread labels for V3 Thread.label, Recent Threads, and Phase 4 current-space marker.
  * Wisewave narrowing pack: docs/hc-os-v1-phase-4-marker-language-narrowing-pack-wisewave.md
- * Tree reach pass: fewer generic-collapsed rows — more heuristics + hashed trace fallbacks
- * (not the old generic strings suppressed by Phase 4).
+ * Tree reach pass: trace fallbacks + optional labelEntropy (session/thread) reduces cross-row collision
+ * (Lumen: repeated "still more here than shows" across threads).
  */
 
 function stableLabelHash(s: string): number {
@@ -14,8 +14,16 @@ function stableLabelHash(s: string): number {
   return Math.abs(h);
 }
 
-function pickTraceFallback(text: string, variants: readonly string[]): string {
-  const idx = stableLabelHash(text) % variants.length;
+function pickTraceFallback(
+  text: string,
+  variants: readonly string[],
+  labelEntropy?: string | null
+): string {
+  const seed =
+    labelEntropy && labelEntropy.length > 0
+      ? `${text}\x1e${labelEntropy}`
+      : text;
+  const idx = stableLabelHash(seed) % variants.length;
   return variants[idx] ?? variants[0];
 }
 
@@ -27,6 +35,12 @@ const EN_TRACE_FALLBACKS = [
   "something quiet still here",
   "still a faint pull here",
   "not fully quiet yet",
+  "still not fully gone",
+  "something still close",
+  "still a little open",
+  "not quite landed",
+  "still carrying a little weight",
+  "this still feels nearby",
 ] as const;
 
 const ZH_TRACE_FALLBACKS = [
@@ -36,9 +50,28 @@ const ZH_TRACE_FALLBACKS = [
   "似乎还轻轻在这里",
   "还没有完全落下",
   "这里还轻轻停着什么",
+  "还没完全安静下来",
+  "似乎还有一点敞着",
+  "还带着一点重量",
+  "好像还有一点余波",
+  "那个感觉似乎还在附近",
+  "这里还留着一点那个感觉",
 ] as const;
 
-export function summarizeThreadLabelFromUserMessage(text: string): string {
+/** Overwhelm path: was one fixed line → Lumen saw repeated rows; hash for variety. */
+const EN_OVERWHELM_TRACE_VARIANTS = [
+  "still more here than shows",
+  "still a lot held inside",
+  "something still spilling over",
+  "not quite room to hold it",
+  "a little more here than fits",
+  "still heavy underneath the surface",
+] as const;
+
+export function summarizeThreadLabelFromUserMessage(
+  text: string,
+  labelEntropy?: string | null
+): string {
   const t = text.trim();
   if (!t) return "Quiet trace";
   const hasCjk = /[\u4e00-\u9fff]/.test(t);
@@ -55,7 +88,7 @@ export function summarizeThreadLabelFromUserMessage(text: string): string {
     if (/(分手|离婚|对象|伴侣|男朋友|女朋友)/.test(t)) return "还没完全散开";
     if (/(内疚|愧疚|自责)/.test(t)) return "这里还留着一点重量";
     if (/(失去|去世|走了|不在了|想念)/.test(t)) return "好像还有一点在";
-    return pickTraceFallback(t, ZH_TRACE_FALLBACKS);
+    return pickTraceFallback(t, ZH_TRACE_FALLBACKS, labelEntropy);
   }
   const lower = t.toLowerCase();
   if (/(get it right|perfect|mistake|prove)/.test(lower)) {
@@ -77,7 +110,7 @@ export function summarizeThreadLabelFromUserMessage(text: string): string {
     return "something still quiet here";
   }
   if (/\b(overwhelm|overwhelmed|too much|drowning|can'?t cope)\b/.test(lower)) {
-    return "still more here than shows";
+    return pickTraceFallback(t, EN_OVERWHELM_TRACE_VARIANTS, labelEntropy);
   }
   if (/\b(insomnia|can'?t sleep|lying awake|sleep)\b/.test(lower)) {
     return "still not fully at rest";
@@ -100,5 +133,5 @@ export function summarizeThreadLabelFromUserMessage(text: string): string {
   if (/\b(sad|depressed|hopeless|empty inside)\b/.test(lower)) {
     return "something quiet still here";
   }
-  return pickTraceFallback(t, EN_TRACE_FALLBACKS);
+  return pickTraceFallback(t, EN_TRACE_FALLBACKS, labelEntropy);
 }
