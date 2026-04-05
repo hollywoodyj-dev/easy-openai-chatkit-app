@@ -58,7 +58,10 @@ const ZH_TRACE_FALLBACKS = [
   "这里还留着一点那个感觉",
 ] as const;
 
-/** Overwhelm path: was one fixed line → Lumen saw repeated rows; hash for variety. */
+/**
+ * Overwhelm path: large pool so no single line dominates the drawer
+ * (Lumen: "still more here than shows" occasional repetition is residual, not defining).
+ */
 const EN_OVERWHELM_TRACE_VARIANTS = [
   "still more here than shows",
   "still a lot held inside",
@@ -66,6 +69,16 @@ const EN_OVERWHELM_TRACE_VARIANTS = [
   "not quite room to hold it",
   "a little more here than fits",
   "still heavy underneath the surface",
+  "still fuller than it looks",
+  "something still backing up",
+  "not all on the surface yet",
+  "still tight around the edges",
+  "something still unspoken here",
+  "edges still holding something",
+  "still inwardly crowded",
+  "a quiet surplus still here",
+  "still carrying extra underneath",
+  "something still waiting inside",
 ] as const;
 
 export function summarizeThreadLabelFromUserMessage(
