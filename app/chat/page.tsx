@@ -186,12 +186,14 @@ function ThreadDrawer({
   threadRows,
   onSelectThread,
   busyThreadId,
+  listLoadError,
 }: {
   open: boolean;
   onClose: () => void;
   threadRows: Array<{ id: string; label: string }>;
   onSelectThread: (threadId: string) => void;
   busyThreadId: string | null;
+  listLoadError: string | null;
 }) {
   // V3 presence rule: Recent threads must be hidden by default.
   // Render nothing when closed so it can't accidentally remain visible due to CSS/opacity quirks.
@@ -240,6 +242,10 @@ function ThreadDrawer({
                 </button>
               </li>
             ))
+          ) : listLoadError ? (
+            <li className="rounded-2xl bg-amber-50/90 px-3.5 py-2.5 text-sm leading-6 text-[#6B5344] ring-1 ring-amber-200/80">
+              {listLoadError}
+            </li>
           ) : (
             <li className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm text-[#868686] ring-1 ring-black/4">
               No recent thread yet.
@@ -344,6 +350,7 @@ function ChatContent() {
   const [threadDrawerRows, setThreadDrawerRows] = useState<Array<{ id: string; label: string }>>([]);
   const [threadReentryAnchor, setThreadReentryAnchor] = useState<string | null>(null);
   const [busyThreadId, setBusyThreadId] = useState<string | null>(null);
+  const [threadsListLoadError, setThreadsListLoadError] = useState<string | null>(null);
   const phase3ReentryNextTurnRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -358,10 +365,15 @@ function ChatContent() {
   }, [messages]);
   const anchorText = threadReentryAnchor ?? anchorFromMessages;
 
-  const authHeaders = useMemo(() => {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    return headers;
+  /** Match GET /api/chat/messages: no Content-Type on GET (avoids unnecessary CORS preflight if API host differs). */
+  const bearerOnlyHeaders = useMemo((): Record<string, string> => {
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+  }, [token]);
+  const jsonWithBearerHeaders = useMemo((): Record<string, string> => {
+    const h: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) h.Authorization = `Bearer ${token}`;
+    return h;
   }, [token]);
 
   const storageKey = useMemo(() => {
@@ -394,6 +406,7 @@ function ChatContent() {
   useEffect(() => {
     if (!conversationId || sessionLoading) {
       setThreadDrawerRows([]);
+      setThreadsListLoadError(null);
       return;
     }
     let cancelled = false;
@@ -401,9 +414,18 @@ function ChatContent() {
       try {
         const res = await fetch(
           `${CHAT_THREADS_ENDPOINT}?session_id=${encodeURIComponent(conversationId)}`,
-          { credentials: "include", headers: authHeaders }
+          { credentials: "include", headers: bearerOnlyHeaders }
         );
-        if (cancelled || !res.ok) return;
+        if (cancelled) return;
+        if (!res.ok) {
+          const hint =
+            res.status === 404
+              ? "Session not found for this account (try the same sign-in you use to chat, or refresh)."
+              : `Could not load threads (HTTP ${res.status}).`;
+          setThreadsListLoadError(hint);
+          setThreadDrawerRows([]);
+          return;
+        }
         const data = (await res.json()) as {
           threads?: Array<{ id: string; label?: string | null }>;
         };
@@ -413,15 +435,19 @@ function ChatContent() {
             id: t.id,
             label: (t.label?.trim() || "Quiet trace").slice(0, 200),
           }));
-        if (!cancelled) setThreadDrawerRows(rows.slice(0, 8));
+        setThreadDrawerRows(rows.slice(0, 8));
+        setThreadsListLoadError(null);
       } catch {
-        if (!cancelled) setThreadDrawerRows([]);
+        if (!cancelled) {
+          setThreadDrawerRows([]);
+          setThreadsListLoadError("Could not load threads (network error).");
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [conversationId, sessionLoading, messages.length, authHeaders, drawerOpen]);
+  }, [conversationId, sessionLoading, messages.length, bearerOnlyHeaders, drawerOpen]);
 
   const handleSelectThread = useCallback(
     async (threadId: string) => {
@@ -431,7 +457,7 @@ function ChatContent() {
       try {
         const act = await fetch(CHAT_THREADS_ENDPOINT, {
           method: "POST",
-          headers: authHeaders,
+          headers: jsonWithBearerHeaders,
           credentials: "include",
           body: JSON.stringify({
             session_id: conversationId,
@@ -451,7 +477,7 @@ function ChatContent() {
         }
         const cont = await fetch(
           `${CHAT_CONTINUITY_ENDPOINT}?session_id=${encodeURIComponent(conversationId)}`,
-          { credentials: "include", headers: authHeaders }
+          { credentials: "include", headers: bearerOnlyHeaders }
         );
         if (!cont.ok) {
           setThreadReentryAnchor(null);
@@ -472,11 +498,12 @@ function ChatContent() {
       }
     },
     [
-      authHeaders,
+      bearerOnlyHeaders,
       busyThreadId,
       conversationId,
       handleAuthExpired,
       handleSubscriptionRequired,
+      jsonWithBearerHeaders,
     ]
   );
 
@@ -491,7 +518,7 @@ function ChatContent() {
         if (token) {
           const authRes = await fetch(CHAT_AUTH_CHECK_ENDPOINT, {
             credentials: "include",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: bearerOnlyHeaders,
           });
           if (!cancelled && authRes.status === 401) {
             setTokenInvalid(true);
@@ -512,7 +539,7 @@ function ChatContent() {
           try {
             const listRes = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
               credentials: "include",
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
+              headers: bearerOnlyHeaders,
             });
             if (!cancelled && listRes.ok) {
               const data = (await listRes.json()) as {
@@ -535,7 +562,7 @@ function ChatContent() {
         if (!sessionId) {
           const s = await fetch(CHAT_SESSION_ENDPOINT, {
             method: "POST",
-            headers: authHeaders,
+            headers: jsonWithBearerHeaders,
             credentials: "include",
             body: "{}",
           });
@@ -567,7 +594,7 @@ function ChatContent() {
           `${CHAT_MESSAGES_ENDPOINT}?session_id=${encodeURIComponent(sessionId)}`,
           {
             credentials: "include",
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: bearerOnlyHeaders,
           }
         );
 
@@ -594,7 +621,7 @@ function ChatContent() {
           }
           const s2 = await fetch(CHAT_SESSION_ENDPOINT, {
             method: "POST",
-            headers: authHeaders,
+            headers: jsonWithBearerHeaders,
             credentials: "include",
             body: "{}",
           });
@@ -629,7 +656,14 @@ function ChatContent() {
     return () => {
       cancelled = true;
     };
-  }, [authHeaders, handleAuthExpired, handleSubscriptionRequired, storageKey, token]);
+  }, [
+    bearerOnlyHeaders,
+    handleAuthExpired,
+    handleSubscriptionRequired,
+    jsonWithBearerHeaders,
+    storageKey,
+    token,
+  ]);
 
   async function handleSubmit() {
     if (!canSend || !conversationId) return;
@@ -652,7 +686,7 @@ function ChatContent() {
     try {
       const response = await fetch(CHAT_TURN_ENDPOINT, {
         method: "POST",
-        headers: authHeaders,
+        headers: jsonWithBearerHeaders,
         credentials: "include",
         body: JSON.stringify({
           session_id: conversationId,
@@ -779,6 +813,7 @@ function ChatContent() {
         threadRows={threadDrawerRows}
         onSelectThread={handleSelectThread}
         busyThreadId={busyThreadId}
+        listLoadError={threadsListLoadError}
       />
 
       <InputBar value={input} onChange={setInput} onSubmit={handleSubmit} disabled={isWaiting} />

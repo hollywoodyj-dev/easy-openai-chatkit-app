@@ -3156,6 +3156,16 @@ export async function POST(request: Request) {
     debugSecondarySourceValid = false;
   }
 
+  // Post-turn DB snapshot for QA (prod: confirms Thread rows + assistant persistence vs empty drawer).
+  let debugV3ConversationThreadCount: number | null = null;
+  try {
+    debugV3ConversationThreadCount = await prisma.thread.count({
+      where: { conversationId: sessionId },
+    });
+  } catch {
+    debugV3ConversationThreadCount = null;
+  }
+
   // Final response payload: strictly separated layers.
   const responsePayload = {
     main_reflection: assistantContent,
@@ -3231,6 +3241,8 @@ export async function POST(request: Request) {
     debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
     debug_active_thread_id: debugActiveThreadId,
     debug_v3_inner_thread_upsert_ok: debugV3InnerThreadUpsertOk,
+    debug_v3_conversation_thread_count: debugV3ConversationThreadCount,
+    debug_assistant_message_persisted: assistantMsgId !== null,
     debug_emotion_similarity: debugEmotionSimilarity,
     debug_interpretation_similarity: debugInterpretationSimilarity,
     debug_tension_similarity: debugTensionSimilarity,
