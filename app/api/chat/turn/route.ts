@@ -367,8 +367,51 @@ function rewriteEarnedValueAfterEffort(corePattern: string): string {
     );
   }
 
-  return "Doing a lot can still leave the feeling that it is not enough yet.";
+  const earnedFallbacks = [
+    "Doing a lot can still leave the feeling that it is not enough yet.",
+    "Heavy effort can still leave a sense that it does not fully count yet.",
+    "A full push can still feel like it left you short of enough.",
+  ] as const;
+  return pickContinuityLine(normalized, earnedFallbacks);
 }
+
+/** Deterministic pick so different `core_pattern` strings tend to get different anchor wording. */
+function pickContinuityLine(seed: string, lines: readonly string[]): string {
+  if (lines.length === 0) return "";
+  const idx = stableHashInt(seed) % lines.length;
+  return lines[idx] ?? lines[0];
+}
+
+/** Prefer the most specific clause from short extractor-shaped lines (comma / semicolon split). */
+function bestSpecificClauseFromExtractor(cleaned: string): string | null {
+  const metaBad = /\b(the model|as an ai|insufficient signal|unclear trigger)\b/i.test(
+    cleaned.toLowerCase()
+  );
+  if (metaBad) return null;
+
+  const parts = cleaned.split(/\s*[,;]\s*/).map((p) => p.trim()).filter(Boolean);
+  const candidates: string[] =
+    parts.length > 0 ? parts : cleaned ? [cleaned] : [];
+
+  let best: string | null = null;
+  for (const c of candidates) {
+    const words = c.split(/\s+/).filter((w) => w.length > 0);
+    if (words.length < 5 || c.length < 24) continue;
+    if (c.length > 160) continue;
+    if (!/[a-zA-Z]/.test(c)) continue;
+    if (!best || c.length > best.length) best = c;
+  }
+  return best;
+}
+
+const EXTRACTOR_SHORT_FALLBACK_LINES = [
+  "This pattern can come back quickly, especially when things feel uncertain.",
+  "A familiar tightness can return when stakes feel high or unnamed.",
+  "Something here can sharpen fast when the situation feels open-ended.",
+  "A similar weight can surface quietly when pressure feels unclear.",
+  "This can loop back in when things feel unsettled underneath.",
+  "What felt settled can tighten again when the next edge appears.",
+] as const;
 
 function fallbackContinuityReminder(corePattern: string): string {
   const text = corePattern.trim();
@@ -381,6 +424,10 @@ function fallbackContinuityReminder(corePattern: string): string {
     .replace(/\btheir value\b/gi, "your value")
     .trim();
 
+  const metaBad = /\b(the model|as an ai|insufficient signal|unclear trigger)\b/i.test(
+    cleaned.toLowerCase()
+  );
+
   // Many reflection extractions used to hit the branch below and all received the same
   // canned line, so different threads could store identical `continuityText` and re-entry
   // anchors felt undifferentiated (Lumen 2026 — last insight thread specificity).
@@ -389,41 +436,68 @@ function fallbackContinuityReminder(corePattern: string): string {
       cleaned
     );
   if (looksExtractorShaped) {
-    const longEnoughToCarrySpecificity =
-      cleaned.length >= 44 &&
-      !/\b(the model|as an ai|insufficient signal|unclear trigger)\b/i.test(
-        cleaned.toLowerCase()
-      );
-    if (longEnoughToCarrySpecificity) {
+    const wc = cleaned.split(/\s+/).filter((w) => w.length > 0).length;
+    if (!metaBad && cleaned.length >= 44) {
       return sentence(cleaned);
     }
-    return sentence(
-      "This pattern can come back quickly, especially when things feel uncertain."
-    );
+    // Slightly shorter extractor lines: still thread-specific if dense enough (not one thin clause).
+    if (!metaBad && cleaned.length >= 34 && wc >= 7) {
+      return sentence(cleaned);
+    }
+    const clause = bestSpecificClauseFromExtractor(cleaned);
+    if (clause && clause.length >= 28) {
+      return sentence(clause);
+    }
+    return sentence(pickContinuityLine(cleaned, EXTRACTOR_SHORT_FALLBACK_LINES));
   }
 
   return sentence(cleaned);
 }
 
+const DELAYED_REPLY_ANCHOR_LINES = [
+  "A delayed reply can quickly start to feel like proof you did something wrong.",
+  "Silence after you reach out can shrink into evidence it was your fault.",
+  "A slow answer can start to read as confirmation you slipped.",
+] as const;
+
+const REST_MUST_BE_EARNED_ANCHOR_LINES = [
+  "Rest can quickly start to feel like something you still have to earn.",
+  "Pausing can feel like it still needs to be deserved first.",
+  "Stopping can feel out of reach until you have earned it again.",
+] as const;
+
+const CONSTANT_PRESSURE_ANCHOR_LINES = [
+  "It can start to feel like you are only allowed to relax when you are keeping up.",
+  "Ease can feel tied to staying ahead of everything first.",
+  "Letting go can wait until it still feels like you are in control.",
+] as const;
+
+const REPLAY_FOR_MISTAKES_ANCHOR_LINES = [
+  "Unclear moments can quickly turn into checking for what you might have done wrong.",
+  "Ambiguous stretches can turn into scanning for where you might have slipped.",
+  "When things stay fuzzy, attention can hunt for your own mistake.",
+] as const;
+
 function continuityReminderFromFamily(
   family: ContinuityPatternFamily,
   corePattern: string
 ): string {
+  const seed = corePattern.trim();
   switch (family) {
     case "earned_value_after_effort":
       return rewriteEarnedValueAfterEffort(corePattern);
 
     case "delayed_reply_means_i_did_something_wrong":
-      return "A delayed reply can quickly start to feel like proof you did something wrong.";
+      return pickContinuityLine(seed, DELAYED_REPLY_ANCHOR_LINES);
 
     case "rest_must_be_earned":
-      return "Rest can quickly start to feel like something you still have to earn.";
+      return pickContinuityLine(seed, REST_MUST_BE_EARNED_ANCHOR_LINES);
 
     case "constant_pressure_keep_up":
-      return "It can start to feel like you are only allowed to relax when you are keeping up.";
+      return pickContinuityLine(seed, CONSTANT_PRESSURE_ANCHOR_LINES);
 
     case "replay_for_mistakes":
-      return "Unclear moments can quickly turn into checking for what you might have done wrong.";
+      return pickContinuityLine(seed, REPLAY_FOR_MISTAKES_ANCHOR_LINES);
 
     case "fallback_generic":
     default:
