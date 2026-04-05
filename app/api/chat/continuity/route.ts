@@ -87,7 +87,7 @@ export async function GET(request: Request) {
   const phase4Orientation = computePhase4SoftOrientation({
     threadState: "same_thread",
     activeThreadLabel: activeThread.label,
-    allowContinuityLayers: true,
+    allowPhase4ForUserTurn: true,
     mainReflection: "",
     skipMainOverlap: true,
   });

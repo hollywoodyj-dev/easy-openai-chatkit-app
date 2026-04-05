@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computePhase4SoftOrientation } from "@/lib/phase4-soft-orientation";
+import {
+  allowPhase4MarkerForUserTurn,
+  phase4NarrowReflectiveCarveOut,
+} from "@/lib/phase4-user-turn-admissible";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { verifyUserToken } from "@/lib/auth";
 import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
@@ -3082,6 +3086,12 @@ export async function POST(request: Request) {
   const allowContinuityLayers =
     threadState === "same_thread" && !looksUtilitarianOrFactual(message);
 
+  const allowPhase4UserTurn = allowPhase4MarkerForUserTurn(threadState, message);
+  const debugPhase4ReflectiveCarveOut =
+    threadState === "same_thread" &&
+    looksUtilitarianOrFactual(message) &&
+    phase4NarrowReflectiveCarveOut(message);
+
   // Hard block: remove previously QA-rejected "space" phrasing from main reflection.
   // (Secondary layers are suppressed instead of replaced to keep separation strict.)
   const mainSanitized = sanitizeRejectedSpacePhrases(assistantContent);
@@ -3280,7 +3290,7 @@ export async function POST(request: Request) {
   const phase4Orientation = computePhase4SoftOrientation({
     threadState,
     activeThreadLabel: phase4ThreadLabel,
-    allowContinuityLayers,
+    allowPhase4ForUserTurn: allowPhase4UserTurn,
     mainReflection: assistantContent,
   });
 
@@ -3343,6 +3353,8 @@ export async function POST(request: Request) {
     debug_phase_4_marker_shown: phase4Orientation.debug_phase_4_marker_shown,
     debug_phase_4_suppressed_reason: phase4Orientation.debug_phase_4_suppressed_reason,
     debug_phase_4_cleared_on_reset: phase4Orientation.debug_phase_4_cleared_on_reset,
+    debug_phase_4_turn_admissible: allowPhase4UserTurn,
+    debug_phase_4_reflective_carve_out: debugPhase4ReflectiveCarveOut,
     // Debug-only fields to help QA distinguish:
     // - whether this turn created an Insight row
     // - whether that row was continuity-eligible

@@ -101,11 +101,13 @@ export type Phase4OrientationResult = {
 
 /**
  * @param skipMainOverlap — continuity GET has no main reflection; skip overlap check.
+ * @param allowPhase4ForUserTurn — false when this user turn must not show a marker (e.g. utilitarian);
+ *   continuity GET passes true (no turn context). Decoupled from last_insight / soft_continuity gates.
  */
 export function computePhase4SoftOrientation(params: {
   threadState: "same_thread" | "new_thread" | "borderline";
   activeThreadLabel: string | null | undefined;
-  allowContinuityLayers: boolean;
+  allowPhase4ForUserTurn: boolean;
   mainReflection: string;
   skipMainOverlap?: boolean;
 }): Phase4OrientationResult {
@@ -122,12 +124,12 @@ export function computePhase4SoftOrientation(params: {
     };
   }
 
-  if (!params.allowContinuityLayers) {
+  if (!params.allowPhase4ForUserTurn) {
     return {
       thread_legibility: "hidden",
       current_space_marker: null,
       debug_phase_4_marker_shown: false,
-      debug_phase_4_suppressed_reason: "continuity_layers_blocked",
+      debug_phase_4_suppressed_reason: "phase_4_turn_not_admissible",
       debug_phase_4_cleared_on_reset: false,
     };
   }
