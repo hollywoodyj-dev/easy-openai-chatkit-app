@@ -11,6 +11,15 @@ describe("applyContinuityAnchorSemanticWeightV2", () => {
     expect(REST_THIN.has(text)).toBe(true);
   });
 
+  it("thins REST_FULL to ZH residue when responseLang is zh", () => {
+    const raw =
+      "Stopping can feel out of reach until you have earned it again.";
+    const { text, debug_anchor_semantic_weight_v2 } =
+      applyContinuityAnchorSemanticWeightV2(raw, { responseLang: "zh" });
+    expect(debug_anchor_semantic_weight_v2).toBe("thinned_template");
+    expect(REST_THIN_ZH.has(text)).toBe(true);
+  });
+
   it("thins silence / interpret extractor without requiring comma", () => {
     const raw =
       "When silence appears you can often interpret it as a sign they upset someone.";
@@ -18,6 +27,15 @@ describe("applyContinuityAnchorSemanticWeightV2", () => {
       applyContinuityAnchorSemanticWeightV2(raw);
     expect(debug_anchor_semantic_weight_v2).toBe("thinned_extractor_silence");
     expect(text).toBe("Something still tight there.");
+  });
+
+  it("thins silence extractor to ZH when responseLang is zh", () => {
+    const raw =
+      "When silence appears you can often interpret it as a sign they upset someone.";
+    const { text, debug_anchor_semantic_weight_v2 } =
+      applyContinuityAnchorSemanticWeightV2(raw, { responseLang: "zh" });
+    expect(debug_anchor_semantic_weight_v2).toBe("thinned_extractor_silence");
+    expect(text).toBe("安静里好像还紧着一点。");
   });
 
   it("maps Level-4 EN object phrases to bare trace pool", () => {
@@ -56,6 +74,12 @@ const REST_THIN = new Set([
   "Still not easing.",
   "Stopping still feels far.",
   "Still not fully eased.",
+]);
+
+const REST_THIN_ZH = new Set([
+  "还没真的缓下来。",
+  "停下来好像还远着一点。",
+  "还没完全松下来。",
 ]);
 
 const BARE_TRACE_EN = new Set([

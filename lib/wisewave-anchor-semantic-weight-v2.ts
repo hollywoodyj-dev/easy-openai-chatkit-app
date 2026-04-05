@@ -64,6 +64,12 @@ const DELAYED_THIN = [
   "Something still not eased.",
 ] as const;
 
+const DELAYED_THIN_ZH = [
+  "这里好像还紧着一点。",
+  "等过之后还是有点沉。",
+  "还有一点没松下来。",
+] as const;
+
 const REST_FULL = new Set(
   [
     "Rest can quickly start to feel like something you still have to earn.",
@@ -76,6 +82,12 @@ const REST_THIN = [
   "Still not easing.",
   "Stopping still feels far.",
   "Still not fully eased.",
+] as const;
+
+const REST_THIN_ZH = [
+  "还没真的缓下来。",
+  "停下来好像还远着一点。",
+  "还没完全松下来。",
 ] as const;
 
 const PRESSURE_FULL = new Set(
@@ -92,6 +104,12 @@ const PRESSURE_THIN = [
   "Still tight before rest.",
 ] as const;
 
+const PRESSURE_THIN_ZH = [
+  "还没完全静下来。",
+  "缓一点还要再等等。",
+  "休息前还有点紧。",
+] as const;
+
 const REPLAY_FULL = new Set(
   [
     "Unclear moments can quickly turn into checking for what you might have done wrong.",
@@ -106,16 +124,51 @@ const REPLAY_THIN = [
   "Something still unsettled.",
 ] as const;
 
+const REPLAY_THIN_ZH = [
+  "还有点没落定。",
+  "还在里面轻轻转。",
+  "有一点还悬着。",
+] as const;
+
 const EARNED_FALLBACK_THIN = [
   "Still not enough afterward.",
   "Doing a lot can still feel short.",
   "Effort still feels unsettled.",
 ] as const;
 
+const EARNED_FALLBACK_THIN_ZH = [
+  "过后还是有点不够。",
+  "做很多还是短一截。",
+  "努力后还有点悬。",
+] as const;
+
 function isSilenceInterpretExtractorLine(t: string): boolean {
   return (
     /\bwhen silence appears\b/i.test(t) && /\binterpret it as\b/i.test(t)
   );
+}
+
+function hasCjkInRaw(raw: string): boolean {
+  return /[\u4e00-\u9fff]/u.test(raw);
+}
+
+export type ContinuityAnchorResponseLang = "en" | "zh";
+
+export type ApplyContinuityAnchorSemanticWeightV2Options = {
+  responseLang?: ContinuityAnchorResponseLang;
+};
+
+/**
+ * ZH residue pools when the turn/UI is Chinese, even if `core_pattern` /
+ * continuity reminder text is still English (extraction baseline).
+ */
+function shouldUseZhResiduePools(
+  raw: string,
+  responseLang?: ContinuityAnchorResponseLang
+): boolean {
+  if (responseLang === "zh") return true;
+  if (responseLang === "en") return false;
+  return hasCjkInRaw(raw);
 }
 
 export type AnchorSemanticWeightV2Debug =
@@ -125,7 +178,10 @@ export type AnchorSemanticWeightV2Debug =
   | "thinned_extractor_silence"
   | "suppressed_level4_trace";
 
-export function applyContinuityAnchorSemanticWeightV2(raw: string): {
+export function applyContinuityAnchorSemanticWeightV2(
+  raw: string,
+  options?: ApplyContinuityAnchorSemanticWeightV2Options
+): {
   text: string;
   debug_anchor_semantic_weight_v2: AnchorSemanticWeightV2Debug;
 } {
@@ -134,17 +190,13 @@ export function applyContinuityAnchorSemanticWeightV2(raw: string): {
     return { text: t, debug_anchor_semantic_weight_v2: "unchanged" };
   }
 
-  const hasCjk = /[\u4e00-\u9fff]/.test(t);
-
-  if (!hasCjk && LEVEL4_EN_RE.test(t)) {
+  const zh = shouldUseZhResiduePools(t, options?.responseLang);
+  const level4ZhHit = LEVEL4_ZH_RE.test(t);
+  const level4EnHit = LEVEL4_EN_RE.test(t);
+  if (level4ZhHit || level4EnHit) {
+    const traceZh = zh || level4ZhHit;
     return {
-      text: pickVariant(t, BARE_TRACE_EN),
-      debug_anchor_semantic_weight_v2: "suppressed_level4_trace",
-    };
-  }
-  if (hasCjk && LEVEL4_ZH_RE.test(t)) {
-    return {
-      text: pickVariant(t, BARE_TRACE_ZH),
+      text: pickVariant(t, traceZh ? BARE_TRACE_ZH : BARE_TRACE_EN),
       debug_anchor_semantic_weight_v2: "suppressed_level4_trace",
     };
   }
@@ -153,9 +205,7 @@ export function applyContinuityAnchorSemanticWeightV2(raw: string): {
 
   if (isSilenceInterpretExtractorLine(t)) {
     return {
-      text: hasCjk
-        ? "安静里好像还紧着一点。"
-        : "Something still tight there.",
+      text: zh ? "安静里好像还紧着一点。" : "Something still tight there.",
       debug_anchor_semantic_weight_v2: "thinned_extractor_silence",
     };
   }
@@ -165,32 +215,32 @@ export function applyContinuityAnchorSemanticWeightV2(raw: string): {
   );
   if (earnedEvenAfter) {
     return {
-      text: pickVariant(t, EARNED_FALLBACK_THIN),
+      text: pickVariant(t, zh ? EARNED_FALLBACK_THIN_ZH : EARNED_FALLBACK_THIN),
       debug_anchor_semantic_weight_v2: "thinned_earned_template",
     };
   }
 
   if (DELAYED_FULL.has(norm)) {
     return {
-      text: pickVariant(t, DELAYED_THIN),
+      text: pickVariant(t, zh ? DELAYED_THIN_ZH : DELAYED_THIN),
       debug_anchor_semantic_weight_v2: "thinned_template",
     };
   }
   if (REST_FULL.has(norm)) {
     return {
-      text: pickVariant(t, REST_THIN),
+      text: pickVariant(t, zh ? REST_THIN_ZH : REST_THIN),
       debug_anchor_semantic_weight_v2: "thinned_template",
     };
   }
   if (PRESSURE_FULL.has(norm)) {
     return {
-      text: pickVariant(t, PRESSURE_THIN),
+      text: pickVariant(t, zh ? PRESSURE_THIN_ZH : PRESSURE_THIN),
       debug_anchor_semantic_weight_v2: "thinned_template",
     };
   }
   if (REPLAY_FULL.has(norm)) {
     return {
-      text: pickVariant(t, REPLAY_THIN),
+      text: pickVariant(t, zh ? REPLAY_THIN_ZH : REPLAY_THIN),
       debug_anchor_semantic_weight_v2: "thinned_template",
     };
   }
@@ -206,7 +256,7 @@ export function applyContinuityAnchorSemanticWeightV2(raw: string): {
   );
   if (norm === earnedDoing || norm === earnedHeavy || norm === earnedFull) {
     return {
-      text: pickVariant(t, EARNED_FALLBACK_THIN),
+      text: pickVariant(t, zh ? EARNED_FALLBACK_THIN_ZH : EARNED_FALLBACK_THIN),
       debug_anchor_semantic_weight_v2: "thinned_template",
     };
   }

@@ -7,6 +7,10 @@ import { applyContinuityAnchorSemanticWeightV2 } from "@/lib/wisewave-anchor-sem
 
 export const dynamic = "force-dynamic";
 
+function hasCjkContent(text: string): boolean {
+  return /[\u4E00-\u9FFF]/.test(text);
+}
+
 /**
  * GET: Latest stable continuity insight for the user's **active inner thread**
  * within the given conversation (`session_id` = conversation id).
@@ -14,6 +18,9 @@ export const dynamic = "force-dynamic";
  * V3: Same rules as `last_insight` sourcing on `POST /api/chat/turn` — no
  * cross-thread carry, no cross-conversation strip. Without `session_id`, returns
  * null (avoids conversation-wide memory-like continuity).
+ *
+ * Optional `lang=zh|en` aligns Anchor Generator v2 thinning with UI language; if
+ * omitted, language is inferred from the latest user message in the conversation.
  */
 export async function GET(request: Request) {
   const { userId } = await resolveChatUserId(request);
@@ -118,8 +125,26 @@ export async function GET(request: Request) {
     insightId: latest.id,
   });
 
+  const langParam = searchParams.get("lang")?.trim();
+  let continuityReadLang: "en" | "zh";
+  if (langParam === "zh" || langParam === "en") {
+    continuityReadLang = langParam;
+  } else {
+    const lastUser = await prisma.message.findFirst({
+      where: {
+        conversationId: sessionId,
+        userId,
+        role: "user",
+      },
+      orderBy: { createdAt: "desc" },
+      select: { message: true },
+    });
+    continuityReadLang = hasCjkContent(lastUser?.message ?? "") ? "zh" : "en";
+  }
+
   const continuityV2 = applyContinuityAnchorSemanticWeightV2(
-    latest.continuityText ?? ""
+    latest.continuityText ?? "",
+    { responseLang: continuityReadLang }
   );
 
   return NextResponse.json({

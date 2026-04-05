@@ -1564,6 +1564,9 @@ export async function POST(request: Request) {
   // Minimal bilingual baseline: detect input language and instruct the model output language.
   // Canonical continuity meaning remains language-neutral (extraction returns English corePattern).
   const wantsChinese = hasCjkContent(message);
+  /** Anchor Generator v2: ZH residue pools when UI/turn is Chinese even if reminder text is EN. */
+  const continuityAnchorLang: "en" | "zh" =
+    body.lang === "zh" || body.lang === "en" ? body.lang : wantsChinese ? "zh" : "en";
   const languageInstruction = wantsChinese
     ? "\n\nLanguage rule: Respond in Chinese only. Do not include English words."
     : "\n\nLanguage rule: Respond in English only. Do not include Chinese characters.";
@@ -2133,7 +2136,9 @@ export async function POST(request: Request) {
       });
       const candidateText = previousInsight?.continuityText?.trim() || null;
       if (candidateText) {
-        const v2 = applyContinuityAnchorSemanticWeightV2(candidateText);
+        const v2 = applyContinuityAnchorSemanticWeightV2(candidateText, {
+          responseLang: continuityAnchorLang,
+        });
         previousTurnLastInsightText = v2.text;
         debugAnchorV2LastInsightRead = v2.debug_anchor_semantic_weight_v2;
         debugLastInsightSource = "same_thread_stable_insight";
@@ -2151,7 +2156,9 @@ export async function POST(request: Request) {
   if (reflectionState && reflectionState.insight_candidate.trim()) {
     const corePattern = reflectionState.insight_candidate.trim();
     const rawContinuityText = toContinuityReminderText(corePattern);
-    const continuityV2 = applyContinuityAnchorSemanticWeightV2(rawContinuityText);
+    const continuityV2 = applyContinuityAnchorSemanticWeightV2(rawContinuityText, {
+      responseLang: continuityAnchorLang,
+    });
     const continuityText = continuityV2.text;
     debugAnchorV2ContinuitySave = continuityV2.debug_anchor_semantic_weight_v2;
 
