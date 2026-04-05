@@ -1,7 +1,7 @@
 /**
  * HC-OS V1 Phase 4 — Thread legibility × soft orientation (Nova).
- * Suppression-first; aligns with docs/hc-os-v1-phase-4-addendum-thread-legibility-soft-orientation-layer.md
- * and Wisewave space-language spec (trace not title, non-archival).
+ * Suppression-first; aligns with addendum, Wisewave space-language spec, and
+ * docs/hc-os-v1-phase-4-marker-language-narrowing-pack-wisewave.md (trace not name).
  */
 
 export type ThreadLegibility = "hidden" | "low";
@@ -32,6 +32,52 @@ const ARCHIVAL_OR_SYSTEM_RE = new RegExp(
     "\\b讨论关于\\b",
     "\\b延续刚才\\b",
     "\\b你刚刚提到\\b",
+  ].join("|"),
+  "i"
+);
+
+/**
+ * Topic / summary / identity / analytic phrasing (Wisewave narrowing pack §4–§8).
+ * Legacy labels and user-edited rows: suppress rather than show object-like markers.
+ */
+const TOPIC_OR_OBJECT_LIKE_MARKER_RE = new RegExp(
+  [
+    "work discouragement",
+    "relationship anxiety",
+    "self-worth pressure",
+    "family conflict",
+    "uncertainty pattern",
+    "difficulty setting boundaries",
+    "fear of disappointing",
+    "pressure to get it right",
+    "feeling not enough",
+    "your self-doubt",
+    "your anxiety",
+    "your conflict",
+    "what you'?re carrying",
+    "tension around being seen",
+    "conflict between rest and effort",
+    "unresolved pressure here",
+    "avoidance under uncertainty",
+    "low after knocks at work",
+    "tight around getting it right",
+    "not quite enough underneath",
+    "a little held back inside",
+    "rushed and still not settling",
+    "inner hesitation",
+    "quiet pressure around work",
+    "getting it right",
+    "self-worth tension",
+    "工作受挫感",
+    "自我价值压力",
+    "害怕让别人失望",
+    "努力与放松之间的张力",
+    "前一个工作话题",
+    "一点想别做错的压力",
+    "价值感还有点拉扯",
+    "一点内在迟疑",
+    "工作后心里还有点沉",
+    "节奏里还有一点紧",
   ].join("|"),
   "i"
 );
@@ -117,8 +163,19 @@ export function computePhase4SoftOrientation(params: {
     };
   }
 
+  if (TOPIC_OR_OBJECT_LIKE_MARKER_RE.test(raw)) {
+    return {
+      thread_legibility: "hidden",
+      current_space_marker: null,
+      debug_phase_4_marker_shown: false,
+      debug_phase_4_suppressed_reason: "marker_topic_or_object_like",
+      debug_phase_4_cleared_on_reset: false,
+    };
+  }
+
   const hasCjk = /[\u4e00-\u9fff]/.test(raw);
-  const marker = hasCjk ? truncateMarker(raw, 24, 10) : truncateMarker(raw, 42, 6);
+  // Wisewave pack §10: EN max ~5 words; CJK short fragment
+  const marker = hasCjk ? truncateMarker(raw, 24, 10) : truncateMarker(raw, 36, 5);
   if (!marker || marker.length < 3) {
     return {
       thread_legibility: "hidden",

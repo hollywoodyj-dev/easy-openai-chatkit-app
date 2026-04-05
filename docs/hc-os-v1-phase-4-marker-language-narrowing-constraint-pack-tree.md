@@ -2,6 +2,7 @@
 
 **Status:** Narrow follow-up only — Phase 4 is **not** reopened.  
 **Scope:** Language layer for the **current-space marker** only (not routing, not anchor/last-insight copy, not UI chrome).  
+**Authoritative narrowing pass (Wisewave owner):** **`docs/hc-os-v1-phase-4-marker-language-narrowing-pack-wisewave.md`** — rewrite map, suppression law, allowed forms, Lumen checklist.  
 **Aligns with:** Wisewave **`docs/hc-os-v1-phase-4-space-language-spec-wisewave-owner.md`**, addendum **`docs/hc-os-v1-phase-4-addendum-thread-legibility-soft-orientation-layer.md`**.  
 **Implementation touchpoints today:** **`lib/wisewave-thread-label.ts`** (thread label → marker source), **`lib/phase4-soft-orientation.ts`** (suppression), **`/chat`** marker render.
 
