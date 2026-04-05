@@ -418,17 +418,36 @@ function ChatContent() {
         );
         if (cancelled) return;
         if (!res.ok) {
-          const hint =
+          let hint =
             res.status === 404
               ? "Session not found for this account (try the same sign-in you use to chat, or refresh)."
               : `Could not load threads (HTTP ${res.status}).`;
+          try {
+            const errBody = (await res.json()) as { code?: string; error?: string };
+            if (
+              errBody.code === "threads_prisma_error" ||
+              errBody.code === "threads_unexpected"
+            ) {
+              hint = `Could not load threads (HTTP ${res.status}). Chat can still work; if this keeps happening, apply the latest DB migration on the server (V3 Thread table).`;
+            }
+          } catch {
+            /* keep hint */
+          }
           setThreadsListLoadError(hint);
           setThreadDrawerRows([]);
           return;
         }
         const data = (await res.json()) as {
           threads?: Array<{ id: string; label?: string | null }>;
+          meta?: { thread_storage_unavailable?: boolean };
         };
+        if (data.meta?.thread_storage_unavailable) {
+          setThreadDrawerRows([]);
+          setThreadsListLoadError(
+            "Recent threads are not available on this server yet (database schema update pending). You can keep chatting; run migrations on the host, then reload."
+          );
+          return;
+        }
         const rows = (data.threads ?? [])
           .filter((t) => typeof t.id === "string" && t.id.length > 0)
           .map((t) => ({
