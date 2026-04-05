@@ -89,7 +89,10 @@ export async function GET(request: Request) {
       hasInsight: false,
       reason: "none_found",
     });
-    return NextResponse.json({ insight: null });
+    return NextResponse.json({
+      active_inner_thread_id: activeThread.id,
+      insight: null,
+    });
   }
 
   console.debug("[ticket7][chat/continuity] load", {
@@ -99,6 +102,7 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
+    active_inner_thread_id: activeThread.id,
     insight: {
       id: latest.id,
       core_pattern: latest.corePattern,

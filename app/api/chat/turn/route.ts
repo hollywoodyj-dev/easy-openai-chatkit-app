@@ -375,13 +375,27 @@ function fallbackContinuityReminder(corePattern: string): string {
   const cleaned = text
     .replace(/\bthe user\b/gi, "you")
     .replace(/\btends to\b/gi, "can often")
+    .replace(/\binterpret their\b/gi, "interpret your")
+    .replace(/\btheir worth\b/gi, "your worth")
+    .replace(/\btheir value\b/gi, "your value")
     .trim();
 
-  if (
-    /you can often interpret|you can often assume|interpret their|value as/i.test(
+  // Many reflection extractions used to hit the branch below and all received the same
+  // canned line, so different threads could store identical `continuityText` and re-entry
+  // anchors felt undifferentiated (Lumen 2026 — last insight thread specificity).
+  const looksExtractorShaped =
+    /you can often interpret|you can often assume|interpret your|value as/i.test(
       cleaned
-    )
-  ) {
+    );
+  if (looksExtractorShaped) {
+    const longEnoughToCarrySpecificity =
+      cleaned.length >= 44 &&
+      !/\b(the model|as an ai|insufficient signal|unclear trigger)\b/i.test(
+        cleaned.toLowerCase()
+      );
+    if (longEnoughToCarrySpecificity) {
+      return sentence(cleaned);
+    }
     return sentence(
       "This pattern can come back quickly, especially when things feel uncertain."
     );
