@@ -61,9 +61,10 @@ If you want this paragraph to evolve, edit it like any other doc.
 
 ```bash
 npm run build
+npm run test:phase4-narrowing
 ```
 
-Fix new errors before merging. ESLint warnings may exist; don’t introduce new **errors**.
+Fix new errors before merging. ESLint warnings may exist; don’t introduce new **errors**. Phase 4 marker language / narrowing regressions: **`lib/phase4-language-narrowing.test.ts`** (Vitest).
 
 ## Governance (read before expanding behavior)
 

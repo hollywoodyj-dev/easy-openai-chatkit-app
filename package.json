@@ -12,7 +12,8 @@
     "db:push": "prisma db push",
     "db:push:prod": "prisma db push",
     "e2:qa-backdate-insights": "node scripts/e2-qa-backdate-conversation-insights.cjs",
-    "milestone-g:kill-switch-proof": "node scripts/milestone-g-kill-switch-proof.cjs"
+    "milestone-g:kill-switch-proof": "node scripts/milestone-g-kill-switch-proof.cjs",
+    "test:phase4-narrowing": "vitest run lib/phase4-language-narrowing.test.ts"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",
@@ -39,6 +40,7 @@
     "eslint-config-next": "15.5.7",
     "prisma": "^6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }
