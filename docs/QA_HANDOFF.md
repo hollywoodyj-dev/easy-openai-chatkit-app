@@ -1,6 +1,6 @@
 ## Wisewave Chat – QA Handoff
 
-**Last updated:** 2026-04-03 (Lumen rerun A/C pass; hedge-after-practical prompt tightening for rerun B watchpoint)  
+**Last updated:** 2026-04-05 (Phase 3 soft thread re-entry on `/chat`; prior: Lumen rerun A/C pass)  
 **Environment:** Next.js app at `/chat` (Option B – backend turn API + DB persistence)
 
 ### 1. High‑level status
@@ -256,3 +256,5 @@ Both 2026-03-13 QA items above have been implemented in the codebase:
 - **2026-04-03 — Nova (Lumen hedge-after-practical strict policy):** When the previous user message is utilitarian/practical and the current message is a brief hedge (`Not sure.`, `Maybe.`, `I don't know.`, `mm`/`hmm`/`uh`/`um`), the model now (1) sees only user lines (no prior assistant recommendation) and (2) gets a stricter V3 system instruction: clarifier-only or neutral check-in only; no reflective inference; no practical extension; no optional extra lines. **Lumen retest:** after pasta pivot, check `Not sure.`, `Maybe.`, `I don't know.`, `mm` for clarifier/neutral output only (no continuation of the pasta recommendation).
 
 - **2026-04-03 — Nova (V3 UI presence tighten for Recent threads):** updated `/chat` Recent threads drawer to *conditionally render only when opened* (`drawerOpen=true`) so it cannot appear visible by default due to opacity/transform quirks. **Lumen retest target:** on fresh load, ensure the UI does not show “Recent threads / Close / No recent thread yet.” until the user clicks the `...` control.
+
+- **2026-04-05 — Nova (Phase 3 tickets 1–4 — soft thread re-entry):** Recent threads rows are **real** `{ id, label }` from **`GET /api/chat/threads`**. Tap calls **`POST /api/chat/threads`** (`session_id`, `thread_id`) to activate the inner thread — **no** **`GET /api/chat/messages`** and **no** navigation or `conversation_id` change. After activate, **`GET /api/chat/continuity?session_id=...`** fills the **Insight Anchor** from the active thread’s stable insight (`continuity_text` / `core_pattern` fallback). The **next** user send includes **`phase_3_thread_reentry: true`** once (consumed after a successful turn response); turn route appends light re-entry system text and may coerce **`borderline` → `same_thread`** when that flag is set. Debug: **`debug_phase_3_thread_reentry`**, **`debug_phase_3_borderline_coerced_to_same_thread`**. **Lumen retest:** tap thread → messages in the main stream must **not** reload; anchor matches selected thread’s stored continuity; first message after tap gets re-entry appendix; second message does not resend the flag unless user taps another thread again.

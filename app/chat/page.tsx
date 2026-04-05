@@ -9,8 +9,8 @@ import {
   CHAT_SESSIONS_LIST_ENDPOINT,
   CHAT_THREADS_ENDPOINT,
   CHAT_TURN_ENDPOINT,
+  CHAT_CONTINUITY_ENDPOINT,
 } from "@/lib/config";
-import { summarizeThreadLabelFromUserMessage as summarizeThreadLabel } from "@/lib/wisewave-thread-label";
 
 type AssistantPayload = {
   main_reflection: string;
@@ -141,8 +141,8 @@ function InsightAnchor({ text }: { text?: string }) {
   if (!text) return null;
   return (
     <section className="mb-6 max-w-[46rem] rounded-[22px] border border-black/5 bg-white/55 px-4 py-4 shadow-[0_8px_22px_rgba(0,0,0,0.03)] backdrop-blur-sm md:px-5">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-[#8E8E8E]">- last insight -</p>
-      <p className="mt-2 text-[13px] leading-6 text-[#666666]">{text}</p>
+      <p className="text-[11px] uppercase tracking-[0.18em] text-[#9A9A9A]">— last insight —</p>
+      <p className="mt-2 text-[12px] leading-6 text-[#9A9A9A]">{text}</p>
     </section>
   );
 }
@@ -183,11 +183,15 @@ function UserMessage({ text }: { text: string }) {
 function ThreadDrawer({
   open,
   onClose,
-  threads,
+  threadRows,
+  onSelectThread,
+  busyThreadId,
 }: {
   open: boolean;
   onClose: () => void;
-  threads: string[];
+  threadRows: Array<{ id: string; label: string }>;
+  onSelectThread: (threadId: string) => void;
+  busyThreadId: string | null;
 }) {
   // V3 presence rule: Recent threads must be hidden by default.
   // Render nothing when closed so it can't accidentally remain visible due to CSS/opacity quirks.
@@ -209,6 +213,8 @@ function ThreadDrawer({
           "left-1/2 top-[78px] w-[84vw] max-w-[24rem] -translate-x-1/2 md:left-auto md:right-8 md:top-[72px] md:w-[22rem] md:-translate-x-0",
           "pointer-events-auto translate-y-0 opacity-100"
         )}
+        role="dialog"
+        aria-label="Recent threads"
       >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Recent threads</p>
@@ -217,13 +223,21 @@ function ThreadDrawer({
           </button>
         </div>
         <ul className="space-y-2.5">
-          {threads.length > 0 ? (
-            threads.map((thread) => (
-              <li
-                key={thread}
-                className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm leading-6 text-[#545454] ring-1 ring-black/4"
-              >
-                {thread}
+          {threadRows.length > 0 ? (
+            threadRows.map((row) => (
+              <li key={row.id} className="list-none">
+                <button
+                  type="button"
+                  disabled={busyThreadId !== null}
+                  onClick={() => onSelectThread(row.id)}
+                  className={cn(
+                    "w-full rounded-2xl bg-white/72 px-3.5 py-2.5 text-left text-sm leading-6 text-[#545454] ring-1 ring-black/4 transition",
+                    "hover:bg-white/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6F8596]/40",
+                    busyThreadId !== null && "opacity-60"
+                  )}
+                >
+                  {row.label}
+                </button>
               </li>
             ))
           ) : (
@@ -327,11 +341,14 @@ function ChatContent() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [minAnchorUntil, setMinAnchorUntil] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [threadDrawerLabels, setThreadDrawerLabels] = useState<string[]>([]);
+  const [threadDrawerRows, setThreadDrawerRows] = useState<Array<{ id: string; label: string }>>([]);
+  const [threadReentryAnchor, setThreadReentryAnchor] = useState<string | null>(null);
+  const [busyThreadId, setBusyThreadId] = useState<string | null>(null);
+  const phase3ReentryNextTurnRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
-  const anchorText = useMemo(() => {
+  const anchorFromMessages = useMemo(() => {
     const assistants = messages.filter((m): m is Extract<ChatMessage, { role: "assistant" }> => m.role === "assistant");
     for (let i = assistants.length - 1; i >= 0; i -= 1) {
       const payload = assistants[i].payload;
@@ -339,14 +356,7 @@ function ChatContent() {
     }
     return undefined;
   }, [messages]);
-  const recentThreads = useMemo(() => {
-    if (threadDrawerLabels.length > 0) {
-      return Array.from(new Set(threadDrawerLabels)).slice(0, 5);
-    }
-    const users = messages.filter((m): m is Extract<ChatMessage, { role: "user" }> => m.role === "user");
-    const labels = users.slice(-5).reverse().map((u) => summarizeThreadLabel(u.text));
-    return Array.from(new Set(labels)).slice(0, 5);
-  }, [messages, threadDrawerLabels]);
+  const anchorText = threadReentryAnchor ?? anchorFromMessages;
 
   const authHeaders = useMemo(() => {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -383,7 +393,7 @@ function ChatContent() {
 
   useEffect(() => {
     if (!conversationId || sessionLoading) {
-      setThreadDrawerLabels([]);
+      setThreadDrawerRows([]);
       return;
     }
     let cancelled = false;
@@ -394,17 +404,81 @@ function ChatContent() {
           { credentials: "include", headers: authHeaders }
         );
         if (cancelled || !res.ok) return;
-        const data = (await res.json()) as { threads?: Array<{ label: string }> };
-        const labels = (data.threads ?? []).map((t) => t.label).filter(Boolean);
-        if (!cancelled) setThreadDrawerLabels(labels.slice(0, 8));
+        const data = (await res.json()) as {
+          threads?: Array<{ id: string; label?: string | null }>;
+        };
+        const rows = (data.threads ?? [])
+          .filter((t) => typeof t.id === "string" && t.id.length > 0)
+          .map((t) => ({
+            id: t.id,
+            label: (t.label?.trim() || "Quiet trace").slice(0, 200),
+          }));
+        if (!cancelled) setThreadDrawerRows(rows.slice(0, 8));
       } catch {
-        if (!cancelled) setThreadDrawerLabels([]);
+        if (!cancelled) setThreadDrawerRows([]);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [conversationId, sessionLoading, messages.length, authHeaders]);
+
+  const handleSelectThread = useCallback(
+    async (threadId: string) => {
+      if (!conversationId || busyThreadId) return;
+      setBusyThreadId(threadId);
+      setError(null);
+      try {
+        const act = await fetch(CHAT_THREADS_ENDPOINT, {
+          method: "POST",
+          headers: authHeaders,
+          credentials: "include",
+          body: JSON.stringify({
+            session_id: conversationId,
+            thread_id: threadId,
+          }),
+        });
+        if (act.status === 401) {
+          handleAuthExpired();
+          return;
+        }
+        if (act.status === 402) {
+          handleSubscriptionRequired();
+          return;
+        }
+        if (!act.ok) {
+          throw new Error(`Thread activate failed (${act.status})`);
+        }
+        const cont = await fetch(
+          `${CHAT_CONTINUITY_ENDPOINT}?session_id=${encodeURIComponent(conversationId)}`,
+          { credentials: "include", headers: authHeaders }
+        );
+        if (!cont.ok) {
+          setThreadReentryAnchor(null);
+        } else {
+          const cj = (await cont.json()) as {
+            insight?: { continuity_text?: string | null; core_pattern?: string | null } | null;
+          };
+          const line =
+            cj.insight?.continuity_text?.trim() || cj.insight?.core_pattern?.trim() || null;
+          setThreadReentryAnchor(line);
+        }
+        phase3ReentryNextTurnRef.current = true;
+        setDrawerOpen(false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Could not switch thread.");
+      } finally {
+        setBusyThreadId(null);
+      }
+    },
+    [
+      authHeaders,
+      busyThreadId,
+      conversationId,
+      handleAuthExpired,
+      handleSubscriptionRequired,
+    ]
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -573,6 +647,8 @@ function ChatContent() {
     setIsWaiting(true);
     setMinAnchorUntil(Date.now() + 700);
 
+    const phase3ThreadReentry = phase3ReentryNextTurnRef.current;
+
     try {
       const response = await fetch(CHAT_TURN_ENDPOINT, {
         method: "POST",
@@ -582,6 +658,7 @@ function ChatContent() {
           session_id: conversationId,
           conversation_id: conversationId,
           message: text,
+          ...(phase3ThreadReentry ? { phase_3_thread_reentry: true } : {}),
         }),
       });
       if (response.status === 401) {
@@ -594,6 +671,9 @@ function ChatContent() {
       }
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
+      }
+      if (phase3ThreadReentry) {
+        phase3ReentryNextTurnRef.current = false;
       }
       const data = (await response.json()) as TurnResponseBody;
       const payload = extractAssistantPayload(data);
@@ -612,6 +692,7 @@ function ChatContent() {
           createdAt: new Date().toISOString(),
         },
       ]);
+      setThreadReentryAnchor(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The response did not come through cleanly.");
       setInput(text);
@@ -692,7 +773,13 @@ function ChatContent() {
           </div>
         </div>
       </main>
-      <ThreadDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} threads={recentThreads} />
+      <ThreadDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        threadRows={threadDrawerRows}
+        onSelectThread={handleSelectThread}
+        busyThreadId={busyThreadId}
+      />
 
       <InputBar value={input} onChange={setInput} onSubmit={handleSubmit} disabled={isWaiting} />
     </div>

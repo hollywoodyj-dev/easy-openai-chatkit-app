@@ -1286,6 +1286,8 @@ export async function POST(request: Request) {
     message?: string;
     lang?: "en" | "zh";
     debug?: boolean;
+    /** Phase 3: first user turn after explicit thread re-entry from Recent threads UI */
+    phase_3_thread_reentry?: boolean;
     client_context?: {
       last_insight_seen?: boolean;
     };
@@ -1319,6 +1321,7 @@ export async function POST(request: Request) {
   }
   const inputNorm = normalizeIncomingUserMessage(rawMessage);
   const message = inputNorm.text;
+  const phase3ThreadReentry = body.phase_3_thread_reentry === true;
   const rawIngressSummary =
     typeof rawMessage === "string" ? summarizeIngressText(rawMessage) : summarizeIngressText("");
   const normalizedIngressSummary = summarizeIngressText(message);
@@ -1566,6 +1569,9 @@ export async function POST(request: Request) {
       : utilOrFactualTurn || briefNoncommittalTurn
         ? "\n\nTurn focus (V3): The latest user message is practical, logistical, or very brief/non-committal. Reply in one coherent message that addresses only what they asked or signalled here. Do not reinterpret inner reluctance, avoidance, or emotion unless they clearly describe lived feeling in this turn. Do not merge or continue earlier conversation topics unless they explicitly connect them in this message."
         : "";
+    const phase3ReEntryAppendix = phase3ThreadReentry
+      ? "\n\nPhase 3 thread re-entry: The user is continuing inside a chosen inner thread. Keep continuity light and present-oriented. Do not reference stored chat history, prior turns, or archival phrasing (avoid “you said before”, “last time”, “earlier we discussed”, “from your messages”)."
+      : "";
     const milestoneGAppendix = milestoneGSystemAppendix();
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
     const milestoneHLightAppendix = milestoneHLightModeSystemAppendix();
@@ -1580,6 +1586,7 @@ export async function POST(request: Request) {
         milestoneGAppendix +
         milestoneHLightAppendix +
         v3TurnFocusAppendix +
+        phase3ReEntryAppendix +
         languageInstruction,
     });
   }
@@ -1725,6 +1732,7 @@ export async function POST(request: Request) {
   let debugInterpretationSimilarity = 0;
   let debugTensionSimilarity = 0;
   let debugWeightedThreadScore = 0;
+  let debugPhase3BorderlineCoercedToSameThread = false;
   /** Prior assistant metadata (H/I + thread); loaded once when assistantMsgId is set. */
   let previousAssistantReflectionState: ExtractedReflectionState | null = null;
   let previousAssistantHadAwarenessCue = false;
@@ -1957,6 +1965,11 @@ export async function POST(request: Request) {
       debugInterpretationSimilarity = threadDecision.interpretationSimilarity;
       debugTensionSimilarity = threadDecision.tensionSimilarity;
       debugWeightedThreadScore = threadDecision.weightedScore;
+
+      if (phase3ThreadReentry && threadState === "borderline") {
+        threadState = "same_thread";
+        debugPhase3BorderlineCoercedToSameThread = true;
+      }
 
       const structFields = threadStructureToThreadRowFields(currentThreadStructure);
       const label = summarizeThreadLabelFromUserMessage(message);
@@ -3209,6 +3222,8 @@ export async function POST(request: Request) {
     debug_last_insight_source: debugLastInsightSource,
     debug_last_insight_suppressed_reason: debugLastInsightSuppressedReason,
     debug_thread_state: threadState,
+    debug_phase_3_thread_reentry: phase3ThreadReentry,
+    debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
     debug_active_thread_id: debugActiveThreadId,
     debug_emotion_similarity: debugEmotionSimilarity,
     debug_interpretation_similarity: debugInterpretationSimilarity,
