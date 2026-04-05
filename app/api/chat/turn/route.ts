@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { computePhase4SoftOrientation } from "@/lib/phase4-soft-orientation";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { verifyUserToken } from "@/lib/auth";
 import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
@@ -3190,6 +3191,25 @@ export async function POST(request: Request) {
     ...(keptMicroShift ? { micro_shift: keptMicroShift } : {}),
   };
 
+  let phase4ThreadLabel: string | null = null;
+  if (debugActiveThreadId) {
+    try {
+      const tr = await prisma.thread.findUnique({
+        where: { id: debugActiveThreadId },
+        select: { label: true },
+      });
+      phase4ThreadLabel = tr?.label?.trim() || null;
+    } catch {
+      phase4ThreadLabel = null;
+    }
+  }
+  const phase4Orientation = computePhase4SoftOrientation({
+    threadState,
+    activeThreadLabel: phase4ThreadLabel,
+    allowContinuityLayers,
+    mainReflection: assistantContent,
+  });
+
   const res = NextResponse.json({
     conversation_id: sessionId,
     response: responsePayload,
@@ -3242,6 +3262,13 @@ export async function POST(request: Request) {
         render_mode: responseMicroshiftCue.render_mode,
       },
     }),
+    phase_4: {
+      thread_legibility: phase4Orientation.thread_legibility,
+      current_space_marker: phase4Orientation.current_space_marker,
+    },
+    debug_phase_4_marker_shown: phase4Orientation.debug_phase_4_marker_shown,
+    debug_phase_4_suppressed_reason: phase4Orientation.debug_phase_4_suppressed_reason,
+    debug_phase_4_cleared_on_reset: phase4Orientation.debug_phase_4_cleared_on_reset,
     // Debug-only fields to help QA distinguish:
     // - whether this turn created an Insight row
     // - whether that row was continuity-eligible

@@ -39,6 +39,10 @@ type TurnResponseBody = {
   conversation_id?: string;
   assistant_message?: string;
   response?: AssistantPayload;
+  phase_4?: {
+    thread_legibility?: string;
+    current_space_marker?: string | null;
+  };
 };
 
 const INITIAL_MESSAGES: ChatMessage[] = [
@@ -134,6 +138,25 @@ function Header({
         </div>
       </div>
     </header>
+  );
+}
+
+/** Phase 4 — soft orientation only; secondary to main reflection (addendum: current-space marker). */
+function CurrentSpaceMarker({
+  legibility,
+  marker,
+}: {
+  legibility?: string;
+  marker?: string | null;
+}) {
+  if (legibility !== "low" || !marker?.trim()) return null;
+  return (
+    <p
+      className="mb-2 max-w-[46rem] text-[12px] leading-5 text-[#A8A8A8]"
+      aria-live="polite"
+    >
+      {marker.trim()}
+    </p>
   );
 }
 
@@ -351,6 +374,10 @@ function ChatContent() {
   const [threadReentryAnchor, setThreadReentryAnchor] = useState<string | null>(null);
   const [busyThreadId, setBusyThreadId] = useState<string | null>(null);
   const [threadsListLoadError, setThreadsListLoadError] = useState<string | null>(null);
+  const [phase4Space, setPhase4Space] = useState<{
+    thread_legibility: string;
+    current_space_marker: string | null;
+  } | null>(null);
   const phase3ReentryNextTurnRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -364,6 +391,10 @@ function ChatContent() {
     return undefined;
   }, [messages]);
   const anchorText = threadReentryAnchor ?? anchorFromMessages;
+
+  useEffect(() => {
+    setPhase4Space(null);
+  }, [conversationId]);
 
   /** Match GET /api/chat/messages: no Content-Type on GET (avoids unnecessary CORS preflight if API host differs). */
   const bearerOnlyHeaders = useMemo((): Record<string, string> => {
@@ -500,13 +531,24 @@ function ChatContent() {
         );
         if (!cont.ok) {
           setThreadReentryAnchor(null);
+          setPhase4Space(null);
         } else {
           const cj = (await cont.json()) as {
             insight?: { continuity_text?: string | null; core_pattern?: string | null } | null;
+            phase_4?: {
+              thread_legibility?: string;
+              current_space_marker?: string | null;
+            };
           };
           const line =
             cj.insight?.continuity_text?.trim() || cj.insight?.core_pattern?.trim() || null;
           setThreadReentryAnchor(line);
+          if (cj.phase_4) {
+            setPhase4Space({
+              thread_legibility: cj.phase_4.thread_legibility ?? "hidden",
+              current_space_marker: cj.phase_4.current_space_marker ?? null,
+            });
+          }
         }
         phase3ReentryNextTurnRef.current = true;
         setDrawerOpen(false);
@@ -730,6 +772,12 @@ function ChatContent() {
       }
       const data = (await response.json()) as TurnResponseBody;
       const payload = extractAssistantPayload(data);
+      if (data.phase_4) {
+        setPhase4Space({
+          thread_legibility: data.phase_4.thread_legibility ?? "hidden",
+          current_space_marker: data.phase_4.current_space_marker ?? null,
+        });
+      }
       if (data.conversation_id) {
         setConversationId(data.conversation_id);
         if (typeof window !== "undefined") sessionStorage.setItem(storageKey, data.conversation_id);
@@ -810,6 +858,10 @@ function ChatContent() {
         </div>
 
         {error ? <ErrorBanner message={error} /> : null}
+          <CurrentSpaceMarker
+            legibility={phase4Space?.thread_legibility}
+            marker={phase4Space?.current_space_marker}
+          />
           <InsightAnchor text={anchorText} />
 
           <div className="space-y-6 md:space-y-8">
