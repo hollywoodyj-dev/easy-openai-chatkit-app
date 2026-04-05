@@ -421,7 +421,7 @@ function ChatContent() {
     return () => {
       cancelled = true;
     };
-  }, [conversationId, sessionLoading, messages.length, authHeaders]);
+  }, [conversationId, sessionLoading, messages.length, authHeaders, drawerOpen]);
 
   const handleSelectThread = useCallback(
     async (threadId: string) => {

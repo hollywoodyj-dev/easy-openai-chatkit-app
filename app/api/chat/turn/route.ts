@@ -1733,6 +1733,8 @@ export async function POST(request: Request) {
   let debugTensionSimilarity = 0;
   let debugWeightedThreadScore = 0;
   let debugPhase3BorderlineCoercedToSameThread = false;
+  /** False if inner Thread upsert threw; true after successful V3 thread row write. */
+  let debugV3InnerThreadUpsertOk = false;
   /** Prior assistant metadata (H/I + thread); loaded once when assistantMsgId is set. */
   let previousAssistantReflectionState: ExtractedReflectionState | null = null;
   let previousAssistantHadAwarenessCue = false;
@@ -1894,150 +1896,153 @@ export async function POST(request: Request) {
   const debugMilestoneJEnabled = isMilestoneJMicroshiftEnabled();
 
   // V3: inner Thread is the continuity unit. last_insight = prior stable insight in the same thread only (not conversation-wide).
-  if (assistantMsgId) {
-    try {
-      const priorAssistant = await prisma.message.findFirst({
-        where: {
+  // Always upsert Thread rows when this turn reached here — not only when assistant Message save succeeded.
+  // Otherwise prod can show a normal reply (200 + text) while assistantMsgId stays null (DB write failure),
+  // and GET /api/chat/threads stays empty, blocking Phase 3 drawer QA.
+  try {
+    const priorAssistant = await prisma.message.findFirst({
+      where: {
+        conversationId: sessionId,
+        role: "assistant",
+        ...(assistantMsgId ? { NOT: { id: assistantMsgId } } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: { metadata: true },
+    });
+    const pm = priorAssistant?.metadata;
+    if (pm && typeof pm === "object" && !Array.isArray(pm)) {
+      const w = (pm as Record<string, unknown>).wisewave_micro_awareness;
+      previousAssistantHadAwarenessCue =
+        w !== null &&
+        typeof w === "object" &&
+        !Array.isArray(w) &&
+        typeof (w as { kind?: unknown }).kind === "string";
+
+      const rs = (pm as Record<string, unknown>).wisewave_reflection_state;
+      if (rs && typeof rs === "object" && !Array.isArray(rs)) {
+        const r = rs as Record<string, unknown>;
+        if (
+          typeof r.trigger_label === "string" &&
+          typeof r.emotion_label === "string" &&
+          typeof r.interpretation_label === "string" &&
+          typeof r.regulation_label === "string" &&
+          typeof r.choice_label === "string" &&
+          typeof r.insight_candidate === "string"
+        ) {
+          previousAssistantReflectionState = {
+            trigger_label: r.trigger_label,
+            emotion_label: r.emotion_label,
+            interpretation_label: r.interpretation_label,
+            regulation_label: r.regulation_label,
+            choice_label: r.choice_label,
+            insight_candidate: r.insight_candidate,
+          } as ExtractedReflectionState;
+        }
+      }
+    }
+
+    const currentThreadStructure =
+      extractThreadStructureFromReflectionState(reflectionState);
+    const previousFromAssistant = extractThreadStructureFromReflectionState(
+      previousAssistantReflectionState
+    );
+    const activeThreadRow = await prisma.thread.findFirst({
+      where: { conversationId: sessionId, isActive: true },
+    });
+    const previousForDecision =
+      previousFromAssistant ??
+      (activeThreadRow
+        ? threadRowToThreadStructure({
+            emotionSignal: activeThreadRow.emotionSignal,
+            interpretationPattern: activeThreadRow.interpretationPattern,
+            tensionDirection: activeThreadRow.tensionDirection,
+            intensity: activeThreadRow.intensity,
+          })
+        : null);
+
+    const threadDecision = decideThreadState(
+      currentThreadStructure,
+      previousForDecision
+    );
+    threadState = threadDecision.state;
+    debugEmotionSimilarity = threadDecision.emotionSimilarity;
+    debugInterpretationSimilarity = threadDecision.interpretationSimilarity;
+    debugTensionSimilarity = threadDecision.tensionSimilarity;
+    debugWeightedThreadScore = threadDecision.weightedScore;
+
+    if (phase3ThreadReentry && threadState === "borderline") {
+      threadState = "same_thread";
+      debugPhase3BorderlineCoercedToSameThread = true;
+    }
+
+    const structFields = threadStructureToThreadRowFields(currentThreadStructure);
+    const label = summarizeThreadLabelFromUserMessage(message);
+
+    if (threadState === "new_thread" || threadState === "borderline") {
+      await prisma.thread.updateMany({
+        where: { conversationId: sessionId, isActive: true },
+        data: {
+          isActive: false,
+          status: threadState === "new_thread" ? "closed" : "soft_closed",
+          closedAt: new Date(),
+        },
+      });
+      const createdThread = await prisma.thread.create({
+        data: {
           conversationId: sessionId,
-          role: "assistant",
-          NOT: { id: assistantMsgId },
+          isActive: true,
+          status: "active",
+          ...structFields,
+          label,
+        },
+      });
+      activeThreadId = createdThread.id;
+    } else if (activeThreadRow) {
+      await prisma.thread.update({
+        where: { id: activeThreadRow.id },
+        data: { ...structFields, label },
+      });
+      activeThreadId = activeThreadRow.id;
+    } else {
+      const createdThread = await prisma.thread.create({
+        data: {
+          conversationId: sessionId,
+          isActive: true,
+          status: "active",
+          ...structFields,
+          label,
+        },
+      });
+      activeThreadId = createdThread.id;
+    }
+    debugActiveThreadId = activeThreadId;
+
+    if (threadState === "same_thread" && activeThreadId) {
+      const previousInsight = await prisma.insight.findFirst({
+        where: {
+          userId,
+          conversationId: sessionId,
+          threadId: activeThreadId,
+          status: "active",
+          isContinuityEligible: true,
+          isStable: true,
+          createdAt: { lt: userMsg.createdAt },
         },
         orderBy: { createdAt: "desc" },
-        select: { metadata: true },
+        select: { continuityText: true },
       });
-      const pm = priorAssistant?.metadata;
-      if (pm && typeof pm === "object" && !Array.isArray(pm)) {
-        const w = (pm as Record<string, unknown>).wisewave_micro_awareness;
-        previousAssistantHadAwarenessCue =
-          w !== null &&
-          typeof w === "object" &&
-          !Array.isArray(w) &&
-          typeof (w as { kind?: unknown }).kind === "string";
-
-        const rs = (pm as Record<string, unknown>).wisewave_reflection_state;
-        if (rs && typeof rs === "object" && !Array.isArray(rs)) {
-          const r = rs as Record<string, unknown>;
-          if (
-            typeof r.trigger_label === "string" &&
-            typeof r.emotion_label === "string" &&
-            typeof r.interpretation_label === "string" &&
-            typeof r.regulation_label === "string" &&
-            typeof r.choice_label === "string" &&
-            typeof r.insight_candidate === "string"
-          ) {
-            previousAssistantReflectionState = {
-              trigger_label: r.trigger_label,
-              emotion_label: r.emotion_label,
-              interpretation_label: r.interpretation_label,
-              regulation_label: r.regulation_label,
-              choice_label: r.choice_label,
-              insight_candidate: r.insight_candidate,
-            } as ExtractedReflectionState;
-          }
-        }
+      const candidateText = previousInsight?.continuityText?.trim() || null;
+      if (candidateText) {
+        previousTurnLastInsightText = candidateText;
+        debugLastInsightSource = "same_thread_stable_insight";
       }
-
-      const currentThreadStructure =
-        extractThreadStructureFromReflectionState(reflectionState);
-      const previousFromAssistant = extractThreadStructureFromReflectionState(
-        previousAssistantReflectionState
-      );
-      const activeThreadRow = await prisma.thread.findFirst({
-        where: { conversationId: sessionId, isActive: true },
-      });
-      const previousForDecision =
-        previousFromAssistant ??
-        (activeThreadRow
-          ? threadRowToThreadStructure({
-              emotionSignal: activeThreadRow.emotionSignal,
-              interpretationPattern: activeThreadRow.interpretationPattern,
-              tensionDirection: activeThreadRow.tensionDirection,
-              intensity: activeThreadRow.intensity,
-            })
-          : null);
-
-      const threadDecision = decideThreadState(
-        currentThreadStructure,
-        previousForDecision
-      );
-      threadState = threadDecision.state;
-      debugEmotionSimilarity = threadDecision.emotionSimilarity;
-      debugInterpretationSimilarity = threadDecision.interpretationSimilarity;
-      debugTensionSimilarity = threadDecision.tensionSimilarity;
-      debugWeightedThreadScore = threadDecision.weightedScore;
-
-      if (phase3ThreadReentry && threadState === "borderline") {
-        threadState = "same_thread";
-        debugPhase3BorderlineCoercedToSameThread = true;
-      }
-
-      const structFields = threadStructureToThreadRowFields(currentThreadStructure);
-      const label = summarizeThreadLabelFromUserMessage(message);
-
-      if (threadState === "new_thread" || threadState === "borderline") {
-        await prisma.thread.updateMany({
-          where: { conversationId: sessionId, isActive: true },
-          data: {
-            isActive: false,
-            status: threadState === "new_thread" ? "closed" : "soft_closed",
-            closedAt: new Date(),
-          },
-        });
-        const createdThread = await prisma.thread.create({
-          data: {
-            conversationId: sessionId,
-            isActive: true,
-            status: "active",
-            ...structFields,
-            label,
-          },
-        });
-        activeThreadId = createdThread.id;
-      } else if (activeThreadRow) {
-        await prisma.thread.update({
-          where: { id: activeThreadRow.id },
-          data: { ...structFields, label },
-        });
-        activeThreadId = activeThreadRow.id;
-      } else {
-        const createdThread = await prisma.thread.create({
-          data: {
-            conversationId: sessionId,
-            isActive: true,
-            status: "active",
-            ...structFields,
-            label,
-          },
-        });
-        activeThreadId = createdThread.id;
-      }
-      debugActiveThreadId = activeThreadId;
-
-      if (threadState === "same_thread" && activeThreadId) {
-        const previousInsight = await prisma.insight.findFirst({
-          where: {
-            userId,
-            conversationId: sessionId,
-            threadId: activeThreadId,
-            status: "active",
-            isContinuityEligible: true,
-            isStable: true,
-            createdAt: { lt: userMsg.createdAt },
-          },
-          orderBy: { createdAt: "desc" },
-          select: { continuityText: true },
-        });
-        const candidateText = previousInsight?.continuityText?.trim() || null;
-        if (candidateText) {
-          previousTurnLastInsightText = candidateText;
-          debugLastInsightSource = "same_thread_stable_insight";
-        }
-      }
-    } catch (e) {
-      console.warn("[chat/turn] thread / last_insight resolution failed", e);
-      previousTurnLastInsightText = null;
-      debugLastInsightSource = "none";
     }
+    debugV3InnerThreadUpsertOk = true;
+  } catch (e) {
+    debugV3InnerThreadUpsertOk = false;
+    console.warn("[chat/turn] thread / last_insight resolution failed", e);
+    previousTurnLastInsightText = null;
+    debugLastInsightSource = "none";
   }
 
   // Ticket 4: save one durable insight when we have a good candidate.
@@ -3225,6 +3230,7 @@ export async function POST(request: Request) {
     debug_phase_3_thread_reentry: phase3ThreadReentry,
     debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
     debug_active_thread_id: debugActiveThreadId,
+    debug_v3_inner_thread_upsert_ok: debugV3InnerThreadUpsertOk,
     debug_emotion_similarity: debugEmotionSimilarity,
     debug_interpretation_similarity: debugInterpretationSimilarity,
     debug_tension_similarity: debugTensionSimilarity,
