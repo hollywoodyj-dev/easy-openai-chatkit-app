@@ -170,7 +170,12 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true, active_thread_id: threadId });
+    return NextResponse.json({
+      ok: true,
+      active_thread_id: threadId,
+      // Phase 5 instrumentation: lets QA correlate "select Continue" to next-turn latency.
+      selected_at: new Date().toISOString(),
+    });
   } catch (e) {
     console.error("[api/chat/threads POST] unexpected error", e);
     return NextResponse.json(

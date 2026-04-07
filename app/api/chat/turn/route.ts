@@ -3455,6 +3455,13 @@ export async function POST(request: Request) {
     debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
     debug_phase_3_reentry_coerced_new_thread_to_same:
       debugPhase3ReentryCoercedNewThreadToSame,
+    debug_phase_5_continue_path_stage: !phase3ThreadReentry
+      ? "none"
+      : continueReentryContinuationTurn
+        ? threadState === "same_thread"
+          ? "selected_short_ack_resumed"
+          : "selected_short_ack_borderline"
+        : "selected_long_or_explicit_followup",
     debug_active_thread_id: debugActiveThreadId,
     debug_v3_inner_thread_upsert_ok: debugV3InnerThreadUpsertOk,
     debug_v3_conversation_thread_count: debugV3ConversationThreadCount,
