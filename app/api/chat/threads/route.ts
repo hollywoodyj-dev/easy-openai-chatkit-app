@@ -2,10 +2,12 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
+import {
+  CONTINUE_FETCH_POOL,
+  pickContinueOptions,
+} from "@/lib/wisewave-continue-list";
 
 export const dynamic = "force-dynamic";
-
-const MAX_THREADS = 8;
 
 /** Missing Thread table / migration not applied (Prisma P2021, or Postgres undefined_table). */
 function isThreadStorageMissingError(e: unknown): boolean {
@@ -23,7 +25,7 @@ function isThreadStorageMissingError(e: unknown): boolean {
 }
 
 /**
- * GET: recent inner threads for a conversation (V3 — labels from Thread rows, not raw messages).
+ * GET: Continue options for a conversation (≤3 distinct unfinished directions; DB: Thread rows).
  * Query: session_id = conversation id
  */
 export async function GET(request: Request) {
@@ -54,7 +56,7 @@ export async function GET(request: Request) {
       threads = await prisma.thread.findMany({
         where: { conversationId: sessionId },
         orderBy: { updatedAt: "desc" },
-        take: MAX_THREADS,
+        take: CONTINUE_FETCH_POOL,
         select: {
           id: true,
           label: true,
@@ -77,14 +79,19 @@ export async function GET(request: Request) {
       );
     }
 
+    const byId = new Map(threads.map((t) => [t.id, t]));
+    const picked = pickContinueOptions(threads);
     return NextResponse.json({
-      threads: threads.map((t) => ({
-        id: t.id,
-        label: t.label?.trim() || "Quiet trace",
-        is_active: t.isActive,
-        status: t.status,
-        updated_at: t.updatedAt.toISOString(),
-      })),
+      threads: picked.map((p) => {
+        const row = byId.get(p.id);
+        return {
+          id: p.id,
+          label: p.label,
+          is_active: row?.isActive ?? false,
+          status: row?.status ?? "active",
+          updated_at: row?.updatedAt.toISOString() ?? new Date().toISOString(),
+        };
+      }),
     });
   } catch (e) {
     console.error("[api/chat/threads GET] unexpected error", e);
@@ -96,9 +103,9 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST: Phase 3 — set one inner thread active for a conversation (soft re-entry).
+ * POST: Continue — activate one unfinished direction for this conversation (DB: Thread.isActive).
  * Body: { session_id, thread_id } (session_id = conversation id).
- * Does not load or replay messages (client must not call messages API for this).
+ * Does not load or replay transcript; client should not call messages API for this.
  */
 export async function POST(request: Request) {
   try {

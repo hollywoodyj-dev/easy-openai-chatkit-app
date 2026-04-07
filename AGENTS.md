@@ -38,7 +38,8 @@ If you want this paragraph to evolve, edit it like any other doc.
 
 | Area | Location |
 |------|----------|
-| Chat UI | `app/chat/page.tsx` |
+| Chat UI | `app/chat/page.tsx` — **Continue** (user-facing continuation affordance; drawer title + selection feedback). |
+| Continue list API | `GET/POST /api/chat/threads` — DB model remains **`Thread`**; **`lib/wisewave-continue-list.ts`** returns ≤**3** distinct unfinished-direction labels (recency-ranked, weak/topic-like filtered, similarity-deduped). Empty list allowed. |
 | Turn API | `app/api/chat/turn/route.ts` |
 | Messages API | `app/api/chat/messages/route.ts` |
 | Continuity | `app/api/chat/continuity/route.ts`. **Anchor Generator v2 (semantic weight, narrowing only):** `lib/wisewave-anchor-semantic-weight-v2.ts` — spec **`docs/hc-os-v1-phase-3-phase-4-shared-language-filter-wisewave.md`**; runs after `toContinuityReminderText` on insight save and when surfacing prior `last_insight` / GET continuity; pass **`responseLang`** (`body.lang` or CJK on user message on turn; GET optional **`lang`** or latest user message). Debug: **`debug_anchor_semantic_weight_v2_continuity_save`**, **`debug_anchor_semantic_weight_v2_last_insight_read`** (turn), **`debug_anchor_semantic_weight_v2_read`** (continuity GET); includes **`aligned_response_lang`** when `lang` / turn language flips a **paired** thin residue line. |

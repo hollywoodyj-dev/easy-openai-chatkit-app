@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-04-07 — Tree Phase 4: Continue mechanism (not “threads” UI)
+
+- **Product:** Surface **Continue** — lightweight continuation affordance; not history, topic list, or system object. **`lib/wisewave-continue-list.ts`** shapes **`GET /api/chat/threads`** response to **≤3** distinct, recency-sorted labels (weak/topic-like dropped; empty OK).
+- **Turn:** Active **`Thread.label`** + **Continue selection** appendix on **`phase_3_thread_reentry`** in **`app/api/chat/turn/route.ts`** so the next model call biases toward the chosen unfinished direction (JSON field names unchanged for compatibility).
+- **UI:** **`app/chat/page.tsx`** — Continue drawer, row highlight ~650ms after activate, placeholder **Pick up from here.** briefly.
+- **QA:** **`docs/QA_HANDOFF.md`** 2026-04-07 entry; **`npm run test:continue-list`**.
+
 ## 2026-03-29 — Milestone J addendum published (preparation mode)
 
 - **Canonical doc:** `docs/HC_OS_V1_Milestone_J_Addendum_Micro_Shift_Embodied_Effect_Layer.md` — Micro-Shift / Embodied Effect Layer; proof = minimal internal shift **without** more system presence; **open a shift, do not direct a shift**.

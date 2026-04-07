@@ -107,11 +107,11 @@ function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
 }
 
 function Header({
-  threadsOpen,
-  onToggleThreads,
+  continueOpen,
+  onToggleContinue,
 }: {
-  threadsOpen: boolean;
-  onToggleThreads: () => void;
+  continueOpen: boolean;
+  onToggleContinue: () => void;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
@@ -124,14 +124,14 @@ function Header({
           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
           <span className="text-sm text-[#7A7A7A]">present</span>
           <button
-            onClick={onToggleThreads}
+            onClick={onToggleContinue}
             type="button"
             className={cn(
               "ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#777] transition",
-              threadsOpen ? "bg-white" : "bg-white/65 hover:bg-white"
+              continueOpen ? "bg-white" : "bg-white/65 hover:bg-white"
             )}
-            aria-label={threadsOpen ? "Close recent threads" : "Open recent threads"}
-            aria-expanded={threadsOpen}
+            aria-label={continueOpen ? "Close Continue" : "Open Continue"}
+            aria-expanded={continueOpen}
           >
             ...
           </button>
@@ -203,23 +203,24 @@ function UserMessage({ text }: { text: string }) {
   );
 }
 
-function ThreadDrawer({
+function ContinueDrawer({
   open,
   onClose,
-  threadRows,
-  onSelectThread,
-  busyThreadId,
+  continueRows,
+  highlightedId,
+  onSelectContinue,
+  busyContinueId,
   listLoadError,
 }: {
   open: boolean;
   onClose: () => void;
-  threadRows: Array<{ id: string; label: string }>;
-  onSelectThread: (threadId: string) => void;
-  busyThreadId: string | null;
+  continueRows: Array<{ id: string; label: string }>;
+  highlightedId: string | null;
+  onSelectContinue: (continueId: string) => void;
+  busyContinueId: string | null;
   listLoadError: string | null;
 }) {
-  // V3 presence rule: Recent threads must be hidden by default.
-  // Render nothing when closed so it can't accidentally remain visible due to CSS/opacity quirks.
+  // Continue must be hidden by default. Render nothing when closed (no stray tallies from opacity).
   if (!open) return null;
 
   return (
@@ -239,26 +240,28 @@ function ThreadDrawer({
           "pointer-events-auto translate-y-0 opacity-100"
         )}
         role="dialog"
-        aria-label="Recent threads"
+        aria-label="Continue"
       >
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Recent threads</p>
+          <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Continue</p>
           <button onClick={onClose} className="text-sm text-[#7D7D7D]" type="button">
             Close
           </button>
         </div>
         <ul className="space-y-2.5">
-          {threadRows.length > 0 ? (
-            threadRows.map((row) => (
+          {continueRows.length > 0 ? (
+            continueRows.map((row) => (
               <li key={row.id} className="list-none">
                 <button
                   type="button"
-                  disabled={busyThreadId !== null}
-                  onClick={() => onSelectThread(row.id)}
+                  disabled={busyContinueId !== null}
+                  onClick={() => onSelectContinue(row.id)}
                   className={cn(
                     "w-full rounded-2xl bg-white/72 px-3.5 py-2.5 text-left text-sm leading-6 text-[#545454] ring-1 ring-black/4 transition",
                     "hover:bg-white/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6F8596]/40",
-                    busyThreadId !== null && "opacity-60"
+                    busyContinueId !== null && "opacity-60",
+                    highlightedId === row.id &&
+                      "bg-[#EEF4EF] ring-2 ring-[#7C9082]/35 shadow-[0_0_0_1px_rgba(124,144,130,0.12)]"
                   )}
                 >
                   {row.label}
@@ -271,7 +274,7 @@ function ThreadDrawer({
             </li>
           ) : (
             <li className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm text-[#868686] ring-1 ring-black/4">
-              No recent thread yet.
+              Nothing to continue right now.
             </li>
           )}
         </ul>
@@ -308,11 +311,13 @@ function InputBar({
   onChange,
   onSubmit,
   disabled,
+  placeholder = "Speak freely.",
 }: {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   disabled: boolean;
+  placeholder?: string;
 }) {
   return (
     <div className="sticky bottom-0 z-20 border-t border-black/5 bg-[#F7F5F2]/90 backdrop-blur-xl">
@@ -330,7 +335,7 @@ function InputBar({
               }}
               disabled={disabled}
               rows={1}
-              placeholder="Speak freely."
+              placeholder={placeholder}
               className="max-h-40 min-h-[52px] flex-1 resize-none bg-transparent px-1 py-2 text-[15px] leading-7 text-[#232323] outline-none placeholder:text-[#8B8B8B]"
             />
 
@@ -370,16 +375,29 @@ function ChatContent() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [minAnchorUntil, setMinAnchorUntil] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [threadDrawerRows, setThreadDrawerRows] = useState<Array<{ id: string; label: string }>>([]);
+  const [continueDrawerRows, setContinueDrawerRows] = useState<Array<{ id: string; label: string }>>(
+    []
+  );
   const [threadReentryAnchor, setThreadReentryAnchor] = useState<string | null>(null);
-  const [busyThreadId, setBusyThreadId] = useState<string | null>(null);
-  const [threadsListLoadError, setThreadsListLoadError] = useState<string | null>(null);
+  const [busyContinueId, setBusyContinueId] = useState<string | null>(null);
+  const [continueListLoadError, setContinueListLoadError] = useState<string | null>(null);
+  const [continueHighlightId, setContinueHighlightId] = useState<string | null>(null);
+  const [inputPlaceholder, setInputPlaceholder] = useState("Speak freely.");
+  const continueHighlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const continuePlaceholderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [phase4Space, setPhase4Space] = useState<{
     thread_legibility: string;
     current_space_marker: string | null;
   } | null>(null);
   const phase3ReentryNextTurnRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (continueHighlightTimerRef.current) clearTimeout(continueHighlightTimerRef.current);
+      if (continuePlaceholderTimerRef.current) clearTimeout(continuePlaceholderTimerRef.current);
+    };
+  }, []);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
   const anchorFromMessages = useMemo(() => {
@@ -436,8 +454,8 @@ function ChatContent() {
 
   useEffect(() => {
     if (!conversationId || sessionLoading) {
-      setThreadDrawerRows([]);
-      setThreadsListLoadError(null);
+      setContinueDrawerRows([]);
+      setContinueListLoadError(null);
       return;
     }
     let cancelled = false;
@@ -452,20 +470,20 @@ function ChatContent() {
           let hint =
             res.status === 404
               ? "Session not found for this account (try the same sign-in you use to chat, or refresh)."
-              : `Could not load threads (HTTP ${res.status}).`;
+              : `Could not load Continue list (HTTP ${res.status}).`;
           try {
             const errBody = (await res.json()) as { code?: string; error?: string };
             if (
               errBody.code === "threads_prisma_error" ||
               errBody.code === "threads_unexpected"
             ) {
-              hint = `Could not load threads (HTTP ${res.status}). Chat can still work; if this keeps happening, apply the latest DB migration on the server (V3 Thread table).`;
+              hint = `Could not load Continue (HTTP ${res.status}). Chat still works; if this persists, apply the latest DB migration on the server.`;
             }
           } catch {
             /* keep hint */
           }
-          setThreadsListLoadError(hint);
-          setThreadDrawerRows([]);
+          setContinueListLoadError(hint);
+          setContinueDrawerRows([]);
           return;
         }
         const data = (await res.json()) as {
@@ -473,24 +491,30 @@ function ChatContent() {
           meta?: { thread_storage_unavailable?: boolean };
         };
         if (data.meta?.thread_storage_unavailable) {
-          setThreadDrawerRows([]);
-          setThreadsListLoadError(
-            "Recent threads are not available on this server yet (database schema update pending). You can keep chatting; run migrations on the host, then reload."
+          setContinueDrawerRows([]);
+          setContinueListLoadError(
+            "Continue is not available on this server yet (database update pending). You can keep chatting; run migrations on the host, then reload."
           );
           return;
         }
         const rows = (data.threads ?? [])
-          .filter((t) => typeof t.id === "string" && t.id.length > 0)
+          .filter(
+            (t) =>
+              typeof t.id === "string" &&
+              t.id.length > 0 &&
+              typeof t.label === "string" &&
+              t.label.trim().length > 0
+          )
           .map((t) => ({
             id: t.id,
-            label: (t.label?.trim() || "Quiet trace").slice(0, 200),
+            label: t.label!.trim().slice(0, 200),
           }));
-        setThreadDrawerRows(rows.slice(0, 8));
-        setThreadsListLoadError(null);
+        setContinueDrawerRows(rows);
+        setContinueListLoadError(null);
       } catch {
         if (!cancelled) {
-          setThreadDrawerRows([]);
-          setThreadsListLoadError("Could not load threads (network error).");
+          setContinueDrawerRows([]);
+          setContinueListLoadError("Could not load Continue (network error).");
         }
       }
     })();
@@ -499,10 +523,10 @@ function ChatContent() {
     };
   }, [conversationId, sessionLoading, messages.length, bearerOnlyHeaders, drawerOpen]);
 
-  const handleSelectThread = useCallback(
-    async (threadId: string) => {
-      if (!conversationId || busyThreadId) return;
-      setBusyThreadId(threadId);
+  const handleSelectContinue = useCallback(
+    async (continueId: string) => {
+      if (!conversationId || busyContinueId) return;
+      setBusyContinueId(continueId);
       setError(null);
       try {
         const act = await fetch(CHAT_THREADS_ENDPOINT, {
@@ -511,7 +535,7 @@ function ChatContent() {
           credentials: "include",
           body: JSON.stringify({
             session_id: conversationId,
-            thread_id: threadId,
+            thread_id: continueId,
           }),
         });
         if (act.status === 401) {
@@ -523,7 +547,7 @@ function ChatContent() {
           return;
         }
         if (!act.ok) {
-          throw new Error(`Thread activate failed (${act.status})`);
+          throw new Error(`Continue failed (${act.status})`);
         }
         const cont = await fetch(
           `${CHAT_CONTINUITY_ENDPOINT}?session_id=${encodeURIComponent(conversationId)}`,
@@ -552,15 +576,29 @@ function ChatContent() {
         }
         phase3ReentryNextTurnRef.current = true;
         setDrawerOpen(false);
+
+        if (continueHighlightTimerRef.current) clearTimeout(continueHighlightTimerRef.current);
+        setContinueHighlightId(continueId);
+        continueHighlightTimerRef.current = setTimeout(() => {
+          setContinueHighlightId(null);
+          continueHighlightTimerRef.current = null;
+        }, 650);
+
+        setInputPlaceholder("Pick up from here.");
+        if (continuePlaceholderTimerRef.current) clearTimeout(continuePlaceholderTimerRef.current);
+        continuePlaceholderTimerRef.current = setTimeout(() => {
+          setInputPlaceholder("Speak freely.");
+          continuePlaceholderTimerRef.current = null;
+        }, 5000);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not switch thread.");
+        setError(e instanceof Error ? e.message : "Could not continue from there.");
       } finally {
-        setBusyThreadId(null);
+        setBusyContinueId(null);
       }
     },
     [
       bearerOnlyHeaders,
-      busyThreadId,
+      busyContinueId,
       conversationId,
       handleAuthExpired,
       handleSubscriptionRequired,
@@ -845,8 +883,8 @@ function ChatContent() {
       </div>
 
       <Header
-        threadsOpen={drawerOpen}
-        onToggleThreads={() => setDrawerOpen((prev) => !prev)}
+        continueOpen={drawerOpen}
+        onToggleContinue={() => setDrawerOpen((prev) => !prev)}
       />
 
       <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
@@ -878,16 +916,23 @@ function ChatContent() {
           </div>
         </div>
       </main>
-      <ThreadDrawer
+      <ContinueDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        threadRows={threadDrawerRows}
-        onSelectThread={handleSelectThread}
-        busyThreadId={busyThreadId}
-        listLoadError={threadsListLoadError}
+        continueRows={continueDrawerRows}
+        highlightedId={continueHighlightId}
+        onSelectContinue={handleSelectContinue}
+        busyContinueId={busyContinueId}
+        listLoadError={continueListLoadError}
       />
 
-      <InputBar value={input} onChange={setInput} onSubmit={handleSubmit} disabled={isWaiting} />
+      <InputBar
+        value={input}
+        onChange={setInput}
+        onSubmit={handleSubmit}
+        disabled={isWaiting}
+        placeholder={inputPlaceholder}
+      />
     </div>
   );
 }

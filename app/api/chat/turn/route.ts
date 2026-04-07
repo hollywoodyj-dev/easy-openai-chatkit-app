@@ -1622,6 +1622,24 @@ export async function POST(request: Request) {
   if (!systemPrompt) {
     systemPrompt = WISEWAVE_CHAT_PROMPT;
   }
+
+  /** Continue (Phase 4): bias model toward the direction the user picked — resolve before completion. */
+  let continueDirectionLabel: string | null = null;
+  if (phase3ThreadReentry && sessionId) {
+    try {
+      const activeRow = await prisma.thread.findFirst({
+        where: { conversationId: sessionId, isActive: true },
+        select: { label: true },
+      });
+      const lbl = activeRow?.label?.trim();
+      if (lbl && !/^quiet trace$/i.test(lbl)) {
+        continueDirectionLabel = lbl.replace(/[`\r\n]+/g, " ").slice(0, 240);
+      }
+    } catch {
+      continueDirectionLabel = null;
+    }
+  }
+
   const openaiMessagesForApi: { role: "user" | "assistant" | "system"; content: string }[] = [];
   if (systemPrompt) {
     const userRows = allMessages.filter((m) => m.role === "user");
@@ -1669,8 +1687,17 @@ export async function POST(request: Request) {
       : utilOrFactualTurn || briefNoncommittalTurn
         ? "\n\nTurn focus (V3): The latest user message is practical, logistical, or very brief/non-committal. Reply in one coherent message that addresses only what they asked or signalled here. Do not reinterpret inner reluctance, avoidance, or emotion unless they clearly describe lived feeling in this turn. Do not merge or continue earlier conversation topics unless they explicitly connect them in this message."
         : "";
+    const sanitizedContinueHint =
+      continueDirectionLabel
+        ?.replace(/"/g, "'")
+        .replace(/\s+/g, " ")
+        .trim() ?? "";
     const phase3ReEntryAppendix = phase3ThreadReentry
-      ? "\n\nPhase 3 thread re-entry: The user is continuing inside a chosen inner thread. Keep continuity light and present-oriented. Do not reference stored chat history, prior turns, or archival phrasing (avoid “you said before”, “last time”, “earlier we discussed”, “from your messages”)."
+      ? `\n\nContinue selection: The user chose to resume an unfinished conversational direction (this is not history browsing). Stay present-oriented and light. Do not use archival phrasing (“you said before”, “last time”, “earlier we discussed”, “from your messages”).${
+          sanitizedContinueHint
+            ? ` Gently bias interpretation and response tone toward this unfinished residue — do not name it as a topic or quote it: ${sanitizedContinueHint}`
+            : ""
+        }`
       : "";
     const milestoneGAppendix = milestoneGSystemAppendix();
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
