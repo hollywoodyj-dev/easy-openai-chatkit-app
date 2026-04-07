@@ -10,6 +10,11 @@
 
 <!-- Memory entries below -->
 
+## 2026-04-10 — Phase 6 (Continue adoption tuning) — instrumentation only
+
+- **Docs:** `docs/HC_OS_V1_Phase_6_*.md` (Task, Execution Memo, OctopusMind clarifiers, Wisewave felt standard). **Scope:** adoption / selectivity / repeat-use analysis **without** identity drift — no new UI, no explanatory copy, no history/memory widening.
+- **Code:** `lib/wisewave-phase6-continue.ts` — `classifyPhase6ReturnPatternHint`, `buildPhase6ContinueListMeta`; `GET /api/chat/threads` → `meta.phase_6`; turn JSON → `debug_phase_6`; `isStrongEmotionalReturnLabel` exported from `lib/wisewave-continue-list.ts` for strong-option counts.
+
 ## 2026-04-09 — Phase 5 precision (Continue): Lumen **accepted**
 
 - **Scope:** Weak-tail decorative Continue suppressed via last-user-turn gate (**`shouldSuppressContinueListForLastUserMessage`**, **`GET /api/chat/threads`**); strong paths preserved (**`pickContinueOptions`** strong-family + delayed-reply/replay traces in **`lib/wisewave-thread-label.ts`**).

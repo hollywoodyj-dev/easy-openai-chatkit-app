@@ -153,7 +153,8 @@ function isLowSpecificityResidueLabel(raw: string): boolean {
   return genericWords.length >= 2;
 }
 
-function isStrongEmotionalReturnLabel(raw: string): boolean {
+/** Exported for Phase 6 instrumentation (Continue surface quality); not a user-facing API. */
+export function isStrongEmotionalReturnLabel(raw: string): boolean {
   const s = raw.trim();
   if (!s) return false;
   const lower = normalizeLabel(s);

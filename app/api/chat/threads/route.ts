@@ -7,6 +7,7 @@ import {
   pickContinueOptions,
   shouldSuppressContinueListForLastUserMessage,
 } from "@/lib/wisewave-continue-list";
+import { buildPhase6ContinueListMeta } from "@/lib/wisewave-phase6-continue";
 
 export const dynamic = "force-dynamic";
 
@@ -56,12 +57,17 @@ export async function GET(request: Request) {
       lastUserText.length > 0 &&
       shouldSuppressContinueListForLastUserMessage(lastUserText)
     ) {
-      return NextResponse.json({
-        threads: [],
-        meta: {
-          continue_suppressed_last_user_turn: true,
-        },
-      });
+        return NextResponse.json({
+          threads: [],
+          meta: {
+            continue_suppressed_last_user_turn: true,
+            phase_6: buildPhase6ContinueListMeta({
+              lastUserMessage: lastUserText,
+              pickedLabels: [],
+              suppressedWeakTail: true,
+            }),
+          },
+        });
     }
 
     try {
@@ -95,13 +101,27 @@ export async function GET(request: Request) {
             updated_at: row?.updatedAt.toISOString() ?? new Date().toISOString(),
           };
         }),
+        meta: {
+          phase_6: buildPhase6ContinueListMeta({
+            lastUserMessage: lastUserText,
+            pickedLabels: picked.map((p) => p.label),
+            suppressedWeakTail: false,
+          }),
+        },
       });
     } catch (threadErr) {
       console.error("[api/chat/threads GET] prisma.thread.findMany failed", threadErr);
       if (isThreadStorageMissingError(threadErr)) {
         return NextResponse.json({
           threads: [],
-          meta: { thread_storage_unavailable: true },
+          meta: {
+            thread_storage_unavailable: true,
+            phase_6: buildPhase6ContinueListMeta({
+              lastUserMessage: lastUserText,
+              pickedLabels: [],
+              suppressedWeakTail: false,
+            }),
+          },
         });
       }
       return NextResponse.json(

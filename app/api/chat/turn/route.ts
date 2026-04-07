@@ -14,6 +14,7 @@ import {
 } from "@/lib/wisewave-extract";
 import { CHAT_SYSTEM_PROMPT as WISEWAVE_CHAT_PROMPT } from "@/lib/wisewave-prompts";
 import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
+import { classifyPhase6ReturnPatternHint } from "@/lib/wisewave-phase6-continue";
 import {
   type ContinuityPatternFamily,
   detectContinuityPatternFamily,
@@ -3462,6 +3463,10 @@ export async function POST(request: Request) {
           ? "selected_short_ack_resumed"
           : "selected_short_ack_borderline"
         : "selected_long_or_explicit_followup",
+    debug_phase_6: {
+      return_pattern_hint: classifyPhase6ReturnPatternHint(message),
+      user_message_length: message.length,
+    },
     debug_active_thread_id: debugActiveThreadId,
     debug_v3_inner_thread_upsert_ok: debugV3InnerThreadUpsertOk,
     debug_v3_conversation_thread_count: debugV3ConversationThreadCount,
