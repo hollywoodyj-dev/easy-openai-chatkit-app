@@ -33,6 +33,13 @@ const TOPIC_LIKE_EN_RE =
 
 /** Conceptual / topic-like ZH (narrow). */
 const TOPIC_LIKE_ZH_RE = /(工作受挫|关系问题|自我价值|内在冲突|焦虑模式|议题)/;
+const LOW_SPECIFICITY_RESIDUE_RE =
+  /^(still|something|not quite|a little|this still|not fully)\b/i;
+const GENERIC_RESIDUE_NEAR_RE = /\b(still|something|little|near|close|quiet|not|fully|yet|here)\b/gi;
+const SPECIFIC_DIRECTION_CUE_EN_RE =
+  /\b(reply|silence|rest|earned|guilt|guilty|wrong|work|pressure|rushed|sleep|family|partner|grief|fear|blame|settled after|turning back)\b/i;
+const SPECIFIC_DIRECTION_CUE_ZH_RE =
+  /(回复|回覆|沉默|休息|配得|内疚|自责|工作|压力|匆忙|睡|家人|伴侣|失去|害怕|责怪|没稳住)/;
 
 function normalizeLabel(s: string): string {
   return s
@@ -95,7 +102,37 @@ export type ContinueListSourceRow = {
   updatedAt: Date;
   isActive?: boolean;
   status?: string;
+  emotionSignal?: string | null;
+  interpretationPattern?: string | null;
+  tensionDirection?: string | null;
+  intensity?: string | null;
 };
+
+function hasThreadStructureSignal(t: ContinueListSourceRow): boolean {
+  const e = (t.emotionSignal ?? "").trim();
+  const i = (t.interpretationPattern ?? "").trim();
+  const d = (t.tensionDirection ?? "").trim();
+  const intensity = (t.intensity ?? "").trim().toLowerCase();
+  return (
+    e.length > 0 ||
+    i.length > 0 ||
+    d.length > 0 ||
+    intensity === "medium" ||
+    intensity === "high"
+  );
+}
+
+function isLowSpecificityResidueLabel(raw: string): boolean {
+  const s = raw.trim();
+  if (!s) return false;
+  const lower = normalizeLabel(s);
+  if (!LOW_SPECIFICITY_RESIDUE_RE.test(lower)) return false;
+  if (SPECIFIC_DIRECTION_CUE_EN_RE.test(lower) || SPECIFIC_DIRECTION_CUE_ZH_RE.test(s)) {
+    return false;
+  }
+  const genericWords = lower.match(GENERIC_RESIDUE_NEAR_RE) ?? [];
+  return genericWords.length >= 2;
+}
 
 /**
  * Rank by recency, drop weak/topic-like labels, enforce visible distinctness.
@@ -115,9 +152,17 @@ export function pickContinueOptions<T extends ContinueListSourceRow>(
     if (!raw || QUIET_TRACE_RE.test(raw)) continue;
     if (isWeakGenericResidueLabel(raw)) continue;
     if (TOPIC_LIKE_EN_RE.test(raw) || TOPIC_LIKE_ZH_RE.test(raw)) continue;
+    const lowSpecificity = isLowSpecificityResidueLabel(raw);
+    // Phase 5: in low-signal/shallow cases, prefer showing no Continue over decorative residue.
+    if (lowSpecificity && !hasThreadStructureSignal(t)) continue;
 
     const label = raw.slice(0, 200);
     let tooSimilar = false;
+    const existingLowSpecificityCount = out.filter((x) =>
+      isLowSpecificityResidueLabel(x.label)
+    ).length;
+    // Phase 5: never show multiple low-specificity residue options together.
+    if (lowSpecificity && existingLowSpecificityCount >= 1) continue;
     for (const existing of out) {
       if (labelsTooSimilar(label, existing.label)) {
         tooSimilar = true;

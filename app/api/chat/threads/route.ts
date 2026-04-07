@@ -63,6 +63,10 @@ export async function GET(request: Request) {
           isActive: true,
           status: true,
           updatedAt: true,
+          emotionSignal: true,
+          interpretationPattern: true,
+          tensionDirection: true,
+          intensity: true,
         },
       });
     } catch (threadErr) {

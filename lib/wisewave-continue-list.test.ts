@@ -4,9 +4,23 @@ import { CONTINUE_LIST_MAX, pickContinueOptions } from "@/lib/wisewave-continue-
 function row(
   id: string,
   label: string,
-  updatedAtMs: number
-): { id: string; label: string; updatedAt: Date } {
-  return { id, label, updatedAt: new Date(updatedAtMs) };
+  updatedAtMs: number,
+  extras?: {
+    emotionSignal?: string | null;
+    interpretationPattern?: string | null;
+    tensionDirection?: string | null;
+    intensity?: string | null;
+  }
+): {
+  id: string;
+  label: string;
+  updatedAt: Date;
+  emotionSignal?: string | null;
+  interpretationPattern?: string | null;
+  tensionDirection?: string | null;
+  intensity?: string | null;
+} {
+  return { id, label, updatedAt: new Date(updatedAtMs), ...(extras ?? {}) };
 }
 
 describe("pickContinueOptions", () => {
@@ -21,7 +35,10 @@ describe("pickContinueOptions", () => {
     const picked = pickContinueOptions([
       row("a", "still a bit rushed", 3_000),
       row("b", "still a bit rushed today", 2_000),
-      row("c", "not quite settled yet", 1_000),
+      row("c", "not quite settled yet", 1_000, {
+        interpretationPattern: "residual_unfinished_direction",
+        intensity: "medium",
+      }),
     ]);
     expect(picked.length).toBe(2);
   });
@@ -29,7 +46,10 @@ describe("pickContinueOptions", () => {
   it("filters weak residue-style headlines", () => {
     const picked = pickContinueOptions([
       row("a", "Something still here.", 2_000),
-      row("b", "not quite settled yet", 1_000),
+      row("b", "not quite settled yet", 1_000, {
+        interpretationPattern: "residual_unfinished_direction",
+        intensity: "medium",
+      }),
     ]);
     expect(picked.map((p) => p.id)).toEqual(["b"]);
   });
@@ -49,5 +69,31 @@ describe("pickContinueOptions", () => {
       row("b", "rest still feels earned", 4_000),
     ]);
     expect(picked.map((p) => p.id)).toEqual(["b"]);
+  });
+
+  it("suppresses shallow low-specificity residue when structure is weak", () => {
+    const picked = pickContinueOptions([
+      row("a", "still carrying a little weight", 5_000),
+      row("b", "not quite settled yet", 4_000),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual([]);
+  });
+
+  it("allows one low-specificity label only with stronger structure signal", () => {
+    const picked = pickContinueOptions([
+      row("a", "still carrying a little weight", 5_000, {
+        interpretationPattern: "self_blame_loop",
+        intensity: "medium",
+      }),
+      row("b", "still not fully gone", 4_000, {
+        interpretationPattern: "self_blame_loop",
+        intensity: "medium",
+      }),
+      row("c", "slow reply still pulls inward", 3_000, {
+        interpretationPattern: "delayed_reply_self_blame",
+        intensity: "medium",
+      }),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual(["a", "c"]);
   });
 });
