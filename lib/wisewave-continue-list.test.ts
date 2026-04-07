@@ -44,7 +44,8 @@ describe("pickContinueOptions", () => {
         intensity: "medium",
       }),
     ]);
-    expect(picked.length).toBe(2);
+    // b ~ a; c is a Phase-6 weaker companion once a strong-family row (rushed) is present.
+    expect(picked.map((p) => p.id)).toEqual(["a"]);
   });
 
   it("filters weak residue-style headlines", () => {
@@ -98,7 +99,30 @@ describe("pickContinueOptions", () => {
         intensity: "medium",
       }),
     ]);
-    expect(picked.map((p) => p.id)).toEqual(["a", "c"]);
+    // Phase 6: beside a strong family row, softer residue companions drop (earnedness > filled drawer).
+    expect(picked.map((p) => p.id)).toEqual(["c"]);
+  });
+
+  it("Phase 6: drops weaker-trace companion when a strong-family row is present", () => {
+    const picked = pickContinueOptions([
+      row("a", "not quite landed", 5_000, {
+        interpretationPattern: "residual_unfinished_direction",
+        intensity: "medium",
+      }),
+      row("b", "Replaying still pulls inward", 4_000),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual(["b"]);
+    expect(picked[0]?.label).toContain("inward");
+  });
+
+  it("Phase 6: without a primary-earned row, weaker-trace headline can still surface alone", () => {
+    const picked = pickContinueOptions([
+      row("a", "not quite settled yet", 5_000, {
+        interpretationPattern: "residual_unfinished_direction",
+        intensity: "medium",
+      }),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual(["a"]);
   });
 
   it("suppresses low-specific labels when structure is weak placeholder text", () => {

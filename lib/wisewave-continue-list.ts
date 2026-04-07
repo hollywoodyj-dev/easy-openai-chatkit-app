@@ -166,6 +166,38 @@ export function isStrongEmotionalReturnLabel(raw: string): boolean {
 }
 
 /**
+ * Phase 6 — Headlines that read as generic trace residue next to a clear strong family line
+ * (Lumen: mixed-quality drawer / diluted earnedness). Dropped when any primary-earned row exists.
+ * Keep narrow: do not list delayed-reply / replay / rest / weight / pull / inward lines here.
+ */
+const PHASE6_WEAKER_COMPANION_EN =
+  /^(not quite landed|not quite settled yet|not fully quiet yet|still a little open|still a faint pull here|this still feels nearby|a little tension still near|something still quiet here|a little still underneath|not quite room to hold it|a little more here than fits|edges still holding something|something still waiting inside|still fuller than it looks)\.?$/i;
+
+/** ZH trace fallbacks that are structurally “soft residue” vs direction-bearing traces. */
+const PHASE6_WEAKER_COMPANION_ZH =
+  /^(这里还留着一点|好像还有一点在|还有一点没散开|似乎还轻轻在这里|还没有完全落下|这里还轻轻停着什么|还没完全安静下来|似乎还有一点敞着|还带着一点重量|好像还有一点余波|那个感觉似乎还在附近|这里还留着一点那个感觉)$/u;
+
+function isPhase6WeakerCompanionLabel(raw: string): boolean {
+  const s = raw.trim();
+  if (!s) return false;
+  const lower = normalizeLabel(s);
+  if (PHASE6_WEAKER_COMPANION_EN.test(s) || PHASE6_WEAKER_COMPANION_EN.test(lower))
+    return true;
+  if (PHASE6_WEAKER_COMPANION_ZH.test(s.trim())) return true;
+  return false;
+}
+
+function isPhase6PrimaryEarnedLabel(
+  raw: string,
+  row: ContinueListSourceRow
+): boolean {
+  if (isPhase6WeakerCompanionLabel(raw)) return false;
+  if (isStrongEmotionalReturnLabel(raw)) return true;
+  if (hasThreadStructureSignal(row)) return true;
+  return false;
+}
+
+/**
  * Phase 5 Batch 3 + Phase 6: suppress Continue when the latest user line is utilitarian /
  * social / coordination — avoids decorative Continue after shallow tails.
  *
@@ -193,7 +225,7 @@ export function pickContinueOptions<T extends ContinueListSourceRow>(
   const sorted = [...threads].sort(
     (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
   );
-  const out: Array<{ id: string; label: string }> = [];
+  const out: Array<{ id: string; label: string; row: T }> = [];
 
   for (const t of sorted) {
     if (out.length >= CONTINUE_LIST_MAX) break;
@@ -221,8 +253,15 @@ export function pickContinueOptions<T extends ContinueListSourceRow>(
     }
     if (tooSimilar) continue;
 
-    out.push({ id: t.id, label });
+    out.push({ id: t.id, label, row: t });
   }
 
-  return out;
+  const anyPrimaryEarned = out.some((x) =>
+    isPhase6PrimaryEarnedLabel(x.label, x.row)
+  );
+  const filtered = anyPrimaryEarned
+    ? out.filter((x) => !isPhase6WeakerCompanionLabel(x.label))
+    : out;
+
+  return filtered.map(({ id, label }) => ({ id, label }));
 }
