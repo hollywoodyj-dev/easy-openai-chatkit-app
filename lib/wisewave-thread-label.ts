@@ -81,6 +81,86 @@ const EN_OVERWHELM_TRACE_VARIANTS = [
   "something still waiting inside",
 ] as const;
 
+/**
+ * Phase 5 / Lumen Batch 3 — delayed-reply + silence interpretation substrate.
+ * Traces must match Continue-picker strong-family tokens (reply/silence/wait/delay/pull/inward/weight…),
+ * otherwise these turns fell through to weak EN fallbacks and surfaced 0 Continue options.
+ */
+const EN_DELAYED_REPLY_SILENCE_TRACE_VARIANTS = [
+  "Slow reply still pulls inward",
+  "Waiting still carries weight here",
+  "Silence still turns inward",
+  "No reply still pulls inward",
+  "Delayed text still sits heavy",
+  "Left on read still carries weight",
+  "Waiting on a reply still pulls inward",
+  "Their silence still sits heavy here",
+] as const;
+
+/** EN replay-for-mistakes / mental replay — strong tokens (wrong, pull, inward, blame…). */
+const EN_REPLAY_MISTAKES_TRACE_VARIANTS = [
+  "Replaying still pulls inward",
+  "Still replaying what went wrong",
+  "Searching for mistakes still pulls inward",
+  "Running it back still sits heavy here",
+] as const;
+
+const ZH_DELAYED_REPLY_SILENCE_TRACE_VARIANTS = [
+  "慢回还在心里拉着",
+  "等回复还在沉着一点",
+  "沉默还在往里拉着",
+  "已读不回还在心里沉着",
+  "迟迟未回还在紧紧拉着",
+  "等不到回音还在沉着",
+  "对方沉默还在往里拉着",
+] as const;
+
+const ZH_REPLAY_MISTAKES_TRACE_VARIANTS = [
+  "脑内重播还在紧紧拉着",
+  "反复回想还在往里拉着",
+  "找自己错处还在紧紧拉着",
+] as const;
+
+function enLooksLikeDelayedReplySilence(lower: string): boolean {
+  return (
+    /\b(no reply|didn'?t reply|won'?t reply|slow reply|delayed reply|delayed text)\b/.test(
+      lower
+    ) ||
+    /\b(ghost(ed|ing)?|left on read|read receipts?|soft ghost)\b/.test(lower) ||
+    /\b(silent treatment|not texting back|hasn'?t text(ed)?|haven'?t heard back)\b/.test(
+      lower
+    ) ||
+    /\b(waiting (for (a |the |my )?)?(reply|response|text|message|them|him|her)\b)/.test(
+      lower
+    ) ||
+    /\b(nothing back from them|they('re|'ve) gone quiet|gone quiet on me)\b/.test(lower) ||
+    /\b(took (forever |so long )?to reply|took ages to text)\b/.test(lower)
+  );
+}
+
+function enLooksLikeReplayForMistakes(lower: string): boolean {
+  if (enLooksLikeDelayedReplySilence(lower)) return false;
+  return (
+    /\b(replay(ing)?|playing it back|runs? through my head|running it back|over and over in my head)\b/.test(
+      lower
+    ) ||
+    /\b(where i went wrong|what i did wrong|must have messed up|searching for (my )?mistakes)\b/.test(
+      lower
+    )
+  );
+}
+
+function zhLooksLikeDelayedReplySilence(t: string): boolean {
+  return /(没回|不回|不回复|无回音|沉默|已读|慢回|晚回|迟迟|等不到|不回消息|没回音|对方不回)/.test(
+    t
+  );
+}
+
+function zhLooksLikeReplayForMistakes(t: string): boolean {
+  if (zhLooksLikeDelayedReplySilence(t)) return false;
+  return /(重播|回放|反复想|一遍一遍|找错|哪里做错|做错了)/.test(t);
+}
+
 export function summarizeThreadLabelFromUserMessage(
   text: string,
   labelEntropy?: string | null
@@ -89,6 +169,12 @@ export function summarizeThreadLabelFromUserMessage(
   if (!t) return "Quiet trace";
   const hasCjk = /[\u4e00-\u9fff]/.test(t);
   if (hasCjk) {
+    if (zhLooksLikeDelayedReplySilence(t)) {
+      return pickTraceFallback(t, ZH_DELAYED_REPLY_SILENCE_TRACE_VARIANTS, labelEntropy);
+    }
+    if (zhLooksLikeReplayForMistakes(t)) {
+      return pickTraceFallback(t, ZH_REPLAY_MISTAKES_TRACE_VARIANTS, labelEntropy);
+    }
     if (/(做对|出错|不能错|完美|证明)/.test(t)) return "这里还轻轻紧着一点";
     if (/(怀疑|不够好|价值|拉扯)/.test(t)) return "下面好像还有一点在";
     if (/(迟疑|犹豫|不敢|停不下)/.test(t)) return "似乎还有一点收着";
@@ -104,6 +190,12 @@ export function summarizeThreadLabelFromUserMessage(
     return pickTraceFallback(t, ZH_TRACE_FALLBACKS, labelEntropy);
   }
   const lower = t.toLowerCase();
+  if (enLooksLikeDelayedReplySilence(lower)) {
+    return pickTraceFallback(t, EN_DELAYED_REPLY_SILENCE_TRACE_VARIANTS, labelEntropy);
+  }
+  if (enLooksLikeReplayForMistakes(lower)) {
+    return pickTraceFallback(t, EN_REPLAY_MISTAKES_TRACE_VARIANTS, labelEntropy);
+  }
   if (/(get it right|perfect|mistake|prove)/.test(lower)) {
     return "something still tight here";
   }

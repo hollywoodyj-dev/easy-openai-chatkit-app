@@ -4,6 +4,7 @@ import {
   allowPhase4MarkerForUserTurn,
   phase4NarrowReflectiveCarveOut,
 } from "@/lib/phase4-user-turn-admissible";
+import { pickContinueOptions } from "@/lib/wisewave-continue-list";
 import { summarizeThreadLabelFromUserMessage } from "@/lib/wisewave-thread-label";
 import { looksUtilitarianOrFactual } from "@/lib/wisewave-milestone-h-micro-awareness";
 
@@ -55,7 +56,37 @@ describe("summarizeThreadLabelFromUserMessage (narrowing / reach)", () => {
   it("empty input stays Quiet trace (Phase 4 generic-suppressed)", () => {
     expect(summarizeThreadLabelFromUserMessage("   ")).toBe("Quiet trace");
   });
+
+  it("maps delayed-reply / silence substrate to strong Continue-safe traces (Lumen Phase 5 Batch 3)", () => {
+    const msg =
+      "They left me on read days ago and I keep checking my phone for a reply";
+    const label = summarizeThreadLabelFromUserMessage(msg, "conv:x:thr1:same_thread");
+    expect(GENERIC_SUPPRESSED.has(label.toLowerCase())).toBe(false);
+    const picked = pickContinueOptions([
+      {
+        id: "t1",
+        label,
+        updatedAt: new Date(),
+      },
+    ]);
+    expect(picked.length).toBe(1);
+    expect(picked[0]?.label).toBe(label);
+  });
+
+  it("maps ZH delayed-reply substrate to traces that survive Continue filtering", () => {
+    const label = summarizeThreadLabelFromUserMessage(
+      "对方一直不回消息，我很焦虑",
+      "conv:zh:thr2:same_thread"
+    );
+    expect(pickedContinue(label)).toBe(true);
+  });
 });
+
+function pickedContinue(label: string): boolean {
+  return (
+    pickContinueOptions([{ id: "t", label, updatedAt: new Date() }]).length > 0
+  );
+}
 
 describe("computePhase4SoftOrientation", () => {
   const base = {
