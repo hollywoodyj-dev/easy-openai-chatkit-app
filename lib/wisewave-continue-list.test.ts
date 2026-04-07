@@ -42,4 +42,12 @@ describe("pickContinueOptions", () => {
     ]);
     expect(picked.map((p) => p.id)).toEqual(["c"]);
   });
+
+  it("filters 'a little still near' mist label", () => {
+    const picked = pickContinueOptions([
+      row("a", "a little still near", 5_000),
+      row("b", "rest still feels earned", 4_000),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual(["b"]);
+  });
 });

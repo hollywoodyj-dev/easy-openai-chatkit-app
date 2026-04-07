@@ -21,6 +21,8 @@ function isWeakGenericResidueLabel(raw: string): boolean {
   if (WEAK_CONTINUE_LABEL_RE.test(s)) return true;
   if (/^something\s+quiet\b/i.test(s)) return true;
   if (/^something\s+still\s+(close|quiet|here|near)\b/i.test(lower)) return true;
+  // Lumen watchpoint: "a little still near" style is too mist-like to headline Continue.
+  if (/^a\s+little\s+still\s+(near|close)\b/i.test(lower)) return true;
   if (/still\s+not\s+eased/i.test(lower)) return true;
   return false;
 }
