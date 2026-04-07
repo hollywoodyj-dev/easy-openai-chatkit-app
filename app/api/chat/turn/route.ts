@@ -1877,6 +1877,8 @@ export async function POST(request: Request) {
   let debugWeightedThreadScore = 0;
   let debugPhase3BorderlineCoercedToSameThread = false;
   let debugPhase3ReentryCoercedNewThreadToSame = false;
+  /** Phase 6: short Continue re-entry ack kept prior Thread.label (avoids weak summarize + empty drawer). */
+  let debugContinueReentryThreadLabelPreserved = false;
   /** False if inner Thread upsert threw; true after successful V3 thread row write. */
   let debugV3InnerThreadUpsertOk = false;
   /** Prior assistant metadata (H/I + thread); loaded once when assistantMsgId is set. */
@@ -2131,7 +2133,24 @@ export async function POST(request: Request) {
 
     const structFields = threadStructureToThreadRowFields(currentThreadStructure);
     const labelEntropy = `${sessionId}:${activeThreadRow?.id ?? "none"}:${threadState}`;
-    const label = summarizeThreadLabelFromUserMessage(message, labelEntropy);
+    const summarizedLabel = summarizeThreadLabelFromUserMessage(
+      message,
+      labelEntropy
+    );
+    const priorThreadLabel =
+      activeThreadRow?.label != null && activeThreadRow.label.trim().length > 0
+        ? activeThreadRow.label.trim()
+        : null;
+    const preserveThreadLabelForLowVerbalReentry =
+      continueReentryContinuationTurn &&
+      threadState === "same_thread" &&
+      priorThreadLabel != null;
+    const label = preserveThreadLabelForLowVerbalReentry
+      ? priorThreadLabel
+      : summarizedLabel;
+    if (preserveThreadLabelForLowVerbalReentry) {
+      debugContinueReentryThreadLabelPreserved = true;
+    }
 
     if (threadState === "new_thread" || threadState === "borderline") {
       await prisma.thread.updateMany({
@@ -3453,6 +3472,8 @@ export async function POST(request: Request) {
     debug_thread_state: threadState,
     debug_phase_3_thread_reentry: phase3ThreadReentry,
     debug_continue_reentry_continuation_turn: continueReentryContinuationTurn,
+    debug_continue_reentry_thread_label_preserved:
+      debugContinueReentryThreadLabelPreserved,
     debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
     debug_phase_3_reentry_coerced_new_thread_to_same:
       debugPhase3ReentryCoercedNewThreadToSame,

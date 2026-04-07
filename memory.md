@@ -20,6 +20,7 @@
 - **Last-user suppression:** Greeting/coordination **before** utilitarian short-line kill; **exception** for `isContinueReentryContinuationUtterance` — protects low-verbal post-Continue list visibility. Narrow polite expansion (*will do*, *no problem*, …).
 - **Labels:** Interrupted articulation + earned-rest EN/ZH trace pools in `lib/wisewave-thread-label.ts`.
 - **Instrumentation:** `meta.phase_6.low_verbal_reentry_ack`.
+- **Low-verbal re-entry (complete):** On `continueReentryContinuationTurn` + `same_thread`, **keep prior `Thread.label`** (do not summarize *mm* into a weak trace). Debug **`debug_continue_reentry_thread_label_preserved`**.
 
 ## 2026-04-09 — Phase 5 precision (Continue): Lumen **accepted**
 
