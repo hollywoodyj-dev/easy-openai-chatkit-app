@@ -15,7 +15,8 @@
     "milestone-g:kill-switch-proof": "node scripts/milestone-g-kill-switch-proof.cjs",
     "test:phase4-narrowing": "vitest run lib/phase4-language-narrowing.test.ts",
     "test:anchor-v2": "vitest run lib/wisewave-anchor-semantic-weight-v2.test.ts",
-    "test:continue-list": "vitest run lib/wisewave-continue-list.test.ts"
+    "test:continue-list": "vitest run lib/wisewave-continue-list.test.ts",
+    "test:continue-reentry": "vitest run lib/wisewave-continue-reentry-turn.test.ts"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",

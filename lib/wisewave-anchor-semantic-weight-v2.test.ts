@@ -84,7 +84,7 @@ describe("applyContinuityAnchorSemanticWeightV2", () => {
         responseLang: "en",
       });
     expect(debug_anchor_semantic_weight_v2).toBe("aligned_response_lang");
-    expect(text).toBe("Something still not eased.");
+    expect(text).toBe("Slow reply still pulls inward.");
   });
 });
 
@@ -103,7 +103,7 @@ const REST_THIN_ZH = new Set([
 const BARE_TRACE_EN = new Set([
   "Still a little there.",
   "Not fully gone yet.",
-  "Something still here.",
+  "Not quite through it yet.",
   "Not quite landed.",
   "Still a faint pull.",
 ]);
@@ -111,7 +111,7 @@ const BARE_TRACE_EN = new Set([
 const BARE_TRACE_ZH = new Set([
   "还有一点在。",
   "还没完全散开。",
-  "这里还留着一点。",
+  "还没真正穿过去。",
   "好像还在附近一点。",
   "下面似乎还有一点。",
 ]);

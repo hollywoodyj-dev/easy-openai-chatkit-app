@@ -849,6 +849,11 @@ export function computeMilestoneICarryoverCue(params: {
   awarenessCueEmitted: boolean;
   // Language parity is controlled by the same "wantsChinese" heuristic used elsewhere.
   wantsChinese: boolean;
+  /**
+   * First turn after Continue selection: brief lines must not be suppressed as utilitarian
+   * or thin-signal if they are intentional continuation of the resumed direction.
+   */
+  continueReentryContinuationTurn?: boolean;
 }): MilestoneIOutcome {
   const debugPath: MilestoneIDebugPath = {
     previousFamily: null,
@@ -907,6 +912,7 @@ export function computeMilestoneICarryoverCue(params: {
     previousReflectionState,
     recurrenceCueEmitted,
     awarenessCueEmitted,
+    continueReentryContinuationTurn = false,
   } = params;
 
   if (!reflectionState || !reflectionState.insight_candidate.trim()) {
@@ -920,7 +926,7 @@ export function computeMilestoneICarryoverCue(params: {
   debugPath.precheckVagueSource = vagueSource;
   debugPath.precheckMinimalAffect = minimalAffect;
 
-  if (looksUtilitarianOrFactual(userMessage)) {
+  if (!continueReentryContinuationTurn && looksUtilitarianOrFactual(userMessage)) {
     return { status: "suppressed", reason: "utilitarian_or_factual", debugPath };
   }
 
@@ -968,13 +974,25 @@ export function computeMilestoneICarryoverCue(params: {
 
   // Phase A widening: do not let early style heuristics kill credible same-family carry-over.
   // Keep suppression-first behavior for weak/none threads.
-  if (thinUserMessage && (thread.threadStrength === "none" || thread.threadStrength === "weak")) {
+  if (
+    !continueReentryContinuationTurn &&
+    thinUserMessage &&
+    (thread.threadStrength === "none" || thread.threadStrength === "weak")
+  ) {
     return { status: "suppressed", reason: "thin_user_message", debugPath };
   }
-  if (vagueSource && (thread.threadStrength === "none" || thread.threadStrength === "weak")) {
+  if (
+    !continueReentryContinuationTurn &&
+    vagueSource &&
+    (thread.threadStrength === "none" || thread.threadStrength === "weak")
+  ) {
     return { status: "suppressed", reason: "vague_source", debugPath };
   }
-  if (minimalAffect && (thread.threadStrength === "none" || thread.threadStrength === "weak")) {
+  if (
+    !continueReentryContinuationTurn &&
+    minimalAffect &&
+    (thread.threadStrength === "none" || thread.threadStrength === "weak")
+  ) {
     return { status: "suppressed", reason: "minimal_affect_low_signal", debugPath };
   }
 

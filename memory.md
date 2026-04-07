@@ -17,6 +17,11 @@
 - **UI:** **`app/chat/page.tsx`** — Continue drawer, row highlight ~650ms after activate, placeholder **Pick up from here.** briefly.
 - **QA:** **`docs/QA_HANDOFF.md`** 2026-04-07 entry; **`npm run test:continue-list`**.
 
+## 2026-04-05 — Continue QA: label floor + re-entry carry (one turn)
+
+- **List/anchor:** Stronger drop of generic residue labels in **`lib/wisewave-continue-list.ts`**; anchor v2 bare/delayed thin lines less mist-like (**`lib/wisewave-anchor-semantic-weight-v2.ts`**).
+- **Post-Continue short line:** **`lib/wisewave-continue-reentry-turn.ts`** + turn-route wiring: **`new_thread` → `same_thread`** when **`phase_3_thread_reentry`** + continuation utterance; utilitarian/V3 non-committal prompts and continuity-layer gates bypassed for that narrow case; Milestone I **`continueReentryContinuationTurn`** skips thin/utilitarian pre-kills. Debug: **`debug_continue_reentry_continuation_turn`**, **`debug_phase_3_reentry_coerced_new_thread_to_same`**. Tests: **`npm run test:continue-reentry`**.
+
 ## 2026-03-29 — Milestone J addendum published (preparation mode)
 
 - **Canonical doc:** `docs/HC_OS_V1_Milestone_J_Addendum_Micro_Shift_Embodied_Effect_Layer.md` — Micro-Shift / Embodied Effect Layer; proof = minimal internal shift **without** more system presence; **open a shift, do not direct a shift**.

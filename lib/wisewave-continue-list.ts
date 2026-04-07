@@ -10,9 +10,20 @@ export const CONTINUE_FETCH_POOL = 16;
 
 const QUIET_TRACE_RE = /^quiet trace$/i;
 
-/** Tree §6.3 — weak / anchor-adjacent residue lines should not headline choices. */
+/** Tree §6.3 / Lumen QA — generic residue must not headline Continue (no interchangeable mist). */
 const WEAK_CONTINUE_LABEL_RE =
-  /^(something still here|not fully gone|something still near|still a little there)\.?$/i;
+  /^(something still here|something still close|something still near|something quiet still here|not fully gone|still a little there|something still not eased)\.?$/i;
+
+function isWeakGenericResidueLabel(raw: string): boolean {
+  const s = raw.trim();
+  if (!s) return false;
+  const lower = normalizeLabel(s);
+  if (WEAK_CONTINUE_LABEL_RE.test(s)) return true;
+  if (/^something\s+quiet\b/i.test(s)) return true;
+  if (/^something\s+still\s+(close|quiet|here|near)\b/i.test(lower)) return true;
+  if (/still\s+not\s+eased/i.test(lower)) return true;
+  return false;
+}
 
 /** Obvious topic buckets / pressure nouns (EN fragments). */
 const TOPIC_LIKE_EN_RE =
@@ -100,7 +111,7 @@ export function pickContinueOptions<T extends ContinueListSourceRow>(
     if (out.length >= CONTINUE_LIST_MAX) break;
     const raw = t.label?.trim() ?? "";
     if (!raw || QUIET_TRACE_RE.test(raw)) continue;
-    if (WEAK_CONTINUE_LABEL_RE.test(raw)) continue;
+    if (isWeakGenericResidueLabel(raw)) continue;
     if (TOPIC_LIKE_EN_RE.test(raw) || TOPIC_LIKE_ZH_RE.test(raw)) continue;
 
     const label = raw.slice(0, 200);

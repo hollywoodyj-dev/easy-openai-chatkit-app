@@ -33,4 +33,13 @@ describe("pickContinueOptions", () => {
     ]);
     expect(picked.map((p) => p.id)).toEqual(["b"]);
   });
+
+  it("filters Lumen weak generic mist labels", () => {
+    const picked = pickContinueOptions([
+      row("a", "something still close", 5_000),
+      row("b", "something quiet still here", 4_000),
+      row("c", "still a bit rushed after that", 3_000),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual(["c"]);
+  });
 });

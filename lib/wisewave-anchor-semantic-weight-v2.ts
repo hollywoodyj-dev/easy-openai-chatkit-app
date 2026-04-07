@@ -32,7 +32,7 @@ function normalizeAnchorKey(s: string): string {
 const BARE_TRACE_EN = [
   "Still a little there.",
   "Not fully gone yet.",
-  "Something still here.",
+  "Not quite through it yet.",
   "Not quite landed.",
   "Still a faint pull.",
 ] as const;
@@ -40,7 +40,7 @@ const BARE_TRACE_EN = [
 const BARE_TRACE_ZH = [
   "还有一点在。",
   "还没完全散开。",
-  "这里还留着一点。",
+  "还没真正穿过去。",
   "好像还在附近一点。",
   "下面似乎还有一点。",
 ] as const;
@@ -62,7 +62,7 @@ const DELAYED_FULL = new Set(
 const DELAYED_THIN = [
   "Something still tight here.",
   "Still heavy after a wait.",
-  "Something still not eased.",
+  "Slow reply still pulls inward.",
 ] as const;
 
 const DELAYED_THIN_ZH = [

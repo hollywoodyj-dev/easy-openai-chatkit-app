@@ -13,6 +13,7 @@ import {
   type ExtractedReflectionState,
 } from "@/lib/wisewave-extract";
 import { CHAT_SYSTEM_PROMPT as WISEWAVE_CHAT_PROMPT } from "@/lib/wisewave-prompts";
+import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
 import {
   type ContinuityPatternFamily,
   detectContinuityPatternFamily,
@@ -1419,6 +1420,9 @@ export async function POST(request: Request) {
   const inputNorm = normalizeIncomingUserMessage(rawMessage);
   const message = inputNorm.text;
   const phase3ThreadReentry = body.phase_3_thread_reentry === true;
+  /** Narrow: true only when client sent re-entry flag and this line is a short continuation ack. */
+  const continueReentryContinuationTurn =
+    phase3ThreadReentry && isContinueReentryContinuationUtterance(message);
   const rawIngressSummary =
     typeof rawMessage === "string" ? summarizeIngressText(rawMessage) : summarizeIngressText("");
   const normalizedIngressSummary = summarizeIngressText(message);
@@ -1598,7 +1602,9 @@ export async function POST(request: Request) {
   // Strict V3 stance: if current user line is a brief hedge immediately after a utilitarian/practical message,
   // expose only user lines to the model (remove the prior assistant recommendation from context).
   const hedgeAfterUtilitarian =
-    priorUserWasUtilitarianForHeuristics && briefHedgeAfterPracticalForHeuristics;
+    priorUserWasUtilitarianForHeuristics &&
+    briefHedgeAfterPracticalForHeuristics &&
+    !continueReentryContinuationTurn;
 
   const recent = hedgeAfterUtilitarian
     ? userMessagesForHeuristics.slice(-2)
@@ -1658,7 +1664,10 @@ export async function POST(request: Request) {
         /^i\s*dk\b/.test(msgLower) ||
         /^(mm+|hm+|hmm+|uhm*|um+)\s*\.{0,3}\s*$/i.test(msgNorm));
 
-    const hedgeAfterUtilitarianTurn = briefNoncommittalTurn && priorUserWasUtilitarian;
+    const hedgeAfterUtilitarianTurn =
+      briefNoncommittalTurn && priorUserWasUtilitarian && !continueReentryContinuationTurn;
+    const briefNoncommittalForPrompt =
+      briefNoncommittalTurn && !continueReentryContinuationTurn;
 
     const continuationHint =
       openaiMessages.length === 0
@@ -1673,10 +1682,12 @@ export async function POST(request: Request) {
         : ""
       : "";
 
-    const utilOrFactualTurn = looksUtilitarianOrFactual(message) || hedgeAfterUtilitarianTurn;
+    const utilOrFactualTurn =
+      (looksUtilitarianOrFactual(message) && !continueReentryContinuationTurn) ||
+      hedgeAfterUtilitarianTurn;
     const reflectionBlock =
       !utilOrFactualTurn &&
-      !briefNoncommittalTurn &&
+      !briefNoncommittalForPrompt &&
       reflectionState &&
       reflectionState.insight_candidate.trim()
         ? `\n\nLatest reflection state (for this user message):\n- trigger_label: ${reflectionState.trigger_label}\n- emotion_label: ${reflectionState.emotion_label}\n- interpretation_label: ${reflectionState.interpretation_label}\n- regulation_label: ${reflectionState.regulation_label}\n- choice_label: ${reflectionState.choice_label}\n- insight_candidate: ${reflectionState.insight_candidate}`
@@ -1684,7 +1695,7 @@ export async function POST(request: Request) {
 
     const v3TurnFocusAppendix = hedgeAfterUtilitarianTurn
       ? "\n\nV3 strict policy (hedge-after-practical):\n- Do NOT extend or repeat the prior practical recommendation.\n- Do NOT infer reflective/emotional interpretation from the hedge.\n- Output ONLY ONE of: (a) a short clarifying question, or (b) a brief neutral check-in.\n- Do NOT add any extra optional lines.\n- Keep it short and directly tied to what the user just hedged."
-      : utilOrFactualTurn || briefNoncommittalTurn
+      : utilOrFactualTurn || briefNoncommittalForPrompt
         ? "\n\nTurn focus (V3): The latest user message is practical, logistical, or very brief/non-committal. Reply in one coherent message that addresses only what they asked or signalled here. Do not reinterpret inner reluctance, avoidance, or emotion unless they clearly describe lived feeling in this turn. Do not merge or continue earlier conversation topics unless they explicitly connect them in this message."
         : "";
     const sanitizedContinueHint =
@@ -1696,6 +1707,10 @@ export async function POST(request: Request) {
       ? `\n\nContinue selection: The user chose to resume an unfinished conversational direction (this is not history browsing). Stay present-oriented and light. Do not use archival phrasing (“you said before”, “last time”, “earlier we discussed”, “from your messages”).${
           sanitizedContinueHint
             ? ` Gently bias interpretation and response tone toward this unfinished residue — do not name it as a topic or quote it: ${sanitizedContinueHint}`
+            : ""
+        }${
+          continueReentryContinuationTurn
+            ? " Their latest line is brief — treat it as staying inside that same unfinished direction unless they clearly open a new topic."
             : ""
         }`
       : "";
@@ -1860,6 +1875,7 @@ export async function POST(request: Request) {
   let debugTensionSimilarity = 0;
   let debugWeightedThreadScore = 0;
   let debugPhase3BorderlineCoercedToSameThread = false;
+  let debugPhase3ReentryCoercedNewThreadToSame = false;
   /** False if inner Thread upsert threw; true after successful V3 thread row write. */
   let debugV3InnerThreadUpsertOk = false;
   /** Prior assistant metadata (H/I + thread); loaded once when assistantMsgId is set. */
@@ -2102,6 +2118,14 @@ export async function POST(request: Request) {
     if (phase3ThreadReentry && threadState === "borderline") {
       threadState = "same_thread";
       debugPhase3BorderlineCoercedToSameThread = true;
+    }
+    if (
+      phase3ThreadReentry &&
+      threadState === "new_thread" &&
+      continueReentryContinuationTurn
+    ) {
+      threadState = "same_thread";
+      debugPhase3ReentryCoercedNewThreadToSame = true;
     }
 
     const structFields = threadStructureToThreadRowFields(currentThreadStructure);
@@ -2357,7 +2381,7 @@ export async function POST(request: Request) {
       }
     }
 
-    if (looksUtilitarianOrFactual(message)) {
+    if (looksUtilitarianOrFactual(message) && !continueReentryContinuationTurn) {
       isContinuityEligible = false;
     }
 
@@ -2875,6 +2899,7 @@ export async function POST(request: Request) {
         recurrenceCueEmitted: !!responseRecurrenceCue,
         awarenessCueEmitted: !!responseAwarenessCue,
         wantsChinese,
+        continueReentryContinuationTurn,
       });
 
       if (iResult.status === "emitted") {
@@ -3130,9 +3155,12 @@ export async function POST(request: Request) {
   const responseLang: "en" | "zh" = requestedLang ?? (wantsChinese ? "zh" : "en");
   let responseLastInsight: string | null = previousTurnLastInsightText;
   const allowContinuityLayers =
-    threadState === "same_thread" && !looksUtilitarianOrFactual(message);
+    threadState === "same_thread" &&
+    (!looksUtilitarianOrFactual(message) || continueReentryContinuationTurn);
 
-  const allowPhase4UserTurn = allowPhase4MarkerForUserTurn(threadState, message);
+  const allowPhase4UserTurn =
+    (continueReentryContinuationTurn && threadState === "same_thread") ||
+    allowPhase4MarkerForUserTurn(threadState, message);
   const debugPhase4ReflectiveCarveOut =
     threadState === "same_thread" &&
     looksUtilitarianOrFactual(message) &&
@@ -3423,7 +3451,10 @@ export async function POST(request: Request) {
       : {}),
     debug_thread_state: threadState,
     debug_phase_3_thread_reentry: phase3ThreadReentry,
+    debug_continue_reentry_continuation_turn: continueReentryContinuationTurn,
     debug_phase_3_borderline_coerced_to_same_thread: debugPhase3BorderlineCoercedToSameThread,
+    debug_phase_3_reentry_coerced_new_thread_to_same:
+      debugPhase3ReentryCoercedNewThreadToSame,
     debug_active_thread_id: debugActiveThreadId,
     debug_v3_inner_thread_upsert_ok: debugV3InnerThreadUpsertOk,
     debug_v3_conversation_thread_count: debugV3ConversationThreadCount,
