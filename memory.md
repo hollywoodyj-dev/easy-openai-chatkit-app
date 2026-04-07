@@ -10,6 +10,11 @@
 
 <!-- Memory entries below -->
 
+## 2026-04-09 — Phase 5 precision (Continue): Lumen **accepted**
+
+- **Scope:** Weak-tail decorative Continue suppressed via last-user-turn gate (**`shouldSuppressContinueListForLastUserMessage`**, **`GET /api/chat/threads`**); strong paths preserved (**`pickContinueOptions`** strong-family + delayed-reply/replay traces in **`lib/wisewave-thread-label.ts`**).
+- **Lumen 2026-04-09:** **Pass** — delayed-reply + earned-rest visible; weak tails empty + **`continue_suppressed_last_user_turn`**; short ack **`selected_short_ack_resumed`** / **`same_thread`**. **Watchpoints only** (label quality, suppression precision, re-entry coherence); no reopen of object/UI/copy. Code: `acc4766` (suppression), `9cb3185` (delayed-reply traces).
+
 ## 2026-04-07 — Tree Phase 4: Continue mechanism (not “threads” UI)
 
 - **Product:** Surface **Continue** — lightweight continuation affordance; not history, topic list, or system object. **`lib/wisewave-continue-list.ts`** shapes **`GET /api/chat/threads`** response to **≤3** distinct, recency-sorted labels (weak/topic-like dropped; empty OK).
