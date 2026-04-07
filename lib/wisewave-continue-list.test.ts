@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CONTINUE_LIST_MAX, pickContinueOptions } from "@/lib/wisewave-continue-list";
+import {
+  CONTINUE_LIST_MAX,
+  pickContinueOptions,
+  shouldSuppressContinueListForLastUserMessage,
+} from "@/lib/wisewave-continue-list";
 
 function row(
   id: string,
@@ -73,19 +77,19 @@ describe("pickContinueOptions", () => {
 
   it("suppresses shallow low-specificity residue when structure is weak", () => {
     const picked = pickContinueOptions([
-      row("a", "still carrying a little weight", 5_000),
-      row("b", "not quite settled yet", 4_000),
+      row("a", "still a little open", 5_000),
+      row("b", "still not quite here", 4_000),
     ]);
     expect(picked.map((p) => p.id)).toEqual([]);
   });
 
   it("allows one low-specificity label only with stronger structure signal", () => {
     const picked = pickContinueOptions([
-      row("a", "still carrying a little weight", 5_000, {
+      row("a", "still a little open", 5_000, {
         interpretationPattern: "self_blame_loop",
         intensity: "medium",
       }),
-      row("b", "still not fully gone", 4_000, {
+      row("b", "still not quite here", 4_000, {
         interpretationPattern: "self_blame_loop",
         intensity: "medium",
       }),
@@ -99,12 +103,12 @@ describe("pickContinueOptions", () => {
 
   it("suppresses low-specific labels when structure is weak placeholder text", () => {
     const picked = pickContinueOptions([
-      row("a", "not quite settled yet", 5_000, {
+      row("a", "still a little open", 5_000, {
         interpretationPattern: "unknown",
         emotionSignal: "uncertain",
         intensity: "high",
       }),
-      row("b", "still carrying a little weight", 4_000, {
+      row("b", "still not quite here", 4_000, {
         interpretationPattern: "generic",
         intensity: "medium",
       }),
@@ -117,6 +121,33 @@ describe("pickContinueOptions", () => {
       row("a", "slow reply still pulls inward", 5_000),
       row("b", "still not fully gone", 4_000),
     ]);
-    expect(picked.map((p) => p.id)).toEqual(["a"]);
+    expect(picked.map((p) => p.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("shouldSuppressContinueListForLastUserMessage", () => {
+  it("suppresses polite closure and coordination tails (Lumen Batch 3)", () => {
+    expect(shouldSuppressContinueListForLastUserMessage("Thanks.")).toBe(true);
+    expect(shouldSuppressContinueListForLastUserMessage("Tomorrow at 9 works.")).toBe(
+      true
+    );
+    expect(
+      shouldSuppressContinueListForLastUserMessage(
+        "Send me the address when you can."
+      )
+    ).toBe(true);
+  });
+
+  it("does not suppress substantive emotional lines", () => {
+    expect(
+      shouldSuppressContinueListForLastUserMessage(
+        "I still feel guilty about the slow reply."
+      )
+    ).toBe(false);
+    expect(
+      shouldSuppressContinueListForLastUserMessage(
+        "I keep noticing rest still doesn't feel earned, like I'm not allowed to stop."
+      )
+    ).toBe(false);
   });
 });

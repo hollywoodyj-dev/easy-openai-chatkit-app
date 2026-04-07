@@ -3,6 +3,8 @@
  * Internal DB model remains Thread; user-facing concept is Continue.
  */
 
+import { looksUtilitarianOrFactual } from "@/lib/wisewave-milestone-h-micro-awareness";
+
 export const CONTINUE_LIST_MAX = 3;
 
 /** Fetch extra rows so filtering still yields up to CONTINUE_LIST_MAX. */
@@ -36,10 +38,19 @@ const TOPIC_LIKE_ZH_RE = /(工作受挫|关系问题|自我价值|内在冲突|�
 const LOW_SPECIFICITY_RESIDUE_RE =
   /^(still|something|not quite|a little|this still|not fully)\b/i;
 const GENERIC_RESIDUE_NEAR_RE = /\b(still|something|little|near|close|quiet|not|fully|yet|here)\b/gi;
-const SPECIFIC_DIRECTION_CUE_EN_RE =
-  /\b(reply|silence|rest|earned|guilt|guilty|wrong|work|pressure|rushed|sleep|family|partner|grief|fear|blame|settled after|turning back)\b/i;
-const SPECIFIC_DIRECTION_CUE_ZH_RE =
-  /(回复|回覆|沉默|休息|配得|内疚|自责|工作|压力|匆忙|睡|家人|伴侣|失去|害怕|责怪|没稳住)/;
+/** Labels that carry unfinished emotional direction (Phase 4 traces + anchor residues); not utilitarian/social. */
+const STRONG_CONTINUE_FAMILY_EN_RE =
+  /\b(reply|replies|silence|silent|rest|resting|earned|earn|worth|enough|guilt|guilty|wrong|work|pressure|rushed|sleep|family|partner|grief|fear|blame|settled after|turning back|tight|heavy|weight|carry|carrying|inward|pull|pulls|wait|waiting|delayed|delay|late|rush|settled|settling|tension|anxiet|anxious|prove|proving|deserve|deserving|ease|eased|easing|landed|stopping|far|underneath|not fully gone)\b/i;
+const STRONG_CONTINUE_FAMILY_ZH_RE =
+  /(回复|回覆|沉默|休息|配得|内疚|自责|工作|压力|匆忙|睡|家人|伴侣|失去|害怕|责怪|没稳住|紧|沉|重量|往里|拉|等|拖延|晚|内疚|自责|着急|安定|松|停|远|底下)/;
+
+/** Greetings / polite one-liners (do not spend Continue budget). */
+const GREETING_OR_POLITE_ONE_LINER_RE =
+  /^(hi|hey|hello|howdy|yo|sup|thanks\.?|thank you\.?|thx\.?|ty\.?|ok\.?|okay\.?|cool\.?|great\.?|perfect\.?|sounds good\.?|got it\.?|bye\.?|good talk\.?|cheers\.?)\s*$/i;
+
+/** Scheduling / logistics / coordination (utilitarian adjacent; Lumen Batch 3). */
+const COORDINATION_OR_LOGISTICS_RE =
+  /\b(tomorrow|tonight|today)\s+at\b|\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b|\b(send me|email me|text me)\s+(the|an|your|a)\b|\bwhen you can\b|\bworks\s+for\s+me\b|\blet['']?s\s+do\b|\binstead\b[\s.]*$|\b(address|location|calendar|invite|rsvp|zoom|meet)\b|\b\d{1,2}\s*[:.]\s*\d{2}\s*(am|pm)?\b|\b\d{1,2}\s*(am|pm)\b/i;
 const WEAK_STRUCTURE_TOKEN_RE = /\b(unknown|uncertain|none|generic|fallback|n\/a)\b/i;
 
 function normalizeLabel(s: string): string {
@@ -132,7 +143,10 @@ function isLowSpecificityResidueLabel(raw: string): boolean {
   if (!s) return false;
   const lower = normalizeLabel(s);
   if (!LOW_SPECIFICITY_RESIDUE_RE.test(lower)) return false;
-  if (SPECIFIC_DIRECTION_CUE_EN_RE.test(lower) || SPECIFIC_DIRECTION_CUE_ZH_RE.test(s)) {
+  if (
+    STRONG_CONTINUE_FAMILY_EN_RE.test(lower) ||
+    STRONG_CONTINUE_FAMILY_ZH_RE.test(s)
+  ) {
     return false;
   }
   const genericWords = lower.match(GENERIC_RESIDUE_NEAR_RE) ?? [];
@@ -143,7 +157,24 @@ function isStrongEmotionalReturnLabel(raw: string): boolean {
   const s = raw.trim();
   if (!s) return false;
   const lower = normalizeLabel(s);
-  return SPECIFIC_DIRECTION_CUE_EN_RE.test(lower) || SPECIFIC_DIRECTION_CUE_ZH_RE.test(s);
+  return (
+    STRONG_CONTINUE_FAMILY_EN_RE.test(lower) ||
+    STRONG_CONTINUE_FAMILY_ZH_RE.test(s)
+  );
+}
+
+/**
+ * Phase 5 Batch 3: suppress Continue surface when the latest user line is utilitarian /
+ * social / coordination — avoids decorative Continue after shallow tails without global
+ * label suppression that clips strong emotional threads.
+ */
+export function shouldSuppressContinueListForLastUserMessage(message: string): boolean {
+  const t = message.trim();
+  if (!t) return false;
+  if (looksUtilitarianOrFactual(t)) return true;
+  if (GREETING_OR_POLITE_ONE_LINER_RE.test(t)) return true;
+  if (COORDINATION_OR_LOGISTICS_RE.test(t)) return true;
+  return false;
 }
 
 /**

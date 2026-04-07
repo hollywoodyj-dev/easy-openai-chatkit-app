@@ -5,6 +5,7 @@ import { resolveChatUserId } from "@/lib/chat-identity";
 import {
   CONTINUE_FETCH_POOL,
   pickContinueOptions,
+  shouldSuppressContinueListForLastUserMessage,
 } from "@/lib/wisewave-continue-list";
 
 export const dynamic = "force-dynamic";
@@ -45,15 +46,26 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
-    let threads: Array<{
-      id: string;
-      label: string | null;
-      isActive: boolean;
-      status: string;
-      updatedAt: Date;
-    }>;
+    const lastUser = await prisma.message.findFirst({
+      where: { conversationId: sessionId, role: "user" },
+      orderBy: { createdAt: "desc" },
+      select: { message: true },
+    });
+    const lastUserText = lastUser?.message?.trim() ?? "";
+    if (
+      lastUserText.length > 0 &&
+      shouldSuppressContinueListForLastUserMessage(lastUserText)
+    ) {
+      return NextResponse.json({
+        threads: [],
+        meta: {
+          continue_suppressed_last_user_turn: true,
+        },
+      });
+    }
+
     try {
-      threads = await prisma.thread.findMany({
+      const threads = await prisma.thread.findMany({
         where: { conversationId: sessionId },
         orderBy: { updatedAt: "desc" },
         take: CONTINUE_FETCH_POOL,
@@ -69,6 +81,21 @@ export async function GET(request: Request) {
           intensity: true,
         },
       });
+
+      const byId = new Map(threads.map((t) => [t.id, t]));
+      const picked = pickContinueOptions(threads);
+      return NextResponse.json({
+        threads: picked.map((p) => {
+          const row = byId.get(p.id);
+          return {
+            id: p.id,
+            label: p.label,
+            is_active: row?.isActive ?? false,
+            status: row?.status ?? "active",
+            updated_at: row?.updatedAt.toISOString() ?? new Date().toISOString(),
+          };
+        }),
+      });
     } catch (threadErr) {
       console.error("[api/chat/threads GET] prisma.thread.findMany failed", threadErr);
       if (isThreadStorageMissingError(threadErr)) {
@@ -82,21 +109,6 @@ export async function GET(request: Request) {
         { status: 500 }
       );
     }
-
-    const byId = new Map(threads.map((t) => [t.id, t]));
-    const picked = pickContinueOptions(threads);
-    return NextResponse.json({
-      threads: picked.map((p) => {
-        const row = byId.get(p.id);
-        return {
-          id: p.id,
-          label: p.label,
-          is_active: row?.isActive ?? false,
-          status: row?.status ?? "active",
-          updated_at: row?.updatedAt.toISOString() ?? new Date().toISOString(),
-        };
-      }),
-    });
   } catch (e) {
     console.error("[api/chat/threads GET] unexpected error", e);
     return NextResponse.json(
