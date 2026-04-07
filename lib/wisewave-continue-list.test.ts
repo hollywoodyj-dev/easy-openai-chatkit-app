@@ -96,4 +96,27 @@ describe("pickContinueOptions", () => {
     ]);
     expect(picked.map((p) => p.id)).toEqual(["a", "c"]);
   });
+
+  it("suppresses low-specific labels when structure is weak placeholder text", () => {
+    const picked = pickContinueOptions([
+      row("a", "not quite settled yet", 5_000, {
+        interpretationPattern: "unknown",
+        emotionSignal: "uncertain",
+        intensity: "high",
+      }),
+      row("b", "still carrying a little weight", 4_000, {
+        interpretationPattern: "generic",
+        intensity: "medium",
+      }),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual([]);
+  });
+
+  it("preserves strong delayed-reply path even if structure fields are missing", () => {
+    const picked = pickContinueOptions([
+      row("a", "slow reply still pulls inward", 5_000),
+      row("b", "still not fully gone", 4_000),
+    ]);
+    expect(picked.map((p) => p.id)).toEqual(["a"]);
+  });
 });

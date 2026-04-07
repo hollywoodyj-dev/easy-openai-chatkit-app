@@ -40,6 +40,7 @@ const SPECIFIC_DIRECTION_CUE_EN_RE =
   /\b(reply|silence|rest|earned|guilt|guilty|wrong|work|pressure|rushed|sleep|family|partner|grief|fear|blame|settled after|turning back)\b/i;
 const SPECIFIC_DIRECTION_CUE_ZH_RE =
   /(回复|回覆|沉默|休息|配得|内疚|自责|工作|压力|匆忙|睡|家人|伴侣|失去|害怕|责怪|没稳住)/;
+const WEAK_STRUCTURE_TOKEN_RE = /\b(unknown|uncertain|none|generic|fallback|n\/a)\b/i;
 
 function normalizeLabel(s: string): string {
   return s
@@ -113,12 +114,16 @@ function hasThreadStructureSignal(t: ContinueListSourceRow): boolean {
   const i = (t.interpretationPattern ?? "").trim();
   const d = (t.tensionDirection ?? "").trim();
   const intensity = (t.intensity ?? "").trim().toLowerCase();
+  const meaningful = (v: string): boolean => v.length > 0 && !WEAK_STRUCTURE_TOKEN_RE.test(v);
+  const hasInterpret = meaningful(i);
+  const hasTension = meaningful(d);
+  const hasEmotion = meaningful(e);
+  const strongIntensity = intensity === "medium" || intensity === "high";
   return (
-    e.length > 0 ||
-    i.length > 0 ||
-    d.length > 0 ||
-    intensity === "medium" ||
-    intensity === "high"
+    hasInterpret ||
+    hasTension ||
+    // Emotion-only signal needs at least medium intensity to count as meaningful.
+    (hasEmotion && strongIntensity)
   );
 }
 
@@ -132,6 +137,13 @@ function isLowSpecificityResidueLabel(raw: string): boolean {
   }
   const genericWords = lower.match(GENERIC_RESIDUE_NEAR_RE) ?? [];
   return genericWords.length >= 2;
+}
+
+function isStrongEmotionalReturnLabel(raw: string): boolean {
+  const s = raw.trim();
+  if (!s) return false;
+  const lower = normalizeLabel(s);
+  return SPECIFIC_DIRECTION_CUE_EN_RE.test(lower) || SPECIFIC_DIRECTION_CUE_ZH_RE.test(s);
 }
 
 /**
@@ -153,8 +165,9 @@ export function pickContinueOptions<T extends ContinueListSourceRow>(
     if (isWeakGenericResidueLabel(raw)) continue;
     if (TOPIC_LIKE_EN_RE.test(raw) || TOPIC_LIKE_ZH_RE.test(raw)) continue;
     const lowSpecificity = isLowSpecificityResidueLabel(raw);
+    const strongEmotionalReturn = isStrongEmotionalReturnLabel(raw);
     // Phase 5: in low-signal/shallow cases, prefer showing no Continue over decorative residue.
-    if (lowSpecificity && !hasThreadStructureSignal(t)) continue;
+    if (lowSpecificity && !hasThreadStructureSignal(t) && !strongEmotionalReturn) continue;
 
     const label = raw.slice(0, 200);
     let tooSimilar = false;
