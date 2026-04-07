@@ -15,6 +15,12 @@
 - **Docs:** `docs/HC_OS_V1_Phase_6_*.md` (Task, Execution Memo, OctopusMind clarifiers, Wisewave felt standard). **Scope:** adoption / selectivity / repeat-use analysis **without** identity drift — no new UI, no explanatory copy, no history/memory widening.
 - **Code:** `lib/wisewave-phase6-continue.ts` — `classifyPhase6ReturnPatternHint`, `buildPhase6ContinueListMeta`; `GET /api/chat/threads` → `meta.phase_6`; turn JSON → `debug_phase_6`; `isStrongEmotionalReturnLabel` exported from `lib/wisewave-continue-list.ts` for strong-option counts.
 
+## 2026-04-10 — Phase 6 first tuning pass (Nova / Tree)
+
+- **Last-user suppression:** Greeting/coordination **before** utilitarian short-line kill; **exception** for `isContinueReentryContinuationUtterance` — protects low-verbal post-Continue list visibility. Narrow polite expansion (*will do*, *no problem*, …).
+- **Labels:** Interrupted articulation + earned-rest EN/ZH trace pools in `lib/wisewave-thread-label.ts`.
+- **Instrumentation:** `meta.phase_6.low_verbal_reentry_ack`.
+
 ## 2026-04-09 — Phase 5 precision (Continue): Lumen **accepted**
 
 - **Scope:** Weak-tail decorative Continue suppressed via last-user-turn gate (**`shouldSuppressContinueListForLastUserMessage`**, **`GET /api/chat/threads`**); strong paths preserved (**`pickContinueOptions`** strong-family + delayed-reply/replay traces in **`lib/wisewave-thread-label.ts`**).

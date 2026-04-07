@@ -150,4 +150,16 @@ describe("shouldSuppressContinueListForLastUserMessage", () => {
       )
     ).toBe(false);
   });
+
+  it("Phase 6: does not suppress low-verbal Continue re-entry acks (yeah/mm)", () => {
+    expect(shouldSuppressContinueListForLastUserMessage("yeah")).toBe(false);
+    expect(shouldSuppressContinueListForLastUserMessage("mm")).toBe(false);
+    expect(shouldSuppressContinueListForLastUserMessage("still there")).toBe(false);
+  });
+
+  it("Phase 6: still suppresses standalone polite ok / expanded shallow closures", () => {
+    expect(shouldSuppressContinueListForLastUserMessage("ok")).toBe(true);
+    expect(shouldSuppressContinueListForLastUserMessage("will do")).toBe(true);
+    expect(shouldSuppressContinueListForLastUserMessage("no problem")).toBe(true);
+  });
 });

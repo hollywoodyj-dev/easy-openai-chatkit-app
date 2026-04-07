@@ -121,6 +121,70 @@ const ZH_REPLAY_MISTAKES_TRACE_VARIANTS = [
   "找自己错处还在紧紧拉着",
 ] as const;
 
+/** Phase 6 — interrupted articulation / lost thread (strong Continue tokens only). */
+const EN_INTERRUPTED_ARTICULATION_TRACE_VARIANTS = [
+  "Cut-off thought still pulls inward",
+  "Lost thread still carries weight here",
+  "Interrupted line still sits heavy",
+  "Hard to pick back up still pulls inward",
+] as const;
+
+const ZH_INTERRUPTED_ARTICULATION_TRACE_VARIANTS = [
+  "说到一半还在心里拉着",
+  "被打断的地方还沉着一点",
+  "接不上的那一句还在紧紧拉着",
+] as const;
+
+/** Phase 6 — rest / permission without earned sense (worth-pressure family). */
+const EN_EARNED_REST_TRACE_VARIANTS = [
+  "Rest still does not feel earned here",
+  "Stopping still carries weight before it feels allowed",
+  "Permission to rest still sits heavy",
+  "Earned rest still feels out of reach",
+] as const;
+
+const ZH_EARNED_REST_TRACE_VARIANTS = [
+  "休息还不太敢真正落下",
+  "停下来之前好像还差一点点配得",
+  "允许休息这件事还在沉沉压着",
+] as const;
+
+function enLooksLikeInterruptedArticulation(lower: string): boolean {
+  if (enLooksLikeDelayedReplySilence(lower)) return false;
+  if (enLooksLikeReplayForMistakes(lower)) return false;
+  return (
+    /\b(lost (my |the )?(train|thread|place)|mid-thought|mid sentence|mid-sentence|cut (me )?off|got interrupted|trailing off|can'?t pick (it |this |things )?back up|\bwhere was i\b|hard to pick back up)\b/i.test(
+      lower
+    )
+  );
+}
+
+function enLooksLikeEarnedRest(lower: string): boolean {
+  if (enLooksLikeDelayedReplySilence(lower) || enLooksLikeReplayForMistakes(lower))
+    return false;
+  return (
+    /\b(can'?t rest|cannot rest|rest doesn'?t feel|don'?t feel .{0,24}earned|not feel .{0,24}earned|guilty (about )?rest(ing)?|rest feels wrong|allow myself to rest|permission to rest|stop without earning)\b/i.test(
+      lower
+    ) ||
+    (/\brest(ing)?\b/.test(lower) &&
+      /\b(earn|earned|deserve|deserving|permission|allowed|unearned)\b/i.test(lower))
+  );
+}
+
+function zhLooksLikeInterruptedArticulation(t: string): boolean {
+  if (zhLooksLikeDelayedReplySilence(t)) return false;
+  if (zhLooksLikeReplayForMistakes(t)) return false;
+  return /(说到一半|被打断|接不上|忘了刚才|念头断了|话没说完|想着想着就断了)/.test(t);
+}
+
+function zhLooksLikeEarnedRest(t: string): boolean {
+  if (zhLooksLikeDelayedReplySilence(t) || zhLooksLikeReplayForMistakes(t))
+    return false;
+  return /(不敢休息|没法休息|不配休息|没资格停|休息.*愧疚|停下.*(不配|没资格)|得先.*才.*歇)/.test(
+    t
+  );
+}
+
 function enLooksLikeDelayedReplySilence(lower: string): boolean {
   return (
     /\b(no reply|didn'?t reply|won'?t reply|slow reply|delayed reply|delayed text)\b/.test(
@@ -175,6 +239,12 @@ export function summarizeThreadLabelFromUserMessage(
     if (zhLooksLikeReplayForMistakes(t)) {
       return pickTraceFallback(t, ZH_REPLAY_MISTAKES_TRACE_VARIANTS, labelEntropy);
     }
+    if (zhLooksLikeInterruptedArticulation(t)) {
+      return pickTraceFallback(t, ZH_INTERRUPTED_ARTICULATION_TRACE_VARIANTS, labelEntropy);
+    }
+    if (zhLooksLikeEarnedRest(t)) {
+      return pickTraceFallback(t, ZH_EARNED_REST_TRACE_VARIANTS, labelEntropy);
+    }
     if (/(做对|出错|不能错|完美|证明)/.test(t)) return "这里还轻轻紧着一点";
     if (/(怀疑|不够好|价值|拉扯)/.test(t)) return "下面好像还有一点在";
     if (/(迟疑|犹豫|不敢|停不下)/.test(t)) return "似乎还有一点收着";
@@ -195,6 +265,12 @@ export function summarizeThreadLabelFromUserMessage(
   }
   if (enLooksLikeReplayForMistakes(lower)) {
     return pickTraceFallback(t, EN_REPLAY_MISTAKES_TRACE_VARIANTS, labelEntropy);
+  }
+  if (enLooksLikeInterruptedArticulation(lower)) {
+    return pickTraceFallback(t, EN_INTERRUPTED_ARTICULATION_TRACE_VARIANTS, labelEntropy);
+  }
+  if (enLooksLikeEarnedRest(lower)) {
+    return pickTraceFallback(t, EN_EARNED_REST_TRACE_VARIANTS, labelEntropy);
   }
   if (/(get it right|perfect|mistake|prove)/.test(lower)) {
     return "something still tight here";

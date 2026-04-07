@@ -5,6 +5,7 @@
  */
 
 import { isStrongEmotionalReturnLabel } from "@/lib/wisewave-continue-list";
+import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
 
 /** Heuristic only — segment repeat-use and impressions; not used for product decisions. */
 export type Phase6ReturnPatternHint =
@@ -27,6 +28,10 @@ export type Phase6ContinueListMeta = {
    * Product-quality signal (Task addendum): empty Continue in weak/no-candidate cases is success, not failure.
    */
   zero_continue_surface: boolean;
+  /**
+   * Phase 6: last user line matches low-verbal Continue re-entry ack (not a suppression tail).
+   */
+  low_verbal_reentry_ack: boolean;
 };
 
 /**
@@ -100,5 +105,8 @@ export function buildPhase6ContinueListMeta(input: {
     strong_option_count: strongOptionCount,
     suppressed_weak_tail: input.suppressedWeakTail,
     zero_continue_surface: optionCount === 0,
+    low_verbal_reentry_ack: isContinueReentryContinuationUtterance(
+      input.lastUserMessage
+    ),
   };
 }

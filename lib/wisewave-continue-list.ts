@@ -3,6 +3,7 @@
  * Internal DB model remains Thread; user-facing concept is Continue.
  */
 
+import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
 import { looksUtilitarianOrFactual } from "@/lib/wisewave-milestone-h-micro-awareness";
 
 export const CONTINUE_LIST_MAX = 3;
@@ -46,7 +47,7 @@ const STRONG_CONTINUE_FAMILY_ZH_RE =
 
 /** Greetings / polite one-liners (do not spend Continue budget). */
 const GREETING_OR_POLITE_ONE_LINER_RE =
-  /^(hi|hey|hello|howdy|yo|sup|thanks\.?|thank you\.?|thx\.?|ty\.?|ok\.?|okay\.?|cool\.?|great\.?|perfect\.?|sounds good\.?|got it\.?|bye\.?|good talk\.?|cheers\.?)\s*$/i;
+  /^(hi|hey|hello|howdy|yo|sup|thanks\.?|thank you\.?|thx\.?|ty\.?|ok\.?|okay\.?|cool\.?|great\.?|perfect\.?|sounds good\.?|got it\.?|bye\.?|good talk\.?|cheers\.?|np\.?|no problem\.?|will do\.?|sounds like a plan\.?)\s*$/i;
 
 /** Scheduling / logistics / coordination (utilitarian adjacent; Lumen Batch 3). */
 const COORDINATION_OR_LOGISTICS_RE =
@@ -165,16 +166,20 @@ export function isStrongEmotionalReturnLabel(raw: string): boolean {
 }
 
 /**
- * Phase 5 Batch 3: suppress Continue surface when the latest user line is utilitarian /
- * social / coordination — avoids decorative Continue after shallow tails without global
- * label suppression that clips strong emotional threads.
+ * Phase 5 Batch 3 + Phase 6: suppress Continue when the latest user line is utilitarian /
+ * social / coordination — avoids decorative Continue after shallow tails.
+ *
+ * Phase 6: greeting/coordination first; then **carve out** low-verbal Continue re-entry
+ * acks (`isContinueReentryContinuationUtterance`) so `looksUtilitarianOrFactual`'s
+ * short-message rule does not hide the drawer after "yeah" / "mm" (strong-path protection).
  */
 export function shouldSuppressContinueListForLastUserMessage(message: string): boolean {
   const t = message.trim();
   if (!t) return false;
-  if (looksUtilitarianOrFactual(t)) return true;
   if (GREETING_OR_POLITE_ONE_LINER_RE.test(t)) return true;
   if (COORDINATION_OR_LOGISTICS_RE.test(t)) return true;
+  if (isContinueReentryContinuationUtterance(t)) return false;
+  if (looksUtilitarianOrFactual(t)) return true;
   return false;
 }
 

@@ -80,6 +80,19 @@ describe("summarizeThreadLabelFromUserMessage (narrowing / reach)", () => {
     );
     expect(pickedContinue(label)).toBe(true);
   });
+
+  it("Phase 6: interrupted articulation + earned-rest traces survive Continue picker", () => {
+    const labelA = summarizeThreadLabelFromUserMessage(
+      "I lost my train of thought halfway through explaining",
+      "conv:p6:interrupt:1"
+    );
+    expect(pickedContinue(labelA)).toBe(true);
+    const labelB = summarizeThreadLabelFromUserMessage(
+      "I can't rest without feeling I earned it first",
+      "conv:p6:rest:1"
+    );
+    expect(pickedContinue(labelB)).toBe(true);
+  });
 });
 
 function pickedContinue(label: string): boolean {

@@ -45,6 +45,7 @@ describe("buildPhase6ContinueListMeta", () => {
     expect(m.zero_continue_surface).toBe(true);
     expect(m.suppressed_weak_tail).toBe(true);
     expect(m.strong_option_count).toBe(0);
+    expect(m.low_verbal_reentry_ack).toBe(false);
   });
 
   it("counts strong options when labels match strong family", () => {
@@ -56,5 +57,15 @@ describe("buildPhase6ContinueListMeta", () => {
     expect(m.option_count).toBe(2);
     expect(m.strong_option_count).toBe(1);
     expect(m.suppressed_weak_tail).toBe(false);
+    expect(m.low_verbal_reentry_ack).toBe(false);
+  });
+
+  it("flags low_verbal_reentry_ack on continuation-shaped last lines", () => {
+    const m = buildPhase6ContinueListMeta({
+      lastUserMessage: "mhm",
+      pickedLabels: [],
+      suppressedWeakTail: false,
+    });
+    expect(m.low_verbal_reentry_ack).toBe(true);
   });
 });
