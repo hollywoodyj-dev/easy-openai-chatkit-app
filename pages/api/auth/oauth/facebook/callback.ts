@@ -151,8 +151,8 @@ export default async function handler(
       );
     }
 
-    // Redirect web users to chat with token
-    return res.redirect(`/embed?token=${encodeURIComponent(token)}`);
+    // Redirect web users to the primary /chat experience with token
+    return res.redirect(`/chat?token=${encodeURIComponent(token)}`);
   } catch (error) {
     console.error("[oauth/facebook/callback] error", error);
     return res.redirect(

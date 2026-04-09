@@ -170,10 +170,10 @@ function AccountContent() {
           <Link
             href={
               isEmbedMobile
-                ? `/embed?token=${encodeURIComponent(
+                ? `/chat?token=${encodeURIComponent(
                     token
                   )}&embed=mobile`
-                : `/embed?token=${encodeURIComponent(token)}`
+                : `/chat?token=${encodeURIComponent(token)}`
             }
             className="text-sm text-slate-500 underline-offset-4 hover:underline"
           >

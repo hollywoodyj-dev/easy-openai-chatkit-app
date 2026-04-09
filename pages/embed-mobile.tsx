@@ -144,7 +144,7 @@ const EmbedMobilePage: NextPage = () => {
                     </button>
                   </p>
                   <iframe
-                    src="/embed"
+                    src="/chat"
                     className="flex-1 w-full border-0 rounded-lg"
                     style={{ minHeight: "600px" }}
                     title="Chat"

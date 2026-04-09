@@ -172,7 +172,7 @@ export default async function handler(
       );
     }
 
-    return res.redirect(`/embed?token=${encodeURIComponent(token)}`);
+    return res.redirect(`/chat?token=${encodeURIComponent(token)}`);
   } catch (error) {
     console.error("[oauth/x/callback] error", error);
     return res.redirect(

@@ -156,7 +156,7 @@ function SubscribeContent() {
               ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
               : "";
           const nextPath = isEmbedMobile
-            ? `/embed?token=${encodeURIComponent(token ?? "")}&embed=mobile`
+            ? `/chat?token=${encodeURIComponent(token ?? "")}&embed=mobile`
             : `/chat?token=${encodeURIComponent(token ?? "")}`;
           window.location.href = `${base}${nextPath}`;
         } else {
@@ -216,8 +216,8 @@ function SubscribeContent() {
 
   const chatHref = isEmbedMobile
     ? token
-      ? `/embed?token=${encodeURIComponent(token)}&embed=mobile`
-      : "/embed?embed=mobile"
+      ? `/chat?token=${encodeURIComponent(token)}&embed=mobile`
+      : "/chat?embed=mobile"
     : token
       ? `/chat?token=${encodeURIComponent(token)}`
       : "/chat";
