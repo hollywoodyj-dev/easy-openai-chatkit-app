@@ -8,6 +8,7 @@ import {
   shouldSuppressContinueListForLastUserMessage,
 } from "@/lib/wisewave-continue-list";
 import { buildPhase6ContinueListMeta } from "@/lib/wisewave-phase6-continue";
+import { buildPhase7ContinueListMeta } from "@/lib/wisewave-phase7-continue";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,11 @@ export async function GET(request: Request) {
               pickedLabels: [],
               suppressedWeakTail: true,
             }),
+            phase_7: buildPhase7ContinueListMeta({
+              lastUserMessage: lastUserText,
+              optionCount: 0,
+              suppressedWeakTail: true,
+            }),
           },
         });
     }
@@ -107,6 +113,11 @@ export async function GET(request: Request) {
             pickedLabels: picked.map((p) => p.label),
             suppressedWeakTail: false,
           }),
+          phase_7: buildPhase7ContinueListMeta({
+            lastUserMessage: lastUserText,
+            optionCount: picked.length,
+            suppressedWeakTail: false,
+          }),
         },
       });
     } catch (threadErr) {
@@ -119,6 +130,11 @@ export async function GET(request: Request) {
             phase_6: buildPhase6ContinueListMeta({
               lastUserMessage: lastUserText,
               pickedLabels: [],
+              suppressedWeakTail: false,
+            }),
+            phase_7: buildPhase7ContinueListMeta({
+              lastUserMessage: lastUserText,
+              optionCount: 0,
               suppressedWeakTail: false,
             }),
           },

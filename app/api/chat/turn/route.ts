@@ -15,6 +15,7 @@ import {
 import { CHAT_SYSTEM_PROMPT as WISEWAVE_CHAT_PROMPT } from "@/lib/wisewave-prompts";
 import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
 import { classifyPhase6ReturnPatternHint } from "@/lib/wisewave-phase6-continue";
+import { buildPhase7TurnDebugMeta } from "@/lib/wisewave-phase7-continue";
 import {
   type ContinuityPatternFamily,
   detectContinuityPatternFamily,
@@ -3488,6 +3489,12 @@ export async function POST(request: Request) {
       return_pattern_hint: classifyPhase6ReturnPatternHint(message),
       user_message_length: message.length,
     },
+    debug_phase_7: buildPhase7TurnDebugMeta({
+      userMessage: message,
+      phase3ThreadReentry,
+      continueReentryContinuationTurn,
+      threadState,
+    }),
     debug_active_thread_id: debugActiveThreadId,
     debug_v3_inner_thread_upsert_ok: debugV3InnerThreadUpsertOk,
     debug_v3_conversation_thread_count: debugV3ConversationThreadCount,
