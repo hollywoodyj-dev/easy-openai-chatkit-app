@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -117,21 +116,9 @@ function Header({
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4 md:px-8">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/wisewave-logo.png"
-            alt="Wisewave"
-            width={40}
-            height={40}
-            className="h-10 w-10 shrink-0 rounded-2xl"
-            priority
-          />
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">
-              Wisewave
-            </div>
-            <div className="mt-1 text-sm text-[#4E4E4E]">A quieter kind of intelligence</div>
-          </div>
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">Wisewave</div>
+          <div className="mt-1 text-sm text-[#4E4E4E]">A quieter kind of intelligence</div>
         </div>
         <div className="flex items-center gap-3">
           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />

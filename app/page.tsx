@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -7,19 +6,7 @@ export default function HomePage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(200,220,255,0.15),transparent_60%)]" />
       <div className="relative mx-auto max-w-6xl px-6 py-10 md:px-10 lg:px-12">
         <header className="mb-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/wisewave-logo.png"
-              alt="Wisewave"
-              width={44}
-              height={44}
-              className="h-11 w-11 shrink-0 rounded-2xl"
-              priority
-            />
-            <span className="text-lg font-medium tracking-[0.12em] text-[#5E5E5E]">
-              WISEWAVE
-            </span>
-          </Link>
+          <div className="text-lg tracking-[0.18em] text-[#5E5E5E]">WISEWAVE</div>
           <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-4 py-2 text-sm text-[#5E5E5E] backdrop-blur-sm">
             <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#A8C3A0]" />
             present

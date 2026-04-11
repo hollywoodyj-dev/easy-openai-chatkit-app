@@ -1,6 +1,5 @@
 import { useState, FormEvent, useEffect } from "react";
 import type { NextPage } from "next";
-import Image from "next/image";
 import { useRouter } from "next/router";
 
 const API_BASE = typeof window !== "undefined" ? window.location.origin : "";
@@ -81,19 +80,7 @@ const LoginPage: NextPage = () => {
     <main className="min-h-screen bg-[#F7F5F2] px-4 py-10">
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <div className="flex flex-col items-center gap-3">
-            <Image
-              src="/wisewave-logo.png"
-              alt="Wisewave"
-              width={56}
-              height={56}
-              className="h-14 w-14 rounded-2xl"
-              priority
-            />
-            <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">
-              WISEWAVE
-            </div>
-          </div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">WISEWAVE</div>
           <h1 className="mt-3 text-3xl font-medium tracking-[-0.02em] text-[#1F1F1F]">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>
