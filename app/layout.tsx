@@ -4,6 +4,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   applicationName: "Wisewave",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
   title: {
     default: "Wisewave",
     template: "%s · Wisewave",
