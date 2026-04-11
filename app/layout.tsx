@@ -3,8 +3,21 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "agentkit Amazing",
-  description: "agentkit Amazing - Powered by ChatKit",
+  applicationName: "Wisewave",
+  title: {
+    default: "Wisewave",
+    template: "%s · Wisewave",
+  },
+  description:
+    "Wisewave — a quieter kind of intelligence: clarity, continuity, and inner steadiness without taking over your process.",
+  appleWebApp: {
+    capable: true,
+    title: "Wisewave",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
