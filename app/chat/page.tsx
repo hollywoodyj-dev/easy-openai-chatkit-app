@@ -107,11 +107,11 @@ function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
 }
 
 function Header({
-  continueOpen,
-  onToggleContinue,
+  menuOpen,
+  onToggleMenu,
 }: {
-  continueOpen: boolean;
-  onToggleContinue: () => void;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
@@ -124,20 +124,267 @@ function Header({
           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
           <span className="text-sm text-[#7A7A7A]">present</span>
           <button
-            onClick={onToggleContinue}
+            onClick={onToggleMenu}
             type="button"
             className={cn(
               "inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#777] transition",
-              continueOpen ? "bg-white" : "bg-white/65 hover:bg-white"
+              menuOpen ? "bg-white" : "bg-white/65 hover:bg-white"
             )}
-            aria-label={continueOpen ? "Close Continue" : "Open Continue"}
-            aria-expanded={continueOpen}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
           >
             ...
           </button>
         </div>
       </div>
     </header>
+  );
+}
+
+function OverflowMenu({
+  open,
+  onClose,
+  onOpenContinue,
+  onOpenSubscription,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onOpenContinue: () => void;
+  onOpenSubscription: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <>
+      <button onClick={onClose} className="fixed inset-0 z-30" aria-label="Close menu" />
+      <div className="fixed right-5 top-[76px] z-40 w-52 rounded-2xl border border-black/10 bg-white/95 p-2 shadow-[0_14px_28px_rgba(0,0,0,0.08)] backdrop-blur md:right-8">
+        <button
+          type="button"
+          onClick={onOpenContinue}
+          className="w-full rounded-xl px-3 py-2 text-left text-sm text-[#444] transition hover:bg-[#F3F0EA]"
+        >
+          Continue
+        </button>
+        <button
+          type="button"
+          onClick={onOpenSubscription}
+          className="w-full rounded-xl px-3 py-2 text-left text-sm text-[#444] transition hover:bg-[#F3F0EA]"
+        >
+          Subscription
+        </button>
+      </div>
+    </>
+  );
+}
+
+type AccountSubscription = {
+  status: "trialing" | "active" | "canceled" | "expired";
+  plan: "monthly" | "yearly" | null;
+  trialEndsAt: string | null;
+  currentPeriodEnd: string | null;
+} | null;
+
+type SubscriptionStatus = "trialing" | "active" | "canceled" | "expired";
+
+function formatSubscriptionDate(value: string | null): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+function formatPlan(plan: "monthly" | "yearly" | null): string {
+  if (plan === "monthly") return "Monthly";
+  if (plan === "yearly") return "Yearly";
+  return "No active plan";
+}
+
+function formatStatus(status: SubscriptionStatus): string {
+  if (status === "active") return "Active";
+  if (status === "trialing") return "Trialing";
+  if (status === "canceled") return "Cancellation scheduled";
+  return "Expired";
+}
+
+function SubscriptionModal({
+  open,
+  token,
+  onClose,
+}: {
+  open: boolean;
+  token: string | null;
+  onClose: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<AccountSubscription>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [cancelSuccessDate, setCancelSuccessDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!token) {
+      setError("Please sign in to view subscription details.");
+      setSubscription(null);
+      setConfirmCancel(false);
+      setCancelSuccessDate(null);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setConfirmCancel(false);
+    setCancelSuccessDate(null);
+    (async () => {
+      try {
+        const res = await fetch("/api/account/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          subscription?: AccountSubscription;
+        };
+        if (cancelled) return;
+        if (!res.ok) {
+          setError(json.error ?? "Could not load subscription details.");
+          setSubscription(null);
+          return;
+        }
+        setSubscription(json.subscription ?? null);
+      } catch {
+        if (!cancelled) setError("Could not load subscription details.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, token]);
+
+  if (!open) return null;
+
+  const nextDateRaw = subscription?.currentPeriodEnd ?? subscription?.trialEndsAt ?? null;
+  const nextDate = formatSubscriptionDate(nextDateRaw);
+  const accountHref = token ? `/account?token=${encodeURIComponent(token)}` : "/login";
+  const canCancel =
+    !!token &&
+    !!subscription &&
+    subscription.status !== "canceled" &&
+    subscription.status !== "expired" &&
+    !cancelSuccessDate;
+
+  async function handleConfirmCancellation() {
+    if (!token || !canCancel) return;
+    setCanceling(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/subscription/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        subscription?: AccountSubscription;
+      };
+      if (!res.ok) {
+        setError(json.error ?? "Could not schedule cancellation.");
+        return;
+      }
+      const updated = json.subscription ?? subscription;
+      setSubscription(updated);
+      setCancelSuccessDate(updated?.currentPeriodEnd ?? updated?.trialEndsAt ?? nextDateRaw);
+      setConfirmCancel(false);
+    } catch {
+      setError("Could not schedule cancellation.");
+    } finally {
+      setCanceling(false);
+    }
+  }
+
+  return (
+    <>
+      <button className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-label="Close subscription modal" />
+      <section className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-black/10 bg-[#FBF9F5] p-6 shadow-[0_18px_45px_rgba(0,0,0,0.14)] md:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-[#8A8A8A]">Subscription</p>
+            <h2 className="mt-1 text-xl font-medium text-[#232323]">Manage plan</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#727272] hover:bg-white"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        {loading ? <p className="mt-6 text-sm text-[#666]">Loading plan details…</p> : null}
+        {error ? <p className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
+
+        {!loading && !error ? (
+          <div className="mt-6 space-y-4 text-sm text-[#4B4B4B]">
+            <div className="rounded-2xl border border-black/8 bg-white/70 p-4">
+              <p>Current plan: <span className="font-medium text-[#222]">{formatPlan(subscription?.plan ?? null)}</span></p>
+              <p className="mt-1">Subscription status: <span className="font-medium text-[#222]">{subscription ? formatStatus(subscription.status) : "No subscription"}</span></p>
+              <p className="mt-1">
+                {subscription?.status === "trialing" ? "Trial expiry date" : "Next billing / expiry date"}:{" "}
+                <span className="font-medium text-[#222]">{nextDate}</span>
+              </p>
+            </div>
+
+            {cancelSuccessDate ? (
+              <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
+                Cancellation scheduled. Your plan will remain active until {formatSubscriptionDate(cancelSuccessDate)}.
+              </p>
+            ) : confirmCancel ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-900">
+                <p>Your access will remain active until {nextDate}.</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmCancel(false)}
+                    className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-medium text-[#333]"
+                  >
+                    Keep subscription
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmCancellation}
+                    disabled={canceling}
+                    className="rounded-full bg-[#7A2626] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                  >
+                    {canceling ? "Confirming…" : "Confirm cancellation"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3 pt-1">
+              <a
+                href={accountHref}
+                className="rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-medium text-[#333] transition hover:bg-white/90"
+              >
+                Manage billing
+              </a>
+              <button
+                type="button"
+                onClick={() => setConfirmCancel(true)}
+                disabled={!canCancel}
+                className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition disabled:opacity-50"
+              >
+                Cancel subscription
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+    </>
   );
 }
 
@@ -419,6 +666,8 @@ function ChatContent() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [minAnchorUntil, setMinAnchorUntil] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [continueDrawerRows, setContinueDrawerRows] = useState<Array<{ id: string; label: string }>>(
     []
   );
@@ -1072,8 +1321,20 @@ function ChatContent() {
       </div>
 
       <Header
-        continueOpen={drawerOpen}
-        onToggleContinue={() => setDrawerOpen((prev) => !prev)}
+        menuOpen={menuOpen}
+        onToggleMenu={() => setMenuOpen((prev) => !prev)}
+      />
+      <OverflowMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onOpenContinue={() => {
+          setMenuOpen(false);
+          setDrawerOpen((prev) => !prev);
+        }}
+        onOpenSubscription={() => {
+          setMenuOpen(false);
+          setSubscriptionModalOpen(true);
+        }}
       />
 
       <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
@@ -1114,6 +1375,11 @@ function ChatContent() {
         onSelectContinue={handleSelectContinue}
         busyContinueId={busyContinueId}
         listLoadError={continueListLoadError}
+      />
+      <SubscriptionModal
+        open={subscriptionModalOpen}
+        token={token}
+        onClose={() => setSubscriptionModalOpen(false)}
       />
 
       <InputBar
