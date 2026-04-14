@@ -108,14 +108,10 @@ function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
 
 function Header({
   continueOpen,
-  chatsOpen,
   onToggleContinue,
-  onToggleChats,
 }: {
   continueOpen: boolean;
-  chatsOpen: boolean;
   onToggleContinue: () => void;
-  onToggleChats: () => void;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
@@ -125,20 +121,8 @@ function Header({
           <div className="mt-1 text-sm text-[#4E4E4E]">A quieter kind of intelligence</div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="hidden sm:inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
-          <span className="hidden text-sm text-[#7A7A7A] sm:inline">present</span>
-          <button
-            onClick={onToggleChats}
-            type="button"
-            className={cn(
-              "inline-flex items-center rounded-full border border-black/10 px-3 py-1.5 text-[12px] tracking-[0.08em] text-[#666] transition",
-              chatsOpen ? "bg-white" : "bg-white/65 hover:bg-white"
-            )}
-            aria-label={chatsOpen ? "Close conversations" : "Open conversations"}
-            aria-expanded={chatsOpen}
-          >
-            Chats
-          </button>
+          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
+          <span className="text-sm text-[#7A7A7A]">present</span>
           <button
             onClick={onToggleContinue}
             type="button"
@@ -156,6 +140,19 @@ function Header({
     </header>
   );
 }
+
+const PERCEPTION_HINT_COPY_POOL = [
+  "回到刚刚聊到的地方",
+  "从最近的地方继续",
+  "刚刚停在这里",
+  "这里只显示最近聊到的内容",
+  "这里会从最近的地方开始",
+] as const;
+const PERCEPTION_HINT_SESSION_KEY = "ws_hint_shown";
+const PERCEPTION_HINT_LAST_KEY = "ws_hint_last";
+const PERCEPTION_IDLE_MS = 2500;
+const PERCEPTION_STAY_MS = 1800;
+const PERCEPTION_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 /** Phase 4 — soft orientation only; secondary to main reflection (addendum: current-space marker). */
 function CurrentSpaceMarker({
@@ -299,93 +296,18 @@ function ContinueDrawer({
   );
 }
 
-function SessionsDrawer({
-  open,
-  onClose,
-  sessions,
-  activeSessionId,
-  onSelectSession,
-  onNewChat,
-  listError,
-  switching,
-}: {
-  open: boolean;
-  onClose: () => void;
-  sessions: Array<{ id: string; topic: string }>;
-  activeSessionId?: string;
-  onSelectSession: (sessionId: string) => void;
-  onNewChat: () => void;
-  listError: string | null;
-  switching: boolean;
-}) {
-  if (!open) return null;
-
+function PerceptionHint({ text, visible }: { text: string | null; visible: boolean }) {
+  if (!text) return null;
   return (
-    <>
-      <button
-        type="button"
-        onClick={onClose}
-        className="fixed inset-0 z-30 bg-black/10 transition-opacity"
-        aria-hidden="true"
-      />
-      <aside
-        className={cn(
-          "fixed z-40 max-h-[min(70vh,32rem)] w-[84vw] max-w-[24rem] overflow-hidden rounded-[24px] border border-black/5 bg-[#F8F6F2]/96 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl transition duration-200",
-          "left-1/2 top-[78px] -translate-x-1/2 md:left-8 md:top-[72px] md:translate-x-0"
-        )}
-        role="dialog"
-        aria-label="Conversations"
-      >
-        <div className="flex items-center justify-between border-b border-black/5 px-4 py-3">
-          <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Chats</p>
-          <button type="button" onClick={onClose} className="text-sm text-[#7D7D7D]">
-            Close
-          </button>
-        </div>
-        <div className="px-3 pb-3 pt-2">
-          <button
-            type="button"
-            disabled={switching}
-            onClick={onNewChat}
-            className="mb-2 w-full rounded-2xl border border-dashed border-black/15 bg-white/50 px-3 py-2.5 text-left text-sm text-[#5C5C5C] transition hover:bg-white/80 disabled:opacity-50"
-          >
-            New conversation
-          </button>
-          {listError ? (
-            <p className="rounded-2xl bg-amber-50/90 px-3 py-2.5 text-sm text-[#6B5344] ring-1 ring-amber-200/80">
-              {listError}
-            </p>
-          ) : (
-            <ul className="max-h-[min(52vh,26rem)] space-y-2 overflow-y-auto pr-1">
-              {sessions.length === 0 ? (
-                <li className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm text-[#868686] ring-1 ring-black/4">
-                  No saved conversations yet.
-                </li>
-              ) : (
-                sessions.map((s) => (
-                  <li key={s.id} className="list-none">
-                    <button
-                      type="button"
-                      disabled={switching}
-                      onClick={() => onSelectSession(s.id)}
-                      className={cn(
-                        "w-full rounded-2xl bg-white/72 px-3.5 py-2.5 text-left text-sm leading-6 text-[#545454] ring-1 ring-black/4 transition",
-                        "hover:bg-white/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6F8596]/40",
-                        switching && "opacity-60",
-                        activeSessionId === s.id &&
-                          "bg-[#EEF4EF] ring-2 ring-[#7C9082]/35 shadow-[0_0_0_1px_rgba(124,144,130,0.12)]"
-                      )}
-                    >
-                      {s.topic || "Conversation"}
-                    </button>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-        </div>
-      </aside>
-    </>
+    <p
+      className={cn(
+        "pointer-events-none mb-4 text-center text-[12px] transition-opacity duration-300",
+        visible ? "opacity-100 text-[#A0A0A0]" : "opacity-0 text-[#A0A0A0]"
+      )}
+      aria-live="polite"
+    >
+      {text}
+    </p>
   );
 }
 
@@ -497,16 +419,39 @@ function ChatContent() {
   } | null>(null);
   const phase3ReentryNextTurnRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [chatsDrawerOpen, setChatsDrawerOpen] = useState(false);
   const [sessionsList, setSessionsList] = useState<Array<{ id: string; topic: string }>>([]);
-  const [sessionsListError, setSessionsListError] = useState<string | null>(null);
-  const [sessionSwitching, setSessionSwitching] = useState(false);
+  const [perceptionHintText, setPerceptionHintText] = useState<string | null>(null);
+  const [perceptionHintVisible, setPerceptionHintVisible] = useState(false);
+  const [perceptionHasShownThisSession, setPerceptionHasShownThisSession] = useState(false);
+  const [isFirstEntryThisSession, setIsFirstEntryThisSession] = useState(true);
+  const userHasTypedRef = useRef(false);
+  const userHasScrolledRef = useRef(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (continueHighlightTimerRef.current) clearTimeout(continueHighlightTimerRef.current);
       if (continuePlaceholderTimerRef.current) clearTimeout(continuePlaceholderTimerRef.current);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem(PERCEPTION_HINT_SESSION_KEY) === "true") {
+      setPerceptionHasShownThisSession(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onScroll = () => {
+      userHasScrolledRef.current = true;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
@@ -581,124 +526,83 @@ function ChatContent() {
         sessions?: Array<{ id: string; topic: string }>;
       };
       setSessionsList(data.sessions ?? []);
-      setSessionsListError(null);
     } catch {
-      setSessionsListError("Could not load your conversations.");
+      /* keep silent: perception layer is suppression-first */
     }
   }, [bearerOnlyHeaders, handleAuthExpired, handleSubscriptionRequired]);
-
-  const loadMessagesForConversation = useCallback(
-    async (sessionId: string): Promise<boolean> => {
-      const msgRes = await fetch(
-        `${CHAT_MESSAGES_ENDPOINT}?session_id=${encodeURIComponent(sessionId)}`,
-        { credentials: "include", headers: bearerOnlyHeaders }
-      );
-      if (msgRes.status === 401) {
-        handleAuthExpired();
-        return false;
-      }
-      if (msgRes.status === 402) {
-        handleSubscriptionRequired();
-        return false;
-      }
-      if (!msgRes.ok) return false;
-      const body = (await msgRes.json()) as { messages?: ApiChatMessage[] };
-      const loaded = mapApiMessagesToState(body.messages ?? []);
-      if (loaded.length > 0) {
-        setMessages(loaded);
-      } else {
-        setMessages(INITIAL_MESSAGES);
-      }
-      return true;
-    },
-    [bearerOnlyHeaders, handleAuthExpired, handleSubscriptionRequired]
-  );
-
-  const handleSelectSession = useCallback(
-    async (sessionId: string) => {
-      if (!sessionId || sessionId === conversationId) {
-        setChatsDrawerOpen(false);
-        return;
-      }
-      setSessionSwitching(true);
-      setChatsDrawerOpen(false);
-      setError(null);
-      try {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(storageKey, sessionId);
-        }
-        setConversationId(sessionId);
-        setPhase4Space(null);
-        setThreadReentryAnchor(null);
-        phase3ReentryNextTurnRef.current = false;
-        const ok = await loadMessagesForConversation(sessionId);
-        if (!ok) {
-          setError("Could not load messages for that chat.");
-        }
-        await refreshSessionsList();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not open that conversation.");
-      } finally {
-        setSessionSwitching(false);
-      }
-    },
-    [
-      conversationId,
-      loadMessagesForConversation,
-      refreshSessionsList,
-      storageKey,
-    ]
-  );
-
-  const handleNewChat = useCallback(async () => {
-    setSessionSwitching(true);
-    setChatsDrawerOpen(false);
-    setError(null);
-    try {
-      const s = await fetch(CHAT_SESSION_ENDPOINT, {
-        method: "POST",
-        headers: jsonWithBearerHeaders,
-        credentials: "include",
-        body: "{}",
-      });
-      if (s.status === 401) {
-        handleAuthExpired();
-        return;
-      }
-      if (s.status === 402) {
-        handleSubscriptionRequired();
-        return;
-      }
-      if (!s.ok) throw new Error("Could not start a new chat.");
-      const sj = (await s.json()) as { session_id?: string };
-      const newId = sj.session_id;
-      if (!newId) throw new Error("No session id returned.");
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(storageKey, newId);
-      }
-      setConversationId(newId);
-      setMessages(INITIAL_MESSAGES);
-      setPhase4Space(null);
-      setThreadReentryAnchor(null);
-      phase3ReentryNextTurnRef.current = false;
-      await refreshSessionsList();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not start a new chat.");
-    } finally {
-      setSessionSwitching(false);
-    }
-  }, [
-    handleAuthExpired,
-    handleSubscriptionRequired,
-    jsonWithBearerHeaders,
-    refreshSessionsList,
-    storageKey,
-  ]);
 
   useEffect(() => {
     if (sessionLoading) return;
     void refreshSessionsList();
   }, [sessionLoading, refreshSessionsList]);
+
+  const showPerceptionHint = useCallback(() => {
+    if (perceptionHasShownThisSession) return;
+    const now = Date.now();
+    if (typeof window !== "undefined") {
+      const raw = window.localStorage.getItem(PERCEPTION_HINT_LAST_KEY);
+      const last = raw ? Number(raw) : 0;
+      if (Number.isFinite(last) && now - last < PERCEPTION_COOLDOWN_MS) return;
+    }
+    const idx = Math.floor(Math.random() * PERCEPTION_HINT_COPY_POOL.length);
+    const text = PERCEPTION_HINT_COPY_POOL[idx] ?? PERCEPTION_HINT_COPY_POOL[0];
+    setPerceptionHintText(text);
+    setPerceptionHintVisible(true);
+    setPerceptionHasShownThisSession(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(PERCEPTION_HINT_SESSION_KEY, "true");
+      window.localStorage.setItem(PERCEPTION_HINT_LAST_KEY, String(now));
+    }
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => {
+      setPerceptionHintVisible(false);
+      setTimeout(() => setPerceptionHintText(null), 320);
+    }, PERCEPTION_STAY_MS);
+  }, [perceptionHasShownThisSession]);
+
+  useEffect(() => {
+    if (sessionLoading || !isFirstEntryThisSession) return;
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+
+    const visibleMessages = messages.length;
+    const totalMessageCount = messages.length;
+    const hasHistory = totalMessageCount >= 6 || sessionsList.length >= 2;
+    const conditionA = hasHistory && visibleMessages <= 2;
+    const conditionBEligible = !isWaiting && !userHasTypedRef.current && !userHasScrolledRef.current;
+    const shouldSuppress =
+      perceptionHasShownThisSession ||
+      userHasTypedRef.current ||
+      userHasScrolledRef.current ||
+      visibleMessages > 3;
+    if (shouldSuppress) return;
+    if (conditionA) {
+      showPerceptionHint();
+      return;
+    }
+    if (!conditionBEligible) return;
+    idleTimerRef.current = setTimeout(() => {
+      const stillSuppress =
+        perceptionHasShownThisSession ||
+        userHasTypedRef.current ||
+        userHasScrolledRef.current ||
+        messages.length > 3 ||
+        !isFirstEntryThisSession;
+      if (!stillSuppress) {
+        showPerceptionHint();
+      }
+    }, PERCEPTION_IDLE_MS);
+  }, [
+    isFirstEntryThisSession,
+    isWaiting,
+    messages.length,
+    perceptionHasShownThisSession,
+    sessionsList.length,
+    sessionLoading,
+    showPerceptionHint,
+  ]);
 
   useEffect(() => {
     if (!conversationId || sessionLoading) {
@@ -1016,6 +920,8 @@ function ChatContent() {
     if (!canSend || !conversationId) return;
 
     const text = input.trim();
+    userHasTypedRef.current = true;
+    setIsFirstEntryThisSession(false);
     const userMessage: ChatMessage = {
       id: safeId(),
       role: "user",
@@ -1133,15 +1039,7 @@ function ChatContent() {
 
       <Header
         continueOpen={drawerOpen}
-        chatsOpen={chatsDrawerOpen}
-        onToggleContinue={() => {
-          setChatsDrawerOpen(false);
-          setDrawerOpen((prev) => !prev);
-        }}
-        onToggleChats={() => {
-          setDrawerOpen(false);
-          setChatsDrawerOpen((prev) => !prev);
-        }}
+        onToggleContinue={() => setDrawerOpen((prev) => !prev)}
       />
 
       <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
@@ -1158,6 +1056,7 @@ function ChatContent() {
             marker={phase4Space?.current_space_marker}
           />
           <InsightAnchor text={anchorText} />
+          <PerceptionHint text={perceptionHintText} visible={perceptionHintVisible} />
 
           <div className="space-y-6 md:space-y-8">
             {messages.map((message) =>
@@ -1173,17 +1072,6 @@ function ChatContent() {
           </div>
         </div>
       </main>
-      <SessionsDrawer
-        open={chatsDrawerOpen}
-        onClose={() => setChatsDrawerOpen(false)}
-        sessions={sessionsList}
-        activeSessionId={conversationId}
-        onSelectSession={handleSelectSession}
-        onNewChat={handleNewChat}
-        listError={sessionsListError}
-        switching={sessionSwitching}
-      />
-
       <ContinueDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -1196,9 +1084,15 @@ function ChatContent() {
 
       <InputBar
         value={input}
-        onChange={setInput}
+        onChange={(value) => {
+          setInput(value);
+          if (value.trim().length > 0) {
+            userHasTypedRef.current = true;
+            setIsFirstEntryThisSession(false);
+          }
+        }}
         onSubmit={handleSubmit}
-        disabled={isWaiting || sessionSwitching}
+        disabled={isWaiting}
         placeholder={inputPlaceholder}
       />
     </div>

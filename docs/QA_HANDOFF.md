@@ -26,6 +26,7 @@
 - **Working now**:
   - On load, `/chat` creates or resumes a session and loads messages.  
   - Header **Chats** opens a drawer listing conversations from **`GET /api/chat/sessions`** (topic preview), refreshed after load and after each successful turn; user can **switch** chats (loads messages for that `session_id`) or **New conversation**. Active row is highlighted. Continue (**?**) is separate (unfinished inner-thread directions).  
+  - A minimal perception hint can appear above messages in narrowly gated conditions (one-time per session, randomized copy, auto-fade, non-interactive), then disappears.  
   - Message roles are labeled as **You** (user) and **Wisewave** (assistant) in the stream layout.  
   - Error states (e.g. failure to create session or send message) show inline banners with simple recovery actions.
 

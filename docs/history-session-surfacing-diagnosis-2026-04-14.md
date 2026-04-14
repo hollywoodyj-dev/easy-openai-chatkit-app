@@ -174,3 +174,4 @@ The goal is to answer one precise question:
 **Shipped fix:** A **Chats** control in the header opens a **Sessions** drawer that lists all rows from `GET /api/chat/sessions` (topic preview), highlights the active session, supports **switching** (loads `GET /api/chat/messages` for the chosen id + updates `sessionStorage`), **New conversation** (`POST /api/chat/session`), and **refreshes** the list after load and after each successful send. Continue (`…`) and Chats drawers are mutually exclusive when toggled.
 
 **Lumen retest:** On hosted token `/chat`, open **Chats** — expect multiple rows matching API QA; tap an older id — messages for that conversation should load; new chat creates a fresh session and appears in the list after send.
+

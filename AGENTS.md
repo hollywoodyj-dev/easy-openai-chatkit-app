@@ -107,3 +107,4 @@ Fix new errors before merging. ESLint warnings may exist; don’t introduce new 
 
 - Do not commit **`.env`**, **`.env.local`**, or API keys.
 - `tmp-*.js` scripts at repo root are usually local scratch — don’t commit unless intentional.
+

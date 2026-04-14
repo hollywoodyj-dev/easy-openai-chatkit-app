@@ -497,3 +497,4 @@
 - **Spec:** `docs/hc-os-v1-phase-3-phase-4-shared-language-filter-wisewave.md` — narrow object/topic/sentence feel on **`continuity_text` / `last_insight`** without more visibility or length; Phase 4 markers unchanged (thread label + soft orientation still separate).
 - **Code:** `lib/wisewave-anchor-semantic-weight-v2.ts`; wired in **`app/api/chat/turn/route.ts`** (save + prior-thread read) and **`app/api/chat/continuity/route.ts`** (GET). Vitest: **`npm run test:anchor-v2`**.
 - **Lumen:** `docs/QA_HANDOFF.md` 2026-04-05 entry; use Wisewave §12 primary questions + instant-fail list.
+
