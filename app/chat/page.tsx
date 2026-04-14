@@ -404,6 +404,10 @@ function ChatContent() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams?.get("token")?.trim() || null, [searchParams]);
   const prefill = useMemo(() => searchParams?.get("prefill")?.trim() || "", [searchParams]);
+  const subscribeHref = useMemo(() => {
+    if (!token) return "/subscribe";
+    return `/subscribe?token=${encodeURIComponent(token)}`;
+  }, [token]);
 
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -1027,13 +1031,13 @@ function ChatContent() {
 
   useEffect(() => {
     if (!tokenInvalid) return;
-    router.replace("/subscribe");
-  }, [tokenInvalid, router]);
+    router.replace(subscribeHref);
+  }, [tokenInvalid, router, subscribeHref]);
 
   useEffect(() => {
     if (!subscriptionRequired) return;
-    router.replace("/subscribe");
-  }, [subscriptionRequired, router]);
+    router.replace(subscribeHref);
+  }, [subscriptionRequired, router, subscribeHref]);
 
   if (tokenInvalid) {
     return (
