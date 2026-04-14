@@ -52,6 +52,14 @@ const GREETING_OR_POLITE_ONE_LINER_RE =
 /** Scheduling / logistics / coordination (utilitarian adjacent; Lumen Batch 3). */
 const COORDINATION_OR_LOGISTICS_RE =
   /\b(tomorrow|tonight|today)\s+at\b|\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b|\b(send me|email me|text me)\s+(the|an|your|a)\b|\bwhen you can\b|\bworks\s+for\s+me\b|\blet['']?s\s+do\b|\binstead\b[\s.]*$|\b(address|location|calendar|invite|rsvp|zoom|meet)\b|\b\d{1,2}\s*[:.]\s*\d{2}\s*(am|pm)?\b|\b\d{1,2}\s*(am|pm)\b/i;
+
+/**
+ * Phase 8 — Lumen 2026-04-14: deferral / planning tails that must stay zero-surface.
+ * @see docs/phase-8-lumen-nova-adjustment-note-weak-case-suppression.md
+ * Narrow: does not match "let us be…" / vague emotional uses of "later today".
+ */
+const PHASE8_LOGISTICS_COORDINATION_WEAK_TAIL_RE =
+  /\bcome\s+back\s+later\b|\b(ok|okay)\s+i\s+will\s+do\s+it\s+later\s+today\b|\b(i\s+will|i'll)\s+do\s+it\s+later\s+today\b|\bgoing\s+to\s+do\s+it\s+later\s+today\b|\blet\s+us\s+do\b(?=[\s\S]{0,160}\b(first\b|phase\s+\d|come\s+back\s+later|later\s+today)\b)/i;
 const WEAK_STRUCTURE_TOKEN_RE = /\b(unknown|uncertain|none|generic|fallback|n\/a)\b/i;
 
 function normalizeLabel(s: string): string {
@@ -210,6 +218,7 @@ export function shouldSuppressContinueListForLastUserMessage(message: string): b
   if (!t) return false;
   if (GREETING_OR_POLITE_ONE_LINER_RE.test(t)) return true;
   if (COORDINATION_OR_LOGISTICS_RE.test(t)) return true;
+  if (PHASE8_LOGISTICS_COORDINATION_WEAK_TAIL_RE.test(t)) return true;
   if (isContinueReentryContinuationUtterance(t)) return false;
   if (looksUtilitarianOrFactual(t)) return true;
   return false;

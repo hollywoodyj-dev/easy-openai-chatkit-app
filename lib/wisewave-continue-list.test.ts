@@ -186,4 +186,17 @@ describe("shouldSuppressContinueListForLastUserMessage", () => {
     expect(shouldSuppressContinueListForLastUserMessage("will do")).toBe(true);
     expect(shouldSuppressContinueListForLastUserMessage("no problem")).toBe(true);
   });
+
+  it("Phase 8 (Lumen 2026-04-14): suppresses logistics / coordination deferral tails", () => {
+    expect(
+      shouldSuppressContinueListForLastUserMessage(
+        "ok I will do it later today"
+      )
+    ).toBe(true);
+    expect(
+      shouldSuppressContinueListForLastUserMessage(
+        "let us do phase 8 first and come back later"
+      )
+    ).toBe(true);
+  });
 });
