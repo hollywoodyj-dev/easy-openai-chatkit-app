@@ -85,7 +85,7 @@ export default function HomePage() {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
-                href="/chat"
+                href="/login"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-neutral-900 bg-neutral-900 px-6 text-sm font-medium text-white transition hover:bg-neutral-800"
               >
                 Enter the space
