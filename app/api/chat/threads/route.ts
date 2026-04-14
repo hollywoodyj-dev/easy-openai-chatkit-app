@@ -4,11 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import {
   CONTINUE_FETCH_POOL,
+  isStrongEmotionalReturnLabel,
   pickContinueOptions,
   shouldSuppressContinueListForLastUserMessage,
 } from "@/lib/wisewave-continue-list";
 import { buildPhase6ContinueListMeta } from "@/lib/wisewave-phase6-continue";
 import { buildPhase7ContinueListMeta } from "@/lib/wisewave-phase7-continue";
+import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
 
 export const dynamic = "force-dynamic";
 
@@ -54,28 +56,6 @@ export async function GET(request: Request) {
       select: { message: true },
     });
     const lastUserText = lastUser?.message?.trim() ?? "";
-    if (
-      lastUserText.length > 0 &&
-      shouldSuppressContinueListForLastUserMessage(lastUserText)
-    ) {
-        return NextResponse.json({
-          threads: [],
-          meta: {
-            continue_suppressed_last_user_turn: true,
-            phase_6: buildPhase6ContinueListMeta({
-              lastUserMessage: lastUserText,
-              pickedLabels: [],
-              suppressedWeakTail: true,
-            }),
-            phase_7: buildPhase7ContinueListMeta({
-              lastUserMessage: lastUserText,
-              optionCount: 0,
-              suppressedWeakTail: true,
-            }),
-          },
-        });
-    }
-
     try {
       const threads = await prisma.thread.findMany({
         where: { conversationId: sessionId },
@@ -93,9 +73,36 @@ export async function GET(request: Request) {
           intensity: true,
         },
       });
+      const picked = pickContinueOptions(threads);
+
+      const lowVerbalAck = isContinueReentryContinuationUtterance(lastUserText);
+      const hasStrongPathOption = picked.some((p) =>
+        isStrongEmotionalReturnLabel(p.label)
+      );
+      const suppressWeakTail =
+        lastUserText.length > 0 &&
+        (shouldSuppressContinueListForLastUserMessage(lastUserText) ||
+          (lowVerbalAck && !hasStrongPathOption));
+      if (suppressWeakTail) {
+        return NextResponse.json({
+          threads: [],
+          meta: {
+            continue_suppressed_last_user_turn: true,
+            phase_6: buildPhase6ContinueListMeta({
+              lastUserMessage: lastUserText,
+              pickedLabels: [],
+              suppressedWeakTail: true,
+            }),
+            phase_7: buildPhase7ContinueListMeta({
+              lastUserMessage: lastUserText,
+              optionCount: 0,
+              suppressedWeakTail: true,
+            }),
+          },
+        });
+      }
 
       const byId = new Map(threads.map((t) => [t.id, t]));
-      const picked = pickContinueOptions(threads);
       return NextResponse.json({
         threads: picked.map((p) => {
           const row = byId.get(p.id);

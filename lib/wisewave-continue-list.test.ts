@@ -175,10 +175,10 @@ describe("shouldSuppressContinueListForLastUserMessage", () => {
     ).toBe(false);
   });
 
-  it("Phase 6: does not suppress low-verbal Continue re-entry acks (yeah/mm)", () => {
-    expect(shouldSuppressContinueListForLastUserMessage("yeah")).toBe(false);
-    expect(shouldSuppressContinueListForLastUserMessage("mm")).toBe(false);
-    expect(shouldSuppressContinueListForLastUserMessage("still there")).toBe(false);
+  it("Phase 8.5: suppresses standalone low-verbal acks; re-entry carveout is context-gated in route", () => {
+    expect(shouldSuppressContinueListForLastUserMessage("yeah")).toBe(true);
+    expect(shouldSuppressContinueListForLastUserMessage("mm")).toBe(true);
+    expect(shouldSuppressContinueListForLastUserMessage("still there")).toBe(true);
   });
 
   it("Phase 6: still suppresses standalone polite ok / expanded shallow closures", () => {

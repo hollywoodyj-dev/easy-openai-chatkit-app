@@ -219,7 +219,6 @@ export function shouldSuppressContinueListForLastUserMessage(message: string): b
   if (GREETING_OR_POLITE_ONE_LINER_RE.test(t)) return true;
   if (COORDINATION_OR_LOGISTICS_RE.test(t)) return true;
   if (PHASE8_LOGISTICS_COORDINATION_WEAK_TAIL_RE.test(t)) return true;
-  if (isContinueReentryContinuationUtterance(t)) return false;
   if (looksUtilitarianOrFactual(t)) return true;
   return false;
 }
