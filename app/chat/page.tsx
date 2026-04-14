@@ -148,6 +148,13 @@ const PERCEPTION_HINT_COPY_POOL = [
   "这里只显示最近聊到的内容",
   "这里会从最近的地方开始",
 ] as const;
+const PERCEPTION_HINT_COPY_POOL_EN = [
+  "Continue from where you just were.",
+  "Pick up from the most recent place.",
+  "You paused here just now.",
+  "This view starts from your most recent messages.",
+  "We begin from the latest place in this thread.",
+] as const;
 const PERCEPTION_HINT_SESSION_KEY = "ws_hint_shown";
 const PERCEPTION_HINT_LAST_KEY = "ws_hint_last";
 const PERCEPTION_IDLE_MS = 2500;
@@ -332,6 +339,10 @@ function ErrorBanner({ message }: { message: string }) {
       {message}
     </div>
   );
+}
+
+function looksLikeChinese(text: string): boolean {
+  return /[\u4e00-\u9fff]/.test(text);
 }
 
 function InputBar({
@@ -544,8 +555,18 @@ function ChatContent() {
       const last = raw ? Number(raw) : 0;
       if (Number.isFinite(last) && now - last < PERCEPTION_COOLDOWN_MS) return;
     }
-    const idx = Math.floor(Math.random() * PERCEPTION_HINT_COPY_POOL.length);
-    const text = PERCEPTION_HINT_COPY_POOL[idx] ?? PERCEPTION_HINT_COPY_POOL[0];
+    const latestUserText =
+      [...messages]
+        .reverse()
+        .find((m): m is Extract<ChatMessage, { role: "user" }> => m.role === "user")
+        ?.text ?? "";
+    const browserLang =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
+    const useChinese =
+      looksLikeChinese(latestUserText) || browserLang.startsWith("zh");
+    const pool = useChinese ? PERCEPTION_HINT_COPY_POOL : PERCEPTION_HINT_COPY_POOL_EN;
+    const idx = Math.floor(Math.random() * pool.length);
+    const text = pool[idx] ?? pool[0];
     setPerceptionHintText(text);
     setPerceptionHintVisible(true);
     setPerceptionHasShownThisSession(true);
@@ -558,7 +579,7 @@ function ChatContent() {
       setPerceptionHintVisible(false);
       setTimeout(() => setPerceptionHintText(null), 320);
     }, PERCEPTION_STAY_MS);
-  }, [perceptionHasShownThisSession]);
+  }, [messages, perceptionHasShownThisSession]);
 
   useEffect(() => {
     if (sessionLoading || !isFirstEntryThisSession) return;
