@@ -191,7 +191,7 @@ export default function SubscriptionScreen() {
       }
 
       const res = await fetch(
-        `${API_BASE_URL}/api/subscription/activate-google-play`,
+        `${API_BASE_URL}/api/subscription/verify-android`,
         {
           method: "POST",
           headers: {
@@ -200,8 +200,8 @@ export default function SubscriptionScreen() {
           },
           body: JSON.stringify({
             purchaseToken,
-            productId,
-            plan,
+            subscriptionId: productId,
+            packageName: "com.wisewave.chatkit",
           }),
         }
       );

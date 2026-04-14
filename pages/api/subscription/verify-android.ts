@@ -1,6 +1,92 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { verifyUserToken } from "@/lib/auth";
+import jwt from "jsonwebtoken";
+
+const GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_ANDROID_PUBLISHER_SCOPE =
+  "https://www.googleapis.com/auth/androidpublisher";
+const GOOGLE_ANDROID_SUBSCRIPTION_URL =
+  "https://androidpublisher.googleapis.com/androidpublisher/v3/applications";
+
+type GoogleServiceAccount = {
+  client_email?: string;
+  private_key?: string;
+};
+
+type GoogleSubscriptionState =
+  | "SUBSCRIPTION_STATE_ACTIVE"
+  | "SUBSCRIPTION_STATE_CANCELED"
+  | "SUBSCRIPTION_STATE_EXPIRED"
+  | "SUBSCRIPTION_STATE_IN_GRACE_PERIOD"
+  | "SUBSCRIPTION_STATE_ON_HOLD"
+  | "SUBSCRIPTION_STATE_PAUSED"
+  | string;
+
+type GoogleSubscriptionV2 = {
+  subscriptionState?: GoogleSubscriptionState;
+  lineItems?: Array<{
+    expiryTime?: string;
+    autoRenewingPlan?: {
+      autoRenewEnabled?: boolean;
+    };
+  }>;
+};
+
+async function getGoogleAccessToken(
+  serviceAccount: GoogleServiceAccount
+): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const assertion = jwt.sign(
+    {
+      iss: serviceAccount.client_email,
+      scope: GOOGLE_ANDROID_PUBLISHER_SCOPE,
+      aud: GOOGLE_OAUTH_TOKEN_URL,
+      iat: now,
+      exp: now + 3600,
+    },
+    serviceAccount.private_key as string,
+    { algorithm: "RS256" }
+  );
+
+  const tokenRes = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+
+  if (!tokenRes.ok) {
+    const body = await tokenRes.text().catch(() => "");
+    throw new Error(`google_oauth_failed:${tokenRes.status}:${body}`);
+  }
+
+  const tokenJson = (await tokenRes.json()) as { access_token?: string };
+  if (!tokenJson.access_token) {
+    throw new Error("google_oauth_missing_access_token");
+  }
+  return tokenJson.access_token;
+}
+
+function mapGoogleStateToSubscriptionStatus(
+  state: GoogleSubscriptionState | undefined
+): "active" | "canceled" | "expired" {
+  if (!state) return "expired";
+  if (
+    state === "SUBSCRIPTION_STATE_ACTIVE" ||
+    state === "SUBSCRIPTION_STATE_IN_GRACE_PERIOD" ||
+    state === "SUBSCRIPTION_STATE_ON_HOLD" ||
+    state === "SUBSCRIPTION_STATE_PAUSED"
+  ) {
+    return "active";
+  }
+  if (state === "SUBSCRIPTION_STATE_CANCELED") {
+    return "canceled";
+  }
+  return "expired";
+}
 
 /**
  * Verify a Google Play subscription purchase and activate the user's subscription.
@@ -65,24 +151,83 @@ export default async function handler(
       });
     }
 
-    // Verify with Google Play Developer API (subscriptionsv2.get) then update DB.
-    // See: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2
-    // Until verification is implemented, return 501 so clients open Play Store only.
-    const key = JSON.parse(serviceAccountJson) as {
-      client_email?: string;
-      private_key?: string;
-    };
+    const key = JSON.parse(serviceAccountJson) as GoogleServiceAccount;
     if (!key.client_email || !key.private_key) {
       return res.status(500).json({ error: "Invalid service account JSON" });
     }
 
-    // TODO: use google-auth-library + androidpublisher API to verify token and get expiryTimeMillis,
-    // then update the user's Subscription in the DB. See:
-    // https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptionsv2
-    return res.status(501).json({
-      error: "Google Play server-side verification not yet implemented",
-      message:
-        "Implement verification in pages/api/subscription/verify-android.ts. Until then, use the Subscribe screen to open Google Play.",
+    const accessToken = await getGoogleAccessToken(key);
+    const verifyUrl = `${GOOGLE_ANDROID_SUBSCRIPTION_URL}/${encodeURIComponent(pkg)}/purchases/subscriptionsv2/tokens/${encodeURIComponent(purchaseToken)}`;
+    const verifyRes = await fetch(verifyUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!verifyRes.ok) {
+      const body = await verifyRes.text().catch(() => "");
+      return res.status(400).json({
+        error: "Invalid or inaccessible Google Play purchase token",
+        details:
+          process.env.NODE_ENV !== "production"
+            ? `google_verify_failed:${verifyRes.status}:${body}`
+            : undefined,
+      });
+    }
+
+    const verifyJson = (await verifyRes.json()) as GoogleSubscriptionV2;
+    const firstLineItem = verifyJson.lineItems?.[0];
+    const expiryTime = firstLineItem?.expiryTime ?? null;
+    const subscriptionStatus = mapGoogleStateToSubscriptionStatus(
+      verifyJson.subscriptionState
+    );
+    const now = new Date();
+    const periodEnd = expiryTime ? new Date(expiryTime) : null;
+    const inferredPlan =
+      typeof subscriptionId === "string" &&
+      subscriptionId.toLowerCase().includes("year")
+        ? "yearly"
+        : "monthly";
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        subscriptions: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+    });
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    const data = {
+      status: subscriptionStatus,
+      plan: inferredPlan as "monthly" | "yearly",
+      platform: "google_play" as const,
+      currentPeriodStart: now,
+      currentPeriodEnd: periodEnd,
+      externalSubscriptionId: purchaseToken,
+    };
+
+    if (user.subscriptions[0]) {
+      await prisma.subscription.update({
+        where: { id: user.subscriptions[0].id },
+        data,
+      });
+    } else {
+      await prisma.subscription.create({
+        data: {
+          userId: user.id,
+          ...data,
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Google Play subscription verified and synced.",
+      subscriptionState: verifyJson.subscriptionState ?? null,
+      currentPeriodEnd: periodEnd,
+      plan: inferredPlan,
+      subscriptionId,
     });
   } catch (error) {
     console.error("[verify-android] unexpected error", error);
