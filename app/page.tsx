@@ -28,24 +28,6 @@ const boundaries = [
   "It won’t try to change you",
 ];
 
-const ads = [
-  {
-    title: "Facebook angle 01",
-    copy:
-      "Not everything needs advice. Sometimes you just need space to think clearly. Wisewave doesn’t guide you. It reflects — quietly.",
-  },
-  {
-    title: "Facebook angle 02",
-    copy:
-      "This AI won’t help you the usual way. It won’t give advice. It won’t guide you. But something becomes clearer when you use it.",
-  },
-  {
-    title: "Facebook angle 03",
-    copy:
-      "Too many thoughts. Not enough clarity. Wisewave doesn’t add more. It makes things quieter.",
-  },
-];
-
 function toPrefillHref(text: string) {
   return `/chat?prefill=${encodeURIComponent(text)}`;
 }
@@ -317,56 +299,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="py-10 md:py-14">
-          <div className="rounded-[32px] border border-neutral-200 bg-[#f7f4ee] p-7 sm:p-9">
-            <div className="max-w-2xl">
-              <SectionLabel>SEO + share layer</SectionLabel>
-              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-neutral-950 sm:text-4xl">
-                A quieter way to think clearly
-              </h2>
-            </div>
-
-            <div className="mt-6 max-w-3xl space-y-5 text-base leading-8 text-neutral-600">
-              <p>
-                Wisewave is a quiet reflection space for people who need clarity
-                without advice. It does not act like a coaching AI, a therapist,
-                or a chatbot trying to solve your life.
-              </p>
-              <p>
-                When thoughts feel noisy, repetitive, or hard to understand,
-                Wisewave responds with reflection instead of direction. The goal
-                is not to tell you what to do. The goal is to help you see more
-                clearly what is already present.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-10 md:py-14">
-          <div className="max-w-2xl">
-            <SectionLabel>Facebook angles</SectionLabel>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-neutral-950 sm:text-4xl">
-              Ad language that keeps the product honest
-            </h2>
-          </div>
-
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {ads.map((ad) => (
-              <div
-                key={ad.title}
-                className="rounded-[28px] border border-white/70 bg-white/78 p-7 shadow-[0_8px_30px_rgba(20,20,20,0.03)]"
-              >
-                <p className="text-sm font-medium uppercase tracking-[0.14em] text-neutral-500">
-                  {ad.title}
-                </p>
-                <p className="mt-4 text-base leading-8 text-neutral-700">
-                  {ad.copy}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section id="final-cta" className="scroll-mt-24 py-10 md:py-16">
           <div className="rounded-[36px] border border-neutral-900 bg-neutral-900 px-7 py-10 text-white sm:px-10 sm:py-12">
             <div className="max-w-2xl">
@@ -415,7 +347,7 @@ export default function HomePage() {
               <Link href="/about" className="transition hover:text-neutral-900">
                 About
               </Link>
-              <Link href="/legal/privacy" className="transition hover:text-neutral-900">
+              <Link href="/privacy" className="transition hover:text-neutral-900">
                 Privacy
               </Link>
             </div>
