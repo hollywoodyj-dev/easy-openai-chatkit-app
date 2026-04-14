@@ -403,6 +403,7 @@ function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams?.get("token")?.trim() || null, [searchParams]);
+  const prefill = useMemo(() => searchParams?.get("prefill")?.trim() || "", [searchParams]);
 
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
@@ -439,6 +440,7 @@ function ChatContent() {
   const userHasScrolledRef = useRef(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prefillAppliedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -464,6 +466,13 @@ function ChatContent() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    if (!prefill) return;
+    setInput(prefill);
+    prefillAppliedRef.current = true;
+  }, [prefill]);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
   const anchorFromMessages = useMemo(() => {
