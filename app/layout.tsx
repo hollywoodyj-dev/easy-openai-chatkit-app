@@ -12,11 +12,32 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   title: {
-    default: "Wisewave",
+    default: "Wisewave — A Quiet Space for Clear Thinking",
     template: "%s · Wisewave",
   },
   description:
-    "Wisewave — a quieter kind of intelligence: clarity, continuity, and inner steadiness without taking over your process.",
+    "Wisewave is not a chatbot or coaching AI. It reflects your thoughts without giving advice, helping you see clearly without being guided or controlled.",
+  keywords: [
+    "self reflection AI",
+    "clarity thinking tool",
+    "no advice AI",
+    "consciousness reflection",
+    "inner clarity",
+  ],
+  openGraph: {
+    title: "Wisewave — A Quiet Space for Clear Thinking",
+    description:
+      "Not here to give you answers. Wisewave reflects your thoughts without advice, pressure, or direction.",
+    type: "website",
+    url: "https://wisewave.io",
+    siteName: "Wisewave",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Wisewave — A Quiet Space for Clear Thinking",
+    description:
+      "Wisewave reflects your thoughts without giving advice, helping you see clearly without being guided or controlled.",
+  },
   appleWebApp: {
     capable: true,
     title: "Wisewave",
