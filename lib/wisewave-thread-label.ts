@@ -27,20 +27,24 @@ function pickTraceFallback(
   return variants[idx] ?? variants[0];
 }
 
-/** EN: when no heuristic matches — admissible trace fragments (not GENERIC_LABELS). */
+/**
+ * EN: when no heuristic matches — admissible trace fragments (not GENERIC_LABELS).
+ * Phase 8 (Lumen): prefer light lines with inward/weight/pull hooks over mist-like residue;
+ * @see docs/phase-8-lumen-nova-watchpoint-label-quality.md
+ */
 const EN_TRACE_FALLBACKS = [
-  "something still here",
+  "something still carries weight here",
   "a little still near",
   "not quite settled yet",
   "something quiet still here",
-  "still a faint pull here",
+  "something still pulls inward here",
   "not fully quiet yet",
   "still not fully gone",
   "something still close",
   "still a little open",
   "not quite landed",
   "still carrying a little weight",
-  "this still feels nearby",
+  "weight still sits quietly here",
 ] as const;
 
 const ZH_TRACE_FALLBACKS = [

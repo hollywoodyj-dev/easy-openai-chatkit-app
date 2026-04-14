@@ -15,6 +15,7 @@
 - **Docs:** `docs/phase-8-octopusmind-strategic-diagnosis.md`, `docs/phase-8-addendum-protected-habit-layer-guardrails.md` — validity over growth; habit signal vs guardrail layers; exposure inflation invalidates habit reads; escalation ladder; no product expansion from dashboards without Tree alignment.
 - **Wiring:** `AGENTS.md` (code map Phase 7–8 rows, governance bullets, QA artifacts, **`npm run test:phase7-continue`** in quality bar); `docs/QA_HANDOFF.md` dated entry for Lumen; **`package.json`** script **`test:phase7-continue`**.
 - **Lumen Phase 8 weak-tail fix:** `docs/phase-8-lumen-nova-adjustment-note-weak-case-suppression.md` — `lib/wisewave-continue-list.ts` **`PHASE8_LOGISTICS_COORDINATION_WEAK_TAIL_RE`** (defer-for-later / `let us do` + planning cues / `come back later`) in **`shouldSuppressContinueListForLastUserMessage`**; Lumen hosted Layer A retest after deploy.
+- **Lumen Phase 8 label-quality watchpoint:** `docs/phase-8-lumen-nova-watchpoint-label-quality.md` — `lib/wisewave-thread-label.ts` **`EN_TRACE_FALLBACKS`** raised specificity floor (inward/weight hooks; removed faint pull / feels nearby / bare something-still-here from rotation); not exposure/routing.
 
 ## 2026-04-15 — Phase 8 (Wisewave chat): Lumen doc prep
 
