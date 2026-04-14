@@ -108,10 +108,14 @@ function extractAssistantPayload(data: TurnResponseBody): AssistantPayload {
 
 function Header({
   continueOpen,
+  chatsOpen,
   onToggleContinue,
+  onToggleChats,
 }: {
   continueOpen: boolean;
+  chatsOpen: boolean;
   onToggleContinue: () => void;
+  onToggleChats: () => void;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-black/5 bg-[#F7F5F2]/85 backdrop-blur-md">
@@ -120,14 +124,26 @@ function Header({
           <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">Wisewave</div>
           <div className="mt-1 text-sm text-[#4E4E4E]">A quieter kind of intelligence</div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
-          <span className="text-sm text-[#7A7A7A]">present</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="hidden sm:inline-flex h-2.5 w-2.5 rounded-full bg-[#7C9082]/70" />
+          <span className="hidden text-sm text-[#7A7A7A] sm:inline">present</span>
+          <button
+            onClick={onToggleChats}
+            type="button"
+            className={cn(
+              "inline-flex items-center rounded-full border border-black/10 px-3 py-1.5 text-[12px] tracking-[0.08em] text-[#666] transition",
+              chatsOpen ? "bg-white" : "bg-white/65 hover:bg-white"
+            )}
+            aria-label={chatsOpen ? "Close conversations" : "Open conversations"}
+            aria-expanded={chatsOpen}
+          >
+            Chats
+          </button>
           <button
             onClick={onToggleContinue}
             type="button"
             className={cn(
-              "ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#777] transition",
+              "inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#777] transition",
               continueOpen ? "bg-white" : "bg-white/65 hover:bg-white"
             )}
             aria-label={continueOpen ? "Close Continue" : "Open Continue"}
@@ -283,6 +299,96 @@ function ContinueDrawer({
   );
 }
 
+function SessionsDrawer({
+  open,
+  onClose,
+  sessions,
+  activeSessionId,
+  onSelectSession,
+  onNewChat,
+  listError,
+  switching,
+}: {
+  open: boolean;
+  onClose: () => void;
+  sessions: Array<{ id: string; topic: string }>;
+  activeSessionId?: string;
+  onSelectSession: (sessionId: string) => void;
+  onNewChat: () => void;
+  listError: string | null;
+  switching: boolean;
+}) {
+  if (!open) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed inset-0 z-30 bg-black/10 transition-opacity"
+        aria-hidden="true"
+      />
+      <aside
+        className={cn(
+          "fixed z-40 max-h-[min(70vh,32rem)] w-[84vw] max-w-[24rem] overflow-hidden rounded-[24px] border border-black/5 bg-[#F8F6F2]/96 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl transition duration-200",
+          "left-1/2 top-[78px] -translate-x-1/2 md:left-8 md:top-[72px] md:translate-x-0"
+        )}
+        role="dialog"
+        aria-label="Conversations"
+      >
+        <div className="flex items-center justify-between border-b border-black/5 px-4 py-3">
+          <p className="text-sm tracking-[0.12em] text-[#6B6B6B]">Chats</p>
+          <button type="button" onClick={onClose} className="text-sm text-[#7D7D7D]">
+            Close
+          </button>
+        </div>
+        <div className="px-3 pb-3 pt-2">
+          <button
+            type="button"
+            disabled={switching}
+            onClick={onNewChat}
+            className="mb-2 w-full rounded-2xl border border-dashed border-black/15 bg-white/50 px-3 py-2.5 text-left text-sm text-[#5C5C5C] transition hover:bg-white/80 disabled:opacity-50"
+          >
+            New conversation
+          </button>
+          {listError ? (
+            <p className="rounded-2xl bg-amber-50/90 px-3 py-2.5 text-sm text-[#6B5344] ring-1 ring-amber-200/80">
+              {listError}
+            </p>
+          ) : (
+            <ul className="max-h-[min(52vh,26rem)] space-y-2 overflow-y-auto pr-1">
+              {sessions.length === 0 ? (
+                <li className="rounded-2xl bg-white/72 px-3.5 py-2.5 text-sm text-[#868686] ring-1 ring-black/4">
+                  No saved conversations yet.
+                </li>
+              ) : (
+                sessions.map((s) => (
+                  <li key={s.id} className="list-none">
+                    <button
+                      type="button"
+                      disabled={switching}
+                      onClick={() => onSelectSession(s.id)}
+                      className={cn(
+                        "w-full rounded-2xl bg-white/72 px-3.5 py-2.5 text-left text-sm leading-6 text-[#545454] ring-1 ring-black/4 transition",
+                        "hover:bg-white/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6F8596]/40",
+                        switching && "opacity-60",
+                        activeSessionId === s.id &&
+                          "bg-[#EEF4EF] ring-2 ring-[#7C9082]/35 shadow-[0_0_0_1px_rgba(124,144,130,0.12)]"
+                      )}
+                    >
+                      {s.topic || "Conversation"}
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
 function WaitingPulse() {
   return (
     <div className="max-w-[46rem] px-1 py-1">
@@ -391,6 +497,10 @@ function ChatContent() {
   } | null>(null);
   const phase3ReentryNextTurnRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [chatsDrawerOpen, setChatsDrawerOpen] = useState(false);
+  const [sessionsList, setSessionsList] = useState<Array<{ id: string; topic: string }>>([]);
+  const [sessionsListError, setSessionsListError] = useState<string | null>(null);
+  const [sessionSwitching, setSessionSwitching] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -451,6 +561,144 @@ function ChatContent() {
     setTokenInvalid(false);
     setError(null);
   }, [storageKey]);
+
+  const refreshSessionsList = useCallback(async () => {
+    try {
+      const res = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
+        credentials: "include",
+        headers: bearerOnlyHeaders,
+      });
+      if (res.status === 401) {
+        handleAuthExpired();
+        return;
+      }
+      if (res.status === 402) {
+        handleSubscriptionRequired();
+        return;
+      }
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        sessions?: Array<{ id: string; topic: string }>;
+      };
+      setSessionsList(data.sessions ?? []);
+      setSessionsListError(null);
+    } catch {
+      setSessionsListError("Could not load your conversations.");
+    }
+  }, [bearerOnlyHeaders, handleAuthExpired, handleSubscriptionRequired]);
+
+  const loadMessagesForConversation = useCallback(
+    async (sessionId: string): Promise<boolean> => {
+      const msgRes = await fetch(
+        `${CHAT_MESSAGES_ENDPOINT}?session_id=${encodeURIComponent(sessionId)}`,
+        { credentials: "include", headers: bearerOnlyHeaders }
+      );
+      if (msgRes.status === 401) {
+        handleAuthExpired();
+        return false;
+      }
+      if (msgRes.status === 402) {
+        handleSubscriptionRequired();
+        return false;
+      }
+      if (!msgRes.ok) return false;
+      const body = (await msgRes.json()) as { messages?: ApiChatMessage[] };
+      const loaded = mapApiMessagesToState(body.messages ?? []);
+      if (loaded.length > 0) {
+        setMessages(loaded);
+      } else {
+        setMessages(INITIAL_MESSAGES);
+      }
+      return true;
+    },
+    [bearerOnlyHeaders, handleAuthExpired, handleSubscriptionRequired]
+  );
+
+  const handleSelectSession = useCallback(
+    async (sessionId: string) => {
+      if (!sessionId || sessionId === conversationId) {
+        setChatsDrawerOpen(false);
+        return;
+      }
+      setSessionSwitching(true);
+      setChatsDrawerOpen(false);
+      setError(null);
+      try {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(storageKey, sessionId);
+        }
+        setConversationId(sessionId);
+        setPhase4Space(null);
+        setThreadReentryAnchor(null);
+        phase3ReentryNextTurnRef.current = false;
+        const ok = await loadMessagesForConversation(sessionId);
+        if (!ok) {
+          setError("Could not load messages for that chat.");
+        }
+        await refreshSessionsList();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Could not open that conversation.");
+      } finally {
+        setSessionSwitching(false);
+      }
+    },
+    [
+      conversationId,
+      loadMessagesForConversation,
+      refreshSessionsList,
+      storageKey,
+    ]
+  );
+
+  const handleNewChat = useCallback(async () => {
+    setSessionSwitching(true);
+    setChatsDrawerOpen(false);
+    setError(null);
+    try {
+      const s = await fetch(CHAT_SESSION_ENDPOINT, {
+        method: "POST",
+        headers: jsonWithBearerHeaders,
+        credentials: "include",
+        body: "{}",
+      });
+      if (s.status === 401) {
+        handleAuthExpired();
+        return;
+      }
+      if (s.status === 402) {
+        handleSubscriptionRequired();
+        return;
+      }
+      if (!s.ok) throw new Error("Could not start a new chat.");
+      const sj = (await s.json()) as { session_id?: string };
+      const newId = sj.session_id;
+      if (!newId) throw new Error("No session id returned.");
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(storageKey, newId);
+      }
+      setConversationId(newId);
+      setMessages(INITIAL_MESSAGES);
+      setPhase4Space(null);
+      setThreadReentryAnchor(null);
+      phase3ReentryNextTurnRef.current = false;
+      await refreshSessionsList();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not start a new chat.");
+    } finally {
+      setSessionSwitching(false);
+    }
+  }, [
+    handleAuthExpired,
+    handleSubscriptionRequired,
+    jsonWithBearerHeaders,
+    refreshSessionsList,
+    storageKey,
+  ]);
+
+  useEffect(() => {
+    if (sessionLoading) return;
+    void refreshSessionsList();
+  }, [sessionLoading, refreshSessionsList]);
 
   useEffect(() => {
     if (!conversationId || sessionLoading) {
@@ -837,6 +1085,7 @@ function ChatContent() {
       setInput(text);
     } finally {
       setIsWaiting(false);
+      void refreshSessionsList();
     }
   }
 
@@ -884,7 +1133,15 @@ function ChatContent() {
 
       <Header
         continueOpen={drawerOpen}
-        onToggleContinue={() => setDrawerOpen((prev) => !prev)}
+        chatsOpen={chatsDrawerOpen}
+        onToggleContinue={() => {
+          setChatsDrawerOpen(false);
+          setDrawerOpen((prev) => !prev);
+        }}
+        onToggleChats={() => {
+          setDrawerOpen(false);
+          setChatsDrawerOpen((prev) => !prev);
+        }}
       />
 
       <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
@@ -916,6 +1173,17 @@ function ChatContent() {
           </div>
         </div>
       </main>
+      <SessionsDrawer
+        open={chatsDrawerOpen}
+        onClose={() => setChatsDrawerOpen(false)}
+        sessions={sessionsList}
+        activeSessionId={conversationId}
+        onSelectSession={handleSelectSession}
+        onNewChat={handleNewChat}
+        listError={sessionsListError}
+        switching={sessionSwitching}
+      />
+
       <ContinueDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -930,7 +1198,7 @@ function ChatContent() {
         value={input}
         onChange={setInput}
         onSubmit={handleSubmit}
-        disabled={isWaiting}
+        disabled={isWaiting || sessionSwitching}
         placeholder={inputPlaceholder}
       />
     </div>
