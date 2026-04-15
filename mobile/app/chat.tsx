@@ -41,8 +41,12 @@ export default function ChatScreen() {
         plan?: "monthly" | "yearly";
       };
       if (payload?.type === SUBSCRIPTION_MESSAGE_TYPE) {
-        const plan = payload.plan === "yearly" ? "yearly" : "monthly";
-        router.push(`/subscription?plan=${plan}&autostart=1`);
+        const plan = payload.plan === "yearly" ? "yearly" : payload.plan === "monthly" ? "monthly" : null;
+        if (plan) {
+          router.push(`/subscription?plan=${plan}&autostart=1`);
+          return;
+        }
+        router.push("/subscription");
       }
     } catch {
       // ignore non-JSON or unknown messages

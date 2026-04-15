@@ -784,6 +784,19 @@ function ChatContent() {
     setError(null);
   }, [storageKey]);
 
+  const openNativeSubscriptionFromMobileEmbed = useCallback((): boolean => {
+    if (!isEmbedMobile) return false;
+    if (typeof window === "undefined") return false;
+    const bridge = (
+      window as unknown as {
+        ReactNativeWebView?: { postMessage: (message: string) => void };
+      }
+    ).ReactNativeWebView;
+    if (!bridge) return false;
+    bridge.postMessage(JSON.stringify({ type: "open_subscription" }));
+    return true;
+  }, [isEmbedMobile]);
+
   const refreshSessionsList = useCallback(async () => {
     try {
       const res = await fetch(CHAT_SESSIONS_LIST_ENDPOINT, {
@@ -1284,18 +1297,26 @@ function ChatContent() {
 
   useEffect(() => {
     if (!tokenInvalid) return;
-    router.replace(subscribeHref);
-  }, [tokenInvalid, router, subscribeHref]);
+    const openedInNative = openNativeSubscriptionFromMobileEmbed();
+    if (!openedInNative) {
+      router.replace(subscribeHref);
+    }
+  }, [tokenInvalid, openNativeSubscriptionFromMobileEmbed, router, subscribeHref]);
 
   useEffect(() => {
     if (!subscriptionRequired) return;
-    router.replace(subscribeHref);
-  }, [subscriptionRequired, router, subscribeHref]);
+    const openedInNative = openNativeSubscriptionFromMobileEmbed();
+    if (!openedInNative) {
+      router.replace(subscribeHref);
+    }
+  }, [subscriptionRequired, openNativeSubscriptionFromMobileEmbed, router, subscribeHref]);
 
   if (tokenInvalid) {
     return (
       <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4 items-center justify-center">
-        <p className="text-sm text-[#5E5E5E]">Session expired. Redirecting to subscriptions...</p>
+        <p className="text-sm text-[#5E5E5E]">
+          Session expired. Redirecting to {isEmbedMobile ? "app subscriptions" : "subscriptions"}...
+        </p>
       </main>
     );
   }
@@ -1303,7 +1324,9 @@ function ChatContent() {
   if (subscriptionRequired) {
     return (
       <main className="flex min-h-screen flex-col bg-[#F7F5F2] p-4 items-center justify-center">
-        <p className="text-sm text-[#5E5E5E]">Subscription required. Redirecting...</p>
+        <p className="text-sm text-[#5E5E5E]">
+          Subscription required. Redirecting to {isEmbedMobile ? "app subscriptions" : "subscriptions"}...
+        </p>
       </main>
     );
   }

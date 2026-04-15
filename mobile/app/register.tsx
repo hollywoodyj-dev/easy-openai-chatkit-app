@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Linking,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
@@ -32,16 +33,23 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
-  const ensureWebBrowser = () => {
-    if (!WebBrowser) {
-      Alert.alert(
-        "Not available",
-        "Social sign up isn't available in this test build. Please use email and password."
-      );
-      return false;
-    }
-    return true;
-  };
+  useEffect(() => {
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      try {
+        const parsed = new URL(url.replace("wisewave://", "https://"));
+        const token = parsed.searchParams.get("token");
+        if (!token) return;
+        void (async () => {
+          await setToken(token);
+          setOauthLoading(null);
+          router.replace("/chat");
+        })();
+      } catch {
+        // Ignore malformed deep links
+      }
+    });
+    return () => sub.remove();
+  }, [setToken]);
 
   const handleRegister = async () => {
     const trimmedEmail = email.trim();
@@ -80,17 +88,15 @@ export default function RegisterScreen() {
   };
 
   const handleOAuth = async (provider: "google" | "facebook" | "x") => {
-    if (!ensureWebBrowser()) {
-      return;
-    }
-
     setOauthLoading(provider);
     try {
       const oauthUrl = `${API_BASE_URL}/api/auth/oauth/${provider}?state=mobile`;
-      const result = await WebBrowser!.openAuthSessionAsync(
-        oauthUrl,
-        "wisewave://oauth"
-      );
+      if (!WebBrowser) {
+        await Linking.openURL(oauthUrl);
+        return;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(oauthUrl, "wisewave://oauth");
 
       if (result.type === "success" && result.url) {
         const url = new URL(result.url.replace("wisewave://", "https://"));
