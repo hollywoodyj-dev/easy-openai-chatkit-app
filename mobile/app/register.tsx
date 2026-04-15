@@ -26,6 +26,16 @@ try {
   WebBrowser = null;
 }
 
+function extractTokenFromDeepLink(rawUrl: string): string | null {
+  try {
+    const normalized = rawUrl.replace("wisewave://", "https://");
+    const parsed = new URL(normalized);
+    return parsed.searchParams.get("token");
+  } catch {
+    return null;
+  }
+}
+
 export default function RegisterScreen() {
   const { setToken } = useAuth();
   const [email, setEmail] = useState("");
@@ -34,19 +44,23 @@ export default function RegisterScreen() {
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 
   useEffect(() => {
+    const consumeDeepLink = (url: string) => {
+      const token = extractTokenFromDeepLink(url);
+      if (!token) return;
+      void (async () => {
+        await setToken(token);
+        setOauthLoading(null);
+        router.replace("/chat");
+      })();
+    };
+
+    void Linking.getInitialURL().then((initialUrl) => {
+      if (!initialUrl) return;
+      consumeDeepLink(initialUrl);
+    });
+
     const sub = Linking.addEventListener("url", ({ url }) => {
-      try {
-        const parsed = new URL(url.replace("wisewave://", "https://"));
-        const token = parsed.searchParams.get("token");
-        if (!token) return;
-        void (async () => {
-          await setToken(token);
-          setOauthLoading(null);
-          router.replace("/chat");
-        })();
-      } catch {
-        // Ignore malformed deep links
-      }
+      consumeDeepLink(url);
     });
     return () => sub.remove();
   }, [setToken]);
