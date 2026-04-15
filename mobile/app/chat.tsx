@@ -36,9 +36,13 @@ export default function ChatScreen() {
 
   const handleWebViewMessage = (event: { nativeEvent: { data: string } }) => {
     try {
-      const payload = JSON.parse(event.nativeEvent.data) as { type?: string };
+      const payload = JSON.parse(event.nativeEvent.data) as {
+        type?: string;
+        plan?: "monthly" | "yearly";
+      };
       if (payload?.type === SUBSCRIPTION_MESSAGE_TYPE) {
-        router.push("/subscription");
+        const plan = payload.plan === "yearly" ? "yearly" : "monthly";
+        router.push(`/subscription?plan=${plan}&autostart=1`);
       }
     } catch {
       // ignore non-JSON or unknown messages

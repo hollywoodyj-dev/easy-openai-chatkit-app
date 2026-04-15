@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Alert,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import * as RNIap from "react-native-iap";
 import type { Purchase } from "react-native-iap";
@@ -29,9 +29,11 @@ const IAP_UNAVAILABLE_MSG =
 
 export default function SubscriptionScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ plan?: string; autostart?: string }>();
   const { token } = useAuth();
   const [iapReady, setIapReady] = useState(false);
   const [iapChecking, setIapChecking] = useState(Platform.OS === "android");
+  const autoStartTriggeredRef = useRef(false);
 
   useEffect(() => {
     if (Platform.OS !== "android") {
@@ -238,6 +240,16 @@ export default function SubscriptionScreen() {
       Alert.alert("Error", "Could not open the store.");
     });
   };
+
+  useEffect(() => {
+    if (autoStartTriggeredRef.current) return;
+    if (params.autostart !== "1") return;
+    const plan = params.plan === "yearly" ? "yearly" : "monthly";
+    if (Platform.OS !== "android") return;
+    if (!token || !iapReady) return;
+    autoStartTriggeredRef.current = true;
+    void startGooglePlaySubscription(plan);
+  }, [params.autostart, params.plan, token, iapReady]);
 
   return (
     <View style={styles.container}>

@@ -651,6 +651,10 @@ function ChatContent() {
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams?.get("token")?.trim() || null, [searchParams]);
   const prefill = useMemo(() => searchParams?.get("prefill")?.trim() || "", [searchParams]);
+  const isEmbedMobile = useMemo(
+    () => searchParams?.get("embed")?.trim() === "mobile",
+    [searchParams]
+  );
   const subscribeHref = useMemo(() => {
     if (!token) return "/subscribe";
     return `/subscribe?token=${encodeURIComponent(token)}`;
@@ -1314,11 +1318,13 @@ function ChatContent() {
 
   return (
     <div className="min-h-screen bg-[#F7F5F2] text-[#1F1F1F]">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(200,220,255,0.15),transparent_60%)]" />
-        <div className="absolute left-[8%] top-[12%] h-56 w-56 rounded-full bg-[#7C9082]/10 blur-3xl" />
-        <div className="absolute bottom-[10%] right-[8%] h-72 w-72 rounded-full bg-[#6F8596]/10 blur-3xl" />
-      </div>
+      {!isEmbedMobile ? (
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(200,220,255,0.15),transparent_60%)]" />
+          <div className="absolute left-[8%] top-[12%] h-56 w-56 rounded-full bg-[#7C9082]/10 blur-3xl" />
+          <div className="absolute bottom-[10%] right-[8%] h-72 w-72 rounded-full bg-[#6F8596]/10 blur-3xl" />
+        </div>
+      ) : null}
 
       <Header
         menuOpen={menuOpen}
