@@ -1202,6 +1202,9 @@ function tightenEnglishStyleForTurn(params: {
     [/\ba sign that something is wrong\b/gi, "a signal something feels unsettled"],
     [/\bslipping out of your hands\b/gi, "hard to hold steady"],
     [/\bproof that\b/gi, "a sign that"],
+    [/\bthings are slipping\b/gi, "things feel hard to hold steady"],
+    [/\bsomething must be wrong\b/gi, "something feels unsettled"],
+    [/\bhas to be settled right now\b/gi, "keeps pressing for an answer right away"],
   ];
   for (const [re, replacement] of phraseRewrites) {
     out = out.replace(re, replacement);
@@ -1211,6 +1214,16 @@ function tightenEnglishStyleForTurn(params: {
   out = out.replace(/^It sounds like\s+/i, "");
 
   const weakSignal = isWeakSignalInput(userText) || !!briefNoncommittalTurn;
+  if (weakSignal) {
+    // Extra underclaim safety for low-evidence turns.
+    out = out
+      .replace(/\bmust be\b/gi, "feels")
+      .replace(/\bhas to be\b/gi, "feels")
+      .replace(/\bdefinitely\b/gi, "")
+      .replace(/\bclearly\b/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
   const sentences = splitSentencesForStyleTightening(out);
   if (sentences.length === 0) return out;
   const userTextLen = userText.trim().length;

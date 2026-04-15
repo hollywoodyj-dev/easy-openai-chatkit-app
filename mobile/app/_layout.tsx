@@ -15,6 +15,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ title: "Create account" }} />
         <Stack.Screen name="chat" options={{ title: "Chat", headerBackVisible: true }} />
         <Stack.Screen name="subscription" options={{ title: "Subscribe" }} />
+        <Stack.Screen name="oauth/[provider]" options={{ headerShown: false }} />
       </Stack>
     </AuthProvider>
   );
