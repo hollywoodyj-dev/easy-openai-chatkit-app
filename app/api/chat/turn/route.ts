@@ -1213,6 +1213,7 @@ function tightenEnglishStyleForTurn(params: {
   const weakSignal = isWeakSignalInput(userText) || !!briefNoncommittalTurn;
   const sentences = splitSentencesForStyleTightening(out);
   if (sentences.length === 0) return out;
+  const userTextLen = userText.trim().length;
 
   // For weak/vague user turns, keep a single grounded sentence.
   if (weakSignal) {
@@ -1220,17 +1221,26 @@ function tightenEnglishStyleForTurn(params: {
     return first.length > 180 ? `${first.slice(0, 177).trimEnd()}...` : first;
   }
 
-  // Second-sentence gate: keep sentence two only when it does not add heavy mechanism framing.
+  // Harder sentence-2 gate: default to one sentence unless user evidence is richer and
+  // sentence two stays concrete/non-mechanistic.
   if (sentences.length >= 2) {
+    const first = sentences[0]!;
+    const secondRaw = sentences[1]!;
     const second = sentences[1]!.toLowerCase();
+    const richInput = userTextLen >= 95 || /[,;]| but | though | although | while /i.test(userText);
     const secondTooHeavy =
-      /(because|which means|so that|therefore|this shows|this suggests|underneath|at the core|deeper)/.test(
+      /(because|which means|so that|therefore|this shows|this suggests|underneath|at the core|deeper|pressure|mechanism|consequence|signal)/.test(
         second
       );
-    if (secondTooHeavy) {
-      return sentences[0]!;
+    const secondTooWritten =
+      /(still there|still present|keeps running|keeps shaping|pulls inward|stays active|in the background)/.test(
+        second
+      );
+    const secondTooLong = secondRaw.length > 96;
+    if (!richInput || secondTooHeavy || secondTooWritten || secondTooLong) {
+      return first;
     }
-    return `${sentences[0]} ${sentences[1]}`.trim();
+    return `${first} ${secondRaw}`.trim();
   }
 
   return sentences[0]!;
