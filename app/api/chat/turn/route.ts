@@ -1164,6 +1164,78 @@ function hasCjkContent(text: string): boolean {
   return /[\u4E00-\u9FFF]/.test(text);
 }
 
+function splitSentencesForStyleTightening(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isWeakSignalInput(text: string): boolean {
+  const t = (text || "").trim();
+  if (!t) return true;
+  const lower = t.toLowerCase();
+  const lowEvidence =
+    /\b(i don'?t know|idk|not sure|unsure|maybe|just feel off|feel off|off lately|kinda off)\b/.test(
+      lower
+    ) || /^mm+\.?$/.test(lower) || /^hmm+\.?$/.test(lower);
+  const shortAndVague = t.length <= 72 && !/[?]/.test(t);
+  return lowEvidence || shortAndVague;
+}
+
+function tightenEnglishStyleForTurn(params: {
+  assistantText: string;
+  userText: string;
+  briefNoncommittalTurn?: boolean;
+}): string {
+  const { assistantText, userText, briefNoncommittalTurn } = params;
+  if (!assistantText) return assistantText;
+
+  let out = assistantText.trim();
+
+  // Soften over-dramatic / over-interpretive stock phrases observed in QA failures.
+  const phraseRewrites: Array<[RegExp, string]> = [
+    [/\bloss of control\b/gi, "things feeling hard to settle"],
+    [/\bstarting to feel like a trap\b/gi, "starting to feel stuck"],
+    [/\bfeeding on its own uncertainty\b/gi, "staying stuck in uncertainty"],
+    [/\bearning your place in\b/gi, "keeping up in"],
+    [/\ba sign that something is wrong\b/gi, "a signal something feels unsettled"],
+    [/\bslipping out of your hands\b/gi, "hard to hold steady"],
+    [/\bproof that\b/gi, "a sign that"],
+  ];
+  for (const [re, replacement] of phraseRewrites) {
+    out = out.replace(re, replacement);
+  }
+
+  // Reduce repetitive "It sounds like..." opening pattern.
+  out = out.replace(/^It sounds like\s+/i, "");
+
+  const weakSignal = isWeakSignalInput(userText) || !!briefNoncommittalTurn;
+  const sentences = splitSentencesForStyleTightening(out);
+  if (sentences.length === 0) return out;
+
+  // For weak/vague user turns, keep a single grounded sentence.
+  if (weakSignal) {
+    const first = sentences[0]!;
+    return first.length > 180 ? `${first.slice(0, 177).trimEnd()}...` : first;
+  }
+
+  // Second-sentence gate: keep sentence two only when it does not add heavy mechanism framing.
+  if (sentences.length >= 2) {
+    const second = sentences[1]!.toLowerCase();
+    const secondTooHeavy =
+      /(because|which means|so that|therefore|this shows|this suggests|underneath|at the core|deeper)/.test(
+        second
+      );
+    if (secondTooHeavy) {
+      return sentences[0]!;
+    }
+    return `${sentences[0]} ${sentences[1]}`.trim();
+  }
+
+  return sentences[0]!;
+}
+
 function tryRepairMojibakeToUtf8(text: string): string | null {
   try {
     const repaired = Buffer.from(text, "latin1").toString("utf8");
@@ -1779,6 +1851,12 @@ export async function POST(request: Request) {
       data.choices?.[0]?.message?.content?.trim() ?? "";
     if (assistantContent) {
       assistantContent = normalizeModelTextForStorage(assistantContent);
+    }
+    if (assistantContent && !wantsChinese) {
+      assistantContent = tightenEnglishStyleForTurn({
+        assistantText: assistantContent,
+        userText: message,
+      });
     }
     if (wantsChinese && assistantContent) {
       assistantContent = sanitizeChineseOutputLeaks(assistantContent);
