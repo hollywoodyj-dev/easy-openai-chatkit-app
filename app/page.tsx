@@ -88,14 +88,14 @@ export default function HomePage() {
                 href="/login"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-neutral-900 bg-neutral-900 px-6 text-sm font-medium text-white transition hover:bg-neutral-800"
               >
-                Enter the space
+                Enter Wisewave
               </Link>
 
               <a
                 href="#final-cta"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-neutral-300 bg-white/70 px-6 text-sm font-medium text-neutral-700 transition hover:bg-white hover:text-neutral-900"
               >
-                Start with a prompt
+                See example openings
               </a>
             </div>
 
@@ -127,6 +127,23 @@ export default function HomePage() {
                   Use this opening
                 </Link>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-6 md:py-10">
+          <div className="rounded-[28px] border border-white/70 bg-white/76 p-7 shadow-[0_10px_36px_rgba(20,20,20,0.04)] sm:p-9">
+            <div className="max-w-3xl">
+              <SectionLabel>What you receive</SectionLabel>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-neutral-950 sm:text-4xl">
+                You leave with a little more clarity
+              </h2>
+              <p className="mt-5 text-lg leading-8 text-neutral-700">
+                Wisewave helps inner noise settle enough for you to see what is actually there.
+              </p>
+              <p className="mt-3 text-base leading-8 text-neutral-600">
+                You get space to think, reflect, and understand yourself without being directed.
+              </p>
             </div>
           </div>
         </section>
@@ -275,6 +292,9 @@ export default function HomePage() {
               <p className="mt-7 text-base leading-8 text-neutral-500">
                 If you’re looking for answers, this may not be for you.
               </p>
+              <p className="mt-3 text-sm leading-7 text-neutral-500">
+                Best for reflective users feeling inner noise, not task-driven users seeking instructions.
+              </p>
             </div>
 
             <div className="rounded-[30px] border border-white/70 bg-white/78 p-7 shadow-[0_8px_30px_rgba(20,20,20,0.03)] sm:p-9">
@@ -313,7 +333,7 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
               <Link
-                href="/chat"
+                href="/login"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
               >
                 Enter Wisewave
@@ -328,6 +348,30 @@ export default function HomePage() {
                   {prompt}
                 </Link>
               ))}
+            </div>
+
+            <div className="mt-7 rounded-2xl border border-white/15 bg-white/5 p-5">
+              <p className="text-sm font-medium text-white/90">Trust and account support</p>
+              <div className="mt-3 flex flex-wrap gap-4 text-sm text-white/80">
+                <Link href="/privacy" className="underline underline-offset-4 hover:text-white">
+                  How conversations are handled
+                </Link>
+                <Link href="/account" className="underline underline-offset-4 hover:text-white">
+                  Account and subscription
+                </Link>
+                <Link href="/account" className="underline underline-offset-4 hover:text-white">
+                  Cancellation and expiry details
+                </Link>
+                <a
+                  href="mailto:info@wisewave.io"
+                  className="underline underline-offset-4 hover:text-white"
+                >
+                  Contact support
+                </a>
+              </div>
+              <p className="mt-3 text-xs leading-6 text-white/65">
+                Wisewave is for reflection and clarity. It is not crisis or emergency support.
+              </p>
             </div>
           </div>
         </section>

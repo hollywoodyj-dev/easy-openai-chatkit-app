@@ -3,7 +3,6 @@
  * Internal DB model remains Thread; user-facing concept is Continue.
  */
 
-import { isContinueReentryContinuationUtterance } from "@/lib/wisewave-continue-reentry-turn";
 import { looksUtilitarianOrFactual } from "@/lib/wisewave-milestone-h-micro-awareness";
 
 export const CONTINUE_LIST_MAX = 3;

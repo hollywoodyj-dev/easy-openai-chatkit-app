@@ -12,31 +12,36 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   title: {
-    default: "Wisewave — A Quiet Space for Clear Thinking",
+    default: "Wisewave — A Quiet Space for Reflection and Inner Clarity",
     template: "%s · Wisewave",
   },
   description:
-    "Wisewave is not a chatbot or coaching AI. It reflects your thoughts without giving advice, helping you see clearly without being guided or controlled.",
+    "Wisewave is a reflective AI for overthinking and inner noise. It helps you gain clarity and self-understanding without advice, coaching, or direction.",
   keywords: [
     "self reflection AI",
+    "reflective AI",
+    "overthinking",
+    "inner clarity",
+    "self-understanding",
     "clarity thinking tool",
     "no advice AI",
-    "consciousness reflection",
-    "inner clarity",
+    "not coaching AI",
+    "not advice chatbot",
+    "consciousness reflection"
   ],
   openGraph: {
-    title: "Wisewave — A Quiet Space for Clear Thinking",
+    title: "Wisewave — Reflection Without Advice",
     description:
-      "Not here to give you answers. Wisewave reflects your thoughts without advice, pressure, or direction.",
+      "For reflection, overthinking, and inner clarity. Wisewave helps you see clearly without advice, coaching, or pressure.",
     type: "website",
     url: "https://wisewave.io",
     siteName: "Wisewave",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Wisewave — A Quiet Space for Clear Thinking",
+    title: "Wisewave — Reflection Without Advice",
     description:
-      "Wisewave reflects your thoughts without giving advice, helping you see clearly without being guided or controlled.",
+      "A reflective AI for inner clarity and self-understanding. No coaching, no advice, no pressure.",
   },
   appleWebApp: {
     capable: true,
