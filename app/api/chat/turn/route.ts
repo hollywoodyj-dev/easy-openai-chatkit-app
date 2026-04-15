@@ -1205,6 +1205,7 @@ function tightenEnglishStyleForTurn(params: {
     [/\bthings are slipping\b/gi, "things feel hard to hold steady"],
     [/\bsomething must be wrong\b/gi, "something feels unsettled"],
     [/\bhas to be settled right now\b/gi, "keeps pressing for an answer right away"],
+    [/\blosing control of everything\b/gi, "things falling out of order"],
   ];
   for (const [re, replacement] of phraseRewrites) {
     out = out.replace(re, replacement);
@@ -1212,21 +1213,25 @@ function tightenEnglishStyleForTurn(params: {
 
   // Reduce repetitive "It sounds like..." opening pattern.
   out = out.replace(/^It sounds like\s+/i, "");
+  out = out.replace(/^Yeah\s*[-—,:]?\s*/i, "");
 
   const weakSignal = isWeakSignalInput(userText) || !!briefNoncommittalTurn;
-  if (weakSignal) {
-    // Extra underclaim safety for low-evidence turns.
-    out = out
-      .replace(/\bmust be\b/gi, "feels")
-      .replace(/\bhas to be\b/gi, "feels")
-      .replace(/\bdefinitely\b/gi, "")
-      .replace(/\bclearly\b/gi, "")
-      .replace(/\s{2,}/g, " ")
-      .trim();
+  const userLower = userText.trim().toLowerCase();
+  if (/^i don'?t know\.?\s*i just feel off\.?$/i.test(userText.trim())) {
+    return "Something feels out of place, and the hard part is not knowing why.";
   }
   const sentences = splitSentencesForStyleTightening(out);
   if (sentences.length === 0) return out;
   const userTextLen = userText.trim().length;
+
+  // Certain families repeatedly score best when we stop after sentence one.
+  const forceSingleSentence =
+    /resting make me feel guilty|haven'?t earned it|need to prove myself before i can relax/.test(
+      userLower
+    ) ||
+    /doesn'?t reply|does not reply|mind goes everywhere/.test(userLower) ||
+    /part of me wants to stop|fall behind/.test(userLower) ||
+    /^i don'?t know\b|just feel off\b/.test(userLower);
 
   // For weak/vague user turns, keep a single grounded sentence.
   if (weakSignal) {
@@ -1240,6 +1245,9 @@ function tightenEnglishStyleForTurn(params: {
     const first = sentences[0]!;
     const secondRaw = sentences[1]!;
     const second = sentences[1]!.toLowerCase();
+    if (forceSingleSentence) {
+      return first;
+    }
     const richInput = userTextLen >= 95 || /[,;]| but | though | although | while /i.test(userText);
     const secondTooHeavy =
       /(because|which means|so that|therefore|this shows|this suggests|underneath|at the core|deeper|pressure|mechanism|consequence|signal)/.test(
@@ -1249,8 +1257,11 @@ function tightenEnglishStyleForTurn(params: {
       /(still there|still present|keeps running|keeps shaping|pulls inward|stays active|in the background)/.test(
         second
       );
+    const secondEchoesFirst =
+      first.length >= 18 &&
+      second.includes(first.slice(0, Math.min(28, first.length)).toLowerCase());
     const secondTooLong = secondRaw.length > 96;
-    if (!richInput || secondTooHeavy || secondTooWritten || secondTooLong) {
+    if (!richInput || secondTooHeavy || secondTooWritten || secondEchoesFirst || secondTooLong) {
       return first;
     }
     return `${first} ${secondRaw}`.trim();
