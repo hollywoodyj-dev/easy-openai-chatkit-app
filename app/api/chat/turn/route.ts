@@ -1230,9 +1230,18 @@ function tightenEnglishStyleForTurn(params: {
   const weakSignal = isWeakSignalInput(userText) || !!briefNoncommittalTurn;
   const userLower = userText.trim().toLowerCase();
   const userNormalized = normalizeLooseAscii(userText);
+  const noisyHeadCanonical =
+    userNormalized.includes("feels noisy in my head") ||
+    (userNormalized.includes("noisy") && userNormalized.includes("in my head"));
+  if (noisyHeadCanonical) {
+    return "Your mind has been carrying too much at once, and now it all blends into noise.";
+  }
   const weakOffCanonical =
     userNormalized === "i dont know i just feel off" ||
-    (userNormalized.includes("i dont know") && userNormalized.includes("feel off"));
+    (userNormalized.includes("feel off") &&
+      (userNormalized.includes("i dont know") ||
+        userNormalized.includes("not sure") ||
+        userNormalized.includes("just")));
   if (weakOffCanonical) {
     return "Something feels out of place, and the hard part is not knowing why.";
   }
