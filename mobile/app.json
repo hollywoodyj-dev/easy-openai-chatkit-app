@@ -18,7 +18,10 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.wisewave.chatkit"
+      "bundleIdentifier": "com.wisewave.chatkit",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "extra": {
       "router": {},
