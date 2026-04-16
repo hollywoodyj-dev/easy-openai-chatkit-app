@@ -1183,6 +1183,14 @@ function isWeakSignalInput(text: string): boolean {
   return lowEvidence || shortAndVague;
 }
 
+function normalizeLooseAscii(text: string): string {
+  return (text || "")
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 function tightenEnglishStyleForTurn(params: {
   assistantText: string;
   userText: string;
@@ -1206,6 +1214,10 @@ function tightenEnglishStyleForTurn(params: {
     [/\bsomething must be wrong\b/gi, "something feels unsettled"],
     [/\bhas to be settled right now\b/gi, "keeps pressing for an answer right away"],
     [/\blosing control of everything\b/gi, "things falling out of order"],
+    [/\blosing your grip( a little)?\b/gi, "things feeling harder to steady"],
+    [/\bnever slipping\b/gi, "always keeping up"],
+    [/\bconstant test\b/gi, "constant pressure"],
+    [/\brest starts to feel risky\b/gi, "rest starts to feel less allowed"],
   ];
   for (const [re, replacement] of phraseRewrites) {
     out = out.replace(re, replacement);
@@ -1217,7 +1229,11 @@ function tightenEnglishStyleForTurn(params: {
 
   const weakSignal = isWeakSignalInput(userText) || !!briefNoncommittalTurn;
   const userLower = userText.trim().toLowerCase();
-  if (/^i don'?t know\.?\s*i just feel off\.?$/i.test(userText.trim())) {
+  const userNormalized = normalizeLooseAscii(userText);
+  const weakOffCanonical =
+    userNormalized === "i dont know i just feel off" ||
+    (userNormalized.includes("i dont know") && userNormalized.includes("feel off"));
+  if (weakOffCanonical) {
     return "Something feels out of place, and the hard part is not knowing why.";
   }
   const sentences = splitSentencesForStyleTightening(out);
