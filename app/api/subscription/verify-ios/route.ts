@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 type VerifyReceiptBody = {
   "receipt-data": string;
-  password: string;
+  password?: string;
   "exclude-old-transactions"?: boolean;
 };
 
