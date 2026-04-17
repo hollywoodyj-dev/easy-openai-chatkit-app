@@ -4,21 +4,17 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Linking,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import * as RNIap from "react-native-iap";
-import type { Purchase } from "react-native-iap";
 import { API_BASE_URL } from "../config";
 
 const MONTHLY_PRICE = 29;
 const YEARLY_PRICE = 299;
-
-const PLAY_STORE_APP_URL = "https://play.google.com/store/apps/details?id=com.wisewave.chat";
-const APP_STORE_APP_URL = "https://apps.apple.com/app/wisewave-chat/id"; // Replace with your App Store ID
 
 const IAP_UNAVAILABLE_MSG =
   "Google Play Billing couldn't be loaded. Please ensure:\n\n" +
@@ -27,26 +23,103 @@ const IAP_UNAVAILABLE_MSG =
   "• You have the latest app version\n\n" +
   "Try reinstalling from the internal test page if the problem persists.";
 
+// Must match product IDs in each store console (Play vs App Store Connect).
+const GOOGLE_PLAY_PRODUCT_IDS = {
+  monthly: "wisewave_monthly",
+  yearly: "wisewave_yearly",
+} as const;
+
+const APP_STORE_PRODUCT_IDS = {
+  monthly: "wisewave_ios_monthly",
+  yearly: "wisewave_ios_yearly",
+} as const;
+
+const IOS_RECEIPT_RETRY_DELAYS_MS = [0, 700, 1200, 1800, 2500];
+
+function storeSubscriptionProductId(plan: "monthly" | "yearly"): string {
+  if (Platform.OS === "ios") {
+    return plan === "monthly"
+      ? APP_STORE_PRODUCT_IDS.monthly
+      : APP_STORE_PRODUCT_IDS.yearly;
+  }
+  return plan === "monthly"
+    ? GOOGLE_PLAY_PRODUCT_IDS.monthly
+    : GOOGLE_PLAY_PRODUCT_IDS.yearly;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getIosReceiptWithRetry(productId: string, purchase: unknown): Promise<string | undefined> {
+  const purchaseAny = purchase as
+    | {
+        transactionReceipt?: string;
+        receipt?: string;
+        originalTransactionReceipt?: string;
+      }
+    | undefined;
+
+  const directReceipt =
+    purchaseAny?.transactionReceipt ??
+    purchaseAny?.receipt ??
+    purchaseAny?.originalTransactionReceipt;
+  if (directReceipt) return directReceipt;
+
+  for (const waitMs of IOS_RECEIPT_RETRY_DELAYS_MS) {
+    if (waitMs > 0) {
+      await sleep(waitMs);
+    }
+
+    try {
+      const receipt = await RNIap.getReceiptIOS();
+      if (receipt) {
+        return receipt;
+      }
+    } catch {
+      // Keep retrying; receipt may still be propagating.
+    }
+
+    try {
+      const available = await RNIap.getAvailablePurchases();
+      const matching = available.find(
+        (p: any) => (p?.productId ?? p?.id ?? p?.sku) === productId
+      );
+      const fallback =
+        matching?.transactionReceipt ??
+        matching?.receipt ??
+        matching?.originalTransactionReceipt ??
+        available.find((p: any) => p?.transactionReceipt || p?.receipt)
+          ?.transactionReceipt ??
+        available.find((p: any) => p?.transactionReceipt || p?.receipt)?.receipt;
+      if (fallback) {
+        return fallback;
+      }
+    } catch {
+      // Ignore temporary receipt query errors and continue retries.
+    }
+  }
+
+  return undefined;
+}
+
 export default function SubscriptionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ plan?: string; autostart?: string }>();
   const { token } = useAuth();
   const [iapReady, setIapReady] = useState(false);
-  const [iapChecking, setIapChecking] = useState(Platform.OS === "android");
+  const [processingPlan, setProcessingPlan] = useState<"monthly" | "yearly" | "restore" | null>(null);
   const autoStartTriggeredRef = useRef(false);
 
   useEffect(() => {
-    if (Platform.OS !== "android") {
-      setIapChecking(false);
-      return;
-    }
-
     (async () => {
       try {
         await RNIap.initConnection();
-        // Clear any failed purchases from cache on Android
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (RNIap as any).flushFailedPurchasesCachedAsPendingAndroid?.();
+        // Clear any failed purchases from cache on Android only
+        if (Platform.OS === "android") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (RNIap as any).flushFailedPurchasesCachedAsPendingAndroid?.();
+        }
         const hasFetchProducts = typeof RNIap.fetchProducts === "function";
         const hasRequestPurchase = typeof RNIap.requestPurchase === "function";
         setIapReady(hasFetchProducts && hasRequestPurchase);
@@ -54,14 +127,12 @@ export default function SubscriptionScreen() {
         // eslint-disable-next-line no-console
         console.warn("IAP init error", e);
       } finally {
-        setIapChecking(false);
+        // `iapReady` is the actual purchase gate.
       }
     })();
 
     return () => {
-      if (Platform.OS === "android") {
-        RNIap.endConnection();
-      }
+      RNIap.endConnection();
     };
   }, []);
 
@@ -85,8 +156,10 @@ export default function SubscriptionScreen() {
       return;
     }
 
-    // Google Play product IDs (must match Play Console)
-    const productId = plan === "monthly" ? "wisewave_monthly" : "wisewave_yearly";
+    if (processingPlan) return;
+
+    const productId = storeSubscriptionProductId(plan);
+    setProcessingPlan(plan);
 
     try {
       // react-native-iap v14: use fetchProducts + requestPurchase (no getSubscriptions/requestSubscription)
@@ -226,6 +299,148 @@ export default function SubscriptionScreen() {
         "Error",
         "Could not start Google Play subscription. Please try again."
       );
+    } finally {
+      setProcessingPlan(null);
+    }
+  };
+
+  const startAppleSubscription = async (plan: "monthly" | "yearly") => {
+    if (!token) {
+      Alert.alert("Sign in required", "Please sign in first.");
+      router.replace("/login");
+      return;
+    }
+
+    if (Platform.OS !== "ios") {
+      Alert.alert("Not available", "Apple subscriptions are only available on iOS.");
+      return;
+    }
+
+    if (!iapReady) {
+      Alert.alert("Not available", "In-app purchases are not ready yet. Please try again.");
+      return;
+    }
+
+    if (processingPlan) return;
+
+    const productId = storeSubscriptionProductId(plan);
+    setProcessingPlan(plan);
+
+    try {
+      // Ensure the SKU exists in App Store Connect before attempting purchase.
+      let subs: unknown[] = [];
+      try {
+        const raw = await RNIap.fetchProducts({
+          skus: [productId],
+          type: "subs",
+        });
+        subs = Array.isArray(raw) ? raw : [];
+      } catch (fetchErr) {
+        const errMsg =
+          fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        // eslint-disable-next-line no-console
+        console.warn("fetchProducts (iOS) error", errMsg, fetchErr);
+        Alert.alert(
+          "Error",
+          "Could not load subscription products from the App Store. Check the product ID and App Store Connect status, then try again."
+        );
+        return;
+      }
+
+      const found = subs.some(
+        (p: any) => (p?.productId ?? p?.id ?? p?.sku) === productId
+      );
+      if (!found) {
+        Alert.alert(
+          "Error",
+          `This subscription is not available from the App Store yet (SKU: ${productId}). In App Store Connect, finish subscription metadata and wait for processing, then try again.`
+        );
+        return;
+      }
+
+      // react-native-iap v15: requestPurchase resolves to Purchase | Purchase[] | null (event listeners optional).
+      const unsubErr = RNIap.purchaseErrorListener((err) => {
+        // eslint-disable-next-line no-console
+        console.warn("Apple purchase error listener", err);
+      });
+
+      let result: unknown;
+      try {
+        result = await RNIap.requestPurchase({
+          request: { apple: { sku: productId } },
+          type: "subs",
+        });
+      } finally {
+        unsubErr.remove();
+      }
+
+      if (result == null) {
+        // User cancelled / no purchase to return.
+        return;
+      }
+
+      const purchase = Array.isArray(result) ? result[0] : result;
+      const receiptData = await getIosReceiptWithRetry(productId, purchase);
+
+      if (!receiptData) {
+        Alert.alert(
+          "Error",
+          "Purchase completed, but receipt sync is still pending. Please wait a few seconds and try again."
+        );
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/subscription/verify-ios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          receiptData,
+          subscriptionId: productId,
+          bundleId: "com.wisewave.chatkit",
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) {
+        try {
+          // Mark as finished so StoreKit does not keep replaying this purchase event.
+          await RNIap.finishTransaction({ purchase: purchase as any, isConsumable: false });
+        } catch (finishErr) {
+          // eslint-disable-next-line no-console
+          console.warn("finishTransaction (iOS) warning", finishErr);
+        }
+        Alert.alert("Success", "Subscription activated.");
+        router.replace("/chat");
+      } else {
+        const serverError =
+          (json as { error?: string; message?: string }).error ??
+          (json as { error?: string; message?: string }).message;
+        const appleStatus =
+          typeof (json as { appleStatus?: unknown }).appleStatus === "number"
+            ? ` (apple status ${(json as { appleStatus: number }).appleStatus})`
+            : "";
+        Alert.alert(
+          "Error",
+          serverError
+            ? `${serverError}${appleStatus}`
+            : `Could not activate subscription (HTTP ${res.status}).`
+        );
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("Apple subscription error", e);
+      const msg =
+        e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string"
+          ? (e as { message: string }).message
+          : e instanceof Error
+            ? e.message
+            : "Could not start Apple subscription. Please try again.";
+      Alert.alert("Error", msg);
+    } finally {
+      setProcessingPlan(null);
     }
   };
 
@@ -234,21 +449,122 @@ export default function SubscriptionScreen() {
       await startGooglePlaySubscription(plan);
       return;
     }
+    await startAppleSubscription(plan);
+  };
 
-    const url = APP_STORE_APP_URL;
-    Linking.openURL(url).catch(() => {
-      Alert.alert("Error", "Could not open the store.");
-    });
+  const restoreAppleSubscription = async () => {
+    if (Platform.OS !== "ios") {
+      Alert.alert("Not available", "Restore is only available on iOS.");
+      return;
+    }
+
+    if (!token) {
+      Alert.alert("Sign in required", "Please sign in first.");
+      router.replace("/login");
+      return;
+    }
+
+    if (!iapReady) {
+      Alert.alert("Not available", "In-app purchases are not ready yet. Please try again.");
+      return;
+    }
+
+    if (processingPlan) return;
+    setProcessingPlan("restore");
+
+    try {
+      const available = await RNIap.getAvailablePurchases();
+      if (!Array.isArray(available) || available.length === 0) {
+        Alert.alert("No purchases found", "No App Store subscription receipt was found for this account.");
+        return;
+      }
+
+      const activeIds = new Set<string>([
+        APP_STORE_PRODUCT_IDS.monthly,
+        APP_STORE_PRODUCT_IDS.yearly,
+      ]);
+      const matching = available.filter((p: any) =>
+        activeIds.has(String(p?.productId ?? p?.id ?? p?.sku ?? ""))
+      );
+
+      const candidates = matching.length > 0 ? matching : available;
+      const latestPurchase = [...candidates].sort((a: any, b: any) => {
+        const ta = Number(a?.transactionDate ?? a?.purchaseTime ?? 0);
+        const tb = Number(b?.transactionDate ?? b?.purchaseTime ?? 0);
+        return tb - ta;
+      })[0];
+
+      const productId =
+        String(latestPurchase?.productId ?? latestPurchase?.id ?? latestPurchase?.sku ?? "") ||
+        APP_STORE_PRODUCT_IDS.monthly;
+
+      const receiptData = await getIosReceiptWithRetry(productId, latestPurchase);
+      if (!receiptData) {
+        Alert.alert("Error", "No receipt data was available to restore yet. Please try again in a moment.");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/subscription/verify-ios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          receiptData,
+          subscriptionId: productId,
+          bundleId: "com.wisewave.chatkit",
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const serverError =
+          (json as { error?: string; message?: string }).error ??
+          (json as { error?: string; message?: string }).message;
+        Alert.alert(
+          "Restore failed",
+          serverError ?? `Could not restore subscription (HTTP ${res.status}).`
+        );
+        return;
+      }
+
+      try {
+        await RNIap.finishTransaction({ purchase: latestPurchase as any, isConsumable: false });
+      } catch {
+        // Ignore if already finished.
+      }
+
+      Alert.alert("Restored", "Subscription restored successfully.");
+      router.replace("/chat");
+    } catch (e) {
+      const msg =
+        e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string"
+          ? (e as { message: string }).message
+          : e instanceof Error
+            ? e.message
+            : "Could not restore subscription. Please try again.";
+      Alert.alert("Restore failed", msg);
+    } finally {
+      setProcessingPlan(null);
+    }
   };
 
   useEffect(() => {
     if (autoStartTriggeredRef.current) return;
     if (params.autostart !== "1") return;
     const plan = params.plan === "yearly" ? "yearly" : "monthly";
-    if (Platform.OS !== "android") return;
     if (!token || !iapReady) return;
     autoStartTriggeredRef.current = true;
-    void startGooglePlaySubscription(plan);
+    void (async () => {
+      if (Platform.OS === "android") {
+        await startGooglePlaySubscription(plan);
+        return;
+      }
+      if (Platform.OS === "ios") {
+        await startAppleSubscription(plan);
+      }
+    })();
   }, [params.autostart, params.plan, token, iapReady]);
 
   return (
@@ -263,14 +579,22 @@ export default function SubscriptionScreen() {
         <Text style={styles.price}>${MONTHLY_PRICE}</Text>
         <Text style={styles.interval}>per month</Text>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, processingPlan === "monthly" && styles.buttonDisabled]}
+          disabled={processingPlan !== null}
           onPress={() => openStore("monthly")}
         >
-          <Text style={styles.buttonText}>
-            {Platform.OS === "android"
-              ? "Subscribe with Google Play"
-              : "Subscribe with Apple"}
-          </Text>
+          {processingPlan === "monthly" ? (
+            <View style={styles.processingRow}>
+              <ActivityIndicator size="small" color="#ffffff" />
+              <Text style={styles.buttonText}>Verifying purchase...</Text>
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>
+              {Platform.OS === "android"
+                ? "Subscribe with Google Play"
+                : "Subscribe with Apple"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -282,23 +606,45 @@ export default function SubscriptionScreen() {
         <Text style={styles.price}>${YEARLY_PRICE}</Text>
         <Text style={styles.interval}>per year</Text>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, processingPlan === "yearly" && styles.buttonDisabled]}
+          disabled={processingPlan !== null}
           onPress={() => openStore("yearly")}
         >
-          <Text style={styles.buttonText}>
-            {Platform.OS === "android"
-              ? "Subscribe with Google Play"
-              : "Subscribe with Apple"}
-          </Text>
+          {processingPlan === "yearly" ? (
+            <View style={styles.processingRow}>
+              <ActivityIndicator size="small" color="#ffffff" />
+              <Text style={styles.buttonText}>Verifying purchase...</Text>
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>
+              {Platform.OS === "android"
+                ? "Subscribe with Google Play"
+                : "Subscribe with Apple"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
         style={styles.secondaryButton}
+        disabled={processingPlan !== null}
         onPress={() => router.back()}
       >
         <Text style={styles.secondaryButtonText}>Back to chat</Text>
       </TouchableOpacity>
+      {Platform.OS === "ios" && token && (
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          disabled={processingPlan !== null}
+          onPress={() => {
+            void restoreAppleSubscription();
+          }}
+        >
+          <Text style={styles.secondaryButtonText}>
+            {processingPlan === "restore" ? "Restoring purchase..." : "Restore purchase"}
+          </Text>
+        </TouchableOpacity>
+      )}
       {!token && (
         <TouchableOpacity
           style={styles.link}
@@ -379,6 +725,14 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.85,
+  },
+  processingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   buttonText: {
     color: "#fff",

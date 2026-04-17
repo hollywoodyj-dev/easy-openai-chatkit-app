@@ -2,31 +2,25 @@ import { useLayoutEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getEmbedMobileUrl } from "../config";
 import { WebView } from "react-native-webview";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Redirect, useRouter, useNavigation } from "expo-router";
+import { HeaderSignOut } from "../components/HeaderSignOut";
 
 const SUBSCRIPTION_MESSAGE_TYPE = "open_subscription";
 
 export default function ChatScreen() {
-  const { token, signOut } = useAuth();
+  const { token } = useAuth();
   const router = useRouter();
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={async () => {
-            await signOut();
-            router.replace("/login");
-          }}
-          style={{ marginRight: 12 }}
-        >
-          <Text style={{ color: "#0f172a", fontSize: 16 }}>Sign out</Text>
-        </TouchableOpacity>
-      ),
+      headerRight: () => <HeaderSignOut />,
+      headerRightContainerStyle: {
+        backgroundColor: "transparent",
+      },
     });
-  }, [navigation, signOut, router]);
+  }, [navigation]);
 
   if (!token) {
     return <Redirect href="/login" />;
