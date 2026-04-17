@@ -81,6 +81,19 @@ async function verifyAppleReceipt(params: {
   return json;
 }
 
+function getAppleSharedSecrets(): string[] {
+  const candidates = [
+    process.env.APPLE_SHARED_SECRET,
+    process.env.APPLE_APP_SPECIFIC_SHARED_SECRET,
+  ]
+    .filter((v): v is string => typeof v === "string")
+    .flatMap((v) => v.split(","))
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+
+  return Array.from(new Set(candidates));
+}
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get("authorization") ?? "";
@@ -111,12 +124,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "subscriptionId is required" }, { status: 400 });
     }
 
-    const sharedSecret = process.env.APPLE_SHARED_SECRET;
-    if (!sharedSecret) {
+    const sharedSecrets = getAppleSharedSecrets();
+    if (sharedSecrets.length === 0) {
       return NextResponse.json(
         {
           error: "Apple receipt verification not configured",
-          message: "Set APPLE_SHARED_SECRET in Vercel. (Receipt verification endpoint requires it.)",
+          message:
+            "Set APPLE_SHARED_SECRET in Vercel. Optionally also APPLE_APP_SPECIFIC_SHARED_SECRET.",
         },
         { status: 501 }
       );
@@ -127,20 +141,27 @@ export async function POST(request: Request) {
       // Bundle field kept for future stricter validation.
     }
 
-    const productionRes = await verifyAppleReceipt({
-      receiptData,
-      sharedSecret,
-      isSandboxAttempt: false,
-    });
-
-    const status = productionRes.status ?? null;
-    let receiptRes: AppleReceiptResponse = productionRes;
-    if (status === 21007) {
-      receiptRes = await verifyAppleReceipt({
+    let receiptRes: AppleReceiptResponse = { status: 1 };
+    for (const sharedSecret of sharedSecrets) {
+      const productionRes = await verifyAppleReceipt({
         receiptData,
         sharedSecret,
-        isSandboxAttempt: true,
+        isSandboxAttempt: false,
       });
+
+      let candidate: AppleReceiptResponse = productionRes;
+      if ((productionRes.status ?? null) === 21007) {
+        candidate = await verifyAppleReceipt({
+          receiptData,
+          sharedSecret,
+          isSandboxAttempt: true,
+        });
+      }
+
+      receiptRes = candidate;
+      if ((candidate.status ?? 1) === 0) break;
+      // 21004 means wrong secret; continue trying other configured candidates.
+      if ((candidate.status ?? 1) !== 21004) break;
     }
 
     if ((receiptRes.status ?? 1) !== 0) {
