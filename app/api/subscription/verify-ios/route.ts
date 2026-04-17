@@ -57,7 +57,7 @@ function parseMsDate(ms: unknown): Date | null {
 
 async function verifyAppleReceipt(params: {
   receiptData: string;
-  sharedSecret: string;
+  sharedSecret?: string;
   isSandboxAttempt?: boolean;
 }): Promise<AppleReceiptResponse> {
   const { receiptData, sharedSecret, isSandboxAttempt } = params;
@@ -67,9 +67,11 @@ async function verifyAppleReceipt(params: {
 
   const payload: VerifyReceiptBody = {
     "receipt-data": receiptData,
-    password: sharedSecret,
     "exclude-old-transactions": true,
   };
+  if (sharedSecret && sharedSecret.trim().length > 0) {
+    payload.password = sharedSecret.trim();
+  }
 
   const res = await fetch(verifyUrl, {
     method: "POST",
@@ -162,6 +164,22 @@ export async function POST(request: Request) {
       if ((candidate.status ?? 1) === 0) break;
       // 21004 means wrong secret; continue trying other configured candidates.
       if ((candidate.status ?? 1) !== 21004) break;
+    }
+
+    // Fallback: in some TestFlight/sandbox states, password validation can fail even
+    // though the receipt itself is valid. Retry once without password and inspect records.
+    if ((receiptRes.status ?? 1) === 21004) {
+      const prodNoSecret = await verifyAppleReceipt({
+        receiptData,
+        isSandboxAttempt: false,
+      });
+      receiptRes =
+        (prodNoSecret.status ?? null) === 21007
+          ? await verifyAppleReceipt({
+              receiptData,
+              isSandboxAttempt: true,
+            })
+          : prodNoSecret;
     }
 
     if ((receiptRes.status ?? 1) !== 0) {
