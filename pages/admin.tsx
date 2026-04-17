@@ -57,6 +57,7 @@ const AdminPage: NextPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
+  const [clearingUserId, setClearingUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
 
@@ -224,6 +225,62 @@ const AdminPage: NextPage = () => {
     }
   };
 
+  const handleClearStoreRef = async (user: AdminUser) => {
+    if (!token) {
+      setError("Missing token. Please log in again.");
+      return;
+    }
+    const ref = user.subscription?.externalSubscriptionId?.trim();
+    if (!ref) return;
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Clear Store ref for ${user.email}?\n\nThis removes the Apple purchase link from this row so another Wisewave account can verify the same Apple subscription. Only clear rows that should NOT own this Apple sub.`
+      )
+    ) {
+      return;
+    }
+
+    setClearingUserId(user.id);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/clear-subscription-store-ref`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError((data.error as string) || "Failed to clear Store ref");
+        return;
+      }
+      const updated = data.subscription as {
+        externalSubscriptionId: string | null;
+      };
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === user.id && u.subscription
+            ? {
+                ...u,
+                subscription: {
+                  ...u.subscription,
+                  externalSubscriptionId: updated.externalSubscriptionId ?? null,
+                },
+              }
+            : u
+        )
+      );
+    } catch {
+      setError("Network error while clearing Store ref");
+    } finally {
+      setClearingUserId(null);
+    }
+  };
+
   if (!token) {
     return (
       <main style={styles.container}>
@@ -301,8 +358,8 @@ const AdminPage: NextPage = () => {
             <strong>Duplicate Store ref on app_store:</strong>{" "}
             {duplicateAppStoreRefs.size} value(s) appear on more than one user.
             Rows with a highlighted Store ref share the same Apple subscription
-            identity. Clean up by marking the wrong rows expired and clearing
-            their Store ref in the database, or leave one active account only.
+            identity.             Use <strong>Clear ref</strong> on rows that should not own this Apple
+            subscription, then the intended account can use Restore purchase again.
           </p>
         )}
         {error && <p style={styles.error}>{error}</p>}
@@ -435,28 +492,48 @@ const AdminPage: NextPage = () => {
                         />
                       </td>
                       <td style={styles.td}>
-                        <form
-                          onSubmit={(e) =>
-                            handleSave(
-                              e,
-                              user,
-                              (user.subscription?.status ??
-                                defaultStatus) as SubscriptionStatus,
-                              (user.subscription?.currentPeriodEnd ??
-                                defaultDate) as string
-                            )
-                          }
-                        >
-                          <button
-                            type="submit"
-                            disabled={savingUserId === user.id}
-                            style={styles.button}
+                        <div style={styles.actionsCol}>
+                          <form
+                            onSubmit={(e) =>
+                              handleSave(
+                                e,
+                                user,
+                                (user.subscription?.status ??
+                                  defaultStatus) as SubscriptionStatus,
+                                (user.subscription?.currentPeriodEnd ??
+                                  defaultDate) as string
+                              )
+                            }
                           >
-                            {savingUserId === user.id
-                              ? "Saving…"
-                              : "Save"}
-                          </button>
-                        </form>
+                            <button
+                              type="submit"
+                              disabled={
+                                savingUserId === user.id ||
+                                clearingUserId === user.id
+                              }
+                              style={styles.button}
+                            >
+                              {savingUserId === user.id
+                                ? "Saving…"
+                                : "Save"}
+                            </button>
+                          </form>
+                          {sub?.externalSubscriptionId ? (
+                            <button
+                              type="button"
+                              disabled={
+                                savingUserId === user.id ||
+                                clearingUserId === user.id
+                              }
+                              style={styles.buttonSecondary}
+                              onClick={() => void handleClearStoreRef(user)}
+                            >
+                              {clearingUserId === user.id
+                                ? "Clearing…"
+                                : "Clear ref"}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -571,12 +648,27 @@ const styles = {
     padding: "1px 4px",
     borderRadius: 4,
   },
+  actionsCol: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 6,
+    alignItems: "flex-start" as const,
+  },
   button: {
     padding: "6px 10px",
     borderRadius: 999,
     border: "none",
     background: "#2B6CB0",
     color: "#FFFFFF",
+    cursor: "pointer",
+    fontSize: 12,
+  },
+  buttonSecondary: {
+    padding: "6px 10px",
+    borderRadius: 999,
+    border: "1px solid #C05621",
+    background: "#FFFFFF",
+    color: "#C05621",
     cursor: "pointer",
     fontSize: 12,
   },

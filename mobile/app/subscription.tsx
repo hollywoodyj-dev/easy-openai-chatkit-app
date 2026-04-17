@@ -36,6 +36,29 @@ const APP_STORE_PRODUCT_IDS = {
 
 const IOS_RECEIPT_RETRY_DELAYS_MS = [0, 700, 1200, 1800, 2500];
 
+function formatIosVerifyFailureMessage(
+  res: Response,
+  json: Record<string, unknown>
+): string {
+  const serverError =
+    (typeof json.error === "string" && json.error) ||
+    (typeof json.message === "string" && json.message) ||
+    "";
+  const appleStatus =
+    typeof json.appleStatus === "number"
+      ? ` (apple status ${json.appleStatus})`
+      : "";
+  if (res.status === 409 && json.code === "subscription_account_mismatch") {
+    const base =
+      serverError ||
+      "This Apple subscription is already linked to another Wisewave account.";
+    return `${base}\n\nAsk your steward to open the admin page, use Clear ref on Wisewave rows that should not own this Apple subscription, then tap Restore purchase here again.`;
+  }
+  return serverError
+    ? `${serverError}${appleStatus}`
+    : `Could not verify subscription with the server (HTTP ${res.status}).`;
+}
+
 function storeSubscriptionProductId(plan: "monthly" | "yearly"): string {
   if (Platform.OS === "ios") {
     return plan === "monthly"
@@ -409,7 +432,7 @@ export default function SubscriptionScreen() {
         }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (res.ok) {
         try {
           // Mark as finished so StoreKit does not keep replaying this purchase event.
@@ -421,19 +444,7 @@ export default function SubscriptionScreen() {
         Alert.alert("Success", "Subscription activated.");
         router.replace("/chat");
       } else {
-        const serverError =
-          (json as { error?: string; message?: string }).error ??
-          (json as { error?: string; message?: string }).message;
-        const appleStatus =
-          typeof (json as { appleStatus?: unknown }).appleStatus === "number"
-            ? ` (apple status ${(json as { appleStatus: number }).appleStatus})`
-            : "";
-        Alert.alert(
-          "Error",
-          serverError
-            ? `${serverError}${appleStatus}`
-            : `Could not activate subscription (HTTP ${res.status}).`
-        );
+        Alert.alert("Error", formatIosVerifyFailureMessage(res, json));
       }
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -541,15 +552,12 @@ export default function SubscriptionScreen() {
           bundleId: "com.wisewave.chatkit",
         }),
       });
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
       if (!res.ok) {
-        const serverError =
-          (json as { error?: string; message?: string }).error ??
-          (json as { error?: string; message?: string }).message;
         Alert.alert(
           "Restore failed",
-          serverError ?? `Could not restore subscription (HTTP ${res.status}).`
+          formatIosVerifyFailureMessage(res, json)
         );
         return;
       }
