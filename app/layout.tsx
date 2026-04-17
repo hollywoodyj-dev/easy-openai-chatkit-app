@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.wisewave.io"),
   applicationName: "Wisewave",
   icons: {
     icon: [
@@ -12,36 +13,32 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   title: {
-    default: "Wisewave — A Quiet Space for Reflection and Inner Clarity",
+    default: "Wisewave — A quieter space for reflection",
     template: "%s · Wisewave",
   },
   description:
-    "Wisewave is a reflective AI for overthinking and inner noise. It helps you gain clarity and self-understanding without advice, coaching, or direction.",
+    "Wisewave is a low-presence reflection space. Not here to give answers, advice, or coaching — it leaves more room for reflection.",
   keywords: [
-    "self reflection AI",
-    "reflective AI",
-    "overthinking",
-    "inner clarity",
-    "self-understanding",
-    "clarity thinking tool",
-    "no advice AI",
-    "not coaching AI",
-    "not advice chatbot",
-    "consciousness reflection"
+    "reflection space",
+    "low-presence AI",
+    "non-directive reflection",
+    "not an AI assistant",
+    "quiet reflection",
+    "Wisewave",
   ],
   openGraph: {
-    title: "Wisewave — Reflection Without Advice",
+    title: "Wisewave — A quieter space for reflection",
     description:
-      "For reflection, overthinking, and inner clarity. Wisewave helps you see clearly without advice, coaching, or pressure.",
+      "A low-presence reflection space. Not advice, not coaching, not therapy.",
     type: "website",
-    url: "https://wisewave.io",
+    url: "https://www.wisewave.io",
     siteName: "Wisewave",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Wisewave — Reflection Without Advice",
+    title: "Wisewave — A quieter space for reflection",
     description:
-      "A reflective AI for inner clarity and self-understanding. No coaching, no advice, no pressure.",
+      "A low-presence reflection space. Not advice, not coaching, not therapy.",
   },
   appleWebApp: {
     capable: true,
