@@ -230,9 +230,17 @@ export async function POST(request: Request) {
     });
 
     const inferredPlan = inferPlanFromProductId(productIdFromReceipt);
+    const originalTransactionId =
+      typeof record.original_transaction_id === "string"
+        ? record.original_transaction_id
+        : null;
+    const transactionId =
+      typeof record.transaction_id === "string"
+        ? record.transaction_id
+        : null;
     const externalSubscriptionId =
-      (typeof record.original_transaction_id === "string" && record.original_transaction_id) ||
-      (typeof record.transaction_id === "string" && record.transaction_id) ||
+      originalTransactionId ||
+      transactionId ||
       subscriptionId;
 
     const user = await prisma.user.findUnique({
@@ -243,6 +251,29 @@ export async function POST(request: Request) {
     });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
+    }
+
+    // Ownership guard: do not allow one Apple subscription to silently activate
+    // a different Wisewave account. Prefer original_transaction_id for stability.
+    const ownershipKey = originalTransactionId || transactionId;
+    if (ownershipKey) {
+      const existingOwner = await prisma.subscription.findFirst({
+        where: {
+          platform: "app_store",
+          externalSubscriptionId: ownershipKey,
+          userId: { not: user.id },
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+      if (existingOwner) {
+        return NextResponse.json(
+          {
+            error: "This Apple subscription is already linked to another Wisewave account.",
+            code: "subscription_account_mismatch",
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const data = {
