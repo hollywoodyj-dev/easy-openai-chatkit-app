@@ -66,7 +66,26 @@ async function getIosReceiptWithRetry(productId: string, purchase: unknown): Pro
     purchaseAny?.originalTransactionReceipt;
   if (directReceipt) return directReceipt;
 
-  for (const waitMs of IOS_RECEIPT_RETRY_DELAYS_MS) {
+  // Prefer app receipt only on most retries. `getAvailablePurchases()` can trigger
+  // repeated Apple ID / Face ID prompts on iOS; call it at most once at the end.
+  const tryAvailablePurchasesOnce = async (): Promise<string | undefined> => {
+    try {
+      const available = await RNIap.getAvailablePurchases();
+      const matching = available.find(
+        (p: any) => (p?.productId ?? p?.id ?? p?.sku) === productId
+      );
+      return (
+        matching?.transactionReceipt ??
+        matching?.receipt ??
+        matching?.originalTransactionReceipt
+      );
+    } catch {
+      return undefined;
+    }
+  };
+
+  for (let i = 0; i < IOS_RECEIPT_RETRY_DELAYS_MS.length; i++) {
+    const waitMs = IOS_RECEIPT_RETRY_DELAYS_MS[i];
     if (waitMs > 0) {
       await sleep(waitMs);
     }
@@ -80,23 +99,10 @@ async function getIosReceiptWithRetry(productId: string, purchase: unknown): Pro
       // Keep retrying; receipt may still be propagating.
     }
 
-    try {
-      const available = await RNIap.getAvailablePurchases();
-      const matching = available.find(
-        (p: any) => (p?.productId ?? p?.id ?? p?.sku) === productId
-      );
-      const fallback =
-        matching?.transactionReceipt ??
-        matching?.receipt ??
-        matching?.originalTransactionReceipt ??
-        available.find((p: any) => p?.transactionReceipt || p?.receipt)
-          ?.transactionReceipt ??
-        available.find((p: any) => p?.transactionReceipt || p?.receipt)?.receipt;
-      if (fallback) {
-        return fallback;
-      }
-    } catch {
-      // Ignore temporary receipt query errors and continue retries.
+    const isLast = i === IOS_RECEIPT_RETRY_DELAYS_MS.length - 1;
+    if (isLast) {
+      const fallback = await tryAvailablePurchasesOnce();
+      if (fallback) return fallback;
     }
   }
 
@@ -432,6 +438,25 @@ export default function SubscriptionScreen() {
     } catch (e) {
       // eslint-disable-next-line no-console
       console.warn("Apple subscription error", e);
+      const maybeCode =
+        e && typeof e === "object" && "code" in e
+          ? String((e as { code?: unknown }).code ?? "")
+          : "";
+      const maybeMessage =
+        e && typeof e === "object" && "message" in e
+          ? String((e as { message?: unknown }).message ?? "")
+          : "";
+      const lowerMsg = maybeMessage.toLowerCase();
+      const userCancelled =
+        maybeCode.toLowerCase().includes("cancel") ||
+        maybeCode === "2" ||
+        lowerMsg.includes("cancelled") ||
+        lowerMsg.includes("user canceled") ||
+        lowerMsg.includes("skerror code=2");
+      if (userCancelled) {
+        // User explicitly canceled Apple purchase flow; treat as no-op.
+        return;
+      }
       const msg =
         e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string"
           ? (e as { message: string }).message
