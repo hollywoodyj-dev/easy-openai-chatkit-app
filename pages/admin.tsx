@@ -17,7 +17,10 @@ interface AdminUser {
     status: SubscriptionStatus;
     plan: "monthly" | "yearly" | null;
     platform: "google_play" | "app_store" | "stripe_web" | null;
+    currentPeriodStart: string | null;
     currentPeriodEnd: string | null;
+    /** Apple original_transaction_id / transaction_id, Play purchase token, etc. */
+    externalSubscriptionId: string | null;
   } | null;
 }
 
@@ -159,8 +162,13 @@ const AdminPage: NextPage = () => {
         return;
       }
       const updated = data.subscription as {
+        id?: string;
         status: SubscriptionStatus;
+        plan?: "monthly" | "yearly" | null;
+        platform?: "google_play" | "app_store" | "stripe_web" | null;
+        currentPeriodStart?: string | null;
         currentPeriodEnd: string | null;
+        externalSubscriptionId?: string | null;
       };
       setUsers((prev) =>
         prev.map((u) =>
@@ -173,9 +181,24 @@ const AdminPage: NextPage = () => {
                     id: "",
                     plan: null,
                     platform: null,
+                    currentPeriodStart: null,
+                    currentPeriodEnd: null,
+                    externalSubscriptionId: null,
                   }),
+                  id: updated.id ?? u.subscription?.id ?? "",
                   status: updated.status,
+                  plan: updated.plan ?? u.subscription?.plan ?? null,
+                  platform:
+                    updated.platform ?? u.subscription?.platform ?? null,
+                  currentPeriodStart:
+                    updated.currentPeriodStart ??
+                    u.subscription?.currentPeriodStart ??
+                    null,
                   currentPeriodEnd: updated.currentPeriodEnd,
+                  externalSubscriptionId:
+                    updated.externalSubscriptionId ??
+                    u.subscription?.externalSubscriptionId ??
+                    null,
                 },
               }
             : u
@@ -252,7 +275,10 @@ const AdminPage: NextPage = () => {
         )}
         <p style={styles.text}>
           Below is the full user list with their latest subscription. You can
-          update status and active-until date.
+          update status and active-until date. For App Store subscriptions,
+          <strong> Store ref</strong> is the value used to tie an Apple purchase
+          to this Wisewave account (typically Apple&apos;s{" "}
+          <code style={styles.inlineCode}>original_transaction_id</code>).
         </p>
         {error && <p style={styles.error}>{error}</p>}
         {loading ? (
@@ -265,6 +291,9 @@ const AdminPage: NextPage = () => {
                   <th style={styles.th}>Email</th>
                   <th style={styles.th}>Created</th>
                   <th style={styles.th}>Country</th>
+                  <th style={styles.th}>Plan</th>
+                  <th style={styles.th}>Platform</th>
+                  <th style={styles.th}>Store ref</th>
                   <th style={styles.th}>Status</th>
                   <th style={styles.th}>Active until</th>
                   <th style={styles.th}>Actions</th>
@@ -300,6 +329,32 @@ const AdminPage: NextPage = () => {
                         />
                       </td>
                       <td style={styles.td}>
+                        {sub?.plan ? (
+                          <span style={styles.mono}>{sub.plan}</span>
+                        ) : (
+                          <span style={styles.muted}>—</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        {sub?.platform ? (
+                          <span style={styles.mono}>{sub.platform}</span>
+                        ) : (
+                          <span style={styles.muted}>—</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        {sub?.externalSubscriptionId ? (
+                          <span
+                            style={styles.monoSmall}
+                            title={sub.externalSubscriptionId}
+                          >
+                            {sub.externalSubscriptionId}
+                          </span>
+                        ) : (
+                          <span style={styles.muted}>—</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>
                         <select
                           defaultValue={defaultStatus}
                           onChange={(e) => {
@@ -308,6 +363,8 @@ const AdminPage: NextPage = () => {
                                 id: "",
                                 plan: null,
                                 platform: null,
+                                currentPeriodStart: null,
+                                externalSubscriptionId: null,
                               }),
                               status: e.target
                                 .value as SubscriptionStatus,
@@ -389,7 +446,7 @@ const styles = {
   },
   card: {
     width: "100%",
-    maxWidth: 960,
+    maxWidth: 1200,
     background: "#FFFFFF",
     padding: 24,
     borderRadius: 16,
@@ -441,6 +498,28 @@ const styles = {
     borderRadius: 6,
     border: "1px solid #CBD5E0",
     fontSize: 13,
+  },
+  mono: {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: 12,
+  },
+  monoSmall: {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: 11,
+    wordBreak: "break-all" as const,
+    display: "block",
+    maxWidth: 220,
+  },
+  muted: {
+    color: "#A0AEC0",
+    fontSize: 12,
+  },
+  inlineCode: {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: 12,
+    background: "#EDF2F7",
+    padding: "1px 4px",
+    borderRadius: 4,
   },
   button: {
     padding: "6px 10px",

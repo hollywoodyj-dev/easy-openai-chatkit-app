@@ -104,7 +104,11 @@ export default async function handler(
       subscription: {
         id: updated.id,
         status: updated.status,
+        plan: updated.plan,
+        platform: updated.platform,
+        currentPeriodStart: updated.currentPeriodStart,
         currentPeriodEnd: updated.currentPeriodEnd,
+        externalSubscriptionId: updated.externalSubscriptionId,
       },
     });
   } catch (error) {

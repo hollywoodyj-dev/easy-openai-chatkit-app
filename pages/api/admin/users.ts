@@ -79,7 +79,9 @@ export default async function handler(
               status: sub.status,
               plan: sub.plan,
               platform: sub.platform,
+              currentPeriodStart: sub.currentPeriodStart,
               currentPeriodEnd: sub.currentPeriodEnd,
+              externalSubscriptionId: sub.externalSubscriptionId,
             }
           : null,
       };
