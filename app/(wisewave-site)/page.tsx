@@ -55,7 +55,7 @@ export default function WisewaveMarketingHome() {
             <p className="mt-5 text-sm leading-7 text-[#5c5c5c]">
               You can begin with anything — even something unclear.
             </p>
-            <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">
+            <p className="mt-2 max-w-xl text-xs leading-6 text-[#6b6b6b]">
               Useful when you feel crowded inside — not when you need
               instructions.
             </p>
@@ -63,21 +63,19 @@ export default function WisewaveMarketingHome() {
         </div>
       </section>
 
-      <section className="pb-16 sm:pb-20">
+      <section className="border-t border-[#e7e1d8] pb-16 pt-12 sm:pb-20 sm:pt-16">
         <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
-          <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
-            <h2 className="text-2xl font-medium tracking-[-0.02em] text-[#171717] sm:text-3xl">
-              What you receive
-            </h2>
-            <div className="mt-6 space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
-              <p>A little more clarity.</p>
-              <p>A little less inner noise.</p>
-              <p>A space that does not take over.</p>
-            </div>
-            <p className="mt-6 text-sm leading-7 text-[#5c5c5c]">
-              Sometimes that small shift is enough.
-            </p>
+          <h2 className="text-2xl font-medium tracking-[-0.02em] text-[#171717] sm:text-3xl">
+            What you receive
+          </h2>
+          <div className="mt-6 space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
+            <p>A little more clarity.</p>
+            <p>A little less inner noise.</p>
+            <p>A space that does not take over.</p>
           </div>
+          <p className="mt-6 text-sm leading-7 text-[#5c5c5c]">
+            Sometimes that small shift is enough.
+          </p>
         </div>
       </section>
 
