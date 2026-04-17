@@ -36,6 +36,34 @@ const APP_STORE_PRODUCT_IDS = {
 
 const IOS_RECEIPT_RETRY_DELAYS_MS = [0, 700, 1200, 1800, 2500];
 
+type IapPurchaseLike = {
+  productId?: string;
+  id?: string;
+  sku?: string;
+  transactionReceipt?: string;
+  receipt?: string;
+  originalTransactionReceipt?: string;
+  purchaseToken?: string;
+  transactionDate?: number | string;
+  purchaseTime?: number | string;
+  subscriptionOfferDetailsAndroid?: unknown;
+  subscriptionOfferDetails?: unknown;
+};
+
+function productIdOf(p: unknown): string {
+  if (!p || typeof p !== "object") return "";
+  const x = p as IapPurchaseLike;
+  return String(x.productId ?? x.id ?? x.sku ?? "");
+}
+
+function matchesProductId(p: unknown, productId: string): boolean {
+  return productIdOf(p) === productId;
+}
+
+type FinishTransactionPurchase = Parameters<
+  typeof RNIap.finishTransaction
+>[0]["purchase"];
+
 function formatIosVerifyFailureMessage(
   res: Response,
   json: Record<string, unknown>
@@ -94,8 +122,8 @@ async function getIosReceiptWithRetry(productId: string, purchase: unknown): Pro
   const tryAvailablePurchasesOnce = async (): Promise<string | undefined> => {
     try {
       const available = await RNIap.getAvailablePurchases();
-      const matching = available.find(
-        (p: any) => (p?.productId ?? p?.id ?? p?.sku) === productId
+      const matching = available.find((p: unknown) =>
+        matchesProductId(p, productId)
       );
       return (
         matching?.transactionReceipt ??
@@ -146,14 +174,15 @@ export default function SubscriptionScreen() {
         await RNIap.initConnection();
         // Clear any failed purchases from cache on Android only
         if (Platform.OS === "android") {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (RNIap as any).flushFailedPurchasesCachedAsPendingAndroid?.();
+          const iap = RNIap as typeof RNIap & {
+            flushFailedPurchasesCachedAsPendingAndroid?: () => void | Promise<void>;
+          };
+          void iap.flushFailedPurchasesCachedAsPendingAndroid?.();
         }
         const hasFetchProducts = typeof RNIap.fetchProducts === "function";
         const hasRequestPurchase = typeof RNIap.requestPurchase === "function";
         setIapReady(hasFetchProducts && hasRequestPurchase);
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn("IAP init error", e);
       } finally {
         // `iapReady` is the actual purchase gate.
@@ -192,9 +221,9 @@ export default function SubscriptionScreen() {
 
     try {
       // react-native-iap v14: use fetchProducts + requestPurchase (no getSubscriptions/requestSubscription)
-      let purchase: any;
+      let purchase: unknown;
       if (Platform.OS === "android") {
-        let subs: any[];
+        let subs: unknown[];
         try {
           const raw = await RNIap.fetchProducts({
             skus: [productId],
@@ -204,7 +233,6 @@ export default function SubscriptionScreen() {
         } catch (fetchErr) {
           const errMsg =
             fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-          // eslint-disable-next-line no-console
           console.warn("fetchProducts error", errMsg, fetchErr);
           Alert.alert(
             "Error",
@@ -213,9 +241,9 @@ export default function SubscriptionScreen() {
           return;
         }
 
-        const product = subs.find(
-          (p: any) => (p.productId ?? p.id ?? p.sku) === productId
-        ) ?? subs[0];
+        const product = (subs.find((p: unknown) =>
+          matchesProductId(p, productId)
+        ) ?? subs[0]) as IapPurchaseLike | undefined;
         const offers =
           product?.subscriptionOfferDetailsAndroid ??
           product?.subscriptionOfferDetails ??
@@ -232,13 +260,13 @@ export default function SubscriptionScreen() {
         }
 
         // v14: requestPurchase is event-based; wait for purchase via listener
-        purchase = await new Promise<any>((resolve, reject) => {
+        purchase = await new Promise<unknown>((resolve, reject) => {
           const cleanup = () => {
             subUpdated.remove();
             subError.remove();
           };
           const subUpdated = RNIap.purchaseUpdatedListener((p) => {
-            if ((p.productId ?? p.id) === productId) {
+            if (matchesProductId(p, productId)) {
               cleanup();
               resolve(p);
             }
@@ -261,13 +289,13 @@ export default function SubscriptionScreen() {
           });
         });
       } else {
-        purchase = await new Promise<any>((resolve, reject) => {
+        purchase = await new Promise<unknown>((resolve, reject) => {
           const cleanup = () => {
             subUpdated.remove();
             subError.remove();
           };
           const subUpdated = RNIap.purchaseUpdatedListener((p) => {
-            if ((p.productId ?? p.id) === productId) {
+            if (matchesProductId(p, productId)) {
               cleanup();
               resolve(p);
             }
@@ -286,8 +314,9 @@ export default function SubscriptionScreen() {
         });
       }
 
+      const purchaseRec = purchase as IapPurchaseLike;
       const purchaseToken: string | undefined =
-        purchase?.purchaseToken ?? purchase?.transactionReceipt;
+        purchaseRec.purchaseToken ?? purchaseRec.transactionReceipt;
 
       if (!purchaseToken) {
         Alert.alert("Error", "No purchase token returned from Google Play.");
@@ -322,7 +351,6 @@ export default function SubscriptionScreen() {
         );
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("Google Play subscription error", e);
       Alert.alert(
         "Error",
@@ -367,7 +395,6 @@ export default function SubscriptionScreen() {
       } catch (fetchErr) {
         const errMsg =
           fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-        // eslint-disable-next-line no-console
         console.warn("fetchProducts (iOS) error", errMsg, fetchErr);
         Alert.alert(
           "Error",
@@ -376,9 +403,7 @@ export default function SubscriptionScreen() {
         return;
       }
 
-      const found = subs.some(
-        (p: any) => (p?.productId ?? p?.id ?? p?.sku) === productId
-      );
+      const found = subs.some((p: unknown) => matchesProductId(p, productId));
       if (!found) {
         Alert.alert(
           "Error",
@@ -389,7 +414,6 @@ export default function SubscriptionScreen() {
 
       // react-native-iap v15: requestPurchase resolves to Purchase | Purchase[] | null (event listeners optional).
       const unsubErr = RNIap.purchaseErrorListener((err) => {
-        // eslint-disable-next-line no-console
         console.warn("Apple purchase error listener", err);
       });
 
@@ -436,9 +460,11 @@ export default function SubscriptionScreen() {
       if (res.ok) {
         try {
           // Mark as finished so StoreKit does not keep replaying this purchase event.
-          await RNIap.finishTransaction({ purchase: purchase as any, isConsumable: false });
+          await RNIap.finishTransaction({
+            purchase: purchase as FinishTransactionPurchase,
+            isConsumable: false,
+          });
         } catch (finishErr) {
-          // eslint-disable-next-line no-console
           console.warn("finishTransaction (iOS) warning", finishErr);
         }
         Alert.alert("Success", "Subscription activated.");
@@ -447,7 +473,6 @@ export default function SubscriptionScreen() {
         Alert.alert("Error", formatIosVerifyFailureMessage(res, json));
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("Apple subscription error", e);
       const maybeCode =
         e && typeof e === "object" && "code" in e
@@ -519,14 +544,16 @@ export default function SubscriptionScreen() {
         APP_STORE_PRODUCT_IDS.monthly,
         APP_STORE_PRODUCT_IDS.yearly,
       ]);
-      const matching = available.filter((p: any) =>
-        activeIds.has(String(p?.productId ?? p?.id ?? p?.sku ?? ""))
+      const matching = available.filter((p: unknown) =>
+        activeIds.has(productIdOf(p))
       );
 
       const candidates = matching.length > 0 ? matching : available;
-      const latestPurchase = [...candidates].sort((a: any, b: any) => {
-        const ta = Number(a?.transactionDate ?? a?.purchaseTime ?? 0);
-        const tb = Number(b?.transactionDate ?? b?.purchaseTime ?? 0);
+      const latestPurchase = [...candidates].sort((a: unknown, b: unknown) => {
+        const pa = a as IapPurchaseLike;
+        const pb = b as IapPurchaseLike;
+        const ta = Number(pa.transactionDate ?? pa.purchaseTime ?? 0);
+        const tb = Number(pb.transactionDate ?? pb.purchaseTime ?? 0);
         return tb - ta;
       })[0];
 
@@ -563,7 +590,10 @@ export default function SubscriptionScreen() {
       }
 
       try {
-        await RNIap.finishTransaction({ purchase: latestPurchase as any, isConsumable: false });
+        await RNIap.finishTransaction({
+          purchase: latestPurchase as FinishTransactionPurchase,
+          isConsumable: false,
+        });
       } catch {
         // Ignore if already finished.
       }
@@ -598,6 +628,8 @@ export default function SubscriptionScreen() {
         await startAppleSubscription(plan);
       }
     })();
+    // Intentionally omit subscription handlers: autostart runs once when gate opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.autostart, params.plan, token, iapReady]);
 
   return (

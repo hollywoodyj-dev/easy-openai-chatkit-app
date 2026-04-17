@@ -20,7 +20,7 @@ let WebBrowser: typeof import("expo-web-browser") | null = null;
 try {
   // Dynamically require so the app still runs in builds
   // where the native ExpoWebBrowser module isn't present.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   WebBrowser = require("expo-web-browser");
   WebBrowser.maybeCompleteAuthSession();
 } catch {
@@ -249,7 +249,7 @@ export default function LoginScreen() {
             disabled={!!loading || !!oauthLoading}
           >
             <Text style={styles.linkText}>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Text style={styles.linkTextBold}>Create one</Text>
             </Text>
           </TouchableOpacity>

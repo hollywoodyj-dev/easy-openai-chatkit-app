@@ -19,7 +19,7 @@ import { API_BASE_URL } from "../config";
 let WebBrowser: typeof import("expo-web-browser") | null = null;
 try {
   // Dynamically require so the app still runs even if the native module is missing.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   WebBrowser = require("expo-web-browser");
   WebBrowser.maybeCompleteAuthSession();
 } catch {

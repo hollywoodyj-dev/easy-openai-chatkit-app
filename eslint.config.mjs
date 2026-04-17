@@ -18,6 +18,10 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Local scratch / one-off scripts (CommonJS); not part of the shipped app.
+      "tmp*.js",
+      "phase7_hosted_check.cjs",
+      "scripts/e2-qa-backdate-conversation-insights.cjs",
     ],
   },
 ];
