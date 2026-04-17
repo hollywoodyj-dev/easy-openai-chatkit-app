@@ -498,3 +498,8 @@
 - **Code:** `lib/wisewave-anchor-semantic-weight-v2.ts`; wired in **`app/api/chat/turn/route.ts`** (save + prior-thread read) and **`app/api/chat/continuity/route.ts`** (GET). Vitest: **`npm run test:anchor-v2`**.
 - **Lumen:** `docs/QA_HANDOFF.md` 2026-04-05 entry; use Wisewave §12 primary questions + instant-fail list.
 
+## 2026-04-18 — Wisewave public homepage + Lumen calibration QA
+
+- **Shipped:** `app/(wisewave-site)/` marketing site (homepage, `/start`, supporting pages, analytics `lib/wisewave-analytics.ts`, `components/wisewave-site/*`). Checklist **`docs/LUMEN_QA_CHECKLIST_Homepage_Calibration_Pass.md`**.
+- **Lumen verdict (hosted `/`):** **PASS WITH WATCHPOINTS** — approve; watch optional hero line *You do not need to follow anything here* (first trim candidate); mid-page restraint sections = heaviest; sample interaction ongoing watch. Recorded checklist **§12** + **`docs/QA_HANDOFF.md`**.
+

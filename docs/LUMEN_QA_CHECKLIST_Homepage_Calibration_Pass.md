@@ -317,3 +317,35 @@ Approve / adjust / remove / rework
 
 - **Qualified reflective start rate** ( `/start` view + enter + ≥1 message in `/chat` ) — analytics product follow-up; not fully instrumented server-side in this pass.  
 - **Sample interaction block** — uses restrained labels (“Your words” / “Reflective return”) + monospace on reflective line; confirm it does not read as chat-app / companion UI.
+
+---
+
+## 12. Lumen QA result (2026-04-18) — hosted `/`
+
+**Verdict:** PASS WITH WATCHPOINTS  
+
+### What improved
+
+- First-read clarity is materially stronger. The hero states quickly what Wisewave is not; the boundary holds through the rest of the page.  
+- **CTA hierarchy** is clean in both places: hero primary = Enter Wisewave, hero secondary = See example openings; final primary still clearly dominates; final secondary **See whether it fits you** works as a lower-pressure qualification path.  
+- **Qualification line** helps self-selection without taking over the hero; subordinate treatment is directionally right.  
+- **What you receive** adds usable orientation without becoming a benefits pitch or therapeutic promise.  
+- **Before you begin** is visible before the final commitment point; links are easy to find; crisis boundary is present without feeling alarmist.  
+- Overall the page reads more like a restrained category explanation and less like a generic AI landing page.  
+
+### What still risks drift
+
+- Optional hero line *“You do not need to follow anything here.”* — acceptable and supports authorship/restraint, but adds a little extra voice pressure; most removable line in the hero if Tree wants one trim.  
+- Mid-page supporting sections (*When many systems become more active…*, broader restraint/boundaries/difference blocks) do not break category integrity but are where the page gets **heaviest**.  
+- **Sample interaction** — ongoing watch so it keeps reading as reflective separation, not soft advice / chatbot guidance.  
+
+### Watchpoints
+
+- Misread of optional hero line as extra conceptual framing vs useful reassurance.  
+- Whether mid-page explanatory sections make the product feel slightly more “defined by doctrine” than necessary.  
+- Whether **What you receive** stays light in future edits (no benefit inflation or emotional-support language).  
+- Whether the **final CTA** block stays clearly secondary-to-entry vs becoming another conversion cluster.  
+
+### Recommended action
+
+**Approve, with watchpoints.** No blocking drift on hosted `/`. If Tree wants one further polish pass, cleanest candidate: **reconsider or trim the optional hero line** before touching anything else.
