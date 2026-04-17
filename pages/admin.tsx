@@ -1,4 +1,4 @@
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent, useMemo } from "react";
 import type { NextPage } from "next";
 import { useRouter } from "next/router";
 
@@ -62,6 +62,19 @@ const AdminPage: NextPage = () => {
 
   const token =
     typeof router.query.token === "string" ? router.query.token : "";
+
+  /** Same Apple purchase identity written to multiple rows (common after pre-guard testing). */
+  const duplicateAppStoreRefs = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const u of users) {
+      const ref = u.subscription?.externalSubscriptionId?.trim();
+      if (!ref || u.subscription?.platform !== "app_store") continue;
+      counts.set(ref, (counts.get(ref) ?? 0) + 1);
+    }
+    return new Set(
+      [...counts.entries()].filter(([, n]) => n > 1).map(([id]) => id)
+    );
+  }, [users]);
 
   useEffect(() => {
     if (!token) return;
@@ -279,7 +292,19 @@ const AdminPage: NextPage = () => {
           <strong> Store ref</strong> is the value used to tie an Apple purchase
           to this Wisewave account (typically Apple&apos;s{" "}
           <code style={styles.inlineCode}>original_transaction_id</code>).
+          If several emails show the same ref, that is usually from earlier
+          testing with one Apple ID before ownership checks; only one Wisewave
+          account should stay linked to that Apple subscription.
         </p>
+        {duplicateAppStoreRefs.size > 0 && (
+          <p style={styles.warnBanner}>
+            <strong>Duplicate Store ref on app_store:</strong>{" "}
+            {duplicateAppStoreRefs.size} value(s) appear on more than one user.
+            Rows with a highlighted Store ref share the same Apple subscription
+            identity. Clean up by marking the wrong rows expired and clearing
+            their Store ref in the database, or leave one active account only.
+          </p>
+        )}
         {error && <p style={styles.error}>{error}</p>}
         {loading ? (
           <p style={styles.text}>Loading users…</p>
@@ -342,7 +367,18 @@ const AdminPage: NextPage = () => {
                           <span style={styles.muted}>—</span>
                         )}
                       </td>
-                      <td style={styles.td}>
+                      <td
+                        style={{
+                          ...styles.td,
+                          ...(sub?.externalSubscriptionId &&
+                          sub?.platform === "app_store" &&
+                          duplicateAppStoreRefs.has(
+                            sub.externalSubscriptionId.trim()
+                          )
+                            ? styles.tdDupRef
+                            : null),
+                        }}
+                      >
                         {sub?.externalSubscriptionId ? (
                           <span
                             style={styles.monoSmall}
@@ -491,6 +527,20 @@ const styles = {
     padding: "8px 6px",
     borderBottom: "1px solid #EDF2F7",
     verticalAlign: "middle" as const,
+  },
+  tdDupRef: {
+    background: "#FFFAF0",
+    boxShadow: "inset 0 0 0 1px #F6AD55",
+  },
+  warnBanner: {
+    margin: "0 0 16px",
+    padding: "10px 12px",
+    borderRadius: 8,
+    background: "#FFFAF0",
+    border: "1px solid #F6AD55",
+    color: "#744210",
+    fontSize: 13,
+    lineHeight: 1.45,
   },
   input: {
     width: "100%",
