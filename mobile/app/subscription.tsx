@@ -46,6 +46,9 @@ const APP_STORE_PRODUCT_IDS = {
   yearly: "wisewave_ios_yearly",
 } as const;
 
+/** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "afb0174 · subscribe-ui-2026-04-18-b2";
+
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
 >[0]["purchase"];
@@ -565,6 +568,9 @@ export default function SubscriptionScreen() {
       <Text style={styles.subtitle}>
         Your trial has ended. Choose a plan to keep using chat and your history.
       </Text>
+      <Text style={styles.buildTag} selectable>
+        {SUBSCRIPTION_SCREEN_BUILD_TAG}
+      </Text>
 
       <View style={styles.card}>
         <Text style={styles.planName}>Monthly</Text>
@@ -739,8 +745,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#718096",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 8,
     lineHeight: 24,
+  },
+  buildTag: {
+    fontSize: 12,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    color: "#64748b",
+    textAlign: "center",
+    marginBottom: 20,
+    letterSpacing: 0.3,
   },
   card: {
     backgroundColor: "#fff",
