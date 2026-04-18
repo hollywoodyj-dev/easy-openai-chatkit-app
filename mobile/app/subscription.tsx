@@ -617,13 +617,6 @@ export default function SubscriptionScreen() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        disabled={processingPlan !== null}
-        onPress={() => router.back()}
-      >
-        <Text style={styles.secondaryButtonText}>Back to chat</Text>
-      </TouchableOpacity>
       {Platform.OS === "ios" && (
         <TouchableOpacity
           style={styles.secondaryButton}
@@ -705,6 +698,14 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
         </>
       )}
+
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        disabled={processingPlan !== null}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.secondaryButtonText}>Back to chat</Text>
+      </TouchableOpacity>
       {!token && (
         <TouchableOpacity
           style={styles.link}
