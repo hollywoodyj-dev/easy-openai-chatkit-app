@@ -211,12 +211,55 @@ export async function POST(request: Request) {
       );
     }
 
-    const sorted = [...candidateRecords].sort((a, b) => {
+    const requestedProductId = subscriptionId.trim();
+    const byExpiryDesc = (a: AppleReceiptRecord, b: AppleReceiptRecord) => {
       const ea = parseMsDate(a?.expires_date_ms)?.getTime() ?? 0;
       const eb = parseMsDate(b?.expires_date_ms)?.getTime() ?? 0;
       return eb - ea;
-    });
-    const record = sorted[0] ?? {};
+    };
+
+    const recordsForRequestedProduct = candidateRecords.filter(
+      (r) => typeof r.product_id === "string" && r.product_id === requestedProductId
+    );
+
+    const isRecordCurrentlyActive = (r: AppleReceiptRecord): boolean => {
+      const status = mapAppleReceiptStatusToSubscriptionStatus({
+        now,
+        expiresDate: parseMsDate(r?.expires_date_ms),
+        cancellationDate: parseMsDate(r?.cancellation_date_ms),
+      });
+      return status === "active";
+    };
+
+    let record: AppleReceiptRecord;
+    if (recordsForRequestedProduct.length > 0) {
+      record = [...recordsForRequestedProduct].sort(byExpiryDesc)[0] ?? {};
+    } else {
+      const otherActive = candidateRecords.filter(
+        (r) =>
+          typeof r.product_id === "string" &&
+          r.product_id !== requestedProductId &&
+          isRecordCurrentlyActive(r)
+      );
+      if (otherActive.length > 0) {
+        const otherPid =
+          typeof otherActive[0].product_id === "string"
+            ? otherActive[0].product_id
+            : "another plan";
+        return NextResponse.json(
+          {
+            error:
+              "This Apple ID already has an active subscription for a different plan in this app. Switch plans in iPhone Settings → Apple ID → Subscriptions, then try again or use Restore purchase.",
+            code: "receipt_product_mismatch",
+            active_product_id: otherPid,
+            requested_product_id: requestedProductId,
+          },
+          { status: 422 }
+        );
+      }
+      const sorted = [...candidateRecords].sort(byExpiryDesc);
+      record = sorted[0] ?? {};
+    }
 
     const productIdFromReceipt =
       typeof record.product_id === "string" ? record.product_id : subscriptionId;
