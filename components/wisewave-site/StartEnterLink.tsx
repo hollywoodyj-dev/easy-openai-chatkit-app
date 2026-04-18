@@ -14,7 +14,7 @@ export function StartEnterLink() {
 
   return (
     <Link
-      href="/chat"
+      href="/login?from=start"
       className="inline-flex items-center justify-center rounded-full bg-[#2d4b52] px-6 py-3.5 text-sm font-medium text-white transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#2d4b52] focus:ring-offset-2 focus:ring-offset-[#f7f5f1]"
       onClick={() => trackEvent("start_page_enter_click", { source })}
     >

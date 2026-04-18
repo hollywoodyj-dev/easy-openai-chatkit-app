@@ -7,6 +7,7 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
@@ -555,7 +556,11 @@ export default function SubscriptionScreen() {
   }, [params.autostart, params.plan, token, iapReady]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scrollRoot}
+      contentContainerStyle={styles.scrollInner}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Subscribe to continue</Text>
       <Text style={styles.subtitle}>
         Your trial has ended. Choose a plan to keep using chat and your history.
@@ -619,7 +624,7 @@ export default function SubscriptionScreen() {
       >
         <Text style={styles.secondaryButtonText}>Back to chat</Text>
       </TouchableOpacity>
-      {Platform.OS === "ios" && token && (
+      {Platform.OS === "ios" && (
         <TouchableOpacity
           style={styles.secondaryButton}
           disabled={processingPlan !== null}
@@ -632,7 +637,7 @@ export default function SubscriptionScreen() {
           </Text>
         </TouchableOpacity>
       )}
-      {Platform.OS === "ios" && token && (
+      {Platform.OS === "ios" && (
         <>
           <TouchableOpacity
             style={styles.secondaryButton}
@@ -654,6 +659,11 @@ export default function SubscriptionScreen() {
             style={styles.secondaryButton}
             disabled={processingPlan !== null}
             onPress={() => {
+              if (!token) {
+                Alert.alert("Sign in required", "Please sign in first.");
+                router.replace("/login");
+                return;
+              }
               Alert.alert(
                 "Apple subscription",
                 "This opens App Store subscription management, then shows status for this Apple ID, then syncs Wisewave from your receipt.",
@@ -703,15 +713,19 @@ export default function SubscriptionScreen() {
           <Text style={styles.linkText}>Sign in</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollRoot: {
     flex: 1,
     backgroundColor: "#FAF9F6",
+  },
+  scrollInner: {
     padding: 24,
+    paddingBottom: 48,
+    flexGrow: 1,
   },
   title: {
     fontSize: 24,

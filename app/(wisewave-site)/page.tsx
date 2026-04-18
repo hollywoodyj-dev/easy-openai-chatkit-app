@@ -36,7 +36,7 @@ export default function WisewaveMarketingHome() {
             </p>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <TrackButton
-                href="/start?from=home"
+                href="/login?from=hero"
                 className="inline-flex items-center justify-center rounded-full bg-[#2d4b52] px-7 py-3.5 text-sm font-medium text-white transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#2d4b52] focus:ring-offset-2 focus:ring-offset-[#f7f5f1]"
                 eventName="homepage_primary_cta_click"
                 eventPayload={{ location: "hero" }}
@@ -305,7 +305,7 @@ export default function WisewaveMarketingHome() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <TrackButton
-              href="/start?from=home"
+              href="/login?from=final_cta"
               className="inline-flex items-center justify-center rounded-full bg-[#2d4b52] px-7 py-3.5 text-sm font-medium text-white transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#2d4b52] focus:ring-offset-2 focus:ring-offset-[#f7f5f1]"
               eventName="homepage_primary_cta_click"
               eventPayload={{ location: "final_cta" }}
