@@ -12,6 +12,17 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import * as RNIap from "react-native-iap";
 import { API_BASE_URL } from "../config";
+import {
+  presentAppleSubscriptionAccountHub,
+  presentAppleSubscriptionCancellationFlow,
+  runAppleSubscriptionAccountSequential,
+} from "../lib/apple-subscription-account";
+import {
+  getIosReceiptWithRetry,
+  matchesProductId,
+  productIdOf,
+  type IapPurchaseLike,
+} from "../lib/ios-receipt";
 
 const MONTHLY_PRICE = 29;
 const YEARLY_PRICE = 299;
@@ -33,32 +44,6 @@ const APP_STORE_PRODUCT_IDS = {
   monthly: "wisewave_ios_monthly",
   yearly: "wisewave_ios_yearly",
 } as const;
-
-const IOS_RECEIPT_RETRY_DELAYS_MS = [0, 700, 1200, 1800, 2500];
-
-type IapPurchaseLike = {
-  productId?: string;
-  id?: string;
-  sku?: string;
-  transactionReceipt?: string;
-  receipt?: string;
-  originalTransactionReceipt?: string;
-  purchaseToken?: string;
-  transactionDate?: number | string;
-  purchaseTime?: number | string;
-  subscriptionOfferDetailsAndroid?: unknown;
-  subscriptionOfferDetails?: unknown;
-};
-
-function productIdOf(p: unknown): string {
-  if (!p || typeof p !== "object") return "";
-  const x = p as IapPurchaseLike;
-  return String(x.productId ?? x.id ?? x.sku ?? "");
-}
-
-function matchesProductId(p: unknown, productId: string): boolean {
-  return productIdOf(p) === productId;
-}
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -96,68 +81,6 @@ function storeSubscriptionProductId(plan: "monthly" | "yearly"): string {
   return plan === "monthly"
     ? GOOGLE_PLAY_PRODUCT_IDS.monthly
     : GOOGLE_PLAY_PRODUCT_IDS.yearly;
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function getIosReceiptWithRetry(productId: string, purchase: unknown): Promise<string | undefined> {
-  const purchaseAny = purchase as
-    | {
-        transactionReceipt?: string;
-        receipt?: string;
-        originalTransactionReceipt?: string;
-      }
-    | undefined;
-
-  const directReceipt =
-    purchaseAny?.transactionReceipt ??
-    purchaseAny?.receipt ??
-    purchaseAny?.originalTransactionReceipt;
-  if (directReceipt) return directReceipt;
-
-  // Prefer app receipt only on most retries. `getAvailablePurchases()` can trigger
-  // repeated Apple ID / Face ID prompts on iOS; call it at most once at the end.
-  const tryAvailablePurchasesOnce = async (): Promise<string | undefined> => {
-    try {
-      const available = await RNIap.getAvailablePurchases();
-      const matching = available.find((p: unknown) =>
-        matchesProductId(p, productId)
-      );
-      return (
-        matching?.transactionReceipt ??
-        matching?.receipt ??
-        matching?.originalTransactionReceipt
-      );
-    } catch {
-      return undefined;
-    }
-  };
-
-  for (let i = 0; i < IOS_RECEIPT_RETRY_DELAYS_MS.length; i++) {
-    const waitMs = IOS_RECEIPT_RETRY_DELAYS_MS[i];
-    if (waitMs > 0) {
-      await sleep(waitMs);
-    }
-
-    try {
-      const receipt = await RNIap.getReceiptIOS();
-      if (receipt) {
-        return receipt;
-      }
-    } catch {
-      // Keep retrying; receipt may still be propagating.
-    }
-
-    const isLast = i === IOS_RECEIPT_RETRY_DELAYS_MS.length - 1;
-    if (isLast) {
-      const fallback = await tryAvailablePurchasesOnce();
-      if (fallback) return fallback;
-    }
-  }
-
-  return undefined;
 }
 
 export default function SubscriptionScreen() {
@@ -558,8 +481,7 @@ export default function SubscriptionScreen() {
       })[0];
 
       const productId =
-        String(latestPurchase?.productId ?? latestPurchase?.id ?? latestPurchase?.sku ?? "") ||
-        APP_STORE_PRODUCT_IDS.monthly;
+        productIdOf(latestPurchase) || APP_STORE_PRODUCT_IDS.monthly;
 
       const receiptData = await getIosReceiptWithRetry(productId, latestPurchase);
       if (!receiptData) {
@@ -710,6 +632,69 @@ export default function SubscriptionScreen() {
           </Text>
         </TouchableOpacity>
       )}
+      {Platform.OS === "ios" && token && (
+        <>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            disabled={processingPlan !== null}
+            onPress={() =>
+              presentAppleSubscriptionAccountHub({
+                token,
+                apiBaseUrl: API_BASE_URL,
+                bundleId: "com.wisewave.chatkit",
+                monthlyProductId: APP_STORE_PRODUCT_IDS.monthly,
+                yearlyProductId: APP_STORE_PRODUCT_IDS.yearly,
+                onWisewaveSynced: () => router.replace("/chat"),
+              })
+            }
+          >
+            <Text style={styles.secondaryButtonText}>Apple ID: manage, status, or sync…</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            disabled={processingPlan !== null}
+            onPress={() => {
+              Alert.alert(
+                "Apple subscription",
+                "This opens App Store subscription management, then shows status for this Apple ID, then syncs Wisewave from your receipt.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Continue",
+                    onPress: () =>
+                      void runAppleSubscriptionAccountSequential({
+                        token,
+                        apiBaseUrl: API_BASE_URL,
+                        bundleId: "com.wisewave.chatkit",
+                        monthlyProductId: APP_STORE_PRODUCT_IDS.monthly,
+                        yearlyProductId: APP_STORE_PRODUCT_IDS.yearly,
+                        onWisewaveSynced: () => router.replace("/chat"),
+                      }),
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={styles.secondaryButtonText}>Apple ID: run all steps</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            disabled={processingPlan !== null}
+            onPress={() =>
+              presentAppleSubscriptionCancellationFlow({
+                token,
+                apiBaseUrl: API_BASE_URL,
+                bundleId: "com.wisewave.chatkit",
+                monthlyProductId: APP_STORE_PRODUCT_IDS.monthly,
+                yearlyProductId: APP_STORE_PRODUCT_IDS.yearly,
+                onWisewaveSynced: () => router.replace("/chat"),
+              })
+            }
+          >
+            <Text style={styles.cancellationGuideText}>Cancel Apple subscription…</Text>
+          </TouchableOpacity>
+        </>
+      )}
       {!token && (
         <TouchableOpacity
           style={styles.link}
@@ -820,5 +805,10 @@ const styles = StyleSheet.create({
   linkText: {
     color: "#4A5568",
     fontSize: 14,
+  },
+  cancellationGuideText: {
+    color: "#9a3412",
+    fontSize: 16,
+    textAlign: "center",
   },
 });
