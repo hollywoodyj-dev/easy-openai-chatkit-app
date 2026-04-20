@@ -47,11 +47,33 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "afb0174 · subscribe-ui-2026-04-20-b4";
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "8a62077 · subscribe-ui-2026-04-20-b5";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
 >[0]["purchase"];
+
+async function waitForSubscriptionAccessReady(
+  token: string,
+  timeoutMs = 12000
+): Promise<boolean> {
+  const started = Date.now();
+  const pollDelayMs = 1200;
+  while (Date.now() - started <= timeoutMs) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat/auth-check`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) return true;
+      if (res.status !== 402) return false;
+    } catch {
+      // Keep polling; transient network failures can happen right after purchase.
+    }
+    await new Promise((resolve) => setTimeout(resolve, pollDelayMs));
+  }
+  return false;
+}
 
 function formatIosVerifyFailureMessage(
   res: Response,
@@ -403,6 +425,14 @@ export default function SubscriptionScreen() {
           });
         } catch (finishErr) {
           console.warn("finishTransaction (iOS) warning", finishErr);
+        }
+        const accessReady = await waitForSubscriptionAccessReady(token);
+        if (!accessReady) {
+          Alert.alert(
+            "Purchase received",
+            "Apple accepted the purchase, but subscription access is still syncing on this device (common in Sandbox).\n\nTap Restore purchase or Apple ID: sync, then try Continue again in a moment."
+          );
+          return;
         }
         const successBody =
           "Your Wisewave account is active.\n\n" +
