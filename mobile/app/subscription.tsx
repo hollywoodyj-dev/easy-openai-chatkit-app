@@ -51,7 +51,7 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "9caed14 · subscribe-ui-2026-04-20-b6";
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "1b10874 · subscribe-ui-2026-04-20-b7";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction

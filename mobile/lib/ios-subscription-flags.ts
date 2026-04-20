@@ -1,10 +1,8 @@
 /**
- * Temporary switch for Apple Server API migration testing.
- *
- * Keep receipt-verify implementation in code, but disable calling it from
- * mobile purchase/restore/sync flows until the server-side Apple API path is ready.
+ * When true, iOS purchase/restore/sync calls `/api/subscription/verify-ios` (Apple Server API first, then receipt fallback).
+ * Set false only for local experiments.
  */
-export const ENABLE_IOS_RECEIPT_VERIFY = false;
+export const ENABLE_IOS_RECEIPT_VERIFY = true;
 
 export const IOS_RECEIPT_VERIFY_DISABLED_MESSAGE =
   "Receipt verification is temporarily disabled for Apple Server API testing.\n\n" +
