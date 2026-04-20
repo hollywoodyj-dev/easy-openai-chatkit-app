@@ -47,7 +47,7 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "afb0174 · subscribe-ui-2026-04-18-b2";
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "afb0174 · subscribe-ui-2026-04-19-b3";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -311,6 +311,16 @@ export default function SubscriptionScreen() {
     setProcessingPlan(plan);
 
     try {
+      // Refresh StoreKit / App Store state (helps after a subscription has ended so
+      // the next requestPurchase can surface the confirmation sheet reliably).
+      try {
+        if (typeof RNIap.syncIOS === "function") {
+          await RNIap.syncIOS();
+        }
+      } catch (syncErr) {
+        console.warn("syncIOS before purchase (non-fatal)", syncErr);
+      }
+
       // Ensure the SKU exists in App Store Connect before attempting purchase.
       let subs: unknown[] = [];
       try {
@@ -624,6 +634,15 @@ export default function SubscriptionScreen() {
       </View>
 
       {Platform.OS === "ios" && (
+        <Text style={styles.iosStoreHint}>
+          Apple may ask you to sign in with your Apple ID before the price and confirm
+          screen—that is normal, especially in Sandbox after a subscription has ended.
+          After you enter your password, wait for the subscription sheet (or try again in
+          a moment).
+        </Text>
+      )}
+
+      {Platform.OS === "ios" && (
         <TouchableOpacity
           style={styles.secondaryButton}
           disabled={processingPlan !== null}
@@ -755,6 +774,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
     letterSpacing: 0.3,
+  },
+  iosStoreHint: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#64748b",
+    textAlign: "center",
+    marginBottom: 8,
+    paddingHorizontal: 4,
   },
   card: {
     backgroundColor: "#fff",

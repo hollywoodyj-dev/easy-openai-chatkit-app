@@ -75,7 +75,11 @@ export async function fetchStoreAccountSubscriptionSnapshot(
 
 export function formatStoreAccountSnapshotForAlert(subs: ActiveSubscription[]): string {
   if (!subs.length) {
-    return "No active Wisewave subscription was returned for these product IDs on this store account.\n\nIf you expect an active plan, use Manage subscriptions, then try Sync Wisewave.";
+    return (
+      "No active Wisewave subscription was returned for these product IDs on this Apple ID.\n\n" +
+      "That is expected if your plan has ended—use Subscribe with Apple to buy again, or Manage subscriptions in Settings. " +
+      "After purchasing, use Sync Wisewave."
+    );
   }
   return subs
     .map((s) => {
