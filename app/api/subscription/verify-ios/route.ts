@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyUserToken } from "@/lib/auth";
+import jwt from "jsonwebtoken";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,6 +22,22 @@ type AppleReceiptResponse = {
     in_app?: AppleReceiptRecord[];
   };
   environment?: string;
+};
+
+type AppleServerApiTransactionPayload = {
+  transactionId?: string;
+  originalTransactionId?: string;
+  productId?: string;
+  expiresDate?: number;
+  revocationDate?: number;
+  purchaseDate?: number;
+};
+
+type AppleServerApiConfig = {
+  issuerId: string;
+  keyId: string;
+  privateKey: string;
+  bundleId: string;
 };
 
 function mapAppleReceiptStatusToSubscriptionStatus(args: {
@@ -53,6 +70,115 @@ function parseMsDate(ms: unknown): Date | null {
     return new Date(ms);
   }
   return null;
+}
+
+function parseAppleServerApiConfig(bundleIdFromRequest?: string): AppleServerApiConfig | null {
+  const issuerId = process.env.APPLE_SERVER_API_ISSUER_ID?.trim();
+  const keyId = process.env.APPLE_SERVER_API_KEY_ID?.trim();
+  const privateKeyRaw = process.env.APPLE_SERVER_API_PRIVATE_KEY?.trim();
+  const bundleId =
+    bundleIdFromRequest?.trim() ||
+    process.env.APPLE_BUNDLE_ID?.trim() ||
+    process.env.APPLE_SERVER_API_BUNDLE_ID?.trim();
+
+  if (!issuerId || !keyId || !privateKeyRaw || !bundleId) return null;
+  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+  return { issuerId, keyId, privateKey, bundleId };
+}
+
+function decodeJwtPayload<T>(jws: string): T | null {
+  const parts = jws.split(".");
+  if (parts.length < 2) return null;
+  const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+  try {
+    const json = Buffer.from(padded, "base64").toString("utf8");
+    return JSON.parse(json) as T;
+  } catch {
+    return null;
+  }
+}
+
+function createAppleServerApiToken(config: AppleServerApiConfig): string {
+  const now = Math.floor(Date.now() / 1000);
+  return jwt.sign(
+    {
+      iss: config.issuerId,
+      iat: now,
+      exp: now + 300,
+      aud: "appstoreconnect-v1",
+      bid: config.bundleId,
+    },
+    config.privateKey,
+    { algorithm: "ES256", keyid: config.keyId }
+  );
+}
+
+async function fetchAppleServerTransaction(
+  transactionId: string,
+  config: AppleServerApiConfig,
+  useSandbox: boolean
+): Promise<AppleServerApiTransactionPayload | null> {
+  const host = useSandbox
+    ? "https://api.storekit-sandbox.itunes.apple.com"
+    : "https://api.storekit.itunes.apple.com";
+  const token = createAppleServerApiToken(config);
+  const res = await fetch(`${host}/inApps/v1/transactions/${encodeURIComponent(transactionId)}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+  if (!res.ok) return null;
+  const json = (await res.json().catch(() => ({}))) as {
+    signedTransactionInfo?: string;
+  };
+  if (!json.signedTransactionInfo) return null;
+  return decodeJwtPayload<AppleServerApiTransactionPayload>(json.signedTransactionInfo);
+}
+
+async function verifyWithAppleServerApi(params: {
+  transactionId?: string | null;
+  originalTransactionId?: string | null;
+  subscriptionId: string;
+  bundleId?: string;
+}): Promise<
+  | {
+      ok: true;
+      record: AppleReceiptRecord;
+      environment: "sandbox" | "production";
+      source: "apple_server_api";
+    }
+  | { ok: false; reason: string }
+> {
+  const txId = params.transactionId?.trim() || params.originalTransactionId?.trim() || "";
+  if (!txId) return { ok: false, reason: "missing_transaction_id" };
+  const config = parseAppleServerApiConfig(params.bundleId);
+  if (!config) return { ok: false, reason: "server_api_not_configured" };
+
+  const prod = await fetchAppleServerTransaction(txId, config, false);
+  const payload = prod ?? (await fetchAppleServerTransaction(txId, config, true));
+  const environment: "sandbox" | "production" = prod ? "production" : "sandbox";
+  if (!payload?.productId) {
+    return { ok: false, reason: "transaction_not_found" };
+  }
+
+  const record: AppleReceiptRecord = {
+    product_id: payload.productId,
+    transaction_id: payload.transactionId ?? txId,
+    original_transaction_id:
+      payload.originalTransactionId ?? params.originalTransactionId ?? txId,
+    expires_date_ms:
+      typeof payload.expiresDate === "number" ? String(payload.expiresDate) : undefined,
+    cancellation_date_ms:
+      typeof payload.revocationDate === "number"
+        ? String(payload.revocationDate)
+        : undefined,
+    purchase_date_ms:
+      typeof payload.purchaseDate === "number" ? String(payload.purchaseDate) : undefined,
+  };
+  return { ok: true, record, environment, source: "apple_server_api" };
 }
 
 async function verifyAppleReceipt(params: {
@@ -116,8 +242,11 @@ export async function POST(request: Request) {
       receiptData?: string;
       subscriptionId?: string;
       bundleId?: string;
+      transactionId?: string | null;
+      originalTransactionId?: string | null;
     };
-    const { receiptData, subscriptionId, bundleId } = body;
+    const { receiptData, subscriptionId, bundleId, transactionId, originalTransactionId } =
+      body;
 
     if (!receiptData || typeof receiptData !== "string") {
       return NextResponse.json({ error: "receiptData is required" }, { status: 400 });
@@ -126,91 +255,107 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "subscriptionId is required" }, { status: 400 });
     }
 
-    const sharedSecrets = getAppleSharedSecrets();
-    if (sharedSecrets.length === 0) {
-      return NextResponse.json(
-        {
-          error: "Apple receipt verification not configured",
-          message:
-            "Set APPLE_SHARED_SECRET in Vercel. Optionally also APPLE_APP_SPECIFIC_SHARED_SECRET.",
-        },
-        { status: 501 }
-      );
-    }
-
     const bundle = (bundleId as string | undefined) ?? process.env.APPLE_BUNDLE_ID;
     if (bundle && typeof bundle === "string" && bundle.trim().length > 0) {
       // Bundle field kept for future stricter validation.
     }
 
-    let receiptRes: AppleReceiptResponse = { status: 1 };
-    for (const sharedSecret of sharedSecrets) {
-      const productionRes = await verifyAppleReceipt({
-        receiptData,
-        sharedSecret,
-        isSandboxAttempt: false,
-      });
-
-      let candidate: AppleReceiptResponse = productionRes;
-      if ((productionRes.status ?? null) === 21007) {
-        candidate = await verifyAppleReceipt({
-          receiptData,
-          sharedSecret,
-          isSandboxAttempt: true,
-        });
+    let verificationSource: "receipt_verify" | "apple_server_api" = "receipt_verify";
+    let appleEnvironment: string | null = null;
+    let candidateRecords: AppleReceiptRecord[] = [];
+    const serverApiResult = await verifyWithAppleServerApi({
+      transactionId,
+      originalTransactionId,
+      subscriptionId,
+      bundleId: bundle,
+    });
+    if (serverApiResult.ok) {
+      verificationSource = "apple_server_api";
+      appleEnvironment = serverApiResult.environment;
+      candidateRecords = [serverApiResult.record];
+    } else {
+      const sharedSecrets = getAppleSharedSecrets();
+      if (sharedSecrets.length === 0) {
+        return NextResponse.json(
+          {
+            error: "Apple verification not configured",
+            message:
+              "Set APPLE_SERVER_API_ISSUER_ID/KEY_ID/PRIVATE_KEY for Apple Server API, or APPLE_SHARED_SECRET for legacy receipt verification.",
+          },
+          { status: 501 }
+        );
       }
 
-      receiptRes = candidate;
-      if ((candidate.status ?? 1) === 0) break;
-      // 21004 means wrong secret; continue trying other configured candidates.
-      if ((candidate.status ?? 1) !== 21004) break;
-    }
+      let receiptRes: AppleReceiptResponse = { status: 1 };
+      for (const sharedSecret of sharedSecrets) {
+        const productionRes = await verifyAppleReceipt({
+          receiptData,
+          sharedSecret,
+          isSandboxAttempt: false,
+        });
 
-    // Fallback: in some TestFlight/sandbox states, password validation can fail even
-    // though the receipt itself is valid. Retry once without password and inspect records.
-    if ((receiptRes.status ?? 1) === 21004) {
-      const prodNoSecret = await verifyAppleReceipt({
-        receiptData,
-        isSandboxAttempt: false,
-      });
-      receiptRes =
-        (prodNoSecret.status ?? null) === 21007
-          ? await verifyAppleReceipt({
-              receiptData,
-              isSandboxAttempt: true,
-            })
-          : prodNoSecret;
-    }
+        let candidate: AppleReceiptResponse = productionRes;
+        if ((productionRes.status ?? null) === 21007) {
+          candidate = await verifyAppleReceipt({
+            receiptData,
+            sharedSecret,
+            isSandboxAttempt: true,
+          });
+        }
 
-    if ((receiptRes.status ?? 1) !== 0) {
-      return NextResponse.json(
-        {
-          error: "Invalid or unverified Apple receipt",
-          appleStatus: receiptRes.status ?? null,
-        },
-        { status: 400 }
-      );
+        receiptRes = candidate;
+        if ((candidate.status ?? 1) === 0) break;
+        // 21004 means wrong secret; continue trying other configured candidates.
+        if ((candidate.status ?? 1) !== 21004) break;
+      }
+
+      // Fallback: in some TestFlight/sandbox states, password validation can fail even
+      // though the receipt itself is valid. Retry once without password and inspect records.
+      if ((receiptRes.status ?? 1) === 21004) {
+        const prodNoSecret = await verifyAppleReceipt({
+          receiptData,
+          isSandboxAttempt: false,
+        });
+        receiptRes =
+          (prodNoSecret.status ?? null) === 21007
+            ? await verifyAppleReceipt({
+                receiptData,
+                isSandboxAttempt: true,
+              })
+            : prodNoSecret;
+      }
+
+      if ((receiptRes.status ?? 1) !== 0) {
+        return NextResponse.json(
+          {
+            error: "Invalid or unverified Apple receipt",
+            appleStatus: receiptRes.status ?? null,
+            serverApiReason: serverApiResult.reason,
+          },
+          { status: 400 }
+        );
+      }
+
+      appleEnvironment = receiptRes.environment ?? null;
+      const latestInfo = Array.isArray(receiptRes.latest_receipt_info)
+        ? receiptRes.latest_receipt_info
+        : [];
+      const inAppInfo = Array.isArray(receiptRes.receipt?.in_app)
+        ? receiptRes.receipt?.in_app ?? []
+        : [];
+      candidateRecords = latestInfo.length > 0 ? latestInfo : inAppInfo;
+      if (!Array.isArray(candidateRecords) || candidateRecords.length === 0) {
+        return NextResponse.json(
+          {
+            error: "Receipt missing transaction records",
+            appleEnvironment,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const now = new Date();
-    const latestInfo = Array.isArray(receiptRes.latest_receipt_info)
-      ? receiptRes.latest_receipt_info
-      : [];
-    const inAppInfo = Array.isArray(receiptRes.receipt?.in_app)
-      ? receiptRes.receipt?.in_app ?? []
-      : [];
-    const candidateRecords = latestInfo.length > 0 ? latestInfo : inAppInfo;
-    if (!Array.isArray(candidateRecords) || candidateRecords.length === 0) {
-      return NextResponse.json(
-        {
-          error: "Receipt missing transaction records",
-          appleStatus: receiptRes.status ?? null,
-          appleEnvironment: receiptRes.environment ?? null,
-        },
-        { status: 400 }
-      );
-    }
-
     const requestedProductId = subscriptionId.trim();
     const byExpiryDesc = (a: AppleReceiptRecord, b: AppleReceiptRecord) => {
       const ea = parseMsDate(a?.expires_date_ms)?.getTime() ?? 0;
@@ -273,17 +418,17 @@ export async function POST(request: Request) {
     });
 
     const inferredPlan = inferPlanFromProductId(productIdFromReceipt);
-    const originalTransactionId =
+    const originalTransactionIdFromRecord =
       typeof record.original_transaction_id === "string"
         ? record.original_transaction_id
         : null;
-    const transactionId =
+    const transactionIdFromRecord =
       typeof record.transaction_id === "string"
         ? record.transaction_id
         : null;
     const externalSubscriptionId =
-      originalTransactionId ||
-      transactionId ||
+      originalTransactionIdFromRecord ||
+      transactionIdFromRecord ||
       subscriptionId;
 
     const user = await prisma.user.findUnique({
@@ -298,7 +443,7 @@ export async function POST(request: Request) {
 
     // Ownership guard: do not allow one Apple subscription to silently activate
     // a different Wisewave account. Prefer original_transaction_id for stability.
-    const ownershipKey = originalTransactionId || transactionId;
+    const ownershipKey = originalTransactionIdFromRecord || transactionIdFromRecord;
     if (ownershipKey) {
       const existingOwner = await prisma.subscription.findFirst({
         where: {
@@ -344,11 +489,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Apple receipt verified and synced.",
+      message:
+        verificationSource === "apple_server_api"
+          ? "Apple Server API transaction verified and synced."
+          : "Apple receipt verified and synced.",
       plan: inferredPlan,
-      subscriptionState: receiptRes.status ?? null,
+      subscriptionState: verificationSource === "apple_server_api" ? "server_api_ok" : "receipt_ok",
       currentPeriodEnd: expiresDate,
       platform: "app_store",
+      verificationSource,
+      appleEnvironment,
     });
   } catch (error) {
     console.error("[app/api/subscription/verify-ios] unexpected error", error);

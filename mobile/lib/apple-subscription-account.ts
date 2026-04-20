@@ -2,6 +2,10 @@ import { Alert, Platform } from "react-native";
 import * as RNIap from "react-native-iap";
 import type { ActiveSubscription } from "react-native-iap";
 import { getIosReceiptWithRetry, matchesProductId, productIdOf, type IapPurchaseLike } from "./ios-receipt";
+import {
+  ENABLE_IOS_RECEIPT_VERIFY,
+  IOS_RECEIPT_VERIFY_DISABLED_MESSAGE,
+} from "./ios-subscription-flags";
 
 type FinishTransactionPurchase = Parameters<typeof RNIap.finishTransaction>[0]["purchase"];
 
@@ -210,6 +214,16 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
       receiptData,
       subscriptionId: productId,
       bundleId,
+      transactionId:
+        typeof (latestPurchase as Record<string, unknown>)?.transactionId === "string"
+          ? ((latestPurchase as Record<string, unknown>).transactionId as string)
+          : null,
+      originalTransactionId:
+        typeof (latestPurchase as Record<string, unknown>)
+          ?.originalTransactionIdentifierIOS === "string"
+          ? ((latestPurchase as Record<string, unknown>)
+              .originalTransactionIdentifierIOS as string)
+          : null,
     }),
   });
   const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -288,6 +302,10 @@ export function presentAppleSubscriptionAccountHub(options: AppleSubscriptionAcc
         text: "Sync Wisewave",
         onPress: () => {
           void (async () => {
+            if (!ENABLE_IOS_RECEIPT_VERIFY) {
+              Alert.alert("Sync unavailable", IOS_RECEIPT_VERIFY_DISABLED_MESSAGE);
+              return;
+            }
             try {
               const result = await syncWisewaveUsingStoreSnapshot(token, {
                 apiBaseUrl: options.apiBaseUrl,
@@ -341,6 +359,11 @@ export async function runAppleSubscriptionAccountSequential(
   }
 
   Alert.alert("App Store (this Apple ID)", formatStoreAccountSnapshotForAlert(subs));
+
+  if (!ENABLE_IOS_RECEIPT_VERIFY) {
+    Alert.alert("Sync unavailable", IOS_RECEIPT_VERIFY_DISABLED_MESSAGE);
+    return;
+  }
 
   const result = await syncWisewaveUsingStoreSnapshot(options.token, {
     apiBaseUrl: options.apiBaseUrl,
@@ -399,6 +422,10 @@ export function presentAppleSubscriptionCancellationFlow(
         text: "Sync Wisewave from receipt",
         onPress: () => {
           void (async () => {
+            if (!ENABLE_IOS_RECEIPT_VERIFY) {
+              Alert.alert("Sync unavailable", IOS_RECEIPT_VERIFY_DISABLED_MESSAGE);
+              return;
+            }
             try {
               const result = await syncWisewaveUsingStoreSnapshot(token, base);
               if (!result.ok) {

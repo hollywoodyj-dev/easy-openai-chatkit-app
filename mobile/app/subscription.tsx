@@ -24,6 +24,10 @@ import {
   productIdOf,
   type IapPurchaseLike,
 } from "../lib/ios-receipt";
+import {
+  ENABLE_IOS_RECEIPT_VERIFY,
+  IOS_RECEIPT_VERIFY_DISABLED_MESSAGE,
+} from "../lib/ios-subscription-flags";
 
 const MONTHLY_PRICE = 29;
 const YEARLY_PRICE = 299;
@@ -47,7 +51,7 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "8a62077 · subscribe-ui-2026-04-20-b5";
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "9caed14 · subscribe-ui-2026-04-20-b6";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -392,6 +396,21 @@ export default function SubscriptionScreen() {
       }
 
       const purchase = Array.isArray(result) ? result[0] : result;
+      if (!ENABLE_IOS_RECEIPT_VERIFY) {
+        try {
+          await RNIap.finishTransaction({
+            purchase: purchase as FinishTransactionPurchase,
+            isConsumable: false,
+          });
+        } catch (finishErr) {
+          console.warn("finishTransaction (iOS, verify disabled) warning", finishErr);
+        }
+        Alert.alert(
+          "Purchase received",
+          `${IOS_RECEIPT_VERIFY_DISABLED_MESSAGE}\n\nPlease use the upcoming Apple Server API sync flow, or ask steward/admin to set access for testing.`
+        );
+        return;
+      }
       const receiptData = await getIosReceiptWithRetry(productId, purchase);
 
       if (!receiptData) {
@@ -412,6 +431,16 @@ export default function SubscriptionScreen() {
           receiptData,
           subscriptionId: productId,
           bundleId: "com.wisewave.chatkit",
+          transactionId:
+            typeof (purchase as Record<string, unknown>)?.transactionId === "string"
+              ? ((purchase as Record<string, unknown>).transactionId as string)
+              : null,
+          originalTransactionId:
+            typeof (purchase as Record<string, unknown>)?.originalTransactionIdentifierIOS ===
+            "string"
+              ? ((purchase as Record<string, unknown>)
+                  .originalTransactionIdentifierIOS as string)
+              : null,
         }),
       });
 
@@ -515,6 +544,10 @@ export default function SubscriptionScreen() {
     setProcessingPlan("restore");
 
     try {
+      if (!ENABLE_IOS_RECEIPT_VERIFY) {
+        Alert.alert("Restore unavailable", IOS_RECEIPT_VERIFY_DISABLED_MESSAGE);
+        return;
+      }
       const available = await RNIap.getAvailablePurchases();
       if (!Array.isArray(available) || available.length === 0) {
         Alert.alert("No purchases found", "No App Store subscription receipt was found for this account.");
@@ -557,6 +590,16 @@ export default function SubscriptionScreen() {
           receiptData,
           subscriptionId: productId,
           bundleId: "com.wisewave.chatkit",
+          transactionId:
+            typeof (latestPurchase as Record<string, unknown>)?.transactionId === "string"
+              ? ((latestPurchase as Record<string, unknown>).transactionId as string)
+              : null,
+          originalTransactionId:
+            typeof (latestPurchase as Record<string, unknown>)
+              ?.originalTransactionIdentifierIOS === "string"
+              ? ((latestPurchase as Record<string, unknown>)
+                  .originalTransactionIdentifierIOS as string)
+              : null,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
