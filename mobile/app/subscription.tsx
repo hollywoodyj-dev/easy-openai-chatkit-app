@@ -19,9 +19,12 @@ import {
   runAppleSubscriptionAccountSequential,
 } from "../lib/apple-subscription-account";
 import {
+  comparePurchaseByRecency,
   matchesProductId,
   normalizeRequestPurchaseResult,
   productIdOf,
+  purchaseRecordSortTimeMs,
+  safePurchaseKeysForLog,
   type IapPurchaseLike,
 } from "../lib/ios-receipt";
 import { verifyIosSubscriptionServerFirst } from "../lib/verify-ios-subscription";
@@ -53,7 +56,7 @@ const APP_STORE_PRODUCT_IDS = {
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b11 · Nitro-safe purchase unwrap + field reads (Lumen)";
+  "subscribe-ui-2026-04-21-b12 · restore/sync Nitro-safe sort + normalize (Lumen)";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -557,24 +560,47 @@ export default function SubscriptionScreen() {
       );
 
       const candidates = matching.length > 0 ? matching : available;
-      const latestPurchase = [...candidates].sort((a: unknown, b: unknown) => {
-        const pa = a as IapPurchaseLike;
-        const pb = b as IapPurchaseLike;
-        const ta = Number(pa.transactionDate ?? pa.purchaseTime ?? 0);
-        const tb = Number(pb.transactionDate ?? pb.purchaseTime ?? 0);
-        return tb - ta;
-      })[0];
+      const rawLatest = [...candidates].sort(comparePurchaseByRecency)[0];
+      const restorePurchase =
+        normalizeRequestPurchaseResult(rawLatest) ?? rawLatest;
 
       const productId =
-        productIdOf(latestPurchase) || APP_STORE_PRODUCT_IDS.monthly;
+        productIdOf(restorePurchase) || APP_STORE_PRODUCT_IDS.monthly;
 
-      const { res, json } = await verifyIosSubscriptionServerFirst({
-        apiBaseUrl: API_BASE_URL,
-        token,
+      console.warn("[WisewaveIapRestore] start", {
+        availableCount: available.length,
+        candidateCount: candidates.length,
         productId,
-        bundleId: "com.wisewave.chatkit",
-        purchase: latestPurchase,
+        rawKeys: safePurchaseKeysForLog(rawLatest),
+        normalizedKeys: safePurchaseKeysForLog(restorePurchase),
+        unwrap: restorePurchase !== rawLatest,
+        sortMs: {
+          raw: purchaseRecordSortTimeMs(rawLatest),
+          normalized: purchaseRecordSortTimeMs(restorePurchase),
+        },
       });
+
+      let res: Response;
+      let json: Record<string, unknown>;
+      try {
+        const out = await verifyIosSubscriptionServerFirst({
+          apiBaseUrl: API_BASE_URL,
+          token,
+          productId,
+          bundleId: "com.wisewave.chatkit",
+          purchase: restorePurchase,
+        });
+        res = out.res;
+        json = out.json;
+        console.warn("[WisewaveIapRestore] verify_done", {
+          httpOk: res.ok,
+          status: res.status,
+          code: typeof json.code === "string" ? json.code : null,
+        });
+      } catch (verifyErr) {
+        console.warn("[WisewaveIapRestore] verify threw", verifyErr);
+        throw verifyErr;
+      }
 
       if (!res.ok) {
         Alert.alert(
@@ -586,10 +612,12 @@ export default function SubscriptionScreen() {
 
       try {
         await RNIap.finishTransaction({
-          purchase: latestPurchase as FinishTransactionPurchase,
+          purchase: restorePurchase as FinishTransactionPurchase,
           isConsumable: false,
         });
-      } catch {
+        console.warn("[WisewaveIapRestore] finishTransaction ok");
+      } catch (finishErr) {
+        console.warn("[WisewaveIapRestore] finishTransaction", finishErr);
         // Ignore if already finished.
       }
 

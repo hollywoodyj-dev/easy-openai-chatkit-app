@@ -55,6 +55,37 @@ export function matchesProductId(p: unknown, productId: string): boolean {
   return productIdOf(p) === productId;
 }
 
+/** Milliseconds for sorting restore/sync rows; uses readPurchaseField (Nitro-safe). */
+export function purchaseRecordSortTimeMs(p: unknown): number {
+  if (!p || typeof p !== "object") return 0;
+  const o = p as Record<string, unknown>;
+  for (const key of ["transactionDate", "purchaseTime"] as const) {
+    const v = readPurchaseField(o, key);
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    if (typeof v === "string" && v.trim()) {
+      const n = Number(v);
+      if (Number.isFinite(n)) return n;
+      const parsed = Date.parse(v);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return 0;
+}
+
+/** Newest first (for `[...rows].sort(comparePurchaseByRecency)[0]`). */
+export function comparePurchaseByRecency(a: unknown, b: unknown): number {
+  return purchaseRecordSortTimeMs(b) - purchaseRecordSortTimeMs(a);
+}
+
+export function safePurchaseKeysForLog(p: unknown): string[] {
+  if (!p || typeof p !== "object") return [];
+  try {
+    return Object.keys(p as object).sort();
+  } catch {
+    return ["<Object.keys threw>"];
+  }
+}
+
 function asAppleIdString(v: unknown): string | null {
   if (typeof v === "string" && v.trim().length > 0) return v.trim();
   if (typeof v === "number" && Number.isFinite(v)) return String(Math.trunc(v));

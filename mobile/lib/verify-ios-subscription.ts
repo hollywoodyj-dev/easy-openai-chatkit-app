@@ -1,5 +1,6 @@
 import * as RNIap from "react-native-iap";
 import {
+  comparePurchaseByRecency,
   getIosReceiptWithRetry,
   iosPurchaseTransactionIds,
   logIosPurchaseDiagnostics,
@@ -26,9 +27,11 @@ export async function resolveIosPurchaseTransactionIds(
   }
   try {
     const available = await RNIap.getAvailablePurchases();
-    const match = available.find((p: unknown) => matchesProductId(p, productId));
-    if (match) {
-      ids = iosPurchaseTransactionIds(match);
+    const matches = available.filter((p: unknown) => matchesProductId(p, productId));
+    if (matches.length > 0) {
+      const raw = [...matches].sort(comparePurchaseByRecency)[0];
+      const row = normalizeRequestPurchaseResult(raw) ?? raw;
+      ids = iosPurchaseTransactionIds(row);
     }
   } catch (e) {
     console.warn("[WisewaveIapPurchase] getAvailablePurchases id fallback failed", e);

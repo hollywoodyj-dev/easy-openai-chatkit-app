@@ -1,7 +1,14 @@
 import { Alert, Platform } from "react-native";
 import * as RNIap from "react-native-iap";
 import type { ActiveSubscription } from "react-native-iap";
-import { matchesProductId, productIdOf, type IapPurchaseLike } from "./ios-receipt";
+import {
+  comparePurchaseByRecency,
+  matchesProductId,
+  normalizeRequestPurchaseResult,
+  productIdOf,
+  purchaseRecordSortTimeMs,
+  safePurchaseKeysForLog,
+} from "./ios-receipt";
 import { verifyIosSubscriptionServerFirst } from "./verify-ios-subscription";
 import {
   ENABLE_IOS_RECEIPT_VERIFY,
@@ -178,16 +185,10 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
 
   const matching = available.filter((p: unknown) => activeIds.has(productIdOf(p)));
   const candidates = matching.length > 0 ? matching : available;
-  const sorted = [...candidates].sort((a: unknown, b: unknown) => {
-    const pa = a as IapPurchaseLike;
-    const pb = b as IapPurchaseLike;
-    const ta = Number(pa.transactionDate ?? pa.purchaseTime ?? 0);
-    const tb = Number(pb.transactionDate ?? pb.purchaseTime ?? 0);
-    return tb - ta;
-  });
+  const sorted = [...candidates].sort(comparePurchaseByRecency);
 
-  let latestPurchase = sorted[0];
-  let productId = productIdOf(latestPurchase) || monthlyProductId;
+  let rawPick = sorted[0];
+  let productId = productIdOf(rawPick) || monthlyProductId;
 
   if (
     preferredProductId &&
@@ -196,10 +197,25 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
   ) {
     const match = sorted.find((p) => matchesProductId(p, preferredProductId));
     if (match) {
-      latestPurchase = match;
+      rawPick = match;
       productId = preferredProductId;
     }
   }
+
+  const latestPurchase = normalizeRequestPurchaseResult(rawPick) ?? rawPick;
+
+  console.warn("[WisewaveIapSync] start", {
+    availableCount: available.length,
+    candidateCount: candidates.length,
+    productId,
+    rawKeys: safePurchaseKeysForLog(rawPick),
+    normalizedKeys: safePurchaseKeysForLog(latestPurchase),
+    unwrap: latestPurchase !== rawPick,
+    sortMs: {
+      raw: purchaseRecordSortTimeMs(rawPick),
+      normalized: purchaseRecordSortTimeMs(latestPurchase),
+    },
+  });
 
   const { res, json } = await verifyIosSubscriptionServerFirst({
     apiBaseUrl,
@@ -207,6 +223,12 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
     productId,
     bundleId,
     purchase: latestPurchase,
+  });
+
+  console.warn("[WisewaveIapSync] verify_done", {
+    httpOk: res.ok,
+    status: res.status,
+    code: typeof json.code === "string" ? json.code : null,
   });
 
   if (!res.ok) {
@@ -218,7 +240,9 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
       purchase: latestPurchase as FinishTransactionPurchase,
       isConsumable: false,
     });
-  } catch {
+    console.warn("[WisewaveIapSync] finishTransaction ok");
+  } catch (finishErr) {
+    console.warn("[WisewaveIapSync] finishTransaction", finishErr);
     // Ignore if already finished.
   }
 
