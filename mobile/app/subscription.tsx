@@ -47,7 +47,7 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "afb0174 · subscribe-ui-2026-04-19-b3";
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "afb0174 · subscribe-ui-2026-04-20-b4";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -404,8 +404,22 @@ export default function SubscriptionScreen() {
         } catch (finishErr) {
           console.warn("finishTransaction (iOS) warning", finishErr);
         }
-        Alert.alert("Success", "Subscription activated.");
-        router.replace("/chat");
+        const successBody =
+          "Your Wisewave account is active.\n\n" +
+          "Apple may not show a separate price sheet after the Apple ID prompt (common in Sandbox or when re-starting the same plan)—that is still a valid purchase if you see this success message.\n\n" +
+          "Tap Continue to open chat.";
+        Alert.alert("Success", successBody, [
+          {
+            text: "Continue",
+            onPress: () => {
+              // Defer navigation until after the alert closes, and briefly wait so
+              // /chat WebView auth-check sees the updated subscription row.
+              setTimeout(() => {
+                router.replace("/chat");
+              }, 400);
+            },
+          },
+        ]);
       } else {
         Alert.alert("Error", formatIosVerifyFailureMessage(res, json));
       }
