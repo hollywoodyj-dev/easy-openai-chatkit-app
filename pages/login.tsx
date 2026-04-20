@@ -1,5 +1,6 @@
 import { useState, FormEvent, useEffect } from "react";
 import type { NextPage } from "next";
+import Image from "next/image";
 import { useRouter } from "next/router";
 
 const API_BASE = typeof window !== "undefined" ? window.location.origin : "";
@@ -80,8 +81,19 @@ const LoginPage: NextPage = () => {
     <main className="min-h-screen bg-[#F7F5F2] px-4 py-10">
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <div className="text-[11px] uppercase tracking-[0.24em] text-[#7A7A7A]">WISEWAVE</div>
-          <h1 className="mt-3 text-3xl font-medium tracking-[-0.02em] text-[#1F1F1F]">
+          {/* Locked Primary lockup; min ~140px width per brand guidelines */}
+          <div className="mx-auto flex w-full max-w-[288px] min-w-[140px] justify-center">
+            <Image
+              src="/brand/wisewave-primary-lock-reference.png"
+              alt="Wisewave"
+              width={1536}
+              height={1024}
+              className="h-auto w-full object-contain object-center"
+              sizes="288px"
+              priority
+            />
+          </div>
+          <h1 className="mt-5 text-3xl font-medium tracking-[-0.02em] text-[#1F1F1F]">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>
           <p className="mt-2 text-sm text-[#5E5E5E]">
