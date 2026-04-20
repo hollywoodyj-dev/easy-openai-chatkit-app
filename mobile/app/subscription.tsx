@@ -20,6 +20,7 @@ import {
 } from "../lib/apple-subscription-account";
 import {
   matchesProductId,
+  normalizeRequestPurchaseResult,
   productIdOf,
   type IapPurchaseLike,
 } from "../lib/ios-receipt";
@@ -52,7 +53,7 @@ const APP_STORE_PRODUCT_IDS = {
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b10 · tx-id extraction + IAP snapshot disclaimer (Lumen)";
+  "subscribe-ui-2026-04-21-b11 · Nitro-safe purchase unwrap + field reads (Lumen)";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -396,7 +397,26 @@ export default function SubscriptionScreen() {
         return;
       }
 
-      const purchase = Array.isArray(result) ? result[0] : result;
+      const purchase = normalizeRequestPurchaseResult(
+        Array.isArray(result) ? (result.length > 0 ? result[0] : null) : result
+      );
+      if (purchase == null) {
+        console.warn("[WisewaveIapPurchase] requestPurchase empty after normalize", { productId });
+        Alert.alert(
+          "Error",
+          "The store returned an empty purchase object. Please try again or use Restore purchase."
+        );
+        return;
+      }
+      try {
+        const keys =
+          typeof purchase === "object" && purchase
+            ? Object.keys(purchase as Record<string, unknown>).sort()
+            : [];
+        console.warn("[WisewaveIapPurchase] requestPurchase_ok", { productId, keys });
+      } catch (e) {
+        console.warn("[WisewaveIapPurchase] requestPurchase_ok keys skipped", String(e));
+      }
       if (!ENABLE_IOS_RECEIPT_VERIFY) {
         try {
           await RNIap.finishTransaction({

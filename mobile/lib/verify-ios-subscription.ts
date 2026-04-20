@@ -4,6 +4,7 @@ import {
   iosPurchaseTransactionIds,
   logIosPurchaseDiagnostics,
   matchesProductId,
+  normalizeRequestPurchaseResult,
 } from "./ios-receipt";
 
 export const VERIFY_IOS_RECEIPT_DATA_REQUIRED = "receipt_data_required";
@@ -47,7 +48,9 @@ export async function verifyIosSubscriptionServerFirst(options: {
   bundleId: string;
   purchase: unknown;
 }): Promise<{ res: Response; json: VerifyIosJson }> {
-  const { apiBaseUrl, token, productId, bundleId, purchase } = options;
+  const { apiBaseUrl, token, productId, bundleId } = options;
+  const purchase =
+    normalizeRequestPurchaseResult(options.purchase) ?? options.purchase;
   const ids = await resolveIosPurchaseTransactionIds(productId, purchase);
   if (!ids.transactionId && !ids.originalTransactionId) {
     logIosPurchaseDiagnostics(productId, purchase, ids);

@@ -16,6 +16,15 @@ export type IapPurchaseLike = {
   subscriptionOfferDetails?: unknown;
 };
 
+/** Nitro / native purchase objects may throw on missing keys; never assume plain JS objects. */
+function readPurchaseField(o: Record<string, unknown>, key: string): unknown {
+  try {
+    return Reflect.get(o, key);
+  } catch {
+    return undefined;
+  }
+}
+
 function receiptStringsFromPurchase(p: unknown): {
   transactionReceipt?: string;
   receipt?: string;
@@ -25,16 +34,21 @@ function receiptStringsFromPurchase(p: unknown): {
   const o = p as Record<string, unknown>;
   const str = (v: unknown) => (typeof v === "string" && v.length > 0 ? v : undefined);
   return {
-    transactionReceipt: str(o.transactionReceipt),
-    receipt: str(o.receipt),
-    originalTransactionReceipt: str(o.originalTransactionReceipt),
+    transactionReceipt: str(readPurchaseField(o, "transactionReceipt")),
+    receipt: str(readPurchaseField(o, "receipt")),
+    originalTransactionReceipt: str(readPurchaseField(o, "originalTransactionReceipt")),
   };
 }
 
 export function productIdOf(p: unknown): string {
   if (!p || typeof p !== "object") return "";
-  const x = p as IapPurchaseLike;
-  return String(x.productId ?? x.id ?? x.sku ?? "");
+  const o = p as Record<string, unknown>;
+  return String(
+    readPurchaseField(o, "productId") ??
+      readPurchaseField(o, "id") ??
+      readPurchaseField(o, "sku") ??
+      ""
+  );
 }
 
 export function matchesProductId(p: unknown, productId: string): boolean {
@@ -110,7 +124,7 @@ function collectPurchaseRecordBlobs(o: Record<string, unknown>): string[] {
   ] as const;
   const out: string[] = [];
   for (const k of keys) {
-    const v = o[k];
+    const v = readPurchaseField(o, k);
     if (typeof v === "string" && v.length > 0) out.push(v);
   }
   return out;
@@ -123,12 +137,34 @@ function purchaseObjectLayers(purchase: unknown): Record<string, unknown>[] {
   layers.push(root);
   const nested = ["native", "ios", "transaction", "purchase"] as const;
   for (const k of nested) {
-    const v = root[k];
+    const v = readPurchaseField(root, k);
     if (v && typeof v === "object" && !Array.isArray(v)) {
       layers.push(v as Record<string, unknown>);
     }
   }
   return layers;
+}
+
+/**
+ * `requestPurchase` may resolve to a bare `Purchase`, `{ purchase: Purchase }`, or `[Purchase]`.
+ * Always pass the inner purchase to `finishTransaction` / verify helpers.
+ */
+export function normalizeRequestPurchaseResult(result: unknown): unknown {
+  if (result == null) return result;
+  if (Array.isArray(result)) {
+    return result.length > 0 ? normalizeRequestPurchaseResult(result[0]) : null;
+  }
+  if (typeof result !== "object") return result;
+  const o = result as Record<string, unknown>;
+  const innerPurchase = readPurchaseField(o, "purchase");
+  if (innerPurchase != null && typeof innerPurchase === "object") {
+    return innerPurchase;
+  }
+  const innerTx = readPurchaseField(o, "transaction");
+  if (innerTx != null && typeof innerTx === "object") {
+    return innerTx;
+  }
+  return result;
 }
 
 /**
@@ -149,14 +185,14 @@ export function iosPurchaseTransactionIds(p: unknown): {
 
   for (const layer of purchaseObjectLayers(purchase)) {
     tryAssign(
-      asAppleIdString(layer.transactionId) ??
-        asAppleIdString(layer.transactionIdentifierIOS) ??
-        asAppleIdString(layer.transactionIdentifier) ??
-        asAppleIdString(layer.transactionIdentifierStringIOS),
-      asAppleIdString(layer.originalTransactionIdentifierIOS) ??
-        asAppleIdString(layer.originalTransactionIdIOS) ??
-        asAppleIdString(layer.originalTransactionId) ??
-        asAppleIdString(layer.originalTransactionIdentifier)
+      asAppleIdString(readPurchaseField(layer, "transactionId")) ??
+        asAppleIdString(readPurchaseField(layer, "transactionIdentifierIOS")) ??
+        asAppleIdString(readPurchaseField(layer, "transactionIdentifier")) ??
+        asAppleIdString(readPurchaseField(layer, "transactionIdentifierStringIOS")),
+      asAppleIdString(readPurchaseField(layer, "originalTransactionIdentifierIOS")) ??
+        asAppleIdString(readPurchaseField(layer, "originalTransactionIdIOS")) ??
+        asAppleIdString(readPurchaseField(layer, "originalTransactionId")) ??
+        asAppleIdString(readPurchaseField(layer, "originalTransactionIdentifier"))
     );
 
     for (const blob of collectPurchaseRecordBlobs(layer)) {
@@ -185,12 +221,21 @@ export function logIosPurchaseDiagnostics(
     return;
   }
   const o = purchase as Record<string, unknown>;
-  const keys = Object.keys(o).sort();
+  let keys: string[] = [];
+  try {
+    keys = Object.keys(o).sort();
+  } catch {
+    keys = ["<Object.keys threw; likely native purchase host object>"];
+  }
   const types: Record<string, string> = {};
   for (const k of keys) {
-    const v = o[k];
-    types[k] =
-      v === null ? "null" : Array.isArray(v) ? "array" : typeof v === "object" ? "object" : typeof v;
+    try {
+      const v = readPurchaseField(o, k);
+      types[k] =
+        v === null ? "null" : Array.isArray(v) ? "array" : typeof v === "object" ? "object" : typeof v;
+    } catch {
+      types[k] = "<read threw>";
+    }
   }
   console.warn("[WisewaveIapPurchase] missing_tx_ids", { productId, keys, types });
 }
