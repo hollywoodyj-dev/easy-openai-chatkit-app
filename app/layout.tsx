@@ -5,12 +5,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.wisewave.io"),
   applicationName: "Wisewave",
+  manifest: "/site.webmanifest",
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/brand/wisewave-app-logo.png", type: "image/png" },
       { url: "/icon.png", type: "image/png" },
     ],
-    apple: "/apple-icon.png",
+    apple: "/apple-touch-icon.png",
   },
   title: {
     default: "Wisewave — A quieter space for reflection",
