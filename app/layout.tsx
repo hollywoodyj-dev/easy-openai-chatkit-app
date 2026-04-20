@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   applicationName: "Wisewave",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/wisewave-app-logo.png", type: "image/png" },
       { url: "/icon.png", type: "image/png" },
     ],
     apple: "/apple-icon.png",

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const navItems = [
   { href: "/what-is-wisewave", label: "What Wisewave Is" },
@@ -14,9 +15,17 @@ export function WisewaveSiteHeader() {
       <div className="mx-auto flex min-h-16 w-full max-w-[51rem] items-center justify-between gap-6 px-6 py-4 sm:px-8">
         <Link
           href="/"
-          className="text-base font-medium tracking-[-0.02em] text-[#171717]"
+          className="inline-flex items-center"
+          aria-label="Wisewave home"
         >
-          Wisewave
+          <Image
+            src="/brand/wisewave-text.png"
+            alt="Wisewave"
+            width={2172}
+            height={724}
+            className="h-auto w-[140px] object-contain sm:w-[172px]"
+            priority
+          />
         </Link>
         <nav aria-label="Primary" className="hidden gap-6 md:flex">
           {navItems.map((item) => (

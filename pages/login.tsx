@@ -81,15 +81,14 @@ const LoginPage: NextPage = () => {
     <main className="min-h-screen bg-[#F7F5F2] px-4 py-10">
       <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          {/* Locked Primary lockup; min ~140px width per brand guidelines */}
-          <div className="mx-auto flex w-full max-w-[288px] min-w-[140px] justify-center">
+          <div className="mx-auto flex w-full max-w-[280px] min-w-[140px] justify-center">
             <Image
-              src="/brand/wisewave-primary-lock-reference.png"
+              src="/brand/wisewave-text.png"
               alt="Wisewave"
-              width={1536}
-              height={1024}
+              width={2172}
+              height={724}
               className="h-auto w-full object-contain object-center"
-              sizes="288px"
+              sizes="280px"
               priority
             />
           </div>
