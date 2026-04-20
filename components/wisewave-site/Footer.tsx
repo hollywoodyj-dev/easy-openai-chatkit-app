@@ -34,6 +34,9 @@ export function WisewaveSiteFooter() {
           <Link href="/terms" className="hover:text-[#171717]">
             Terms
           </Link>
+          <Link href="/about/founder-note" className="hover:text-[#171717]">
+            A note from the founder
+          </Link>
           <a href="mailto:info@wisewave.io" className="hover:text-[#171717]">
             Contact
           </a>
