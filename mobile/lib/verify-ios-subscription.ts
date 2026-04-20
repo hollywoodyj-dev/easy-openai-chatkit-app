@@ -1,9 +1,39 @@
-import { getIosReceiptWithRetry, iosPurchaseTransactionIds } from "./ios-receipt";
+import * as RNIap from "react-native-iap";
+import {
+  getIosReceiptWithRetry,
+  iosPurchaseTransactionIds,
+  logIosPurchaseDiagnostics,
+  matchesProductId,
+} from "./ios-receipt";
 
 export const VERIFY_IOS_RECEIPT_DATA_REQUIRED = "receipt_data_required";
 export const VERIFY_IOS_RECEIPT_UNAVAILABLE = "receipt_unavailable";
 
 type VerifyIosJson = Record<string, unknown>;
+
+/**
+ * Reads transaction IDs from the purchase object, then from `getAvailablePurchases()`
+ * for the same SKU when the resolved purchase omits IDs (common StoreKit / RN-IAP lag).
+ */
+export async function resolveIosPurchaseTransactionIds(
+  productId: string,
+  purchase: unknown
+): Promise<{ transactionId: string | null; originalTransactionId: string | null }> {
+  let ids = iosPurchaseTransactionIds(purchase);
+  if (ids.transactionId || ids.originalTransactionId) {
+    return ids;
+  }
+  try {
+    const available = await RNIap.getAvailablePurchases();
+    const match = available.find((p: unknown) => matchesProductId(p, productId));
+    if (match) {
+      ids = iosPurchaseTransactionIds(match);
+    }
+  } catch (e) {
+    console.warn("[WisewaveIapPurchase] getAvailablePurchases id fallback failed", e);
+  }
+  return ids;
+}
 
 /**
  * Calls `/api/subscription/verify-ios` with Apple Server API first when transaction
@@ -18,7 +48,10 @@ export async function verifyIosSubscriptionServerFirst(options: {
   purchase: unknown;
 }): Promise<{ res: Response; json: VerifyIosJson }> {
   const { apiBaseUrl, token, productId, bundleId, purchase } = options;
-  const ids = iosPurchaseTransactionIds(purchase);
+  const ids = await resolveIosPurchaseTransactionIds(productId, purchase);
+  if (!ids.transactionId && !ids.originalTransactionId) {
+    logIosPurchaseDiagnostics(productId, purchase, ids);
+  }
 
   const post = async (body: Record<string, unknown>) => {
     const res = await fetch(`${apiBaseUrl}/api/subscription/verify-ios`, {
@@ -66,7 +99,7 @@ export async function verifyIosSubscriptionServerFirst(options: {
       res: new Response(JSON.stringify({}), { status: 400 }),
       json: {
         error:
-          "Purchase completed, but receipt sync is still pending. Please wait a few seconds and try again.",
+          "The App Store has not returned transaction details or a refreshable receipt yet (common right after purchase in TestFlight). Wait a few seconds and try again, or tap Restore purchase.",
         code: VERIFY_IOS_RECEIPT_UNAVAILABLE,
       },
     };

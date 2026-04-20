@@ -41,22 +41,158 @@ export function matchesProductId(p: unknown, productId: string): boolean {
   return productIdOf(p) === productId;
 }
 
-/** Best-effort IDs for App Store Server API (react-native-iap field names vary by version). */
+function asAppleIdString(v: unknown): string | null {
+  if (typeof v === "string" && v.trim().length > 0) return v.trim();
+  if (typeof v === "number" && Number.isFinite(v)) return String(Math.trunc(v));
+  return null;
+}
+
+function decodeB64UrlJsonSegment(segment: string): unknown {
+  try {
+    const b64 = segment.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    if (typeof Buffer !== "undefined") {
+      return JSON.parse(Buffer.from(padded, "base64").toString("utf8")) as unknown;
+    }
+    if (typeof globalThis.atob === "function") {
+      const bin = globalThis.atob(padded);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i) & 0xff;
+      const text = new TextDecoder("utf-8").decode(bytes);
+      return JSON.parse(text) as unknown;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/** True when string looks like a compact JWS (StoreKit 2 transaction / OpenIAP), not a raw receipt blob. */
+function looksLikeCompactJws(s: string): boolean {
+  const parts = s.split(".");
+  if (parts.length < 3) return false;
+  const head = decodeB64UrlJsonSegment(parts[0]);
+  return (
+    head != null &&
+    typeof head === "object" &&
+    head !== null &&
+    ("alg" in (head as Record<string, unknown>) || "typ" in (head as Record<string, unknown>))
+  );
+}
+
+function extractIdsFromTransactionJws(jws: string): {
+  transactionId: string | null;
+  originalTransactionId: string | null;
+} {
+  if (!looksLikeCompactJws(jws)) {
+    return { transactionId: null, originalTransactionId: null };
+  }
+  const parts = jws.split(".");
+  const payload = decodeB64UrlJsonSegment(parts[1]);
+  if (!payload || typeof payload !== "object") {
+    return { transactionId: null, originalTransactionId: null };
+  }
+  const p = payload as Record<string, unknown>;
+  return {
+    transactionId: asAppleIdString(p.transactionId),
+    originalTransactionId: asAppleIdString(p.originalTransactionId),
+  };
+}
+
+function collectPurchaseRecordBlobs(o: Record<string, unknown>): string[] {
+  const keys = [
+    "jwsRepresentation",
+    "jwsRepresentationIOS",
+    "verificationResultIOS",
+    "signedTransactionInfo",
+    "deviceVerification",
+    "appTransactionId",
+  ] as const;
+  const out: string[] = [];
+  for (const k of keys) {
+    const v = o[k];
+    if (typeof v === "string" && v.length > 0) out.push(v);
+  }
+  return out;
+}
+
+function purchaseObjectLayers(purchase: unknown): Record<string, unknown>[] {
+  const layers: Record<string, unknown>[] = [];
+  if (!purchase || typeof purchase !== "object") return layers;
+  const root = purchase as Record<string, unknown>;
+  layers.push(root);
+  const nested = ["native", "ios", "transaction", "purchase"] as const;
+  for (const k of nested) {
+    const v = root[k];
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      layers.push(v as Record<string, unknown>);
+    }
+  }
+  return layers;
+}
+
+/**
+ * Best-effort IDs for App Store Server API. Field names differ across react-native-iap /
+ * Nitro / StoreKit 2; some builds nest under `native` or put signed payloads in `jwsRepresentation`.
+ */
 export function iosPurchaseTransactionIds(p: unknown): {
   transactionId: string | null;
   originalTransactionId: string | null;
 } {
-  if (!p || typeof p !== "object") {
-    return { transactionId: null, originalTransactionId: null };
-  }
-  const o = p as Record<string, unknown>;
-  const str = (v: unknown) => (typeof v === "string" && v.trim().length > 0 ? v.trim() : null);
-  return {
-    transactionId:
-      str(o.transactionId) ?? str(o.transactionIdentifierIOS) ?? str(o.transactionIdentifier),
-    originalTransactionId:
-      str(o.originalTransactionIdentifierIOS) ?? str(o.originalTransactionId),
+  let transactionId: string | null = null;
+  let originalTransactionId: string | null = null;
+
+  const tryAssign = (tx: string | null, orig: string | null) => {
+    if (tx && !transactionId) transactionId = tx;
+    if (orig && !originalTransactionId) originalTransactionId = orig;
   };
+
+  for (const layer of purchaseObjectLayers(purchase)) {
+    tryAssign(
+      asAppleIdString(layer.transactionId) ??
+        asAppleIdString(layer.transactionIdentifierIOS) ??
+        asAppleIdString(layer.transactionIdentifier) ??
+        asAppleIdString(layer.transactionIdentifierStringIOS),
+      asAppleIdString(layer.originalTransactionIdentifierIOS) ??
+        asAppleIdString(layer.originalTransactionIdIOS) ??
+        asAppleIdString(layer.originalTransactionId) ??
+        asAppleIdString(layer.originalTransactionIdentifier)
+    );
+
+    for (const blob of collectPurchaseRecordBlobs(layer)) {
+      const fromJws = extractIdsFromTransactionJws(blob);
+      tryAssign(fromJws.transactionId, fromJws.originalTransactionId);
+    }
+
+    if (transactionId && originalTransactionId) break;
+  }
+
+  return { transactionId, originalTransactionId };
+}
+
+/**
+ * Logs when transaction IDs could not be read (TestFlight / Xcode console).
+ * Does not print receipt or JWS bodies.
+ */
+export function logIosPurchaseDiagnostics(
+  productId: string,
+  purchase: unknown,
+  ids: { transactionId: string | null; originalTransactionId: string | null }
+): void {
+  if (ids.transactionId || ids.originalTransactionId) return;
+  if (!purchase || typeof purchase !== "object") {
+    console.warn("[WisewaveIapPurchase] missing_tx_ids", { productId, purchaseType: typeof purchase });
+    return;
+  }
+  const o = purchase as Record<string, unknown>;
+  const keys = Object.keys(o).sort();
+  const types: Record<string, string> = {};
+  for (const k of keys) {
+    const v = o[k];
+    types[k] =
+      v === null ? "null" : Array.isArray(v) ? "array" : typeof v === "object" ? "object" : typeof v;
+  }
+  console.warn("[WisewaveIapPurchase] missing_tx_ids", { productId, keys, types });
 }
 
 export function sleep(ms: number) {

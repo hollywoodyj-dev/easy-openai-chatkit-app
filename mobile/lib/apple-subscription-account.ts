@@ -69,6 +69,10 @@ export async function openStoreSubscriptionManagement(options?: {
 /**
  * Active Wisewave subscription rows for this store account (Apple ID / Play account),
  * as reported by the store SDK (not Wisewave’s database).
+ *
+ * **Diagnostic only:** `getActiveSubscriptions` can lag or disagree with Settings →
+ * Apple ID → Subscriptions after purchase or in sandbox/TestFlight. Do not treat an
+ * empty list as proof that Apple has no active sub.
  */
 export async function fetchStoreAccountSubscriptionSnapshot(
   subscriptionProductIds: readonly string[]
@@ -81,9 +85,9 @@ export async function fetchStoreAccountSubscriptionSnapshot(
 export function formatStoreAccountSnapshotForAlert(subs: ActiveSubscription[]): string {
   if (!subs.length) {
     return (
-      "No active Wisewave subscription was returned for these product IDs on this Apple ID.\n\n" +
-      "That is expected if your plan has ended—use Subscribe with Apple to buy again, or Manage subscriptions in Settings. " +
-      "After purchasing, use Sync Wisewave."
+      "The in-app store snapshot did not list an active Wisewave subscription for these product IDs.\n\n" +
+      "That can be wrong right after purchase or in TestFlight (SDK lag). If **Settings → Apple ID → Subscriptions** shows Wisewave as active, trust that over this screen.\n\n" +
+      "If your plan ended, use Subscribe with Apple again or Manage subscriptions in Settings. After Apple shows active, use **Sync Wisewave** to update our servers."
     );
   }
   return subs

@@ -52,7 +52,7 @@ const APP_STORE_PRODUCT_IDS = {
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b9 · transaction-first verify-ios (Lumen)";
+  "subscribe-ui-2026-04-21-b10 · tx-id extraction + IAP snapshot disclaimer (Lumen)";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
