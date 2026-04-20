@@ -1,7 +1,13 @@
 import { Alert, Platform } from "react-native";
 import * as RNIap from "react-native-iap";
 import type { ActiveSubscription } from "react-native-iap";
-import { getIosReceiptWithRetry, matchesProductId, productIdOf, type IapPurchaseLike } from "./ios-receipt";
+import {
+  getIosReceiptWithRetry,
+  iosPurchaseTransactionIds,
+  matchesProductId,
+  productIdOf,
+  type IapPurchaseLike,
+} from "./ios-receipt";
 import {
   ENABLE_IOS_RECEIPT_VERIFY,
   IOS_RECEIPT_VERIFY_DISABLED_MESSAGE,
@@ -204,6 +210,7 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
     };
   }
 
+  const syncAppleIds = iosPurchaseTransactionIds(latestPurchase);
   const res = await fetch(`${apiBaseUrl}/api/subscription/verify-ios`, {
     method: "POST",
     headers: {
@@ -214,16 +221,8 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
       receiptData,
       subscriptionId: productId,
       bundleId,
-      transactionId:
-        typeof (latestPurchase as Record<string, unknown>)?.transactionId === "string"
-          ? ((latestPurchase as Record<string, unknown>).transactionId as string)
-          : null,
-      originalTransactionId:
-        typeof (latestPurchase as Record<string, unknown>)
-          ?.originalTransactionIdentifierIOS === "string"
-          ? ((latestPurchase as Record<string, unknown>)
-              .originalTransactionIdentifierIOS as string)
-          : null,
+      transactionId: syncAppleIds.transactionId,
+      originalTransactionId: syncAppleIds.originalTransactionId,
     }),
   });
   const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;

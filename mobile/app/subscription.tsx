@@ -20,6 +20,7 @@ import {
 } from "../lib/apple-subscription-account";
 import {
   getIosReceiptWithRetry,
+  iosPurchaseTransactionIds,
   matchesProductId,
   productIdOf,
   type IapPurchaseLike,
@@ -51,7 +52,7 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "1b10874 · subscribe-ui-2026-04-20-b7";
+const SUBSCRIPTION_SCREEN_BUILD_TAG = "subscribe-ui-2026-04-21-b8 · Apple Server API + subs status";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -421,6 +422,7 @@ export default function SubscriptionScreen() {
         return;
       }
 
+      const appleIds = iosPurchaseTransactionIds(purchase);
       const res = await fetch(`${API_BASE_URL}/api/subscription/verify-ios`, {
         method: "POST",
         headers: {
@@ -431,16 +433,8 @@ export default function SubscriptionScreen() {
           receiptData,
           subscriptionId: productId,
           bundleId: "com.wisewave.chatkit",
-          transactionId:
-            typeof (purchase as Record<string, unknown>)?.transactionId === "string"
-              ? ((purchase as Record<string, unknown>).transactionId as string)
-              : null,
-          originalTransactionId:
-            typeof (purchase as Record<string, unknown>)?.originalTransactionIdentifierIOS ===
-            "string"
-              ? ((purchase as Record<string, unknown>)
-                  .originalTransactionIdentifierIOS as string)
-              : null,
+          transactionId: appleIds.transactionId,
+          originalTransactionId: appleIds.originalTransactionId,
         }),
       });
 
@@ -580,6 +574,7 @@ export default function SubscriptionScreen() {
         return;
       }
 
+      const restoreAppleIds = iosPurchaseTransactionIds(latestPurchase);
       const res = await fetch(`${API_BASE_URL}/api/subscription/verify-ios`, {
         method: "POST",
         headers: {
@@ -590,16 +585,8 @@ export default function SubscriptionScreen() {
           receiptData,
           subscriptionId: productId,
           bundleId: "com.wisewave.chatkit",
-          transactionId:
-            typeof (latestPurchase as Record<string, unknown>)?.transactionId === "string"
-              ? ((latestPurchase as Record<string, unknown>).transactionId as string)
-              : null,
-          originalTransactionId:
-            typeof (latestPurchase as Record<string, unknown>)
-              ?.originalTransactionIdentifierIOS === "string"
-              ? ((latestPurchase as Record<string, unknown>)
-                  .originalTransactionIdentifierIOS as string)
-              : null,
+          transactionId: restoreAppleIds.transactionId,
+          originalTransactionId: restoreAppleIds.originalTransactionId,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;

@@ -31,6 +31,16 @@ type AppleServerApiTransactionPayload = {
   expiresDate?: number;
   revocationDate?: number;
   purchaseDate?: number;
+  /** Present on JWSTransactionDecodedPayload from Apple ("Sandbox" | "Production", etc.). */
+  environment?: string;
+};
+
+type AppleSubscriptionStatusBody = {
+  data?: Array<{
+    lastTransactions?: Array<{
+      signedTransactionInfo?: string;
+    }>;
+  }>;
 };
 
 type AppleServerApiConfig = {
@@ -138,6 +148,64 @@ async function fetchAppleServerTransaction(
   return decodeJwtPayload<AppleServerApiTransactionPayload>(json.signedTransactionInfo);
 }
 
+/**
+ * Subscription status (renewals, grace, family groups): lists signed JWS payloads per group.
+ * See Apple App Store Server API — Get All Subscription Statuses.
+ */
+async function fetchAppleSubscriptionTransactionPayloads(
+  originalTransactionId: string,
+  config: AppleServerApiConfig,
+  useSandbox: boolean
+): Promise<AppleServerApiTransactionPayload[]> {
+  const host = useSandbox
+    ? "https://api.storekit-sandbox.itunes.apple.com"
+    : "https://api.storekit.itunes.apple.com";
+  const token = createAppleServerApiToken(config);
+  const res = await fetch(
+    `${host}/inApps/v1/subscriptions/${encodeURIComponent(originalTransactionId)}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    }
+  );
+  if (!res.ok) return [];
+  const body = (await res.json().catch(() => ({}))) as AppleSubscriptionStatusBody;
+  const out: AppleServerApiTransactionPayload[] = [];
+  for (const group of body.data ?? []) {
+    const rows = Array.isArray(group.lastTransactions) ? group.lastTransactions : [];
+    for (const lt of rows) {
+      if (!lt?.signedTransactionInfo) continue;
+      const p = decodeJwtPayload<AppleServerApiTransactionPayload>(lt.signedTransactionInfo);
+      if (p?.productId) out.push(p);
+    }
+  }
+  return out;
+}
+
+function pickLatestPayloadForProduct(
+  payloads: AppleServerApiTransactionPayload[],
+  subscriptionProductId: string
+): AppleServerApiTransactionPayload | null {
+  const want = subscriptionProductId.trim();
+  const matching = payloads.filter((p) => p.productId === want);
+  if (matching.length === 0) return null;
+  matching.sort((a, b) => (b.expiresDate ?? 0) - (a.expiresDate ?? 0));
+  return matching[0] ?? null;
+}
+
+function applePayloadEnvironment(
+  payload: AppleServerApiTransactionPayload,
+  usedSandboxHost: boolean
+): "sandbox" | "production" {
+  const env = String(payload.environment ?? "").toLowerCase();
+  if (env.includes("sandbox")) return "sandbox";
+  if (env.includes("production")) return "production";
+  return usedSandboxHost ? "sandbox" : "production";
+}
+
 async function verifyWithAppleServerApi(params: {
   transactionId?: string | null;
   originalTransactionId?: string | null;
@@ -152,23 +220,76 @@ async function verifyWithAppleServerApi(params: {
     }
   | { ok: false; reason: string }
 > {
-  const txId = params.transactionId?.trim() || params.originalTransactionId?.trim() || "";
-  if (!txId) return { ok: false, reason: "missing_transaction_id" };
+  const transactionId = params.transactionId?.trim() ?? "";
+  const originalTransactionId = params.originalTransactionId?.trim() ?? "";
+  if (!transactionId && !originalTransactionId) {
+    return { ok: false, reason: "missing_transaction_id" };
+  }
+  const subscriptionProductId = params.subscriptionId.trim();
   const config = parseAppleServerApiConfig(params.bundleId);
   if (!config) return { ok: false, reason: "server_api_not_configured" };
 
-  const prod = await fetchAppleServerTransaction(txId, config, false);
-  const payload = prod ?? (await fetchAppleServerTransaction(txId, config, true));
-  const environment: "sandbox" | "production" = prod ? "production" : "sandbox";
+  const tryTransactionIds = Array.from(
+    new Set([transactionId, originalTransactionId].filter((id) => id.length > 0))
+  );
+
+  let payload: AppleServerApiTransactionPayload | null = null;
+  let environment: "sandbox" | "production" = "production";
+
+  for (const id of tryTransactionIds) {
+    const p = await fetchAppleServerTransaction(id, config, false);
+    if (p?.productId === subscriptionProductId) {
+      payload = p;
+      environment = applePayloadEnvironment(p, false);
+      break;
+    }
+  }
+  if (!payload) {
+    for (const id of tryTransactionIds) {
+      const p = await fetchAppleServerTransaction(id, config, true);
+      if (p?.productId === subscriptionProductId) {
+        payload = p;
+        environment = applePayloadEnvironment(p, true);
+        break;
+      }
+    }
+  }
+
+  if (!payload && originalTransactionId) {
+    const prodPayloads = await fetchAppleSubscriptionTransactionPayloads(
+      originalTransactionId,
+      config,
+      false
+    );
+    const picked = pickLatestPayloadForProduct(prodPayloads, subscriptionProductId);
+    if (picked) {
+      payload = picked;
+      environment = applePayloadEnvironment(picked, false);
+    }
+  }
+  if (!payload && originalTransactionId) {
+    const sandPayloads = await fetchAppleSubscriptionTransactionPayloads(
+      originalTransactionId,
+      config,
+      true
+    );
+    const picked = pickLatestPayloadForProduct(sandPayloads, subscriptionProductId);
+    if (picked) {
+      payload = picked;
+      environment = applePayloadEnvironment(picked, true);
+    }
+  }
+
   if (!payload?.productId) {
     return { ok: false, reason: "transaction_not_found" };
   }
 
+  const fallbackTxKey = transactionId || originalTransactionId;
   const record: AppleReceiptRecord = {
     product_id: payload.productId,
-    transaction_id: payload.transactionId ?? txId,
+    transaction_id: payload.transactionId ?? fallbackTxKey,
     original_transaction_id:
-      payload.originalTransactionId ?? params.originalTransactionId ?? txId,
+      payload.originalTransactionId ?? originalTransactionId ?? fallbackTxKey,
     expires_date_ms:
       typeof payload.expiresDate === "number" ? String(payload.expiresDate) : undefined,
     cancellation_date_ms:

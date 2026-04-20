@@ -41,6 +41,24 @@ export function matchesProductId(p: unknown, productId: string): boolean {
   return productIdOf(p) === productId;
 }
 
+/** Best-effort IDs for App Store Server API (react-native-iap field names vary by version). */
+export function iosPurchaseTransactionIds(p: unknown): {
+  transactionId: string | null;
+  originalTransactionId: string | null;
+} {
+  if (!p || typeof p !== "object") {
+    return { transactionId: null, originalTransactionId: null };
+  }
+  const o = p as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === "string" && v.trim().length > 0 ? v.trim() : null);
+  return {
+    transactionId:
+      str(o.transactionId) ?? str(o.transactionIdentifierIOS) ?? str(o.transactionIdentifier),
+    originalTransactionId:
+      str(o.originalTransactionIdentifierIOS) ?? str(o.originalTransactionId),
+  };
+}
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
