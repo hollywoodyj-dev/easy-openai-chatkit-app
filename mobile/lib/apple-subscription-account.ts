@@ -1,13 +1,8 @@
 import { Alert, Platform } from "react-native";
 import * as RNIap from "react-native-iap";
 import type { ActiveSubscription } from "react-native-iap";
-import {
-  getIosReceiptWithRetry,
-  iosPurchaseTransactionIds,
-  matchesProductId,
-  productIdOf,
-  type IapPurchaseLike,
-} from "./ios-receipt";
+import { matchesProductId, productIdOf, type IapPurchaseLike } from "./ios-receipt";
+import { verifyIosSubscriptionServerFirst } from "./verify-ios-subscription";
 import {
   ENABLE_IOS_RECEIPT_VERIFY,
   IOS_RECEIPT_VERIFY_DISABLED_MESSAGE,
@@ -202,30 +197,13 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
     }
   }
 
-  const receiptData = await getIosReceiptWithRetry(productId, latestPurchase);
-  if (!receiptData) {
-    return {
-      ok: false,
-      message: "Receipt data was not available yet. Wait a few seconds and try Sync again.",
-    };
-  }
-
-  const syncAppleIds = iosPurchaseTransactionIds(latestPurchase);
-  const res = await fetch(`${apiBaseUrl}/api/subscription/verify-ios`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      receiptData,
-      subscriptionId: productId,
-      bundleId,
-      transactionId: syncAppleIds.transactionId,
-      originalTransactionId: syncAppleIds.originalTransactionId,
-    }),
+  const { res, json } = await verifyIosSubscriptionServerFirst({
+    apiBaseUrl,
+    token,
+    productId,
+    bundleId,
+    purchase: latestPurchase,
   });
-  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
   if (!res.ok) {
     return { ok: false, message: formatVerifyIosFailureMessage(res, json) };

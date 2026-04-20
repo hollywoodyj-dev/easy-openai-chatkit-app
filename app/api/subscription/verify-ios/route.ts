@@ -369,8 +369,29 @@ export async function POST(request: Request) {
     const { receiptData, subscriptionId, bundleId, transactionId, originalTransactionId } =
       body;
 
-    if (!receiptData || typeof receiptData !== "string") {
-      return NextResponse.json({ error: "receiptData is required" }, { status: 400 });
+    const receiptDataTrimmed =
+      typeof receiptData === "string" && receiptData.trim().length > 0
+        ? receiptData.trim()
+        : "";
+    const txId =
+      typeof transactionId === "string" && transactionId.trim().length > 0
+        ? transactionId.trim()
+        : "";
+    const origId =
+      typeof originalTransactionId === "string" && originalTransactionId.trim().length > 0
+        ? originalTransactionId.trim()
+        : "";
+    const hasReceipt = receiptDataTrimmed.length > 0;
+    const hasTxIds = txId.length > 0 || origId.length > 0;
+
+    if (!hasReceipt && !hasTxIds) {
+      return NextResponse.json(
+        {
+          error:
+            "Provide receiptData, or transactionId and/or originalTransactionId, for Apple verification.",
+        },
+        { status: 400 }
+      );
     }
     if (!subscriptionId || typeof subscriptionId !== "string") {
       return NextResponse.json({ error: "subscriptionId is required" }, { status: 400 });
@@ -385,8 +406,8 @@ export async function POST(request: Request) {
     let appleEnvironment: string | null = null;
     let candidateRecords: AppleReceiptRecord[] = [];
     const serverApiResult = await verifyWithAppleServerApi({
-      transactionId,
-      originalTransactionId,
+      transactionId: txId || null,
+      originalTransactionId: origId || null,
       subscriptionId,
       bundleId: bundle,
     });
@@ -396,12 +417,36 @@ export async function POST(request: Request) {
       candidateRecords = [serverApiResult.record];
     } else {
       const sharedSecrets = getAppleSharedSecrets();
+      if (!hasReceipt) {
+        if (sharedSecrets.length === 0) {
+          return NextResponse.json(
+            {
+              error: "Apple verification not configured",
+              message:
+                "Set APPLE_SERVER_API_ISSUER_ID/KEY_ID/PRIVATE_KEY for Apple Server API, or APPLE_SHARED_SECRET for legacy receipt verification.",
+              serverApiReason: serverApiResult.reason,
+            },
+            { status: 501 }
+          );
+        }
+        return NextResponse.json(
+          {
+            error:
+              "Apple Server API did not verify this purchase. Retry with an app receipt (legacy verify), or ask the steward to check Server API credentials and bundle ID.",
+            code: "receipt_data_required",
+            serverApiReason: serverApiResult.reason,
+          },
+          { status: 400 }
+        );
+      }
+
       if (sharedSecrets.length === 0) {
         return NextResponse.json(
           {
             error: "Apple verification not configured",
             message:
               "Set APPLE_SERVER_API_ISSUER_ID/KEY_ID/PRIVATE_KEY for Apple Server API, or APPLE_SHARED_SECRET for legacy receipt verification.",
+            serverApiReason: serverApiResult.reason,
           },
           { status: 501 }
         );
@@ -410,7 +455,7 @@ export async function POST(request: Request) {
       let receiptRes: AppleReceiptResponse = { status: 1 };
       for (const sharedSecret of sharedSecrets) {
         const productionRes = await verifyAppleReceipt({
-          receiptData,
+          receiptData: receiptDataTrimmed,
           sharedSecret,
           isSandboxAttempt: false,
         });
@@ -418,7 +463,7 @@ export async function POST(request: Request) {
         let candidate: AppleReceiptResponse = productionRes;
         if ((productionRes.status ?? null) === 21007) {
           candidate = await verifyAppleReceipt({
-            receiptData,
+            receiptData: receiptDataTrimmed,
             sharedSecret,
             isSandboxAttempt: true,
           });
@@ -434,13 +479,13 @@ export async function POST(request: Request) {
       // though the receipt itself is valid. Retry once without password and inspect records.
       if ((receiptRes.status ?? 1) === 21004) {
         const prodNoSecret = await verifyAppleReceipt({
-          receiptData,
+          receiptData: receiptDataTrimmed,
           isSandboxAttempt: false,
         });
         receiptRes =
           (prodNoSecret.status ?? null) === 21007
             ? await verifyAppleReceipt({
-                receiptData,
+                receiptData: receiptDataTrimmed,
                 isSandboxAttempt: true,
               })
             : prodNoSecret;

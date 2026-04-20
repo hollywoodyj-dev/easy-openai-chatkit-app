@@ -19,12 +19,11 @@ import {
   runAppleSubscriptionAccountSequential,
 } from "../lib/apple-subscription-account";
 import {
-  getIosReceiptWithRetry,
-  iosPurchaseTransactionIds,
   matchesProductId,
   productIdOf,
   type IapPurchaseLike,
 } from "../lib/ios-receipt";
+import { verifyIosSubscriptionServerFirst } from "../lib/verify-ios-subscription";
 import {
   ENABLE_IOS_RECEIPT_VERIFY,
   IOS_RECEIPT_VERIFY_DISABLED_MESSAGE,
@@ -52,7 +51,8 @@ const APP_STORE_PRODUCT_IDS = {
 } as const;
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
-const SUBSCRIPTION_SCREEN_BUILD_TAG = "subscribe-ui-2026-04-21-b8 · Apple Server API + subs status";
+const SUBSCRIPTION_SCREEN_BUILD_TAG =
+  "subscribe-ui-2026-04-21-b9 · transaction-first verify-ios (Lumen)";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -412,33 +412,13 @@ export default function SubscriptionScreen() {
         );
         return;
       }
-      const receiptData = await getIosReceiptWithRetry(productId, purchase);
-
-      if (!receiptData) {
-        Alert.alert(
-          "Error",
-          "Purchase completed, but receipt sync is still pending. Please wait a few seconds and try again."
-        );
-        return;
-      }
-
-      const appleIds = iosPurchaseTransactionIds(purchase);
-      const res = await fetch(`${API_BASE_URL}/api/subscription/verify-ios`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          receiptData,
-          subscriptionId: productId,
-          bundleId: "com.wisewave.chatkit",
-          transactionId: appleIds.transactionId,
-          originalTransactionId: appleIds.originalTransactionId,
-        }),
+      const { res, json } = await verifyIosSubscriptionServerFirst({
+        apiBaseUrl: API_BASE_URL,
+        token,
+        productId,
+        bundleId: "com.wisewave.chatkit",
+        purchase,
       });
-
-      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       if (res.ok) {
         try {
           // Mark as finished so StoreKit does not keep replaying this purchase event.
@@ -568,28 +548,13 @@ export default function SubscriptionScreen() {
       const productId =
         productIdOf(latestPurchase) || APP_STORE_PRODUCT_IDS.monthly;
 
-      const receiptData = await getIosReceiptWithRetry(productId, latestPurchase);
-      if (!receiptData) {
-        Alert.alert("Error", "No receipt data was available to restore yet. Please try again in a moment.");
-        return;
-      }
-
-      const restoreAppleIds = iosPurchaseTransactionIds(latestPurchase);
-      const res = await fetch(`${API_BASE_URL}/api/subscription/verify-ios`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          receiptData,
-          subscriptionId: productId,
-          bundleId: "com.wisewave.chatkit",
-          transactionId: restoreAppleIds.transactionId,
-          originalTransactionId: restoreAppleIds.originalTransactionId,
-        }),
+      const { res, json } = await verifyIosSubscriptionServerFirst({
+        apiBaseUrl: API_BASE_URL,
+        token,
+        productId,
+        bundleId: "com.wisewave.chatkit",
+        purchase: latestPurchase,
       });
-      const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
       if (!res.ok) {
         Alert.alert(
