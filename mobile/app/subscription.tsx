@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
@@ -24,6 +25,7 @@ import {
   normalizeRequestPurchaseResult,
   productIdOf,
   purchaseRecordSortTimeMs,
+  prefetchIosSubscriptionSkuCache,
   resolveLatestPurchaseForProductInStore,
   safePurchaseKeysForLog,
   sleep,
@@ -56,9 +58,16 @@ const APP_STORE_PRODUCT_IDS = {
   yearly: "wisewave_ios_yearly",
 } as const;
 
+/** All Wisewave iOS subscription SKUs — prefetch before `getAvailablePurchases` (StoreKit 2 / react-native-iap #2890). */
+const IOS_SUBSCRIPTION_CATALOG_SKUS = [
+  APP_STORE_PRODUCT_IDS.monthly,
+  APP_STORE_PRODUCT_IDS.yearly,
+] as const;
+
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b13 · recover purchase row after empty requestPurchase (Lumen)";
+  "subscribe-ui-2026-04-21-b15 · debug popup + strict Wisewave SKU match for restore/sync";
+const ENABLE_IOS_PURCHASE_DEBUG_POPUP = true;
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -126,11 +135,22 @@ export default function SubscriptionScreen() {
   const { token } = useAuth();
   const [iapReady, setIapReady] = useState(false);
   const [processingPlan, setProcessingPlan] = useState<"monthly" | "yearly" | "restore" | null>(null);
+  const [debugVisible, setDebugVisible] = useState(false);
+  const [debugEvents, setDebugEvents] = useState<string[]>([]);
   const autoStartTriggeredRef = useRef(false);
+
+  const addDebugEvent = (label: string, detail?: Record<string, unknown>) => {
+    if (!ENABLE_IOS_PURCHASE_DEBUG_POPUP || Platform.OS !== "ios") return;
+    const ts = new Date().toISOString().slice(11, 19);
+    const suffix = detail ? ` ${JSON.stringify(detail)}` : "";
+    const line = `[${ts}] ${label}${suffix}`;
+    setDebugEvents((prev) => [...prev.slice(-59), line]);
+  };
 
   useEffect(() => {
     (async () => {
       try {
+        addDebugEvent("iap_init_start");
         await RNIap.initConnection();
         // Clear any failed purchases from cache on Android only
         if (Platform.OS === "android") {
@@ -141,9 +161,12 @@ export default function SubscriptionScreen() {
         }
         const hasFetchProducts = typeof RNIap.fetchProducts === "function";
         const hasRequestPurchase = typeof RNIap.requestPurchase === "function";
-        setIapReady(hasFetchProducts && hasRequestPurchase);
+        const ready = hasFetchProducts && hasRequestPurchase;
+        setIapReady(ready);
+        addDebugEvent("iap_init_done", { ready });
       } catch (e) {
         console.warn("IAP init error", e);
+        addDebugEvent("iap_init_error", { error: String(e) });
       } finally {
         // `iapReady` is the actual purchase gate.
       }
@@ -357,15 +380,18 @@ export default function SubscriptionScreen() {
       // Ensure the SKU exists in App Store Connect before attempting purchase.
       let subs: unknown[] = [];
       try {
+        addDebugEvent("ios_fetch_products_start", { skus: IOS_SUBSCRIPTION_CATALOG_SKUS });
         const raw = await RNIap.fetchProducts({
-          skus: [productId],
+          skus: [...IOS_SUBSCRIPTION_CATALOG_SKUS],
           type: "subs",
         });
         subs = Array.isArray(raw) ? raw : [];
+        addDebugEvent("ios_fetch_products_done", { count: subs.length });
       } catch (fetchErr) {
         const errMsg =
           fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
         console.warn("fetchProducts (iOS) error", errMsg, fetchErr);
+        addDebugEvent("ios_fetch_products_error", { error: errMsg });
         Alert.alert(
           "Error",
           "Could not load subscription products from the App Store. Check the product ID and App Store Connect status, then try again."
@@ -389,9 +415,15 @@ export default function SubscriptionScreen() {
 
       let result: unknown;
       try {
+        addDebugEvent("ios_request_purchase_start", { productId });
         result = await RNIap.requestPurchase({
           request: { apple: { sku: productId } },
           type: "subs",
+        });
+        addDebugEvent("ios_request_purchase_done", {
+          isArray: Array.isArray(result),
+          arrayLen: Array.isArray(result) ? result.length : null,
+          isNull: result == null,
         });
       } finally {
         unsubErr.remove();
@@ -412,7 +444,11 @@ export default function SubscriptionScreen() {
           resultArrayLen: Array.isArray(result) ? result.length : null,
         });
         await sleep(450);
-        purchase = await resolveLatestPurchaseForProductInStore(productId);
+        addDebugEvent("ios_recovery_get_available_start", { productId });
+        purchase = await resolveLatestPurchaseForProductInStore(productId, {
+          prefetchSubscriptionSkus: IOS_SUBSCRIPTION_CATALOG_SKUS,
+        });
+        addDebugEvent("ios_recovery_get_available_done", { found: purchase != null });
       }
       if (purchase == null) {
         console.warn("[WisewaveIapPurchase] still no purchase row after getAvailablePurchases", {
@@ -454,6 +490,12 @@ export default function SubscriptionScreen() {
         productId,
         bundleId: "com.wisewave.chatkit",
         purchase,
+        iosSubscriptionCatalogSkus: IOS_SUBSCRIPTION_CATALOG_SKUS,
+      });
+      addDebugEvent("ios_verify_done", {
+        status: res.status,
+        ok: res.ok,
+        code: typeof json.code === "string" ? json.code : null,
       });
       if (res.ok) {
         try {
@@ -494,6 +536,7 @@ export default function SubscriptionScreen() {
       }
     } catch (e) {
       console.warn("Apple subscription error", e);
+      addDebugEvent("ios_purchase_error", { error: String(e) });
       const maybeCode =
         e && typeof e === "object" && "code" in e
           ? String((e as { code?: unknown }).code ?? "")
@@ -558,7 +601,11 @@ export default function SubscriptionScreen() {
         Alert.alert("Restore unavailable", IOS_RECEIPT_VERIFY_DISABLED_MESSAGE);
         return;
       }
+      await prefetchIosSubscriptionSkuCache(IOS_SUBSCRIPTION_CATALOG_SKUS);
       const available = await RNIap.getAvailablePurchases();
+      addDebugEvent("ios_restore_available_rows", {
+        availableCount: Array.isArray(available) ? available.length : 0,
+      });
       if (!Array.isArray(available) || available.length === 0) {
         Alert.alert("No purchases found", "No App Store subscription receipt was found for this account.");
         return;
@@ -571,8 +618,14 @@ export default function SubscriptionScreen() {
       const matching = available.filter((p: unknown) =>
         activeIds.has(productIdOf(p))
       );
-
-      const candidates = matching.length > 0 ? matching : available;
+      if (matching.length === 0) {
+        Alert.alert(
+          "No Wisewave purchases found",
+          "The App Store returned purchases, but none matched Wisewave monthly/yearly product IDs for this app."
+        );
+        return;
+      }
+      const candidates = matching;
       const rawLatest = [...candidates].sort(comparePurchaseByRecency)[0];
       const restorePurchase =
         normalizeRequestPurchaseResult(rawLatest) ?? rawLatest;
@@ -602,9 +655,15 @@ export default function SubscriptionScreen() {
           productId,
           bundleId: "com.wisewave.chatkit",
           purchase: restorePurchase,
+          iosSubscriptionCatalogSkus: IOS_SUBSCRIPTION_CATALOG_SKUS,
         });
         res = out.res;
         json = out.json;
+        addDebugEvent("ios_restore_verify_done", {
+          status: res.status,
+          ok: res.ok,
+          code: typeof json.code === "string" ? json.code : null,
+        });
         console.warn("[WisewaveIapRestore] verify_done", {
           httpOk: res.ok,
           status: res.status,
@@ -681,6 +740,14 @@ export default function SubscriptionScreen() {
       <Text style={styles.buildTag} selectable>
         {SUBSCRIPTION_SCREEN_BUILD_TAG}
       </Text>
+      {Platform.OS === "ios" && ENABLE_IOS_PURCHASE_DEBUG_POPUP && (
+        <TouchableOpacity
+          style={styles.debugChip}
+          onPress={() => setDebugVisible(true)}
+        >
+          <Text style={styles.debugChipText}>Open purchase debug</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.card}>
         <Text style={styles.planName}>Monthly</Text>
@@ -839,6 +906,33 @@ export default function SubscriptionScreen() {
           <Text style={styles.linkText}>Sign in</Text>
         </TouchableOpacity>
       )}
+      <Modal
+        visible={debugVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setDebugVisible(false)}
+      >
+        <View style={styles.debugModalRoot}>
+          <Text style={styles.debugTitle}>iOS purchase debug</Text>
+          <ScrollView style={styles.debugLogWrap}>
+            <Text selectable style={styles.debugLogText}>
+              {debugEvents.length > 0 ? debugEvents.join("\n") : "No events yet."}
+            </Text>
+          </ScrollView>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setDebugEvents([])}
+          >
+            <Text style={styles.secondaryButtonText}>Clear logs</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => setDebugVisible(false)}
+          >
+            <Text style={styles.secondaryButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -966,5 +1060,44 @@ const styles = StyleSheet.create({
     color: "#9a3412",
     fontSize: 16,
     textAlign: "center",
+  },
+  debugChip: {
+    alignSelf: "center",
+    backgroundColor: "#eef2ff",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 14,
+  },
+  debugChipText: {
+    color: "#334155",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  debugModalRoot: {
+    flex: 1,
+    backgroundColor: "#FAF9F6",
+    padding: 20,
+    paddingTop: 40,
+  },
+  debugTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#0f172a",
+    marginBottom: 12,
+  },
+  debugLogWrap: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    padding: 12,
+  },
+  debugLogText: {
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontSize: 12,
+    color: "#334155",
+    lineHeight: 18,
   },
 });

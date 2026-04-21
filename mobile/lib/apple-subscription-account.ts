@@ -5,6 +5,7 @@ import {
   comparePurchaseByRecency,
   matchesProductId,
   normalizeRequestPurchaseResult,
+  prefetchIosSubscriptionSkuCache,
   productIdOf,
   purchaseRecordSortTimeMs,
   safePurchaseKeysForLog,
@@ -175,6 +176,7 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
     options;
   const activeIds = new Set<string>([monthlyProductId, yearlyProductId]);
 
+  await prefetchIosSubscriptionSkuCache([monthlyProductId, yearlyProductId]);
   const available = await RNIap.getAvailablePurchases();
   if (!Array.isArray(available) || available.length === 0) {
     return {
@@ -184,7 +186,14 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
   }
 
   const matching = available.filter((p: unknown) => activeIds.has(productIdOf(p)));
-  const candidates = matching.length > 0 ? matching : available;
+  if (matching.length === 0) {
+    return {
+      ok: false,
+      message:
+        "The App Store returned purchases, but none matched Wisewave monthly/yearly product IDs for this app.",
+    };
+  }
+  const candidates = matching;
   const sorted = [...candidates].sort(comparePurchaseByRecency);
 
   let rawPick = sorted[0];
@@ -223,6 +232,7 @@ export async function syncWisewaveSubscriptionFromIosReceipt(options: {
     productId,
     bundleId,
     purchase: latestPurchase,
+    iosSubscriptionCatalogSkus: [monthlyProductId, yearlyProductId],
   });
 
   console.warn("[WisewaveIapSync] verify_done", {

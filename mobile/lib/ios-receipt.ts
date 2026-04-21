@@ -212,13 +212,39 @@ export function normalizeRequestPurchaseResult(result: unknown): unknown {
 }
 
 /**
+ * StoreKit 2 + react-native-iap: `getAvailablePurchases()` may return nothing until
+ * subscription products were fetched for **all** relevant SKUs (not only the active one).
+ * @see https://github.com/hyochan/react-native-iap/issues/2890
+ */
+export async function prefetchIosSubscriptionSkuCache(
+  skus: readonly string[]
+): Promise<void> {
+  const unique = Array.from(
+    new Set(skus.map((s) => String(s).trim()).filter((s) => s.length > 0))
+  );
+  if (unique.length === 0) return;
+  try {
+    await RNIap.fetchProducts({ skus: unique, type: "subs" });
+  } catch (e) {
+    console.warn("[WisewaveIapPurchase] prefetchIosSubscriptionSkuCache failed", e);
+  }
+}
+
+/**
  * After `requestPurchase`, some builds resolve with `[]` or omit the row briefly.
  * Same entitlement often appears on `getAvailablePurchases()` milliseconds later.
  */
 export async function resolveLatestPurchaseForProductInStore(
-  productId: string
+  productId: string,
+  options?: { prefetchSubscriptionSkus?: readonly string[] }
 ): Promise<unknown | null> {
   try {
+    const skus =
+      options?.prefetchSubscriptionSkus?.length &&
+      options.prefetchSubscriptionSkus.length > 0
+        ? options.prefetchSubscriptionSkus
+        : [productId];
+    await prefetchIosSubscriptionSkuCache(skus);
     const available = await RNIap.getAvailablePurchases();
     if (!Array.isArray(available) || available.length === 0) return null;
     const matches = available.filter((p: unknown) => matchesProductId(p, productId));
@@ -247,7 +273,7 @@ export function iosPurchaseTransactionIds(p: unknown): {
     if (orig && !originalTransactionId) originalTransactionId = orig;
   };
 
-  for (const layer of purchaseObjectLayers(purchase)) {
+  for (const layer of purchaseObjectLayers(p)) {
     tryAssign(
       asAppleIdString(readPurchaseField(layer, "transactionId")) ??
         asAppleIdString(readPurchaseField(layer, "transactionIdentifierIOS")) ??
@@ -310,7 +336,8 @@ export function sleep(ms: number) {
 
 export async function getIosReceiptWithRetry(
   productId: string,
-  purchase: unknown
+  purchase: unknown,
+  options?: { prefetchSubscriptionSkus?: readonly string[] }
 ): Promise<string | undefined> {
   const direct = receiptStringsFromPurchase(purchase);
   const directReceipt =
@@ -319,6 +346,12 @@ export async function getIosReceiptWithRetry(
 
   const tryAvailablePurchasesOnce = async (): Promise<string | undefined> => {
     try {
+      const skus =
+        options?.prefetchSubscriptionSkus?.length &&
+        options.prefetchSubscriptionSkus.length > 0
+          ? [...options.prefetchSubscriptionSkus]
+          : [productId];
+      await prefetchIosSubscriptionSkuCache(skus);
       const available = await RNIap.getAvailablePurchases();
       const matching = available.find((p: unknown) => matchesProductId(p, productId));
       const r = receiptStringsFromPurchase(matching);

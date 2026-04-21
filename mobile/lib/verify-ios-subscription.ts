@@ -6,6 +6,7 @@ import {
   logIosPurchaseDiagnostics,
   matchesProductId,
   normalizeRequestPurchaseResult,
+  prefetchIosSubscriptionSkuCache,
 } from "./ios-receipt";
 
 export const VERIFY_IOS_RECEIPT_DATA_REQUIRED = "receipt_data_required";
@@ -19,13 +20,19 @@ type VerifyIosJson = Record<string, unknown>;
  */
 export async function resolveIosPurchaseTransactionIds(
   productId: string,
-  purchase: unknown
+  purchase: unknown,
+  opts?: { prefetchSubscriptionSkus?: readonly string[] }
 ): Promise<{ transactionId: string | null; originalTransactionId: string | null }> {
   let ids = iosPurchaseTransactionIds(purchase);
   if (ids.transactionId || ids.originalTransactionId) {
     return ids;
   }
   try {
+    const skus =
+      opts?.prefetchSubscriptionSkus?.length && opts.prefetchSubscriptionSkus.length > 0
+        ? opts.prefetchSubscriptionSkus
+        : [productId];
+    await prefetchIosSubscriptionSkuCache(skus);
     const available = await RNIap.getAvailablePurchases();
     const matches = available.filter((p: unknown) => matchesProductId(p, productId));
     if (matches.length > 0) {
@@ -50,11 +57,19 @@ export async function verifyIosSubscriptionServerFirst(options: {
   productId: string;
   bundleId: string;
   purchase: unknown;
+  /** When set (e.g. all app subscription SKUs), `fetchProducts` runs before `getAvailablePurchases` — needed on some StoreKit 2 builds. */
+  iosSubscriptionCatalogSkus?: readonly string[];
 }): Promise<{ res: Response; json: VerifyIosJson }> {
   const { apiBaseUrl, token, productId, bundleId } = options;
   const purchase =
     normalizeRequestPurchaseResult(options.purchase) ?? options.purchase;
-  const ids = await resolveIosPurchaseTransactionIds(productId, purchase);
+  const prefetchSkus =
+    options.iosSubscriptionCatalogSkus?.length &&
+    options.iosSubscriptionCatalogSkus.length > 0
+      ? options.iosSubscriptionCatalogSkus
+      : [productId];
+  const prefetchOpts = { prefetchSubscriptionSkus: prefetchSkus };
+  const ids = await resolveIosPurchaseTransactionIds(productId, purchase, prefetchOpts);
   if (!ids.transactionId && !ids.originalTransactionId) {
     logIosPurchaseDiagnostics(productId, purchase, ids);
   }
@@ -82,7 +97,7 @@ export async function verifyIosSubscriptionServerFirst(options: {
   if (ids.transactionId || ids.originalTransactionId) {
     let { res, json } = await post(base);
     if (!res.ok && json.code === VERIFY_IOS_RECEIPT_DATA_REQUIRED) {
-      const receiptData = await getIosReceiptWithRetry(productId, purchase);
+      const receiptData = await getIosReceiptWithRetry(productId, purchase, prefetchOpts);
       if (receiptData) {
         ({ res, json } = await post({ ...base, receiptData }));
       } else {
@@ -99,7 +114,7 @@ export async function verifyIosSubscriptionServerFirst(options: {
     return { res, json };
   }
 
-  const receiptData = await getIosReceiptWithRetry(productId, purchase);
+  const receiptData = await getIosReceiptWithRetry(productId, purchase, prefetchOpts);
   if (!receiptData) {
     return {
       res: new Response(JSON.stringify({}), { status: 400 }),
