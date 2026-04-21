@@ -24,7 +24,9 @@ import {
   normalizeRequestPurchaseResult,
   productIdOf,
   purchaseRecordSortTimeMs,
+  resolveLatestPurchaseForProductInStore,
   safePurchaseKeysForLog,
+  sleep,
   type IapPurchaseLike,
 } from "../lib/ios-receipt";
 import { verifyIosSubscriptionServerFirst } from "../lib/verify-ios-subscription";
@@ -56,7 +58,7 @@ const APP_STORE_PRODUCT_IDS = {
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b12 · restore/sync Nitro-safe sort + normalize (Lumen)";
+  "subscribe-ui-2026-04-21-b13 · recover purchase row after empty requestPurchase (Lumen)";
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -400,14 +402,25 @@ export default function SubscriptionScreen() {
         return;
       }
 
-      const purchase = normalizeRequestPurchaseResult(
+      let purchase = normalizeRequestPurchaseResult(
         Array.isArray(result) ? (result.length > 0 ? result[0] : null) : result
       );
       if (purchase == null) {
-        console.warn("[WisewaveIapPurchase] requestPurchase empty after normalize", { productId });
+        console.warn("[WisewaveIapPurchase] requestPurchase empty after normalize; recovering", {
+          productId,
+          resultIsArray: Array.isArray(result),
+          resultArrayLen: Array.isArray(result) ? result.length : null,
+        });
+        await sleep(450);
+        purchase = await resolveLatestPurchaseForProductInStore(productId);
+      }
+      if (purchase == null) {
+        console.warn("[WisewaveIapPurchase] still no purchase row after getAvailablePurchases", {
+          productId,
+        });
         Alert.alert(
           "Error",
-          "The store returned an empty purchase object. Please try again or use Restore purchase."
+          "The store did not return purchase details yet (this can happen right after Apple confirms payment). Wait a few seconds and tap Restore purchase, or open this screen again."
         );
         return;
       }

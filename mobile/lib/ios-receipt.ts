@@ -195,7 +195,40 @@ export function normalizeRequestPurchaseResult(result: unknown): unknown {
   if (innerTx != null && typeof innerTx === "object") {
     return innerTx;
   }
+  const purchases = readPurchaseField(o, "purchases");
+  if (Array.isArray(purchases) && purchases.length > 0) {
+    const first = purchases[0];
+    if (first != null && typeof first === "object") {
+      return normalizeRequestPurchaseResult(first);
+    }
+  }
+  for (const key of ["currentPurchase", "latestTransaction", "latestPurchase"] as const) {
+    const inner = readPurchaseField(o, key);
+    if (inner != null && typeof inner === "object") {
+      return normalizeRequestPurchaseResult(inner);
+    }
+  }
   return result;
+}
+
+/**
+ * After `requestPurchase`, some builds resolve with `[]` or omit the row briefly.
+ * Same entitlement often appears on `getAvailablePurchases()` milliseconds later.
+ */
+export async function resolveLatestPurchaseForProductInStore(
+  productId: string
+): Promise<unknown | null> {
+  try {
+    const available = await RNIap.getAvailablePurchases();
+    if (!Array.isArray(available) || available.length === 0) return null;
+    const matches = available.filter((p: unknown) => matchesProductId(p, productId));
+    if (matches.length === 0) return null;
+    const raw = [...matches].sort(comparePurchaseByRecency)[0];
+    return normalizeRequestPurchaseResult(raw) ?? raw;
+  } catch (e) {
+    console.warn("[WisewaveIapPurchase] resolveLatestPurchaseForProductInStore failed", e);
+    return null;
+  }
 }
 
 /**
