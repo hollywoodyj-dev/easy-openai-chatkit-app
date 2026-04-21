@@ -56,8 +56,7 @@ export default function WisewaveMarketingHome() {
               You can begin with anything — even something unclear.
             </p>
             <p className="mt-2 max-w-xl text-xs leading-6 text-[#6b6b6b]">
-              Useful when you feel crowded inside — not when you need
-              instructions.
+              Useful when you want space, not instructions.
             </p>
           </div>
         </div>
@@ -70,51 +69,32 @@ export default function WisewaveMarketingHome() {
           </h2>
           <div className="mt-6 space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
             <p>A little more clarity.</p>
-            <p>A little less inner noise.</p>
+            <p>A little less noise.</p>
             <p>A space that does not take over.</p>
           </div>
-          <p className="mt-6 text-sm leading-7 text-[#5c5c5c]">
-            Sometimes that small shift is enough.
-          </p>
         </div>
       </section>
 
       <Section
-        title="When many systems become more active, Wisewave steps back"
-        intro="It does not explain you, direct you, or take over your thinking. It simply gives what is mixed together a chance to gradually become clearer."
+        title="Where many systems become more active, Wisewave steps back"
+        intro="It does not explain you, direct you, or take over your thinking. It leaves more room for things to become clear."
       >
         <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
           <p className="text-base leading-[1.75] text-[#5c5c5c]">
-            Wisewave is designed to stay restrained. It is not trying to prove
-            itself by becoming more present, more interpretive, or more
-            emotionally involved.
+            It stays low-presence so your own thinking can stay in front.
           </p>
         </div>
       </Section>
 
       <Section
-        title="This is not an assistant. Not therapy. Not coaching."
-        intro="Wisewave is not here to give you answers. It will not tell you what to do, assign meaning for you, or place itself inside your inner space."
+        title="A low-presence reflection space"
+        intro="You bring the content. Wisewave reflects lightly."
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            "Not an assistant",
-            "Not therapy",
-            "Not coaching",
-            "Not companionship",
-          ].map((item) => (
-            <div
-              key={item}
-              className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
-            >
-              <p className="text-base font-medium text-[#171717]">{item}</p>
-            </div>
-          ))}
+        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
+          <p className="text-base leading-[1.75] text-[#5c5c5c]">
+            It stays restrained so your own words and thinking remain in front.
+          </p>
         </div>
-        <p className="mt-8 max-w-3xl text-base leading-[1.75] text-[#5c5c5c]">
-          It is closer to a low-presence reflection space. You bring the
-          content. It gently reflects.
-        </p>
       </Section>
 
       <Section id="how-it-works" title="How it works">
@@ -123,15 +103,15 @@ export default function WisewaveMarketingHome() {
           {[
             {
               step: "Step 1",
-              text: "You bring something you have not fully clarified yet. It may be a recurring thought, something vaguely stuck, or a mixture of feelings and judgments that have not separated yet.",
+              text: "You bring something not fully clear yet.",
             },
             {
               step: "Step 2",
-              text: "Wisewave gently reflects it. It does not rush to explain, categorize, or push you toward an answer.",
+              text: "Wisewave reflects it back lightly.",
             },
             {
               step: "Step 3",
-              text: "Some things begin to grow clearer through reflection. The point is not to lead you somewhere, but to let what is there emerge more plainly.",
+              text: "Through reflection, some things may become clearer.",
             },
           ].map((item) => (
             <div
@@ -151,37 +131,15 @@ export default function WisewaveMarketingHome() {
         <SampleInteraction />
       </Section>
 
-      <Section title="It may fit people like this">
+      <Section title="It may fit if...">
         <AnalyticsView section="who_its_for" />
-        <div className="grid gap-4 md:grid-cols-2">
-          {[
-            [
-              "Quiet thinker",
-              "You are not lacking thought. You just want a space that does not interrupt it.",
-            ],
-            [
-              "Over-advised person",
-              "You have already heard too many methods, suggestions, and frameworks. What you need now is not one more voice.",
-            ],
-            [
-              "Journaling dropout",
-              "It is not that you do not want reflection. You may simply be tired of blank pages, prompts, and turning expression into a task.",
-            ],
-            [
-              "Uncomfortable with companion-style AI",
-              "You do not want AI to get close to you, understand you, or accompany you. You want something more restrained than that.",
-            ],
-          ].map(([title, body]) => (
-            <div
-              key={title}
-              className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
-            >
-              <h3 className="text-lg font-medium text-[#171717]">{title}</h3>
-              <p className="mt-3 text-base leading-[1.75] text-[#5c5c5c]">
-                {body}
-              </p>
-            </div>
-          ))}
+        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
+          <ul className="grid gap-3 text-base leading-[1.75] text-[#5c5c5c]">
+            <li>you want space without advice</li>
+            <li>you are tired of being guided</li>
+            <li>blank-page journaling does not work for you</li>
+            <li>you do not want companion-style AI</li>
+          </ul>
         </div>
       </Section>
 
@@ -189,13 +147,8 @@ export default function WisewaveMarketingHome() {
         <AnalyticsView section="non_fit" />
         <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
           <p className="text-base leading-[1.75] text-[#5c5c5c]">
-            If you are looking for clear advice, action guidance, emotional
-            support, a sense of companionship, or a system that organizes answers
-            for you, Wisewave may not be for you.
-          </p>
-          <p className="mt-5 text-base leading-[1.75] text-[#171717]">
-            It is not here to take over. It is here to leave space for
-            reflection.
+            If you are looking for advice, action guidance, emotional support,
+            or companionship, Wisewave may not be for you.
           </p>
         </div>
       </Section>
@@ -209,7 +162,7 @@ export default function WisewaveMarketingHome() {
             ],
             [
               "Non-directive",
-              "It does not tell you the next step. No advice. No direction.",
+              "It does not tell you the next step.",
             ],
             [
               "Preserves authorship",
@@ -236,11 +189,10 @@ export default function WisewaveMarketingHome() {
             <li>No coaching</li>
             <li>No therapy</li>
             <li>No manufactured companionship</li>
-            <li>No interpreting you for you</li>
+            <li>Preserves your authorship</li>
           </ul>
           <p className="mt-6 text-base leading-[1.75] text-[#5c5c5c]">
-            Wisewave does not create value by entering you more deeply. Its
-            value comes from knowing where it should not enter.
+            Its value comes from staying restrained and clear about its role.
           </p>
         </div>
       </Section>

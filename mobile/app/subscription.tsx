@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -66,8 +67,10 @@ const IOS_SUBSCRIPTION_CATALOG_SKUS = [
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b15 · debug popup + strict Wisewave SKU match for restore/sync";
+  "subscribe-ui-2026-04-21-b16 · persistent debug logs + delayed listener fallback";
 const ENABLE_IOS_PURCHASE_DEBUG_POPUP = true;
+const IOS_PURCHASE_DEBUG_STORAGE_KEY = "ios_purchase_debug_events_v1";
+const IOS_PURCHASE_DEBUG_MAX_EVENTS = 60;
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -139,16 +142,73 @@ export default function SubscriptionScreen() {
   const [debugEvents, setDebugEvents] = useState<string[]>([]);
   const autoStartTriggeredRef = useRef(false);
 
+  const loadDebugEvents = async () => {
+    if (!ENABLE_IOS_PURCHASE_DEBUG_POPUP || Platform.OS !== "ios") return;
+    try {
+      const raw = await AsyncStorage.getItem(IOS_PURCHASE_DEBUG_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return;
+      const lines = parsed.filter((x): x is string => typeof x === "string");
+      setDebugEvents(lines.slice(-IOS_PURCHASE_DEBUG_MAX_EVENTS));
+    } catch {
+      // Ignore debug log load failures.
+    }
+  };
+
   const addDebugEvent = (label: string, detail?: Record<string, unknown>) => {
     if (!ENABLE_IOS_PURCHASE_DEBUG_POPUP || Platform.OS !== "ios") return;
     const ts = new Date().toISOString().slice(11, 19);
     const suffix = detail ? ` ${JSON.stringify(detail)}` : "";
     const line = `[${ts}] ${label}${suffix}`;
-    setDebugEvents((prev) => [...prev.slice(-59), line]);
+    setDebugEvents((prev) => {
+      const next = [...prev.slice(-(IOS_PURCHASE_DEBUG_MAX_EVENTS - 1)), line];
+      void AsyncStorage.setItem(IOS_PURCHASE_DEBUG_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const clearDebugEvents = () => {
+    setDebugEvents([]);
+    if (ENABLE_IOS_PURCHASE_DEBUG_POPUP && Platform.OS === "ios") {
+      void AsyncStorage.removeItem(IOS_PURCHASE_DEBUG_STORAGE_KEY);
+    }
+  };
+
+  const waitForIosPurchaseUpdate = async (
+    productId: string,
+    timeoutMs = 2600
+  ): Promise<unknown | null> => {
+    return await new Promise<unknown | null>((resolve) => {
+      let settled = false;
+      const done = (value: unknown | null) => {
+        if (settled) return;
+        settled = true;
+        try {
+          subUpdated.remove();
+        } catch {}
+        try {
+          subError.remove();
+        } catch {}
+        clearTimeout(timer);
+        resolve(value);
+      };
+
+      const subUpdated = RNIap.purchaseUpdatedListener((p) => {
+        if (matchesProductId(p, productId)) {
+          done(p);
+        }
+      });
+      const subError = RNIap.purchaseErrorListener(() => {
+        // Keep waiting for timeout or purchase event.
+      });
+      const timer = setTimeout(() => done(null), timeoutMs);
+    });
   };
 
   useEffect(() => {
     (async () => {
+      await loadDebugEvents();
       try {
         addDebugEvent("iap_init_start");
         await RNIap.initConnection();
@@ -443,6 +503,16 @@ export default function SubscriptionScreen() {
           resultIsArray: Array.isArray(result),
           resultArrayLen: Array.isArray(result) ? result.length : null,
         });
+        addDebugEvent("ios_wait_purchase_updated_start", { productId });
+        const listenerPurchase = await waitForIosPurchaseUpdate(productId);
+        addDebugEvent("ios_wait_purchase_updated_done", {
+          found: listenerPurchase != null,
+        });
+        if (listenerPurchase != null) {
+          purchase = normalizeRequestPurchaseResult(listenerPurchase) ?? listenerPurchase;
+        }
+      }
+      if (purchase == null) {
         await sleep(450);
         addDebugEvent("ios_recovery_get_available_start", { productId });
         purchase = await resolveLatestPurchaseForProductInStore(productId, {
@@ -921,7 +991,7 @@ export default function SubscriptionScreen() {
           </ScrollView>
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => setDebugEvents([])}
+            onPress={clearDebugEvents}
           >
             <Text style={styles.secondaryButtonText}>Clear logs</Text>
           </TouchableOpacity>
