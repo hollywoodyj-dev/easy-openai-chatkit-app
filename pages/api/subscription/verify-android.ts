@@ -33,6 +33,13 @@ type GoogleSubscriptionV2 = {
   }>;
 };
 
+type GoogleVerifyFailure = {
+  status: number;
+  bodyText: string;
+  reason?: string;
+  message?: string;
+};
+
 async function getGoogleAccessToken(
   serviceAccount: GoogleServiceAccount
 ): Promise<string> {
@@ -88,6 +95,108 @@ function mapGoogleStateToSubscriptionStatus(
   return "expired";
 }
 
+function parseGoogleApiError(text: string): { reason?: string; message?: string } {
+  try {
+    const parsed = JSON.parse(text) as {
+      error?: {
+        message?: string;
+        details?: Array<{
+          reason?: string;
+        }>;
+        errors?: Array<{
+          reason?: string;
+          message?: string;
+        }>;
+      };
+    };
+    const reason =
+      parsed.error?.details?.[0]?.reason ??
+      parsed.error?.errors?.[0]?.reason ??
+      undefined;
+    const message =
+      parsed.error?.message ?? parsed.error?.errors?.[0]?.message ?? undefined;
+    return { reason, message };
+  } catch {
+    return {};
+  }
+}
+
+async function verifyWithSubscriptionsV2(
+  accessToken: string,
+  packageName: string,
+  purchaseToken: string
+): Promise<{ ok: true; json: GoogleSubscriptionV2 } | { ok: false; failure: GoogleVerifyFailure }> {
+  const verifyUrl = `${GOOGLE_ANDROID_SUBSCRIPTION_URL}/${encodeURIComponent(packageName)}/purchases/subscriptionsv2/tokens/${encodeURIComponent(purchaseToken)}`;
+  const verifyRes = await fetch(verifyUrl, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!verifyRes.ok) {
+    const bodyText = await verifyRes.text().catch(() => "");
+    const parsed = parseGoogleApiError(bodyText);
+    return {
+      ok: false,
+      failure: {
+        status: verifyRes.status,
+        bodyText,
+        reason: parsed.reason,
+        message: parsed.message,
+      },
+    };
+  }
+  const json = (await verifyRes.json()) as GoogleSubscriptionV2;
+  return { ok: true, json };
+}
+
+async function verifyWithSubscriptionsV1(
+  accessToken: string,
+  packageName: string,
+  subscriptionId: string,
+  purchaseToken: string
+): Promise<{ ok: true; json: GoogleSubscriptionV2 } | { ok: false; failure: GoogleVerifyFailure }> {
+  const verifyUrl = `${GOOGLE_ANDROID_SUBSCRIPTION_URL}/${encodeURIComponent(packageName)}/purchases/subscriptions/${encodeURIComponent(subscriptionId)}/tokens/${encodeURIComponent(purchaseToken)}`;
+  const verifyRes = await fetch(verifyUrl, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!verifyRes.ok) {
+    const bodyText = await verifyRes.text().catch(() => "");
+    const parsed = parseGoogleApiError(bodyText);
+    return {
+      ok: false,
+      failure: {
+        status: verifyRes.status,
+        bodyText,
+        reason: parsed.reason,
+        message: parsed.message,
+      },
+    };
+  }
+  const json = (await verifyRes.json()) as {
+    expiryTimeMillis?: string;
+    paymentState?: number;
+    cancelReason?: number;
+  };
+  // Normalize v1 shape into a minimal v2-like object used below.
+  const expiryMs =
+    typeof json.expiryTimeMillis === "string" ? Number(json.expiryTimeMillis) : NaN;
+  const expiryTime =
+    Number.isFinite(expiryMs) && expiryMs > 0
+      ? new Date(expiryMs).toISOString()
+      : undefined;
+  const subscriptionState =
+    json.paymentState === 1
+      ? "SUBSCRIPTION_STATE_ACTIVE"
+      : json.cancelReason != null
+        ? "SUBSCRIPTION_STATE_CANCELED"
+        : "SUBSCRIPTION_STATE_EXPIRED";
+  return {
+    ok: true,
+    json: {
+      subscriptionState,
+      lineItems: [{ expiryTime }],
+    },
+  };
+}
+
 /**
  * Verify a Google Play subscription purchase and activate the user's subscription.
  * Call this from the mobile app after a successful in-app purchase.
@@ -123,11 +232,15 @@ export default async function handler(
     }
 
     const { purchaseToken, subscriptionId, packageName } = req.body ?? {};
+    const purchaseTokenNormalized =
+      typeof purchaseToken === "string" ? purchaseToken.trim() : purchaseToken;
+    const subscriptionIdNormalized =
+      typeof subscriptionId === "string" ? subscriptionId.trim() : subscriptionId;
     if (
-      !purchaseToken ||
-      typeof purchaseToken !== "string" ||
-      !subscriptionId ||
-      typeof subscriptionId !== "string"
+      !purchaseTokenNormalized ||
+      typeof purchaseTokenNormalized !== "string" ||
+      !subscriptionIdNormalized ||
+      typeof subscriptionIdNormalized !== "string"
     ) {
       return res.status(400).json({
         error: "purchaseToken and subscriptionId are required",
@@ -157,24 +270,43 @@ export default async function handler(
     }
 
     const accessToken = await getGoogleAccessToken(key);
-    const verifyUrl = `${GOOGLE_ANDROID_SUBSCRIPTION_URL}/${encodeURIComponent(pkg)}/purchases/subscriptionsv2/tokens/${encodeURIComponent(purchaseToken)}`;
-    const verifyRes = await fetch(verifyUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    if (!verifyRes.ok) {
-      const body = await verifyRes.text().catch(() => "");
-      return res.status(400).json({
-        error: "Invalid or inaccessible Google Play purchase token",
-        details:
+    let verifyJson: GoogleSubscriptionV2 | null = null;
+    const v2 = await verifyWithSubscriptionsV2(accessToken, pkg, purchaseTokenNormalized);
+    if (v2.ok) {
+      verifyJson = v2.json;
+    } else {
+      // Fallback for some Play Console setups where v1 still returns token data.
+      const v1 = await verifyWithSubscriptionsV1(
+        accessToken,
+        pkg,
+        subscriptionIdNormalized,
+        purchaseTokenNormalized
+      );
+      if (v1.ok) {
+        verifyJson = v1.json;
+      } else {
+        const detailsForDebug = `v2:${v2.failure.status}:${v2.failure.reason ?? ""}:${v2.failure.message ?? ""};v1:${v1.failure.status}:${v1.failure.reason ?? ""}:${v1.failure.message ?? ""}`;
+        const detailsBody =
           process.env.NODE_ENV !== "production"
-            ? `google_verify_failed:${verifyRes.status}:${body}`
-            : undefined,
-      });
+            ? `v2_body:${v2.failure.bodyText};v1_body:${v1.failure.bodyText}`
+            : undefined;
+        return res.status(400).json({
+          error: "Invalid or inaccessible Google Play purchase token",
+          code: "google_play_token_invalid_or_inaccessible",
+          googleReason: v2.failure.reason || v1.failure.reason || "",
+          googleMessage: v2.failure.message || v1.failure.message || "",
+          details: process.env.NODE_ENV !== "production" ? detailsForDebug : undefined,
+          detailsBody,
+        });
+      }
     }
 
-    const verifyJson = (await verifyRes.json()) as GoogleSubscriptionV2;
+    if (!verifyJson) {
+      return res.status(400).json({
+        error: "Could not verify Google Play purchase token",
+        code: "google_play_verify_unexpected_null",
+      });
+    }
     const firstLineItem = verifyJson.lineItems?.[0];
     const expiryTime = firstLineItem?.expiryTime ?? null;
     const subscriptionStatus = mapGoogleStateToSubscriptionStatus(
@@ -183,8 +315,8 @@ export default async function handler(
     const now = new Date();
     const periodEnd = expiryTime ? new Date(expiryTime) : null;
     const inferredPlan =
-      typeof subscriptionId === "string" &&
-      subscriptionId.toLowerCase().includes("year")
+      typeof subscriptionIdNormalized === "string" &&
+      subscriptionIdNormalized.toLowerCase().includes("year")
         ? "yearly"
         : "monthly";
 
@@ -204,7 +336,7 @@ export default async function handler(
       platform: "google_play" as const,
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
-      externalSubscriptionId: purchaseToken,
+      externalSubscriptionId: purchaseTokenNormalized,
     };
 
     if (user.subscriptions[0]) {
@@ -227,7 +359,7 @@ export default async function handler(
       subscriptionState: verifyJson.subscriptionState ?? null,
       currentPeriodEnd: periodEnd,
       plan: inferredPlan,
-      subscriptionId,
+      subscriptionId: subscriptionIdNormalized,
     });
   } catch (error) {
     console.error("[verify-android] unexpected error", error);
