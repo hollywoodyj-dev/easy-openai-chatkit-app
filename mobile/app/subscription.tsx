@@ -132,6 +132,47 @@ function storeSubscriptionProductId(plan: "monthly" | "yearly"): string {
     : GOOGLE_PLAY_PRODUCT_IDS.yearly;
 }
 
+function readUnknownField(obj: unknown, key: string): unknown {
+  if (!obj || typeof obj !== "object") return undefined;
+  try {
+    return Reflect.get(obj as Record<string, unknown>, key);
+  } catch {
+    return undefined;
+  }
+}
+
+function stringOrUndefined(v: unknown): string | undefined {
+  return typeof v === "string" && v.trim().length > 0 ? v : undefined;
+}
+
+function extractAndroidPurchaseToken(purchase: unknown): string | undefined {
+  const direct = [
+    "purchaseToken",
+    "purchaseTokenAndroid",
+    "token",
+    "transactionReceipt",
+  ] as const;
+  for (const key of direct) {
+    const v = stringOrUndefined(readUnknownField(purchase, key));
+    if (v) return v;
+  }
+
+  const nested = ["dataAndroid", "originalJson"] as const;
+  for (const key of nested) {
+    const raw = stringOrUndefined(readUnknownField(purchase, key));
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const fromJson = stringOrUndefined(parsed.purchaseToken);
+      if (fromJson) return fromJson;
+    } catch {
+      // Ignore parse errors and continue fallback chain.
+    }
+  }
+
+  return undefined;
+}
+
 export default function SubscriptionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ plan?: string; autostart?: string }>();
@@ -382,11 +423,23 @@ export default function SubscriptionScreen() {
         });
       }
 
-      const purchaseRec = purchase as IapPurchaseLike;
-      const purchaseToken: string | undefined =
-        purchaseRec.purchaseToken ?? purchaseRec.transactionReceipt;
+      const purchaseToken = extractAndroidPurchaseToken(purchase);
 
       if (!purchaseToken) {
+        const keys =
+          purchase && typeof purchase === "object"
+            ? Object.keys(purchase as Record<string, unknown>).sort()
+            : [];
+        addDebugEvent("android_purchase_token_missing", {
+          keys,
+          hasPurchaseToken: !!stringOrUndefined(readUnknownField(purchase, "purchaseToken")),
+          hasPurchaseTokenAndroid: !!stringOrUndefined(
+            readUnknownField(purchase, "purchaseTokenAndroid")
+          ),
+          hasToken: !!stringOrUndefined(readUnknownField(purchase, "token")),
+          hasDataAndroid: !!stringOrUndefined(readUnknownField(purchase, "dataAndroid")),
+          hasOriginalJson: !!stringOrUndefined(readUnknownField(purchase, "originalJson")),
+        });
         Alert.alert("Error", "No purchase token returned from Google Play.");
         return;
       }
