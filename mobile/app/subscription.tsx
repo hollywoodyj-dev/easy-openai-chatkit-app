@@ -67,7 +67,7 @@ const IOS_SUBSCRIPTION_CATALOG_SKUS = [
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-22-b17 · android error detail logging + cross-platform debug timeline";
+  "subscribe-ui-2026-04-22-b18 · android token source + verify response diagnostics";
 const ENABLE_PURCHASE_DEBUG_POPUP = true;
 const PURCHASE_DEBUG_STORAGE_KEY = "purchase_debug_events_v1";
 const PURCHASE_DEBUG_MAX_EVENTS = 60;
@@ -145,7 +145,10 @@ function stringOrUndefined(v: unknown): string | undefined {
   return typeof v === "string" && v.trim().length > 0 ? v : undefined;
 }
 
-function extractAndroidPurchaseToken(purchase: unknown): string | undefined {
+function extractAndroidPurchaseToken(purchase: unknown): {
+  token?: string;
+  source?: string;
+} {
   const direct = [
     "purchaseToken",
     "purchaseTokenAndroid",
@@ -154,7 +157,7 @@ function extractAndroidPurchaseToken(purchase: unknown): string | undefined {
   ] as const;
   for (const key of direct) {
     const v = stringOrUndefined(readUnknownField(purchase, key));
-    if (v) return v;
+    if (v) return { token: v, source: key };
   }
 
   const nested = ["dataAndroid", "originalJson"] as const;
@@ -164,13 +167,18 @@ function extractAndroidPurchaseToken(purchase: unknown): string | undefined {
     try {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
       const fromJson = stringOrUndefined(parsed.purchaseToken);
-      if (fromJson) return fromJson;
+      if (fromJson) return { token: fromJson, source: `${key}.purchaseToken` };
     } catch {
       // Ignore parse errors and continue fallback chain.
     }
   }
 
-  return undefined;
+  return {};
+}
+
+function redactTokenForLog(token: string): string {
+  if (token.length <= 12) return `len:${token.length}`;
+  return `${token.slice(0, 6)}...${token.slice(-6)} (len:${token.length})`;
 }
 
 export default function SubscriptionScreen() {
@@ -423,7 +431,15 @@ export default function SubscriptionScreen() {
         });
       }
 
-      const purchaseToken = extractAndroidPurchaseToken(purchase);
+      const tokenInfo = extractAndroidPurchaseToken(purchase);
+      const purchaseToken = tokenInfo.token;
+
+      if (purchaseToken) {
+        addDebugEvent("android_purchase_token_resolved", {
+          source: tokenInfo.source ?? "unknown",
+          tokenPreview: redactTokenForLog(purchaseToken),
+        });
+      }
 
       if (!purchaseToken) {
         const keys =
@@ -460,15 +476,34 @@ export default function SubscriptionScreen() {
         }
       );
       const json = await res.json().catch(() => ({}));
+      addDebugEvent("android_verify_done", {
+        ok: res.ok,
+        status: res.status,
+        code:
+          typeof (json as { code?: unknown }).code === "string"
+            ? (json as { code?: string }).code
+            : "",
+        error:
+          typeof (json as { error?: unknown }).error === "string"
+            ? (json as { error?: string }).error
+            : "",
+      });
 
       if (res.ok) {
         Alert.alert("Success", "Subscription activated.");
         router.replace("/chat");
       } else {
+        const errText =
+          (json as { error?: string }).error ??
+          (json as { message?: string }).message ??
+          "Could not activate subscription. Please contact support.";
+        const errCode =
+          typeof (json as { code?: unknown }).code === "string"
+            ? (json as { code?: string }).code
+            : "";
         Alert.alert(
           "Error",
-          (json as { error?: string }).error ??
-            "Could not activate subscription. Please contact support."
+          `${errText}${errCode ? `\n\nCode: ${errCode}` : ""}\nHTTP ${res.status}`
         );
       }
     } catch (e) {
@@ -491,6 +526,74 @@ export default function SubscriptionScreen() {
         lower.includes("user_cancelled") ||
         lower.includes("e_user_cancelled");
       if (isCanceled) {
+        return;
+      }
+      const isAlreadyOwned =
+        lower.includes("already-owned") || lower.includes("already owned");
+      if (isAlreadyOwned) {
+        try {
+          const productId = storeSubscriptionProductId(plan);
+          const raw = await RNIap.getAvailablePurchases();
+          const available = Array.isArray(raw) ? raw : [];
+          const matching = available.filter((p: unknown) =>
+            matchesProductId(p, productId)
+          );
+          addDebugEvent("android_already_owned_recover_scan", {
+            productId,
+            availableCount: available.length,
+            matchingCount: matching.length,
+          });
+          if (matching.length > 0) {
+            const tokenInfo = extractAndroidPurchaseToken(matching[0]);
+            const ownedToken = tokenInfo.token;
+            if (ownedToken) {
+              addDebugEvent("android_already_owned_token_resolved", {
+                source: tokenInfo.source ?? "unknown",
+                tokenPreview: redactTokenForLog(ownedToken),
+              });
+              const res = await fetch(
+                `${API_BASE_URL}/api/subscription/verify-android`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    purchaseToken: ownedToken,
+                    subscriptionId: productId,
+                    packageName: "com.wisewave.chatkit",
+                  }),
+                }
+              );
+              const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+              addDebugEvent("android_already_owned_verify_done", {
+                ok: res.ok,
+                status: res.status,
+                code:
+                  typeof json.code === "string" ? json.code : "",
+                error:
+                  typeof json.error === "string" ? json.error : "",
+              });
+              if (res.ok) {
+                Alert.alert(
+                  "Restored",
+                  "Google Play already owns this subscription. Wisewave has been synced."
+                );
+                router.replace("/chat");
+                return;
+              }
+            }
+          }
+        } catch (recoverErr) {
+          addDebugEvent("android_already_owned_recover_error", {
+            error: String(recoverErr),
+          });
+        }
+        Alert.alert(
+          "Already owned",
+          "This Google Play subscription is already owned by this account. We couldn't sync it to Wisewave yet. Please use the same Play account and try again in a moment."
+        );
         return;
       }
       Alert.alert(
