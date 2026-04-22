@@ -67,10 +67,10 @@ const IOS_SUBSCRIPTION_CATALOG_SKUS = [
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-21-b16 · persistent debug logs + delayed listener fallback";
-const ENABLE_IOS_PURCHASE_DEBUG_POPUP = true;
-const IOS_PURCHASE_DEBUG_STORAGE_KEY = "ios_purchase_debug_events_v1";
-const IOS_PURCHASE_DEBUG_MAX_EVENTS = 60;
+  "subscribe-ui-2026-04-22-b17 · android error detail logging + cross-platform debug timeline";
+const ENABLE_PURCHASE_DEBUG_POPUP = true;
+const PURCHASE_DEBUG_STORAGE_KEY = "purchase_debug_events_v1";
+const PURCHASE_DEBUG_MAX_EVENTS = 60;
 
 type FinishTransactionPurchase = Parameters<
   typeof RNIap.finishTransaction
@@ -143,35 +143,35 @@ export default function SubscriptionScreen() {
   const autoStartTriggeredRef = useRef(false);
 
   const loadDebugEvents = async () => {
-    if (!ENABLE_IOS_PURCHASE_DEBUG_POPUP || Platform.OS !== "ios") return;
+    if (!ENABLE_PURCHASE_DEBUG_POPUP) return;
     try {
-      const raw = await AsyncStorage.getItem(IOS_PURCHASE_DEBUG_STORAGE_KEY);
+      const raw = await AsyncStorage.getItem(PURCHASE_DEBUG_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as unknown;
       if (!Array.isArray(parsed)) return;
       const lines = parsed.filter((x): x is string => typeof x === "string");
-      setDebugEvents(lines.slice(-IOS_PURCHASE_DEBUG_MAX_EVENTS));
+      setDebugEvents(lines.slice(-PURCHASE_DEBUG_MAX_EVENTS));
     } catch {
       // Ignore debug log load failures.
     }
   };
 
   const addDebugEvent = (label: string, detail?: Record<string, unknown>) => {
-    if (!ENABLE_IOS_PURCHASE_DEBUG_POPUP || Platform.OS !== "ios") return;
+    if (!ENABLE_PURCHASE_DEBUG_POPUP) return;
     const ts = new Date().toISOString().slice(11, 19);
     const suffix = detail ? ` ${JSON.stringify(detail)}` : "";
-    const line = `[${ts}] ${label}${suffix}`;
+    const line = `[${ts}] ${Platform.OS} ${label}${suffix}`;
     setDebugEvents((prev) => {
-      const next = [...prev.slice(-(IOS_PURCHASE_DEBUG_MAX_EVENTS - 1)), line];
-      void AsyncStorage.setItem(IOS_PURCHASE_DEBUG_STORAGE_KEY, JSON.stringify(next));
+      const next = [...prev.slice(-(PURCHASE_DEBUG_MAX_EVENTS - 1)), line];
+      void AsyncStorage.setItem(PURCHASE_DEBUG_STORAGE_KEY, JSON.stringify(next));
       return next;
     });
   };
 
   const clearDebugEvents = () => {
     setDebugEvents([]);
-    if (ENABLE_IOS_PURCHASE_DEBUG_POPUP && Platform.OS === "ios") {
-      void AsyncStorage.removeItem(IOS_PURCHASE_DEBUG_STORAGE_KEY);
+    if (ENABLE_PURCHASE_DEBUG_POPUP) {
+      void AsyncStorage.removeItem(PURCHASE_DEBUG_STORAGE_KEY);
     }
   };
 
@@ -268,15 +268,18 @@ export default function SubscriptionScreen() {
       if (Platform.OS === "android") {
         let subs: unknown[];
         try {
+          addDebugEvent("android_fetch_products_start", { productId });
           const raw = await RNIap.fetchProducts({
             skus: [productId],
             type: "subs",
           });
           subs = Array.isArray(raw) ? raw : [];
+          addDebugEvent("android_fetch_products_done", { count: subs.length });
         } catch (fetchErr) {
           const errMsg =
             fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
           console.warn("fetchProducts error", errMsg, fetchErr);
+          addDebugEvent("android_fetch_products_error", { error: errMsg });
           Alert.alert(
             "Error",
             "Could not load subscription products. Please try again."
@@ -295,6 +298,10 @@ export default function SubscriptionScreen() {
         const offerToken = firstOffer?.offerToken ?? firstOffer?.offerId;
 
         if (!offerToken) {
+          addDebugEvent("android_offer_token_missing", {
+            productId,
+            hasOfferDetails: Array.isArray(offers) ? offers.length > 0 : !!offers,
+          });
           Alert.alert(
             "Error",
             "Could not load subscription details. Install from Play Store (internal test) on a real device—emulator does not support purchases."
@@ -303,6 +310,7 @@ export default function SubscriptionScreen() {
         }
 
         // v14: requestPurchase is event-based; wait for purchase via listener
+        addDebugEvent("android_request_purchase_start", { productId });
         purchase = await new Promise<unknown>((resolve, reject) => {
           const cleanup = () => {
             subUpdated.remove();
@@ -310,13 +318,24 @@ export default function SubscriptionScreen() {
           };
           const subUpdated = RNIap.purchaseUpdatedListener((p) => {
             if (matchesProductId(p, productId)) {
+              addDebugEvent("android_purchase_updated", { productId });
               cleanup();
               resolve(p);
             }
           });
           const subError = RNIap.purchaseErrorListener((err) => {
+            addDebugEvent("android_purchase_error_listener", {
+              code: String((err as { code?: unknown })?.code ?? ""),
+              message: String((err as { message?: unknown })?.message ?? ""),
+            });
             cleanup();
-            reject(new Error(err.message ?? "Purchase failed"));
+            reject(
+              new Error(
+                `[${String((err as { code?: unknown })?.code ?? "unknown_code")}] ${
+                  err.message ?? "Purchase failed"
+                }`
+              )
+            );
           });
           RNIap.requestPurchase({
             request: {
@@ -327,9 +346,15 @@ export default function SubscriptionScreen() {
             },
             type: "subs",
           }).catch((err) => {
+            addDebugEvent("android_request_purchase_rejected", {
+              error: String(err),
+            });
             cleanup();
             reject(err);
           });
+        });
+        addDebugEvent("android_request_purchase_done", {
+          hasPurchase: purchase != null,
         });
       } else {
         purchase = await new Promise<unknown>((resolve, reject) => {
@@ -395,9 +420,31 @@ export default function SubscriptionScreen() {
       }
     } catch (e) {
       console.warn("Google Play subscription error", e);
+      const code =
+        e && typeof e === "object" && "code" in e
+          ? String((e as { code?: unknown }).code ?? "")
+          : "";
+      const message =
+        e && typeof e === "object" && "message" in e
+          ? String((e as { message?: unknown }).message ?? "")
+          : e instanceof Error
+            ? e.message
+            : String(e);
+      addDebugEvent("android_purchase_catch", { code, message });
+      const lower = `${code} ${message}`.toLowerCase();
+      const isCanceled =
+        lower.includes("cancel") ||
+        lower.includes("user canceled") ||
+        lower.includes("user_cancelled") ||
+        lower.includes("e_user_cancelled");
+      if (isCanceled) {
+        return;
+      }
       Alert.alert(
         "Error",
-        "Could not start Google Play subscription. Please try again."
+        message
+          ? `Could not start Google Play subscription.\n\n${code ? `Code: ${code}\n` : ""}${message}`
+          : "Could not start Google Play subscription. Please try again."
       );
     } finally {
       setProcessingPlan(null);
@@ -810,7 +857,7 @@ export default function SubscriptionScreen() {
       <Text style={styles.buildTag} selectable>
         {SUBSCRIPTION_SCREEN_BUILD_TAG}
       </Text>
-      {Platform.OS === "ios" && ENABLE_IOS_PURCHASE_DEBUG_POPUP && (
+      {ENABLE_PURCHASE_DEBUG_POPUP && (
         <TouchableOpacity
           style={styles.debugChip}
           onPress={() => setDebugVisible(true)}
@@ -983,7 +1030,7 @@ export default function SubscriptionScreen() {
         onRequestClose={() => setDebugVisible(false)}
       >
         <View style={styles.debugModalRoot}>
-          <Text style={styles.debugTitle}>iOS purchase debug</Text>
+          <Text style={styles.debugTitle}>Purchase debug ({Platform.OS})</Text>
           <ScrollView style={styles.debugLogWrap}>
             <Text selectable style={styles.debugLogText}>
               {debugEvents.length > 0 ? debugEvents.join("\n") : "No events yet."}
