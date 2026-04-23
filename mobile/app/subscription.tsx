@@ -67,8 +67,10 @@ const IOS_SUBSCRIPTION_CATALOG_SKUS = [
 
 /** Shown under the title so you can confirm this JS bundle loaded (not a stale cache). Bump when verifying installs. */
 const SUBSCRIPTION_SCREEN_BUILD_TAG =
-  "subscribe-ui-2026-04-22-b18 · android token source + verify response diagnostics";
-const ENABLE_PURCHASE_DEBUG_POPUP = true;
+  "subscribe-ui-2026-04-22-b19 · production cleanup (quiet diagnostics retained)";
+const ENABLE_PURCHASE_DEBUG_POPUP = false;
+const SHOW_SUBSCRIPTION_BUILD_TAG = false;
+const SHOW_IOS_TEST_TOOLS = false;
 const PURCHASE_DEBUG_STORAGE_KEY = "purchase_debug_events_v1";
 const PURCHASE_DEBUG_MAX_EVENTS = 60;
 
@@ -106,19 +108,13 @@ function formatIosVerifyFailureMessage(
     (typeof json.error === "string" && json.error) ||
     (typeof json.message === "string" && json.message) ||
     "";
-  const appleStatus =
-    typeof json.appleStatus === "number"
-      ? ` (apple status ${json.appleStatus})`
-      : "";
   if (res.status === 409 && json.code === "subscription_account_mismatch") {
     const base =
       serverError ||
       "This Apple subscription is already linked to another Wisewave account.";
     return `${base}\n\nAsk your steward to open the admin page, use Clear ref on Wisewave rows that should not own this Apple subscription, then tap Restore purchase here again.`;
   }
-  return serverError
-    ? `${serverError}${appleStatus}`
-    : `Could not verify subscription with the server (HTTP ${res.status}).`;
+  return serverError || "We couldn't verify this Apple purchase right now. Please try again in a moment.";
 }
 
 function storeSubscriptionProductId(plan: "monthly" | "yearly"): string {
@@ -174,11 +170,6 @@ function extractAndroidPurchaseToken(purchase: unknown): {
   }
 
   return {};
-}
-
-function redactTokenForLog(token: string): string {
-  if (token.length <= 12) return `len:${token.length}`;
-  return `${token.slice(0, 6)}...${token.slice(-6)} (len:${token.length})`;
 }
 
 export default function SubscriptionScreen() {
@@ -437,7 +428,7 @@ export default function SubscriptionScreen() {
       if (purchaseToken) {
         addDebugEvent("android_purchase_token_resolved", {
           source: tokenInfo.source ?? "unknown",
-          tokenPreview: redactTokenForLog(purchaseToken),
+          tokenLength: purchaseToken.length,
         });
       }
 
@@ -497,14 +488,7 @@ export default function SubscriptionScreen() {
           (json as { error?: string }).error ??
           (json as { message?: string }).message ??
           "Could not activate subscription. Please contact support.";
-        const errCode =
-          typeof (json as { code?: unknown }).code === "string"
-            ? (json as { code?: string }).code
-            : "";
-        Alert.alert(
-          "Error",
-          `${errText}${errCode ? `\n\nCode: ${errCode}` : ""}\nHTTP ${res.status}`
-        );
+        Alert.alert("Error", errText);
       }
     } catch (e) {
       console.warn("Google Play subscription error", e);
@@ -549,7 +533,7 @@ export default function SubscriptionScreen() {
             if (ownedToken) {
               addDebugEvent("android_already_owned_token_resolved", {
                 source: tokenInfo.source ?? "unknown",
-                tokenPreview: redactTokenForLog(ownedToken),
+                tokenLength: ownedToken.length,
               });
               const res = await fetch(
                 `${API_BASE_URL}/api/subscription/verify-android`,
@@ -599,7 +583,7 @@ export default function SubscriptionScreen() {
       Alert.alert(
         "Error",
         message
-          ? `Could not start Google Play subscription.\n\n${code ? `Code: ${code}\n` : ""}${message}`
+          ? `Could not start Google Play subscription.\n\n${message.replace(/^\[[^\]]+\]\s*/, "")}`
           : "Could not start Google Play subscription. Please try again."
       );
     } finally {
@@ -1010,9 +994,11 @@ export default function SubscriptionScreen() {
       <Text style={styles.subtitle}>
         Your trial has ended. Choose a plan to keep using chat and your history.
       </Text>
-      <Text style={styles.buildTag} selectable>
-        {SUBSCRIPTION_SCREEN_BUILD_TAG}
-      </Text>
+      {SHOW_SUBSCRIPTION_BUILD_TAG && (
+        <Text style={styles.buildTag} selectable>
+          {SUBSCRIPTION_SCREEN_BUILD_TAG}
+        </Text>
+      )}
       {ENABLE_PURCHASE_DEBUG_POPUP && (
         <TouchableOpacity
           style={styles.debugChip}
@@ -1095,7 +1081,7 @@ export default function SubscriptionScreen() {
           </Text>
         </TouchableOpacity>
       )}
-      {Platform.OS === "ios" && (
+      {Platform.OS === "ios" && SHOW_IOS_TEST_TOOLS && (
         <>
           <TouchableOpacity
             style={styles.secondaryButton}
