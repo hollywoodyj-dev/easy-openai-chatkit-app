@@ -197,6 +197,63 @@ async function verifyWithSubscriptionsV1(
   };
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function verifyWithRetryWindow(options: {
+  accessToken: string;
+  packageName: string;
+  subscriptionId: string;
+  purchaseToken: string;
+}): Promise<
+  | { ok: true; json: GoogleSubscriptionV2; via: "v2" | "v1" }
+  | {
+      ok: false;
+      v2Failure: GoogleVerifyFailure;
+      v1Failure: GoogleVerifyFailure;
+      attempts: number;
+    }
+> {
+  const retryDelaysMs = [0, 1200, 2200, 3500];
+  let lastV2: GoogleVerifyFailure | null = null;
+  let lastV1: GoogleVerifyFailure | null = null;
+
+  for (let i = 0; i < retryDelaysMs.length; i++) {
+    const delay = retryDelaysMs[i];
+    if (delay > 0) {
+      await sleep(delay);
+    }
+    const v2 = await verifyWithSubscriptionsV2(
+      options.accessToken,
+      options.packageName,
+      options.purchaseToken
+    );
+    if (v2.ok) {
+      return { ok: true, json: v2.json, via: "v2" };
+    }
+    lastV2 = v2.failure;
+
+    const v1 = await verifyWithSubscriptionsV1(
+      options.accessToken,
+      options.packageName,
+      options.subscriptionId,
+      options.purchaseToken
+    );
+    if (v1.ok) {
+      return { ok: true, json: v1.json, via: "v1" };
+    }
+    lastV1 = v1.failure;
+  }
+
+  return {
+    ok: false,
+    v2Failure: lastV2 ?? { status: 0, bodyText: "" },
+    v1Failure: lastV1 ?? { status: 0, bodyText: "" },
+    attempts: retryDelaysMs.length,
+  };
+}
+
 /**
  * Verify a Google Play subscription purchase and activate the user's subscription.
  * Call this from the mobile app after a successful in-app purchase.
@@ -271,34 +328,28 @@ export default async function handler(
 
     const accessToken = await getGoogleAccessToken(key);
     let verifyJson: GoogleSubscriptionV2 | null = null;
-    const v2 = await verifyWithSubscriptionsV2(accessToken, pkg, purchaseTokenNormalized);
-    if (v2.ok) {
-      verifyJson = v2.json;
+    const verify = await verifyWithRetryWindow({
+      accessToken,
+      packageName: pkg,
+      subscriptionId: subscriptionIdNormalized,
+      purchaseToken: purchaseTokenNormalized,
+    });
+    if (verify.ok) {
+      verifyJson = verify.json;
     } else {
-      // Fallback for some Play Console setups where v1 still returns token data.
-      const v1 = await verifyWithSubscriptionsV1(
-        accessToken,
-        pkg,
-        subscriptionIdNormalized,
-        purchaseTokenNormalized
-      );
-      if (v1.ok) {
-        verifyJson = v1.json;
-      } else {
-        const detailsForDebug = `v2:${v2.failure.status}:${v2.failure.reason ?? ""}:${v2.failure.message ?? ""};v1:${v1.failure.status}:${v1.failure.reason ?? ""}:${v1.failure.message ?? ""}`;
-        const detailsBody =
-          process.env.NODE_ENV !== "production"
-            ? `v2_body:${v2.failure.bodyText};v1_body:${v1.failure.bodyText}`
-            : undefined;
-        return res.status(400).json({
-          error: "Invalid or inaccessible Google Play purchase token",
-          code: "google_play_token_invalid_or_inaccessible",
-          googleReason: v2.failure.reason || v1.failure.reason || "",
-          googleMessage: v2.failure.message || v1.failure.message || "",
-          details: process.env.NODE_ENV !== "production" ? detailsForDebug : undefined,
-          detailsBody,
-        });
-      }
+      const detailsForDebug = `attempts:${verify.attempts};v2:${verify.v2Failure.status}:${verify.v2Failure.reason ?? ""}:${verify.v2Failure.message ?? ""};v1:${verify.v1Failure.status}:${verify.v1Failure.reason ?? ""}:${verify.v1Failure.message ?? ""}`;
+      const detailsBody =
+        process.env.NODE_ENV !== "production"
+          ? `v2_body:${verify.v2Failure.bodyText};v1_body:${verify.v1Failure.bodyText}`
+          : undefined;
+      return res.status(400).json({
+        error: "Invalid or inaccessible Google Play purchase token",
+        code: "google_play_token_invalid_or_inaccessible",
+        googleReason: verify.v2Failure.reason || verify.v1Failure.reason || "",
+        googleMessage: verify.v2Failure.message || verify.v1Failure.message || "",
+        details: process.env.NODE_ENV !== "production" ? detailsForDebug : undefined,
+        detailsBody,
+      });
     }
 
     if (!verifyJson) {
