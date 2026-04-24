@@ -47,6 +47,21 @@ Internal report endpoint auth:
    - one `/api/chat/turn` request
    - one `/api/chat/reflection` request
 
+### Local anonymous smoke caveat (identity/cookie continuity)
+
+If you test `/api/chat/session`, `/api/chat/messages`, `/api/chat/turn`, and
+`/api/chat/reflection` with anonymous access, all calls must share the same cookie jar.
+If the session creation call and follow-up calls do not carry the same cookie identity,
+you can see:
+
+- `404 {"error":"Conversation not found or access denied"}`
+
+Recommended approach for manual API smoke:
+
+1. Create session and persist response cookies.
+2. Reuse the same cookie jar/header for messages/turn/reflection calls.
+3. Keep same origin/protocol/port (`http://localhost:3000` vs `127.0.0.1`) during the sequence.
+
 If `model-compat:check` fails, fix configured model slugs before any deploy.
 
 ## CI workflow
