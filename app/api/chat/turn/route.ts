@@ -59,6 +59,7 @@ import {
   evaluateMilestoneJBoundary,
 } from "@/lib/wisewave-milestone-j-microshift-boundary";
 import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
+import { resolveWisewaveModel } from "@/lib/wisewave-model-router";
 import { summarizeThreadLabelFromUserMessage } from "@/lib/wisewave-thread-label";
 import {
   applyContinuityAnchorSemanticWeightV2,
@@ -69,7 +70,6 @@ import { join } from "path";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_CHAT_MODEL = "gpt-5.4";
 const RECENT_MESSAGES_COUNT = 8;
 const SUMMARY_TRIGGER_EVERY = 10;
 
@@ -1635,7 +1635,9 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-  const model = process.env.OPENAI_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
+  const chatModel = resolveWisewaveModel("chat_turn");
+  const extractModel = resolveWisewaveModel("reflection_extract");
+  const summaryModel = resolveWisewaveModel("chat_summary");
 
   // V1 Ticket 2: extraction pipeline — structured reflection state for this message. Failure is non-blocking; we log and continue.
   let reflectionState: {
@@ -1649,7 +1651,7 @@ export async function POST(request: Request) {
   const extracted = await extractReflectionState(
     message.trim(),
     apiKey,
-    model,
+    extractModel,
     conversation.conversationSummary
   );
   if (extracted) {
@@ -1689,7 +1691,7 @@ export async function POST(request: Request) {
     messageCount >= SUMMARY_TRIGGER_EVERY &&
     messageCount % SUMMARY_TRIGGER_EVERY === 0
   ) {
-    await refreshConversationSummary(sessionId, apiKey, model);
+    await refreshConversationSummary(sessionId, apiKey, summaryModel);
   }
 
   // 3. Reload conversation (to get latest summary) and take recent messages for context
@@ -1880,7 +1882,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model,
+        model: chatModel,
         messages: openaiMessagesForApi,
         max_completion_tokens: 2048,
       }),
@@ -1926,7 +1928,7 @@ export async function POST(request: Request) {
         debugZhRewriteAttempted = true;
         const rewrittenZh = await rewriteAssistantToChinese({
           apiKey,
-          model,
+          model: chatModel,
           sourceText: assistantContent,
         }).catch(() => null);
         if (rewrittenZh && hasCjkContent(rewrittenZh)) {

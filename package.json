@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "vercel --yes",
+    "deploy": "npm run model-compat:check && vercel --yes",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:push:prod": "prisma db push",
@@ -18,8 +18,11 @@
     "test:continue-list": "vitest run lib/wisewave-continue-list.test.ts",
     "test:phase6-continue": "vitest run lib/wisewave-phase6-continue.test.ts",
     "test:phase7-continue": "vitest run lib/wisewave-phase7-continue.test.ts",
+    "test:model-router": "vitest run lib/wisewave-model-router.test.ts",
     "phase7:evidence:probes": "node scripts/phase7-evidence-probes.cjs",
-    "test:continue-reentry": "vitest run lib/wisewave-continue-reentry-turn.test.ts"
+    "test:continue-reentry": "vitest run lib/wisewave-continue-reentry-turn.test.ts",
+    "model-compat:report": "node scripts/model-compat-check.cjs --mode=warn",
+    "model-compat:check": "node scripts/model-compat-check.cjs --mode=block"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",
