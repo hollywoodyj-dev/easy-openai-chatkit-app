@@ -59,6 +59,8 @@ import {
   evaluateMilestoneJBoundary,
 } from "@/lib/wisewave-milestone-j-microshift-boundary";
 import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
+import { lintWisewaveOutput } from "@/lib/drift/linter";
+import { hasHighSeverityDrift } from "@/lib/drift/score";
 import { resolveWisewaveModel } from "@/lib/wisewave-model-router";
 import { summarizeThreadLabelFromUserMessage } from "@/lib/wisewave-thread-label";
 import {
@@ -2038,6 +2040,15 @@ export async function POST(request: Request) {
   let debugSecondaryOverlapScore = 0;
   let debugSecondarySuppressedReason: string | null = null;
   let debugRejectedPhraseHit = false;
+  let debugDriftPassed = true;
+  let debugDriftScore = 1;
+  let debugDriftHighSeveritySuppressed = false;
+  let debugDriftViolations: Array<{
+    type: string;
+    severity: string;
+    matched: string;
+    reason: string;
+  }> = [];
   let debugAnchorV2ContinuitySave: AnchorSemanticWeightV2Debug | null = null;
   let debugAnchorV2LastInsightRead: AnchorSemanticWeightV2Debug | null = null;
   let responseContinuityInsight:
@@ -3470,6 +3481,48 @@ export async function POST(request: Request) {
   assistantContent = finalMainSanitized.text;
   debugRejectedPhraseHit = debugRejectedPhraseHit || finalMainSanitized.hit;
 
+  const driftLint = lintWisewaveOutput(assistantContent);
+  debugDriftPassed = driftLint.passed;
+  debugDriftScore = driftLint.score;
+  debugDriftViolations = driftLint.violations.map((v) => ({
+    type: v.type,
+    severity: v.severity,
+    matched: v.matched,
+    reason: v.reason,
+  }));
+
+  if (hasHighSeverityDrift(driftLint)) {
+    debugDriftHighSeveritySuppressed = true;
+    assistantContent = "";
+    keptLastInsight = null;
+    keptSoftContinuity = null;
+    keptPatternSurfacing = null;
+    keptMicroAwareness = null;
+    keptMicroShift = null;
+    responseContinuityInsight = null;
+    responseRecurrenceCue = null;
+    responseEmbodimentCue = null;
+    responseAwarenessCue = null;
+    responseMicroshiftCue = null;
+    debugSecondaryLayerType = "none";
+    debugSecondarySource = "none";
+    debugSecondarySourceValid = false;
+    debugSecondaryOverlapScore = 0;
+    debugSecondaryTemplateId = null;
+    debugSecondarySuppressedReason = "drift_linter_high_severity";
+
+    if (assistantMsgId) {
+      try {
+        await prisma.message.update({
+          where: { id: assistantMsgId },
+          data: { message: "" },
+        });
+      } catch (e) {
+        console.warn("[chat/turn] drift suppression message update failed", e);
+      }
+    }
+  }
+
   // Debug: indicate which secondary layer survives de-dup + suppression-first.
   if (keptLastInsight) {
     debugSecondaryLayerType = "last_insight";
@@ -3652,6 +3705,10 @@ export async function POST(request: Request) {
     debug_secondary_source_valid: debugSecondarySourceValid,
     debug_secondary_overlap_score: debugSecondaryOverlapScore,
     debug_secondary_suppressed_reason: debugSecondarySuppressedReason,
+    debug_drift_linter_passed: debugDriftPassed,
+    debug_drift_linter_score: debugDriftScore,
+    debug_drift_linter_high_severity_suppressed: debugDriftHighSeveritySuppressed,
+    debug_drift_linter_violations: debugDriftViolations,
     debug_rejected_phrase_hit: debugRejectedPhraseHit,
     debug_insight_core_pattern: debugInsightCorePattern,
     debug_has_strong_pattern_cue: debugHasStrongPatternCue,
