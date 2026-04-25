@@ -19,6 +19,7 @@ import {
   presentAppleSubscriptionAccountHub,
   presentAppleSubscriptionCancellationFlow,
   runAppleSubscriptionAccountSequential,
+  syncWisewaveSubscriptionFromIosReceipt,
 } from "../lib/apple-subscription-account";
 import {
   comparePurchaseByRecency,
@@ -181,6 +182,7 @@ export default function SubscriptionScreen() {
   const [debugVisible, setDebugVisible] = useState(false);
   const [debugEvents, setDebugEvents] = useState<string[]>([]);
   const autoStartTriggeredRef = useRef(false);
+  const iosAutoRenewSyncAttemptedRef = useRef(false);
 
   const loadDebugEvents = async () => {
     if (!ENABLE_PURCHASE_DEBUG_POPUP) return;
@@ -983,6 +985,38 @@ export default function SubscriptionScreen() {
     // Intentionally omit subscription handlers: autostart runs once when gate opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.autostart, params.plan, token, iapReady]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    if (!token) return;
+    if (!iapReady) return;
+    if (processingPlan) return;
+    if (iosAutoRenewSyncAttemptedRef.current) return;
+
+    iosAutoRenewSyncAttemptedRef.current = true;
+    void (async () => {
+      try {
+        addDebugEvent("ios_auto_sync_start");
+        const result = await syncWisewaveSubscriptionFromIosReceipt({
+          token,
+          apiBaseUrl: API_BASE_URL,
+          bundleId: "com.wisewave.chatkit",
+          monthlyProductId: APP_STORE_PRODUCT_IDS.monthly,
+          yearlyProductId: APP_STORE_PRODUCT_IDS.yearly,
+        });
+        addDebugEvent("ios_auto_sync_done", { ok: result.ok });
+        if (!result.ok) return;
+
+        const accessReady = await waitForSubscriptionAccessReady(token, 8000);
+        addDebugEvent("ios_auto_sync_access_ready", { accessReady });
+        if (!accessReady) return;
+
+        router.replace("/chat");
+      } catch (e) {
+        addDebugEvent("ios_auto_sync_error", { error: String(e) });
+      }
+    })();
+  }, [token, iapReady, processingPlan, router]);
 
   return (
     <ScrollView
