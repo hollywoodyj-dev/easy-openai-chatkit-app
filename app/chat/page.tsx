@@ -419,7 +419,7 @@ function CurrentSpaceMarker({
   if (legibility !== "low" || !marker?.trim()) return null;
   return (
     <p
-      className="mb-2 max-w-[46rem] text-[12px] leading-5 text-[#A8A8A8]"
+      className="mb-2 max-w-[46rem] text-[12px] leading-5 text-[#A8A8A8] lg:max-w-[56rem]"
       aria-live="polite"
     >
       {marker.trim()}
@@ -430,7 +430,7 @@ function CurrentSpaceMarker({
 function InsightAnchor({ text }: { text?: string }) {
   if (!text) return null;
   return (
-    <section className="mb-6 max-w-[46rem] rounded-[22px] border border-black/5 bg-white/55 px-4 py-4 shadow-[0_8px_22px_rgba(0,0,0,0.03)] backdrop-blur-sm md:px-5">
+    <section className="mb-6 max-w-[46rem] rounded-[22px] border border-black/5 bg-white/55 px-4 py-4 shadow-[0_8px_22px_rgba(0,0,0,0.03)] backdrop-blur-sm md:px-5 lg:max-w-[56rem]">
       <p className="text-[11px] uppercase tracking-[0.18em] text-[#9A9A9A]">— last insight —</p>
       <p className="mt-2 text-[12px] leading-6 text-[#9A9A9A]">{text}</p>
     </section>
@@ -446,7 +446,7 @@ function AssistantMessage({ payload }: { payload: AssistantPayload }) {
     payload.micro_shift;
 
   return (
-    <div className="max-w-[46rem]">
+    <div className="max-w-[46rem] lg:max-w-[56rem]">
       <div className="rounded-[28px] bg-white/72 px-5 py-5 shadow-[0_10px_35px_rgba(0,0,0,0.04)] ring-1 ring-black/5 backdrop-blur-sm md:px-6 md:py-6">
         <p className="text-[16px] leading-8 text-[#232323] md:text-[17px]">{payload.main_reflection}</p>
         {secondaryLine ? (
@@ -462,7 +462,7 @@ function AssistantMessage({ payload }: { payload: AssistantPayload }) {
 
 function UserMessage({ text }: { text: string }) {
   return (
-    <div className="ml-auto max-w-[40rem]">
+    <div className="ml-auto max-w-[40rem] lg:max-w-[50rem]">
       <div className="rounded-[24px] bg-[#EEEAE3] px-5 py-4 text-[15px] leading-7 text-[#343434] shadow-[0_8px_24px_rgba(0,0,0,0.03)] ring-1 ring-black/5">
         {text}
       </div>
@@ -597,17 +597,24 @@ function InputBar({
   onChange,
   onSubmit,
   disabled,
+  isEmbedMobile = false,
   placeholder = "Speak freely.",
 }: {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   disabled: boolean;
+  isEmbedMobile?: boolean;
   placeholder?: string;
 }) {
   return (
     <div className="sticky bottom-0 z-20 border-t border-black/5 bg-[#F7F5F2]/90 backdrop-blur-xl">
-      <div className="mx-auto max-w-4xl px-5 py-4 md:px-8 md:py-5">
+      <div
+        className={cn(
+          "mx-auto px-5 py-4 md:px-8 md:py-5",
+          isEmbedMobile ? "max-w-6xl" : "max-w-4xl"
+        )}
+      >
         <div className="rounded-[30px] bg-white/78 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.05)] ring-1 ring-black/5 backdrop-blur-sm">
           <div className="flex items-end gap-2 rounded-[24px] px-3 py-2 md:px-4 md:py-3">
             <textarea
@@ -1366,7 +1373,12 @@ function ChatContent() {
         }}
       />
 
-      <main className="relative mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-10">
+      <main
+        className={cn(
+          "relative mx-auto px-5 py-8 md:px-8 md:py-10",
+          isEmbedMobile ? "max-w-6xl" : "max-w-4xl"
+        )}
+      >
         <div>
           <div className="mb-8 max-w-2xl">
           <div className="inline-flex rounded-full border border-black/6 bg-white/60 px-4 py-2 text-[12px] tracking-[0.16em] text-[#7A7A7A] backdrop-blur-sm">
@@ -1422,6 +1434,7 @@ function ChatContent() {
         }}
         onSubmit={handleSubmit}
         disabled={isWaiting}
+        isEmbedMobile={isEmbedMobile}
         placeholder={inputPlaceholder}
       />
     </div>
