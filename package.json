@@ -23,7 +23,8 @@
     "phase7:evidence:probes": "node scripts/phase7-evidence-probes.cjs",
     "test:continue-reentry": "vitest run lib/wisewave-continue-reentry-turn.test.ts",
     "model-compat:report": "node scripts/model-compat-check.cjs --mode=warn",
-    "model-compat:check": "node scripts/model-compat-check.cjs --mode=block"
+    "model-compat:check": "node scripts/model-compat-check.cjs --mode=block",
+    "local-anonymous:smoke": "node scripts/local-anonymous-chat-smoke.cjs"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",

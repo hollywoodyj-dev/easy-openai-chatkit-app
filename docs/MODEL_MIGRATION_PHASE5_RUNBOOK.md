@@ -56,6 +56,11 @@ you can see:
 
 - `404 {"error":"Conversation not found or access denied"}`
 
+**Full write-up, hosted vs local impact, and `curl` recipe:** `docs/MODEL_MIGRATION_LOCAL_ANONYMOUS_SESSION_SMOKE.md`
+
+**One-command smoke (dev server + DB + `OPENAI_API_KEY` on the server):** `npm run local-anonymous:smoke`  
+(optional: `BASE_URL=http://localhost:3000` if not using the default `http://127.0.0.1:3000`).
+
 Recommended approach for manual API smoke:
 
 1. Create session and persist response cookies.
