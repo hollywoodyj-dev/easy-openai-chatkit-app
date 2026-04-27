@@ -34,12 +34,21 @@ export function WisewaveSiteFooter() {
           <Link href="/terms" className="hover:text-[#171717]">
             Terms
           </Link>
+          <Link
+            href="/how-it-works#conversation-handling"
+            className="hover:text-[#171717]"
+          >
+            Conversation handling
+          </Link>
+          <Link href="/subscribe" className="hover:text-[#171717]">
+            Account &amp; subscription
+          </Link>
+          <a href="mailto:info@wisewave.io" className="hover:text-[#171717]">
+            Support
+          </a>
           <Link href="/about/founder-note" className="hover:text-[#171717]">
             A note from the founder
           </Link>
-          <a href="mailto:info@wisewave.io" className="hover:text-[#171717]">
-            Contact
-          </a>
         </div>
       </div>
     </footer>
