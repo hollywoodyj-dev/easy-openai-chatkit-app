@@ -38,6 +38,7 @@ import {
   ENABLE_IOS_RECEIPT_VERIFY,
   IOS_RECEIPT_VERIFY_DISABLED_MESSAGE,
 } from "../lib/ios-subscription-flags";
+import { useIsTablet } from "../lib/device-layout";
 
 const MONTHLY_PRICE = 29;
 const YEARLY_PRICE = 299;
@@ -174,6 +175,7 @@ function extractAndroidPurchaseToken(purchase: unknown): {
 }
 
 export default function SubscriptionScreen() {
+  const isTablet = useIsTablet();
   const router = useRouter();
   const params = useLocalSearchParams<{ plan?: string; autostart?: string }>();
   const { token } = useAuth();
@@ -1021,7 +1023,10 @@ export default function SubscriptionScreen() {
   return (
     <ScrollView
       style={styles.scrollRoot}
-      contentContainerStyle={styles.scrollInner}
+      contentContainerStyle={[
+        styles.scrollInner,
+        isTablet && styles.scrollInnerTablet,
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>Subscribe to continue</Text>
@@ -1042,7 +1047,8 @@ export default function SubscriptionScreen() {
         </TouchableOpacity>
       )}
 
-      <View style={styles.card}>
+      <View style={isTablet ? styles.planRow : styles.planColumn}>
+      <View style={[styles.card, isTablet && styles.cardInRow]}>
         <Text style={styles.planName}>Monthly</Text>
         <Text style={styles.price}>${MONTHLY_PRICE}</Text>
         <Text style={styles.interval}>per month</Text>
@@ -1066,7 +1072,7 @@ export default function SubscriptionScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.card, styles.cardHighlight]}>
+      <View style={[styles.card, styles.cardHighlight, isTablet && styles.cardInRow]}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>Save 14%</Text>
         </View>
@@ -1091,6 +1097,7 @@ export default function SubscriptionScreen() {
             </Text>
           )}
         </TouchableOpacity>
+      </View>
       </View>
 
       {Platform.OS === "ios" && (
@@ -1239,6 +1246,28 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 48,
     flexGrow: 1,
+    width: "100%",
+    maxWidth: "100%",
+    alignSelf: "stretch",
+  },
+  scrollInnerTablet: {
+    paddingHorizontal: 48,
+    paddingTop: 32,
+  },
+  planColumn: {
+    width: "100%",
+  },
+  planRow: {
+    flexDirection: "row",
+    gap: 16,
+    alignItems: "stretch",
+    width: "100%",
+    alignSelf: "stretch",
+  },
+  cardInRow: {
+    flex: 1,
+    minWidth: 0,
+    marginBottom: 0,
   },
   title: {
     fontSize: 24,

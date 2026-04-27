@@ -28,6 +28,8 @@
     },
     "ios": {
       "bundleIdentifier": "com.wisewave.chatkit",
+      "supportsTablet": true,
+      "requireFullScreen": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

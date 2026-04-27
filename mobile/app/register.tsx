@@ -15,6 +15,7 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL } from "../config";
+import { useIsTablet } from "../lib/device-layout";
 
 let WebBrowser: typeof import("expo-web-browser") | null = null;
 try {
@@ -37,6 +38,7 @@ function extractTokenFromDeepLink(rawUrl: string): string | null {
 }
 
 export default function RegisterScreen() {
+  const isTablet = useIsTablet();
   const { setToken } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -139,7 +141,10 @@ export default function RegisterScreen() {
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isTablet && styles.scrollContentTablet,
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
@@ -268,10 +273,18 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     padding: 24,
+    width: "100%",
+    maxWidth: "100%",
+    alignSelf: "stretch",
+  },
+  scrollContentTablet: {
+    paddingHorizontal: 48,
+    paddingVertical: 40,
   },
   header: {
     marginBottom: 32,
     alignItems: "center",
+    maxWidth: "100%",
   },
   title: {
     fontSize: 28,

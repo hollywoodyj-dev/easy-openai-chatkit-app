@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { StyleSheet } from "react-native";
 import { AuthProvider } from "../context/AuthContext";
 
 export default function RootLayout() {
@@ -8,6 +9,7 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: true,
           headerBackTitle: "Back",
+          contentStyle: styles.stackContent,
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -20,3 +22,9 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  stackContent: {
+    flex: 1,
+  },
+});
