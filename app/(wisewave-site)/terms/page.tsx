@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { PageHero } from "@/components/wisewave-site/PageHero";
-import { Section } from "@/components/wisewave-site/Section";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
@@ -10,6 +10,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
+function TermsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-2xl font-medium leading-tight tracking-[-0.02em] text-[#171717]">
+        {title}
+      </h2>
+      <div>{children}</div>
+    </section>
+  );
+}
+
 export default function TermsPage() {
   return (
     <>
@@ -17,18 +34,19 @@ export default function TermsPage() {
         title="Wisewave Terms of Use"
         body="These Terms explain the conditions for using Wisewave across our website, app, account features, subscription features, and reflective AI experience."
       />
-      <Section title="Effective date">
+      <div className="mx-auto w-full max-w-[48rem] space-y-10 px-6 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-12">
+      <TermsSection title="Effective date">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
-          Effective date: <strong>[Insert date]</strong>
+          Effective date: <strong>April 27, 2026</strong>
         </p>
-      </Section>
-      <Section title="Welcome to Wisewave">
+      </TermsSection>
+      <TermsSection title="Welcome to Wisewave">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           By using Wisewave, you agree to these Terms. If you do not agree,
           please do not use Wisewave.
         </p>
-      </Section>
-      <Section title="1. What Wisewave is">
+      </TermsSection>
+      <TermsSection title="1. What Wisewave is">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave is a quiet reflection space.</p>
           <p>
@@ -44,8 +62,8 @@ export default function TermsPage() {
             your own choices, actions, wellbeing, and use of the service.
           </p>
         </div>
-      </Section>
-      <Section title="2. What Wisewave is not">
+      </TermsSection>
+      <TermsSection title="2. What Wisewave is not">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave is not:</p>
           <ul className="list-disc space-y-1 pl-6">
@@ -78,8 +96,8 @@ export default function TermsPage() {
             .
           </p>
         </div>
-      </Section>
-      <Section title="3. Crisis and emergency situations">
+      </TermsSection>
+      <TermsSection title="3. Crisis and emergency situations">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave is not suitable for emergencies or crisis situations.</p>
           <p>
@@ -92,8 +110,8 @@ export default function TermsPage() {
             location. Do not rely on Wisewave for urgent support.
           </p>
         </div>
-      </Section>
-      <Section title="4. Your account">
+      </TermsSection>
+      <TermsSection title="4. Your account">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>You may need an account to use certain parts of Wisewave.</p>
           <p>You are responsible for:</p>
@@ -109,8 +127,8 @@ export default function TermsPage() {
             harms the service or other users.
           </p>
         </div>
-      </Section>
-      <Section title="5. Subscriptions and payments">
+      </TermsSection>
+      <TermsSection title="5. Subscriptions and payments">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave may offer paid subscriptions.</p>
           <p>
@@ -140,8 +158,8 @@ export default function TermsPage() {
             .
           </p>
         </div>
-      </Section>
-      <Section title="6. Refunds">
+      </TermsSection>
+      <TermsSection title="6. Refunds">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Refund eligibility may depend on how you purchased Wisewave.</p>
           <p>
@@ -150,15 +168,15 @@ export default function TermsPage() {
           </p>
           <p>
             If you purchased directly from us, contact:{" "}
-            <strong>[Insert support email]</strong>.
+            <strong>info@wisewave.io</strong>.
           </p>
           <p>
             We review refund requests in line with these Terms, payment provider
             rules, and applicable Australian Consumer Law rights.
           </p>
         </div>
-      </Section>
-      <Section title="7. Your reflections and input">
+      </TermsSection>
+      <TermsSection title="7. Your reflections and input">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>
             You are responsible for what you choose to share in Wisewave.
@@ -174,8 +192,8 @@ export default function TermsPage() {
             </li>
           </ul>
         </div>
-      </Section>
-      <Section title="8. AI-generated responses">
+      </TermsSection>
+      <TermsSection title="8. AI-generated responses">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>
             Wisewave uses AI-generated responses that may be incomplete,
@@ -187,8 +205,8 @@ export default function TermsPage() {
           </p>
           <p>Responses are reflective text, not instructions.</p>
         </div>
-      </Section>
-      <Section title="9. Acceptable use">
+      </TermsSection>
+      <TermsSection title="9. Acceptable use">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
           <p>You must not misuse Wisewave. You must not:</p>
           <ul className="list-disc space-y-1 pl-6">
@@ -205,8 +223,8 @@ export default function TermsPage() {
             believe these rules have been breached.
           </p>
         </div>
-      </Section>
-      <Section title="10. Intellectual property">
+      </TermsSection>
+      <TermsSection title="10. Intellectual property">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           Wisewave name, interface, software, prompts, design, wording,
           branding, and content are owned by us or licensed to us. You may use
@@ -216,8 +234,8 @@ export default function TermsPage() {
           subject to rights needed for us to operate, secure, and improve the
           service as described in our Privacy Policy.
         </p>
-      </Section>
-      <Section title="11. Privacy">
+      </TermsSection>
+      <TermsSection title="11. Privacy">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           Your use of Wisewave is also governed by our{" "}
           <Link
@@ -235,8 +253,8 @@ export default function TermsPage() {
           </Link>
           .
         </p>
-      </Section>
-      <Section title="12. Service availability">
+      </TermsSection>
+      <TermsSection title="12. Service availability">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           We try to keep Wisewave available but do not guarantee uninterrupted
           access. Availability may be affected by maintenance, updates,
@@ -244,53 +262,54 @@ export default function TermsPage() {
           events beyond our control. We may change, pause, or discontinue parts
           of the service where reasonably necessary.
         </p>
-      </Section>
-      <Section title="13. Changes to Wisewave">
+      </TermsSection>
+      <TermsSection title="13. Changes to Wisewave">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           Wisewave may change over time, including features, wording, pricing,
           subscription options, or availability. If a change materially affects
           your rights or use, we will try to provide reasonable notice where
           practical.
         </p>
-      </Section>
-      <Section title="14. Limitation of liability">
+      </TermsSection>
+      <TermsSection title="14. Limitation of liability">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           To the maximum extent permitted by law, we are not liable for
           indirect, incidental, special, consequential, or punitive loss from
           your use of Wisewave. Nothing in these Terms excludes, restricts, or
           modifies non-excludable rights under Australian Consumer Law.
         </p>
-      </Section>
-      <Section title="15. Third-party services">
+      </TermsSection>
+      <TermsSection title="15. Third-party services">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           Wisewave may rely on third-party services such as hosting, analytics,
           authentication, payment processing, app stores, or AI infrastructure.
           Your use of those services may also be subject to their own terms and
           policies.
         </p>
-      </Section>
-      <Section title="16. Termination">
+      </TermsSection>
+      <TermsSection title="16. Termination">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           You may stop using Wisewave at any time. We may suspend or terminate
           access if you breach these Terms, create risk for Wisewave or others,
           if required by law, or if we discontinue the service. Termination does
           not affect rights or obligations intended to continue.
         </p>
-      </Section>
-      <Section title="17. Governing law">
+      </TermsSection>
+      <TermsSection title="17. Governing law">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           These Terms are governed by the laws of New South Wales, Australia,
           unless another jurisdiction is required by applicable consumer law.
           Courts in New South Wales may hear disputes relating to these Terms,
           subject to non-excludable consumer rights.
         </p>
-      </Section>
-      <Section title="18. Contact">
+      </TermsSection>
+      <TermsSection title="18. Contact">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           For questions about these Terms, contact:{" "}
-          <strong>[Insert legal/support email]</strong>.
+          <strong>info@wisewave.io</strong>.
         </p>
-      </Section>
+      </TermsSection>
+      </div>
     </>
   );
 }
