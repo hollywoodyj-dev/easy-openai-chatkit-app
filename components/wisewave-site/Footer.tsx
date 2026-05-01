@@ -1,14 +1,14 @@
 import Link from "next/link";
+import { wisewaveLandingCopy } from "@/lib/wisewave-site/wisewave-landing-copy";
 
 export function WisewaveSiteFooter() {
+  const { line, subline } = wisewaveLandingCopy.footer;
   return (
     <footer className="border-t border-[#e7e1d8] py-12">
       <div className="mx-auto flex w-full max-w-[51rem] flex-col gap-8 px-6 sm:px-8">
         <div className="max-w-2xl">
-          <p className="text-base font-medium text-[#171717]">Wisewave</p>
-          <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">
-            A quiet reflection space for clearer self-understanding.
-          </p>
+          <p className="text-base font-medium text-[#171717]">{line}</p>
+          <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">{subline}</p>
         </div>
         <div className="grid gap-3 text-sm text-[#5c5c5c] sm:grid-cols-2 md:grid-cols-4">
           <Link href="/what-is-wisewave" className="hover:text-[#171717]">

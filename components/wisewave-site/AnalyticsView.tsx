@@ -5,10 +5,18 @@ import { trackEvent, type AnalyticsEventName } from "@/lib/wisewave-analytics";
 
 type SectionKey =
   | "hero"
+  | "user_resonance"
+  | "what_wisewave_is"
+  | "differentiation"
+  | "what_you_receive"
+  | "when_to_use"
   | "how_it_works"
   | "who_its_for"
   | "non_fit"
-  | "sample_openings";
+  | "sample_openings"
+  | "beliefs"
+  | "boundaries"
+  | "final_cta";
 
 export function AnalyticsView({
   event,
