@@ -41,7 +41,7 @@ export default function StartPage() {
             If you are looking for advice, guidance, or emotional support, this
             may not be the right place.
           </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row">
             <Suspense fallback={<EnterFallback />}>
               <StartEnterLink />
             </Suspense>

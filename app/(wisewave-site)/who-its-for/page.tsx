@@ -41,7 +41,7 @@ export default function WhoItsForPage() {
               className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
             >
               <h3 className="text-lg font-medium text-[#171717]">{title}</h3>
-              <p className="mt-3 text-base leading-[1.75] text-[#5c5c5c]">
+              <p className="mt-2 text-base leading-[1.75] text-[#5c5c5c]">
                 {body}
               </p>
             </div>

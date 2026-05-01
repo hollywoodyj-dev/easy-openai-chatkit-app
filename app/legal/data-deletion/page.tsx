@@ -29,14 +29,14 @@ export default function LegalDataDeletionPage() {
         </h1>
         <p className="mt-2 text-sm text-[#7A7A7A]">Wisewave · wisewave.io</p>
 
-        <div className="prose prose-neutral mt-10 max-w-none text-[#3A3A3A] prose-p:leading-relaxed prose-headings:font-medium prose-headings:text-[#1F1F1F]">
+        <div className="prose prose-neutral mt-8 max-w-none text-[#3A3A3A] prose-p:leading-relaxed prose-headings:font-medium prose-headings:text-[#1F1F1F] [&_p]:my-0 [&_p+p]:mt-3">
           <p>
             This page explains how you can ask us to delete personal data associated with
             your use of Wisewave. Use it when an app store or login provider (such as
             Meta) asks for a <strong>data deletion instructions</strong> URL.
           </p>
 
-          <h2 className="mt-10 text-xl">Option 1 — Email (recommended)</h2>
+          <h2 className="mt-6 text-xl">Option 1 — Email (recommended)</h2>
           <p className="mt-3">
             Send an email to{" "}
             <a
@@ -62,7 +62,7 @@ export default function LegalDataDeletionPage() {
             </li>
           </ul>
 
-          <h2 className="mt-10 text-xl">Option 2 — Signed-in account</h2>
+          <h2 className="mt-6 text-xl">Option 2 — Signed-in account</h2>
           <p className="mt-3">
             If you can sign in to Wisewave, open{" "}
             <Link
@@ -83,7 +83,7 @@ export default function LegalDataDeletionPage() {
             .
           </p>
 
-          <h2 className="mt-10 text-xl">What we delete</h2>
+          <h2 className="mt-6 text-xl">What we delete</h2>
           <p className="mt-3">
             When we honor a verified request, we delete or anonymize personal data tied to
             your account as required by law and our technical capabilities, including
@@ -92,7 +92,7 @@ export default function LegalDataDeletionPage() {
             prevention, or legal compliance.
           </p>
 
-          <p className="mt-12 text-sm text-[#7A7A7A]">Last updated: April 2026</p>
+          <p className="mt-8 text-sm text-[#7A7A7A]">Last updated: April 2026</p>
         </div>
       </div>
     </div>

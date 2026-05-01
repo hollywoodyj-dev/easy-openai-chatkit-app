@@ -20,7 +20,7 @@ export default function WisewaveMarketingHome() {
 
   return (
     <>
-      <section className="pb-12 pt-12 sm:pb-16 sm:pt-16">
+      <section className="pb-10 pt-10 sm:pb-14 sm:pt-14">
         <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
           <AnalyticsView section="hero" />
           <div className="max-w-3xl">
@@ -28,10 +28,10 @@ export default function WisewaveMarketingHome() {
             <h1 className="mt-3 text-4xl font-medium leading-tight tracking-[-0.03em] text-[#171717] sm:text-5xl">
               {hero.headline}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5c5c5c]">
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-[#5c5c5c]">
               {hero.subheadline}
             </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <TrackButton
                 href="/login?from=hero"
                 className="inline-flex items-center justify-center rounded-full bg-[#2d4b52] px-7 py-3.5 text-sm font-medium text-white transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#2d4b52] focus:ring-offset-2 focus:ring-offset-[#f7f5f1]"
@@ -61,7 +61,7 @@ export default function WisewaveMarketingHome() {
 
       <Section title={copy.resonance.sectionTitle}>
         <AnalyticsView section="user_resonance" />
-        <div className="space-y-5 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           {copy.resonance.body.map((p) => (
             <p key={p}>{p}</p>
           ))}
@@ -71,7 +71,7 @@ export default function WisewaveMarketingHome() {
 
       <Section title={copy.whatIs.sectionTitle}>
         <AnalyticsView section="what_wisewave_is" />
-        <div className="space-y-5 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           {copy.whatIs.body.map((p) => (
             <p key={p}>{p}</p>
           ))}
@@ -88,7 +88,7 @@ export default function WisewaveMarketingHome() {
               className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
             >
               <h3 className="text-lg font-medium text-[#171717]">{card.title}</h3>
-              <p className="mt-3 text-base leading-[1.75] text-[#5c5c5c]">
+              <p className="mt-2 text-base leading-[1.75] text-[#5c5c5c]">
                 {card.body}
               </p>
             </div>
@@ -105,7 +105,7 @@ export default function WisewaveMarketingHome() {
               className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
             >
               <h3 className="text-lg font-medium text-[#171717]">{item.title}</h3>
-              <p className="mt-3 text-base leading-[1.75] text-[#5c5c5c]">
+              <p className="mt-2 text-base leading-[1.75] text-[#5c5c5c]">
                 {item.body}
               </p>
             </div>
@@ -133,7 +133,7 @@ export default function WisewaveMarketingHome() {
               className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
             >
               <h3 className="text-lg font-medium text-[#171717]">{step.title}</h3>
-              <div className="mt-3 space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
+              <div className="mt-2 space-y-2 text-base leading-[1.75] text-[#5c5c5c]">
                 {step.body.map((p) => (
                   <p key={p}>{p}</p>
                 ))}
@@ -156,7 +156,7 @@ export default function WisewaveMarketingHome() {
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <p className="mt-6 text-base leading-[1.75] text-[#171717]">
+          <p className="mt-4 text-base leading-[1.75] text-[#171717]">
             {copy.beliefs.closingLine}
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function WisewaveMarketingHome() {
 
       <Section title={copy.boundaries.sectionTitle}>
         <AnalyticsView section="boundaries" />
-        <div className="space-y-5 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           {copy.boundaries.body.map((p) => (
             <p key={p}>{p}</p>
           ))}
@@ -174,7 +174,7 @@ export default function WisewaveMarketingHome() {
         </div>
       </Section>
 
-      <section className="py-16 sm:py-20">
+      <section className="py-12 sm:py-16">
         <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
           <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
             <h2 className="text-xl font-medium tracking-[-0.02em] text-[#171717] sm:text-2xl">
@@ -229,12 +229,12 @@ export default function WisewaveMarketingHome() {
       <Section title={copy.finalCta.sectionTitle}>
         <AnalyticsView section="final_cta" />
         <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
-          <div className="max-w-2xl space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <div className="max-w-2xl space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
             {copy.finalCta.body.map((p) => (
               <p key={p}>{p}</p>
             ))}
           </div>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <TrackButton
               href="/login?from=final_cta"
               className="inline-flex items-center justify-center rounded-full bg-[#2d4b52] px-7 py-3.5 text-sm font-medium text-white transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#2d4b52] focus:ring-offset-2 focus:ring-offset-[#f7f5f1]"

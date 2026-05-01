@@ -3,8 +3,8 @@ import Link from "next/link";
 export default function FounderNotePage() {
   return (
     <main className="min-h-screen bg-[#f6f3ee] text-neutral-900">
-      <div className="mx-auto max-w-3xl px-6 pb-20 pt-10 sm:px-8">
-        <header className="mb-10 flex items-center justify-between gap-4">
+      <div className="mx-auto max-w-3xl px-6 pb-14 pt-10 sm:px-8">
+        <header className="mb-6 flex items-center justify-between gap-4">
           <Link
             href="/"
             className="text-sm font-medium tracking-[0.08em] text-neutral-700 transition hover:text-neutral-900"
@@ -27,7 +27,7 @@ export default function FounderNotePage() {
             How Wisewave Was Born
           </h1>
 
-          <div className="mt-6 space-y-5 text-base leading-8 text-neutral-700">
+          <div className="mt-6 space-y-3 text-base leading-8 text-neutral-700">
             <p>
               Wisewave was not born because the world needed another smarter AI.
               It was not created because this era was missing one more system
@@ -201,7 +201,7 @@ export default function FounderNotePage() {
 
           <hr className="my-10 border-neutral-200" />
 
-          <div className="space-y-5 text-base leading-8 text-neutral-700">
+          <div className="space-y-3 text-base leading-8 text-neutral-700">
             <p className="text-sm font-medium tracking-[0.06em] text-neutral-600">
               中文版
             </p>

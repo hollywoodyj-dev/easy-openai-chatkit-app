@@ -40,7 +40,7 @@ export default function ReflectionIsNotAdvicePage() {
           stops being readable. What needs time starts feeling like a problem to
           solve. What needs space starts feeling like a draft to optimize.
         </p>
-        <p className="mt-5 text-base leading-[1.75] text-[#5c5c5c]">
+        <p className="mt-3 text-base leading-[1.75] text-[#5c5c5c]">
           Wisewave stays on the reflection side of the line — not because answers
           are “bad,” but because this product is built for a different job.
         </p>

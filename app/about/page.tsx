@@ -3,8 +3,8 @@ import Link from "next/link";
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#f6f3ee] text-neutral-900">
-      <div className="mx-auto max-w-3xl px-6 pb-20 pt-10 sm:px-8">
-        <header className="mb-10">
+      <div className="mx-auto max-w-3xl px-6 pb-14 pt-10 sm:px-8">
+        <header className="mb-6">
           <Link
             href="/"
             className="text-sm font-medium tracking-[0.08em] text-neutral-700 transition hover:text-neutral-900"

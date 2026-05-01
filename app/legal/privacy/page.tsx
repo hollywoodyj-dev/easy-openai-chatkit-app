@@ -29,14 +29,14 @@ export default function LegalPrivacyPage() {
         </h1>
         <p className="mt-2 text-sm text-[#7A7A7A]">Wisewave · wisewave.io</p>
 
-        <div className="prose prose-neutral mt-10 max-w-none text-[#3A3A3A] prose-p:leading-relaxed prose-headings:font-medium prose-headings:text-[#1F1F1F]">
+        <div className="prose prose-neutral mt-8 max-w-none text-[#3A3A3A] prose-p:leading-relaxed prose-headings:font-medium prose-headings:text-[#1F1F1F] [&_p]:my-0 [&_p+p]:mt-3">
           <p>
             This policy describes how Wisewave collects, uses, and protects information
             when you use our website and related services (the &quot;Service&quot;). It
             is written to be readable; it is not legal advice.
           </p>
 
-          <h2 className="mt-10 text-xl">What we collect</h2>
+          <h2 className="mt-6 text-xl">What we collect</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5">
             <li>
               <strong>Account information</strong> — such as email address and
@@ -54,14 +54,14 @@ export default function LegalPrivacyPage() {
             </li>
           </ul>
 
-          <h2 className="mt-10 text-xl">How we use information</h2>
+          <h2 className="mt-6 text-xl">How we use information</h2>
           <p className="mt-3">
             We use the information above to provide and improve the Service, authenticate
             users, maintain security, comply with law where applicable, and communicate
             with you about your account or the Service when necessary.
           </p>
 
-          <h2 className="mt-10 text-xl">Sharing</h2>
+          <h2 className="mt-6 text-xl">Sharing</h2>
           <p className="mt-3">
             We use service providers (for example hosting, analytics, or AI inference)
             who process data on our behalf under appropriate agreements. We do not sell
@@ -75,7 +75,7 @@ export default function LegalPrivacyPage() {
             with our practices.
           </p>
 
-          <h2 className="mt-10 text-xl">Your choices</h2>
+          <h2 className="mt-6 text-xl">Your choices</h2>
           <p className="mt-3">
             Depending on where you live, you may have rights to access, correct, or
             delete certain information, or to object to or restrict certain processing.
@@ -90,7 +90,7 @@ export default function LegalPrivacyPage() {
             page.
           </p>
 
-          <h2 className="mt-10 text-xl">Children</h2>
+          <h2 className="mt-6 text-xl">Children</h2>
           <p className="mt-3">
             The Service is not directed at children under the age where parental consent
             is required in your region. We do not knowingly collect personal information
@@ -104,7 +104,7 @@ export default function LegalPrivacyPage() {
             changes means you accept the updated policy.
           </p>
 
-          <h2 className="mt-10 text-xl">Contact</h2>
+          <h2 className="mt-6 text-xl">Contact</h2>
           <p className="mt-3">
             For privacy questions or requests, contact us at{" "}
             <a
@@ -116,7 +116,7 @@ export default function LegalPrivacyPage() {
             .
           </p>
 
-          <p className="mt-12 text-sm text-[#7A7A7A]">Last updated: April 2026</p>
+          <p className="mt-8 text-sm text-[#7A7A7A]">Last updated: April 2026</p>
         </div>
       </div>
     </div>

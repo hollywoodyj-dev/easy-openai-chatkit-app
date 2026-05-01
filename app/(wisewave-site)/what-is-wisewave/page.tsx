@@ -17,7 +17,7 @@ export default function WhatIsWisewavePage() {
         body="Wisewave is a low-presence reflection space. It is designed to leave more room for what you bring, rather than becoming more active inside it."
       />
       <Section title="A restrained kind of AI interaction">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <p className="text-base leading-[1.75] text-[#5c5c5c]">
             Wisewave is not organized around answers, advice, or interpretation.
             It is organized around reflection.
@@ -49,7 +49,7 @@ export default function WhatIsWisewavePage() {
               className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6"
             >
               <h3 className="text-lg font-medium text-[#171717]">{title}</h3>
-              <p className="mt-3 text-base leading-[1.75] text-[#5c5c5c]">
+              <p className="mt-2 text-base leading-[1.75] text-[#5c5c5c]">
                 {body}
               </p>
             </div>

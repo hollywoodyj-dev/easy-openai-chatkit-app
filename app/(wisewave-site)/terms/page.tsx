@@ -18,7 +18,7 @@ function TermsSection({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <h2 className="text-2xl font-medium leading-tight tracking-[-0.02em] text-[#171717]">
         {title}
       </h2>
@@ -34,7 +34,7 @@ export default function TermsPage() {
         title="Wisewave Terms of Use"
         body="These Terms explain the conditions for using Wisewave across our website, app, account features, subscription features, and reflective AI experience."
       />
-      <div className="mx-auto w-full max-w-[48rem] space-y-10 px-6 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-12">
+      <div className="mx-auto w-full max-w-[48rem] space-y-7 px-6 pb-12 pt-8 sm:px-8 sm:pb-16 sm:pt-10">
       <TermsSection title="Effective date">
         <p className="text-base leading-[1.75] text-[#5c5c5c]">
           Effective date: <strong>April 27, 2026</strong>
@@ -47,7 +47,7 @@ export default function TermsPage() {
         </p>
       </TermsSection>
       <TermsSection title="1. What Wisewave is">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave is a quiet reflection space.</p>
           <p>
             It helps you put thoughts into words and receive a brief reflective
@@ -64,7 +64,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="2. What Wisewave is not">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave is not:</p>
           <ul className="list-disc space-y-1 pl-6">
             <li>a therapist, doctor, counsellor, or mental health professional</li>
@@ -98,7 +98,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="3. Crisis and emergency situations">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave is not suitable for emergencies or crisis situations.</p>
           <p>
             If you may harm yourself or someone else, or you are in immediate
@@ -112,7 +112,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="4. Your account">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>You may need an account to use certain parts of Wisewave.</p>
           <p>You are responsible for:</p>
           <ul className="list-disc space-y-1 pl-6">
@@ -129,7 +129,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="5. Subscriptions and payments">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Wisewave may offer paid subscriptions.</p>
           <p>
             Price, billing period, renewal terms, and cancellation options are
@@ -160,7 +160,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="6. Refunds">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>Refund eligibility may depend on how you purchased Wisewave.</p>
           <p>
             App store purchases may require refund requests through that app
@@ -177,7 +177,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="7. Your reflections and input">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>
             You are responsible for what you choose to share in Wisewave.
           </p>
@@ -194,7 +194,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="8. AI-generated responses">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>
             Wisewave uses AI-generated responses that may be incomplete,
             inaccurate, inappropriate, or not suitable for your situation.
@@ -207,7 +207,7 @@ export default function TermsPage() {
         </div>
       </TermsSection>
       <TermsSection title="9. Acceptable use">
-        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
           <p>You must not misuse Wisewave. You must not:</p>
           <ul className="list-disc space-y-1 pl-6">
             <li>use Wisewave for unlawful purposes</li>

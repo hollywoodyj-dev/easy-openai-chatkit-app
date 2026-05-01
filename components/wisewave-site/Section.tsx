@@ -10,7 +10,7 @@ interface SectionProps {
 
 export function Section({ id, eyebrow, title, intro, children }: SectionProps) {
   return (
-    <section id={id} className="scroll-mt-24 py-16 sm:py-24">
+    <section id={id} className="scroll-mt-20 py-10 sm:py-14">
       <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
         <div className="max-w-3xl">
           {eyebrow ? (
@@ -20,10 +20,10 @@ export function Section({ id, eyebrow, title, intro, children }: SectionProps) {
             {title}
           </h2>
           {intro ? (
-            <p className="mt-5 text-base leading-[1.75] text-[#5c5c5c]">{intro}</p>
+            <p className="mt-4 text-base leading-[1.75] text-[#5c5c5c]">{intro}</p>
           ) : null}
         </div>
-        <div className="mt-10">{children}</div>
+        <div className="mt-5 sm:mt-6">{children}</div>
       </div>
     </section>
   );

@@ -18,7 +18,7 @@ export default function MarketingPrivacyPage() {
         body="This overview points you to the product’s privacy commitments. For binding legal text, use the full policy linked below."
       />
       <Section title="Where to read the full policy">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <p className="text-base leading-[1.75] text-[#5c5c5c]">
             The{" "}
             <Link

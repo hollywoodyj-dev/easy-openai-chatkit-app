@@ -59,7 +59,7 @@ export default function FAQPage() {
         title="FAQ"
         body="Short answers to common questions about what Wisewave is, what it is not, and who it may fit."
       />
-      <section className="pb-16 pt-0 sm:pb-24">
+      <section className="pb-12 pt-0 sm:pb-16">
         <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
           <AccordionFaq items={faqItems} />
         </div>

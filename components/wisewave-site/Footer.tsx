@@ -4,8 +4,8 @@ import { wisewaveLandingCopy } from "@/lib/wisewave-site/wisewave-landing-copy";
 export function WisewaveSiteFooter() {
   const { line, subline } = wisewaveLandingCopy.footer;
   return (
-    <footer className="border-t border-[#e7e1d8] py-12">
-      <div className="mx-auto flex w-full max-w-[51rem] flex-col gap-8 px-6 sm:px-8">
+    <footer className="border-t border-[#e7e1d8] py-10">
+      <div className="mx-auto flex w-full max-w-[51rem] flex-col gap-6 px-6 sm:px-8">
         <div className="max-w-2xl">
           <p className="text-base font-medium text-[#171717]">{line}</p>
           <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">{subline}</p>
