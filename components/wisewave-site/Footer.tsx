@@ -5,11 +5,9 @@ export function WisewaveSiteFooter() {
     <footer className="border-t border-[#e7e1d8] py-12">
       <div className="mx-auto flex w-full max-w-[51rem] flex-col gap-8 px-6 sm:px-8">
         <div className="max-w-2xl">
-          <p className="text-base font-medium text-[#171717]">
-            Wisewave is a low-presence reflection space.
-          </p>
+          <p className="text-base font-medium text-[#171717]">Wisewave</p>
           <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">
-            Not here to give answers, but to leave space for reflection.
+            A quiet reflection space for clearer self-understanding.
           </p>
         </div>
         <div className="grid gap-3 text-sm text-[#5c5c5c] sm:grid-cols-2 md:grid-cols-4">

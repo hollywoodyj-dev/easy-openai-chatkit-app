@@ -17,7 +17,11 @@ export default function HowItWorksPage() {
         title="How Wisewave works"
         body="Wisewave does not organize a session around advice or direction. It works by reflecting what you bring, without rushing to conclude for you."
       />
-      <Section title="The basic shape">
+      <Section
+        id="conversation-handling"
+        title="The basic shape"
+        intro="How Wisewave handles a conversation: reflect lightly, without rushing to conclude or direct you."
+      >
         <div className="grid gap-4 md:grid-cols-3">
           {[
             [
