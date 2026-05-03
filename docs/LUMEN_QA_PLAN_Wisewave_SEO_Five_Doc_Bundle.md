@@ -139,4 +139,20 @@ After Lumen verdict: if **PASS** or **PASS WITH WATCHPOINTS**, Tree can schedule
 
 ---
 
+## 9. Lumen results (hosted) — 2026-05-02
+
+**Host:** `https://www.wisewave.io/`  
+**Scope reviewed:** §§0–6 only (per Lumen)  
+**Verdict:** **PASS WITH WATCHPOINTS**
+
+**Routes checked:** `/`, `/reflection-ai`, `/reflection-without-advice`, `/self-reflection-app`, `/journaling-alternative`, `/faq`
+
+**Passed:** All routes resolved; category integrity intact (no coaching, therapy-lite, companion, productivity-optimizer, or generic AI journaling pitch); bridge terms bounded; low-presence and authorship legible; calm CTAs; per-route structure, FAQs, and internal links as specified; homepage + footer Topics row; FAQ default item and crisis/data lines acceptable.
+
+**Watchpoints:** None material; minor follow-up territory only (Lumen).
+
+**§7 ops:** Tree may submit `https://www.wisewave.io/sitemap.xml` in Search Console after deploy — **Nova shipped** `app/sitemap.ts` + `app/robots.ts` (2026-05-02) so sitemap/robots are live with the marketing + SEO URL set.
+
+---
+
 *Prepared for Lumen — Wisewave public site / SEO five-doc bundle.*
