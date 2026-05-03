@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 const SEO_TITLE = "Reflection without advice | Wisewave";
@@ -42,10 +44,18 @@ const faqItems = [
   },
 ];
 
+const PAGE_HEADLINE = "Reflection without advice";
+
 export default function ReflectionWithoutAdvicePage() {
   return (
     <>
-      <SeoLandingHero title="Reflection without advice">
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(
+          PAGE_HEADLINE,
+          "/reflection-without-advice",
+        )}
+      />
+      <SeoLandingHero title={PAGE_HEADLINE}>
         <p>Not every thought needs advice.</p>
         <p>
           Sometimes what helps most is not more direction, but a little more

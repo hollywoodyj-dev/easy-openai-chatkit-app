@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { FaqPageJsonLd } from "@/components/wisewave-site/FaqPageJsonLd";
 import { PageHero } from "@/components/wisewave-site/PageHero";
 import { WISEWAVE_MARKETING_FAQ_ITEMS } from "@/lib/wisewave-site/wisewave-marketing-faq-items";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 const FAQ_TITLE = "FAQ";
@@ -16,12 +18,18 @@ export const metadata: Metadata = {
   ...wisewaveMarketingSocialMetadata(FAQ_TITLE, FAQ_DESCRIPTION, "/faq"),
 };
 
+/** Visible PageHero H1 — same string as BreadcrumbList leaf `name`. */
+const PAGE_HEADLINE = "FAQ";
+
 export default function FAQPage() {
   return (
     <>
       <FaqPageJsonLd items={WISEWAVE_MARKETING_FAQ_ITEMS} />
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(PAGE_HEADLINE, "/faq")}
+      />
       <PageHero
-        title="FAQ"
+        title={PAGE_HEADLINE}
         body="Short, boundary-safe answers: what Wisewave is, what it is not, and a few practical limits—without expanding what the product promises."
       />
       <section className="pb-12 pt-0 sm:pb-16">

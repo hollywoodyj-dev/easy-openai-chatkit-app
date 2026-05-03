@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 const SEO_TITLE = "Reflection AI without advice or coaching | Wisewave";
@@ -39,10 +41,16 @@ const faqItems = [
   },
 ];
 
+/** Visible hero H1 — same string in BreadcrumbList leaf `name`. */
+const PAGE_HEADLINE = "Reflection AI without taking over";
+
 export default function ReflectionAiPage() {
   return (
     <>
-      <SeoLandingHero title="Reflection AI without taking over">
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(PAGE_HEADLINE, "/reflection-ai")}
+      />
+      <SeoLandingHero title={PAGE_HEADLINE}>
         <p>
           Wisewave is not here to guide, advise, or fix you. It reflects what you
           share in a restrained way, so you can see your own thoughts more

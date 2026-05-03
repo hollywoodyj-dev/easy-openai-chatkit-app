@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 const SEO_TITLE = "A self reflection app for clearer thinking | Wisewave";
@@ -43,10 +45,19 @@ const faqItems = [
   },
 ];
 
+const PAGE_HEADLINE =
+  "A self reflection app for people who do not want to be guided";
+
 export default function SelfReflectionAppPage() {
   return (
     <>
-      <SeoLandingHero title="A self reflection app for people who do not want to be guided">
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(
+          PAGE_HEADLINE,
+          "/self-reflection-app",
+        )}
+      />
+      <SeoLandingHero title={PAGE_HEADLINE}>
         <p>
           Wisewave is a self reflection app, but not in the usual sense. It does
           not try to coach you, improve you, or lead you through a process.

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 const SEO_TITLE = "A journaling alternative for people tired of prompts | Wisewave";
@@ -42,10 +44,19 @@ const faqItems = [
   },
 ];
 
+const PAGE_HEADLINE =
+  "A journaling alternative when prompts are not what you want";
+
 export default function JournalingAlternativePage() {
   return (
     <>
-      <SeoLandingHero title="A journaling alternative when prompts are not what you want">
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(
+          PAGE_HEADLINE,
+          "/journaling-alternative",
+        )}
+      />
+      <SeoLandingHero title={PAGE_HEADLINE}>
         <p>Journaling helps some people think clearly.</p>
         <p>
           For others, a blank page feels too open — and guided prompts feel too
