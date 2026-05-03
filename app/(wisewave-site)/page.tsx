@@ -186,11 +186,27 @@ export default function WisewaveMarketingHome() {
               Before you begin
             </h2>
             <p className="mt-4 text-base leading-[1.75] text-[#5c5c5c]">
-              You can read how conversations are handled, how privacy works, and
-              how account or subscription access is managed before entering
-              Wisewave.
+              You can read boundaries, how conversations are handled, how privacy
+              works, and how account or subscription access is managed before
+              entering Wisewave.
             </p>
             <ul className="mt-5 flex flex-col gap-2 text-sm text-[#171717] sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
+              <li>
+                <Link
+                  href="/what-it-is-not"
+                  className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+                >
+                  What Wisewave is not
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/how-it-works"
+                  className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+                >
+                  How it works
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/privacy"

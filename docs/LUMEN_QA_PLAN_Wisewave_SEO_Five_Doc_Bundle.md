@@ -157,4 +157,10 @@ After Lumen verdict: if **PASS** or **PASS WITH WATCHPOINTS**, Tree can schedule
 
 ---
 
+## 10. Priority 3 — citation-friendly depth (Option A — 2026-05-02)
+
+**Nova:** Deepened **`/what-it-is-not`**, **`/how-it-works`**, and **`/privacy`** (marketing overview) with direct top summaries, clearer H2 sectioning, plain definitional copy, and **Related pages** internal links. Hubs **`/`**, **`/what-is-wisewave`**, **`/faq`**, **`/reflection-without-advice`** updated to surface those URLs. **No** dedicated “boundary explainer” page (Option B deferred). **Lumen:** re-pass category + quote fidelity vs **`/legal/privacy`** after deploy.
+
+---
+
 *Prepared for Lumen — Wisewave public site / SEO five-doc bundle.*

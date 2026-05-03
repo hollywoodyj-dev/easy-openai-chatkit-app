@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHero } from "@/components/wisewave-site/PageHero";
 import { Section } from "@/components/wisewave-site/Section";
 
@@ -55,6 +56,53 @@ export default function WhatIsWisewavePage() {
             </div>
           ))}
         </div>
+      </Section>
+      <Section title="Related pages">
+        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+          <li>
+            <Link
+              href="/what-it-is-not"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              What Wisewave is not
+            </Link>
+            {" — "}therapy, coaching, companion, and productivity boundaries.
+          </li>
+          <li>
+            <Link
+              href="/how-it-works"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              How Wisewave works
+            </Link>
+            {" — "}conversation handling in plain language.
+          </li>
+          <li>
+            <Link
+              href="/reflection-without-advice"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection without advice
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/privacy"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Privacy overview
+            </Link>
+            {" — "}data handling summary and link to the full policy.
+          </li>
+          <li>
+            <Link
+              href="/faq"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              FAQ
+            </Link>
+          </li>
+        </ul>
       </Section>
     </>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
@@ -120,6 +121,43 @@ export default function ReflectionWithoutAdvicePage() {
 
       <Section title="FAQ">
         <AccordionFaq items={faqItems} />
+      </Section>
+
+      <Section title="Related pages">
+        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+          <li>
+            <Link
+              href="/what-it-is-not"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              What Wisewave is not
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/how-it-works"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              How Wisewave works
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/privacy"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Privacy overview
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/faq"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              FAQ
+            </Link>
+          </li>
+        </ul>
       </Section>
 
       <SeoLandingClosing
