@@ -1,6 +1,7 @@
 import Script from "next/script";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { wisewaveDefaultShareImage } from "@/lib/wisewave-site/wisewave-default-share-image";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.wisewave.io"),
@@ -35,12 +36,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://www.wisewave.io",
     siteName: "Wisewave",
+    images: [wisewaveDefaultShareImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "Wisewave — A quieter space for reflection",
     description:
       "A low-presence reflection space. Not advice, not coaching, not therapy.",
+    images: [wisewaveDefaultShareImage.url],
   },
   appleWebApp: {
     capable: true,

@@ -127,7 +127,7 @@ Implementation already includes per-page **`metadata`** (title, description) and
 
 5. **Do not rely on** automatic “ranking” steps — engines index on their own schedule; QA validates **eligibility and truth**, not rank.
 
-6. **Optional social + FAQ rich results (Tree-approved, 2026-05-02 — Nova shipped):** Per-route **`openGraph`** + **`twitter`** on **`/`** and the five SEO targets (`/reflection-ai`, `/self-reflection-app`, `/reflection-without-advice`, `/journaling-alternative`, `/faq`) using the **same** title/description as each page (`lib/wisewave-site/wisewave-marketing-social-metadata.ts`). **`/faq`** FAQPage **JSON-LD** + accordion share **`lib/wisewave-site/wisewave-marketing-faq-items.ts`** (visible FAQ = structured data only). Post-deploy: **Rich Results Test** on `/faq`.
+6. **Optional social + FAQ rich results (Tree-approved, 2026-05-02 — Nova shipped):** Per-route **`openGraph`** + **`twitter`** on **`/`** and the five SEO targets (`/reflection-ai`, `/self-reflection-app`, `/reflection-without-advice`, `/journaling-alternative`, `/faq`) using the **same** title/description as each page (`lib/wisewave-site/wisewave-marketing-social-metadata.ts`). Default **`og:image`** / **`twitter:image`**: **`/brand/wisewave-app-logo.png`** (`lib/wisewave-site/wisewave-default-share-image.ts`; also root **`app/layout.tsx`**). **`/faq`** FAQPage **JSON-LD** + accordion share **`lib/wisewave-site/wisewave-marketing-faq-items.ts`** (visible FAQ = structured data only). Post-deploy: **Rich Results Test** on `/faq`; spot-check **`og:image`** is non-empty on marketing URLs.
 
 **Who does what:** Lumen **QA plan sections 0–6** (product + copy). **Section 7** is **Tree/Nova deployment/SEO ops** after Lumen passes category QA.
 
