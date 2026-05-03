@@ -3,12 +3,21 @@ import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
+
+const SEO_TITLE = "A journaling alternative for people tired of prompts | Wisewave";
+const SEO_DESCRIPTION =
+  "Wisewave is a journaling alternative for people who want reflection without guided prompts, coaching, or companion-style AI.";
 
 export const metadata: Metadata = {
-  title: "A journaling alternative for people tired of prompts | Wisewave",
-  description:
-    "Wisewave is a journaling alternative for people who want reflection without guided prompts, coaching, or companion-style AI.",
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
   alternates: { canonical: "/journaling-alternative" },
+  ...wisewaveMarketingSocialMetadata(
+    SEO_TITLE,
+    SEO_DESCRIPTION,
+    "/journaling-alternative",
+  ),
 };
 
 const faqItems = [

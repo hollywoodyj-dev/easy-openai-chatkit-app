@@ -5,12 +5,17 @@ import { SampleInteraction } from "@/components/wisewave-site/SampleInteraction"
 import { Section } from "@/components/wisewave-site/Section";
 import { TrackButton } from "@/components/wisewave-site/TrackButton";
 import { wisewaveLandingCopy as copy } from "@/lib/wisewave-site/wisewave-landing-copy";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 /** Canonical strings: `lib/wisewave-site/wisewave-landing-copy.ts` (+ JSON twin). */
+const HOME_TITLE = "Wisewave — A quiet space to hear yourself more clearly";
+const HOME_DESCRIPTION = copy.hero.subheadline;
+
 export const metadata: Metadata = {
-  title: "Wisewave — A quiet space to hear yourself more clearly",
-  description: copy.hero.subheadline,
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
+  ...wisewaveMarketingSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, "/"),
 };
 
 export default function WisewaveMarketingHome() {

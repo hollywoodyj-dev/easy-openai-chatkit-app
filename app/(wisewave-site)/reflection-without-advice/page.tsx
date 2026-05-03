@@ -3,12 +3,21 @@ import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
+
+const SEO_TITLE = "Reflection without advice | Wisewave";
+const SEO_DESCRIPTION =
+  "Wisewave offers reflection without advice, coaching, or direction. A quieter reflection space for people who want clarity without takeover.";
 
 export const metadata: Metadata = {
-  title: "Reflection without advice | Wisewave",
-  description:
-    "Wisewave offers reflection without advice, coaching, or direction. A quieter reflection space for people who want clarity without takeover.",
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
   alternates: { canonical: "/reflection-without-advice" },
+  ...wisewaveMarketingSocialMetadata(
+    SEO_TITLE,
+    SEO_DESCRIPTION,
+    "/reflection-without-advice",
+  ),
 };
 
 const faqItems = [

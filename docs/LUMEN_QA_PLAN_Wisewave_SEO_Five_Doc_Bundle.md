@@ -127,7 +127,7 @@ Implementation already includes per-page **`metadata`** (title, description) and
 
 5. **Do not rely on** automatic “ranking” steps — engines index on their own schedule; QA validates **eligibility and truth**, not rank.
 
-6. **Optional later (not required for v1):** `openGraph` / `twitter` metadata on SEO pages for share cards; **JSON-LD** FAQ schema only if Tree wants rich results — must match visible FAQ exactly to avoid policy mismatch.
+6. **Optional social + FAQ rich results (Tree-approved, 2026-05-02 — Nova shipped):** Per-route **`openGraph`** + **`twitter`** on **`/`** and the five SEO targets (`/reflection-ai`, `/self-reflection-app`, `/reflection-without-advice`, `/journaling-alternative`, `/faq`) using the **same** title/description as each page (`lib/wisewave-site/wisewave-marketing-social-metadata.ts`). **`/faq`** FAQPage **JSON-LD** + accordion share **`lib/wisewave-site/wisewave-marketing-faq-items.ts`** (visible FAQ = structured data only). Post-deploy: **Rich Results Test** on `/faq`.
 
 **Who does what:** Lumen **QA plan sections 0–6** (product + copy). **Section 7** is **Tree/Nova deployment/SEO ops** after Lumen passes category QA.
 
@@ -151,7 +151,7 @@ After Lumen verdict: if **PASS** or **PASS WITH WATCHPOINTS**, Tree can schedule
 
 **Watchpoints:** None material; minor follow-up territory only (Lumen).
 
-**§7 ops:** Tree may submit `https://www.wisewave.io/sitemap.xml` in Search Console after deploy — **Nova shipped** `app/sitemap.ts` + `app/robots.ts` (2026-05-02) so sitemap/robots are live with the marketing + SEO URL set.
+**§7 ops:** Tree may submit `https://www.wisewave.io/sitemap.xml` in Search Console after deploy — **Nova shipped** `app/sitemap.ts` + `app/robots.ts` (2026-05-02) so sitemap/robots are live with the marketing + SEO URL set. **Also shipped (Tree optional layer):** OG/Twitter + FAQ JSON-LD as in §7 item 6 above.
 
 **Canonical consolidation (Bing dedupe — Lumen 2026):** **`/reflection-is-not-advice`** is no longer a separate indexable page; it **301 redirects** to **`/reflection-without-advice`** (`next.config.ts`), is **removed from `sitemap.ts`**, and footer links target **`/reflection-without-advice`** only. Re-submit target URL via IndexNow after deploy if using IndexNow.
 

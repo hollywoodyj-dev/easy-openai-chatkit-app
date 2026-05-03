@@ -3,12 +3,21 @@ import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
+
+const SEO_TITLE = "A self reflection app for clearer thinking | Wisewave";
+const SEO_DESCRIPTION =
+  "Wisewave is a self reflection app for people who want space, not instructions. No advice, no coaching, no companion-style AI.";
 
 export const metadata: Metadata = {
-  title: "A self reflection app for clearer thinking | Wisewave",
-  description:
-    "Wisewave is a self reflection app for people who want space, not instructions. No advice, no coaching, no companion-style AI.",
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
   alternates: { canonical: "/self-reflection-app" },
+  ...wisewaveMarketingSocialMetadata(
+    SEO_TITLE,
+    SEO_DESCRIPTION,
+    "/self-reflection-app",
+  ),
 };
 
 const faqItems = [

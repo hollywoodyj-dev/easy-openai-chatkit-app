@@ -3,12 +3,17 @@ import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
+
+const SEO_TITLE = "Reflection AI without advice or coaching | Wisewave";
+const SEO_DESCRIPTION =
+  "Wisewave is a low-presence reflection AI for people who want clarity without advice, coaching, or companion-style AI.";
 
 export const metadata: Metadata = {
-  title: "Reflection AI without advice or coaching | Wisewave",
-  description:
-    "Wisewave is a low-presence reflection AI for people who want clarity without advice, coaching, or companion-style AI.",
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
   alternates: { canonical: "/reflection-ai" },
+  ...wisewaveMarketingSocialMetadata(SEO_TITLE, SEO_DESCRIPTION, "/reflection-ai"),
 };
 
 const faqItems = [
