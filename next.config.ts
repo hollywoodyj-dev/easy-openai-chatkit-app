@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/reflection-is-not-advice",
+        destination: "/reflection-without-advice",
+        permanent: true,
+      },
+      {
         source: "/embed",
         destination: "/chat",
         permanent: false,

@@ -153,6 +153,8 @@ After Lumen verdict: if **PASS** or **PASS WITH WATCHPOINTS**, Tree can schedule
 
 **§7 ops:** Tree may submit `https://www.wisewave.io/sitemap.xml` in Search Console after deploy — **Nova shipped** `app/sitemap.ts` + `app/robots.ts` (2026-05-02) so sitemap/robots are live with the marketing + SEO URL set.
 
+**Canonical consolidation (Bing dedupe — Lumen 2026):** **`/reflection-is-not-advice`** is no longer a separate indexable page; it **301 redirects** to **`/reflection-without-advice`** (`next.config.ts`), is **removed from `sitemap.ts`**, and footer links target **`/reflection-without-advice`** only. Re-submit target URL via IndexNow after deploy if using IndexNow.
+
 ---
 
 *Prepared for Lumen — Wisewave public site / SEO five-doc bundle.*

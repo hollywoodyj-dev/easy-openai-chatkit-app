@@ -19,7 +19,7 @@ Use this as the **implementation baseline** for QA. Source stack: Wisewave Websi
 | Site chrome | `components/wisewave-site/*` (Header, Footer, Section, SampleInteraction, TrackButton, AnalyticsView, …) |
 | Analytics | `lib/wisewave-analytics.ts` — `gtag` / `dataLayer` when present; `section_view` with `{ section }`; CTA events with `location` where applicable. |
 
-**Routes shipped:** `/`, `/start`, `/what-is-wisewave`, `/how-it-works`, `/who-its-for`, `/what-it-is-not`, `/reflection-is-not-advice`, `/faq`, `/privacy` (overview + link to `/legal/privacy`), `/terms`.
+**Routes shipped:** `/`, `/start`, `/what-is-wisewave`, `/how-it-works`, `/who-its-for`, `/what-it-is-not`, `/reflection-without-advice` (canonical; **`/reflection-is-not-advice`** redirects here), `/faq`, `/privacy` (overview + link to `/legal/privacy`), `/terms`.
 
 **Homepage flow:** Hero → **What you receive** → supporting sections (steps back, not assistant, how it works, sample interaction, fit / non-fit, differences, boundaries) → **Before you begin** → **final CTA** block.
 

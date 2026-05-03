@@ -10,7 +10,6 @@ const PATHS: string[] = [
   "/how-it-works",
   "/who-its-for",
   "/what-it-is-not",
-  "/reflection-is-not-advice",
   "/faq",
   "/privacy",
   "/terms",

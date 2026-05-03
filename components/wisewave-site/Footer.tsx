@@ -20,8 +20,8 @@ export function WisewaveSiteFooter() {
           <Link href="/what-it-is-not" className="hover:text-[#171717]">
             What It Is Not
           </Link>
-          <Link href="/reflection-is-not-advice" className="hover:text-[#171717]">
-            Reflection Is Not Advice
+          <Link href="/reflection-without-advice" className="hover:text-[#171717]">
+            Reflection without advice
           </Link>
           <Link href="/faq" className="hover:text-[#171717]">
             FAQ
