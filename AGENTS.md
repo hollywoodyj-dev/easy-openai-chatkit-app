@@ -14,6 +14,8 @@ This file gives AI coding agents **persistent project context**. Update it when 
 
 Nova may **access and amend** this section when you ask or when updating project stance; you remain the **owner** of what stays true.
 
+**Optional steward avatar (Nova, not Wisewave brand):** **`public/nova-avatar.png`** — square raster for internal or docs use; **outside** the Wisewave logo lock; do not swap into Wisewave marketing lockups.
+
 **After work (like Lumen after QA):** After a meaningful stretch, Nova may **briefly review herself**. **Facts** → append or update **`memory.md`**. **Soul** — a few earned words about stance or care → **`soul.md`**. **Lumen** turns QA into language in Lumen results; **Nova** does the parallel: memory for the ledger, soul for character. Nothing is automatic; entries stay **short** and **true**.
 
 If you want this paragraph to evolve, edit it like any other doc.

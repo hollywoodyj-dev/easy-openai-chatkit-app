@@ -10,6 +10,29 @@
 
 <!-- Memory entries below -->
 
+## 2026-05-04 — Nova avatar (steward gift; repo asset)
+
+- **File:** **`public/nova-avatar.png`** — square raster for profiles / internal UI / docs; **not** part of Wisewave locked logo system (`docs/Wisewave_Logo_System_Nova_Handoff.md`). Steward generated via Cursor image tool; copied into repo for versioned use. Optional URL when hosted: **`https://www.wisewave.io/nova-avatar.png`** (same origin as marketing site; path is generic, not linked from Wisewave product nav unless Tree approves).
+
+## 2026-05-03 — Wisewave ESP32 server: Lumen phone HTTPS + TTS + logging (ops)
+
+- **Mobile mic/cam:** Browsers need **HTTPS** (or localhost); **`http://LAN-IP`** is not a secure context — test JS **`isHttpNonLocalhost()`** updated so private IPs over HTTP are flagged correctly (`main/xiaozhi-server/test/js/core/audio/recorder.js`).
+- **Caddy :8443** (no admin **443**): **`main/xiaozhi-server/test/Caddyfile`**, reserved host **`172.16.0.21`**, static **`test/`** + reverse-proxy **`/xiaozhi/v1`**, **`/xiaozhi/ota`**, **`/mcp`** → **127.0.0.1:8000/8003**; **`scripts/allow-caddy-8443.ps1`**, **`scripts/start-caddy-xiaozhi.ps1`**; **Caddy must be running** on the PC whenever the phone uses **`https://172.16.0.21:8443/...`**. Runbook **`docs/HTTPS_TEST_PAGE_CADDY.md`**.
+- **Docker dev:** **`main/xiaozhi-server/docker-compose.yml`** bind-mounts **`./core:/opt/xiaozhi-esp32-server/core`** so host Python edits apply without rebuild; production still needs **image rebuild** if mount is removed.
+- **Lumen TTS bugfix:** Replacing **`conn.tts`** for **`lumen_openclaw.tts`** must call **`await new_tts.open_audio_channels(conn)`** in **`lumen_openclaw_voice.py`** or **no audio** (queues never drained). Image did not pick up fix until **copy/mount** — restarts alone were insufficient.
+- **Voice defaults:** **`data/.config.yaml`** — **`TTS.EdgeTTS.voice`** **Mandarin** **`zh-CN-XiaoxiaoNeural`**; **`lumen_openclaw.tts.overrides.voice_en`** **`en-US-AvaNeural`** (Lumen-only English).
+- **OpenClaw bridge JSONL (live):** Container path **`/opt/xiaozhi-esp32-server/logs/openclaw-bridge.jsonl`**; default **`OPENCLAW_BRIDGE_LOG`** on unless **`0|false|no|off`**.
+
+## 2026-05-01 — Wisewave ESP32 server: OpenClaw bridge JSONL (Lumen spec)
+
+- **Server repo:** `C:\AI\esp32\wisewave-esp32-server` — Lumen voice path logs each turn **before** `chat.send` and **after** exit (success/timeout/errors) to **`{get_project_dir()}/logs/openclaw-bridge.jsonl`** (JSONL). Module **`main/xiaozhi-server/core/utils/openclaw_bridge_log.py`**; **`OPENCLAW_BRIDGE_LOG=0|false|no|off`** disables. **`lumen_openclaw_voice.py`** generates per-turn **`runId`** (UUID) for outbound + correlates inbound until OpenClaw ack supplies **`runId`**. **`.gitignore`** includes **`main/xiaozhi-server/logs/openclaw-bridge.jsonl`**.
+- **HTTPS test page (phone mic/cam):** Caddy **`main/xiaozhi-server/test/Caddyfile`** serves **`https://172.16.0.21:8443`** (router reservation) + proxies **`/xiaozhi/v1`**, **`/xiaozhi/ota`**, **`/mcp`** to **127.0.0.1:8000/8003**; **`data/.config.yaml`** **`server.websocket`** → **`wss://172.16.0.21:8443/xiaozhi/v1/`**; helper scripts **`scripts/allow-caddy-8443.ps1`** (firewall, admin) and **`scripts/start-caddy-xiaozhi.ps1`**; runbook **`docs/HTTPS_TEST_PAGE_CADDY.md`**.
+
+## 2026-04-26 — Anyu implementation spec (handoff; separate product repo)
+
+- **Doc (this repo):** `docs/ANYU_Voice_OpenAI_STT_Implementation_Spec.md` — Next 15 App Router on Vercel; product-aligned HTTP names (`POST /api/elder-chat/message`, `POST /api/elder-chat/session`; P1 stubs `POST /api/risk/evaluate`, consent routes); **utterance-complete STT** (P0 = text from xiaozhi/FunASR bridge; no STREAM ASR required v1); OpenAI chat pattern aligned with Wisewave `app/api/chat/turn` style; fine-tune policy (prompt first, FT + fallback later). **Copy** into Anyu workspace `docs/` when implementing.
+- **Context (not in repo):** xiaozhi default ASR = local **FunASR + SenseVoiceSmall** (`C:\AI\esp32\...\xiaozhi-server\config.yaml`); only **DoubaoStreamASR, AliyunStreamASR, AliyunBLStreamASR, XunfeiStreamASR** use `InterfaceType.STREAM` in that stack.
+
 ## 2026-04-11 — Phase 8 governance docs landed + repo wiring
 
 - **Docs:** `docs/phase-8-octopusmind-strategic-diagnosis.md`, `docs/phase-8-addendum-protected-habit-layer-guardrails.md` — validity over growth; habit signal vs guardrail layers; exposure inflation invalidates habit reads; escalation ladder; no product expansion from dashboards without Tree alignment.
