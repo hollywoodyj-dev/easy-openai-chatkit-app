@@ -48,6 +48,28 @@ export function WisewaveSiteFooter() {
             A note from the founder
           </Link>
         </div>
+        <div className="border-t border-[#e7e1d8] pt-6">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.08em] text-[#7a7a7a]">
+            Topics
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#5c5c5c]">
+            <Link href="/reflection-ai" className="hover:text-[#171717]">
+              Reflection AI
+            </Link>
+            <Link href="/self-reflection-app" className="hover:text-[#171717]">
+              Self reflection app
+            </Link>
+            <Link
+              href="/reflection-without-advice"
+              className="hover:text-[#171717]"
+            >
+              Reflection without advice
+            </Link>
+            <Link href="/journaling-alternative" className="hover:text-[#171717]">
+              Journaling alternative
+            </Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

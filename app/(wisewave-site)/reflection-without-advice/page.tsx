@@ -1,0 +1,114 @@
+import type { Metadata } from "next";
+import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
+import { Section } from "@/components/wisewave-site/Section";
+import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
+import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
+
+export const metadata: Metadata = {
+  title: "Reflection without advice | Wisewave",
+  description:
+    "Wisewave offers reflection without advice, coaching, or direction. A quieter reflection space for people who want clarity without takeover.",
+  alternates: { canonical: "/reflection-without-advice" },
+};
+
+const faqItems = [
+  {
+    question: "Does Wisewave give advice?",
+    answer: "No. Its role is reflection, not direction.",
+  },
+  {
+    question: "Is Wisewave a coach?",
+    answer:
+      "No. It does not give goals, plans, or action steps.",
+  },
+  {
+    question: "Is Wisewave emotional support?",
+    answer:
+      "No. It is not designed as an emotional support or companion system.",
+  },
+  {
+    question: "What does Wisewave do instead?",
+    answer:
+      "It reflects what you share in a restrained way so you can see your own thoughts more clearly.",
+  },
+];
+
+export default function ReflectionWithoutAdvicePage() {
+  return (
+    <>
+      <SeoLandingHero title="Reflection without advice">
+        <p>Not every thought needs advice.</p>
+        <p>
+          Sometimes what helps most is not more direction, but a little more
+          space.
+        </p>
+        <p>
+          Wisewave reflects what you share without coaching, planning, or telling
+          you what to do.
+        </p>
+      </SeoLandingHero>
+
+      <Section title="Why advice is not always what people need">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>Advice can be useful.</p>
+          <p>But there are moments when advice arrives too early.</p>
+          <p>Before something is clear.</p>
+          <p>Before the real shape of the thought has surfaced.</p>
+          <p>Before your own view has had room to form.</p>
+          <p className="text-[#171717]">
+            Wisewave is built for that kind of moment.
+          </p>
+        </div>
+      </Section>
+
+      <Section title="What Wisewave does instead">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>Instead of giving direction, Wisewave reflects lightly.</p>
+          <p>It does not try to conclude for you.</p>
+          <p>It does not turn your thoughts into an action plan.</p>
+          <p>It does not explain you back to yourself.</p>
+          <p>It leaves more room for clarity to emerge.</p>
+        </div>
+      </Section>
+
+      <Section title="A different kind of usefulness">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>
+            Wisewave is useful not because it does more than other systems. It is
+            useful because it stays restrained:
+          </p>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>no advice</li>
+            <li>no coaching</li>
+            <li>no direction</li>
+            <li>no manufactured companionship</li>
+          </ul>
+        </div>
+      </Section>
+
+      <Section title="For people who are tired of being guided">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>
+            Some people do not need another framework, another prompt set, or
+            another system telling them what to do.
+          </p>
+          <p>
+            They need a reflection space that does not move in front of them.
+          </p>
+          <p className="text-[#171717]">That is where Wisewave fits.</p>
+        </div>
+      </Section>
+
+      <Section title="FAQ">
+        <AccordionFaq items={faqItems} />
+      </Section>
+
+      <SeoLandingClosing
+        lead="If you want reflection without advice, Wisewave is designed for that."
+        from="seo_reflection_without_advice"
+        relatedHref="/reflection-ai"
+        relatedLabel="Reflection AI without taking over"
+      />
+    </>
+  );
+}
