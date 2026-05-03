@@ -66,6 +66,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Bing Webmaster Tools site verification — do not remove after verify */}
+        <meta
+          name="msvalidate.01"
+          content="B7E6061CDF68582BCE302C350AAFCDD4"
+        />
         <Script
           src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
           strategy="beforeInteractive"
