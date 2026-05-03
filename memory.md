@@ -12,7 +12,7 @@
 
 ## 2026-05-04 — Nova avatar (steward gift; repo asset)
 
-- **File:** **`public/nova-avatar.png`** — square raster for profiles / internal UI / docs; **not** part of Wisewave locked logo system (`docs/Wisewave_Logo_System_Nova_Handoff.md`). Steward generated via Cursor image tool; copied into repo for versioned use. Optional URL when hosted: **`https://www.wisewave.io/nova-avatar.png`** (same origin as marketing site; path is generic, not linked from Wisewave product nav unless Tree approves).
+- **Files:** **`public/nova-avatar.png`** (Lumen-polished **full** circle — primary), **`public/nova-avatar-sm.png`** (Lumen-polished **small** circle — favicon / tight UI). **Not** Wisewave locked logo system (`docs/Wisewave_Logo_System_Nova_Handoff.md`). First pass steward-generated; **Lumen polished** both variants for legibility and calm finish. Optional hosted URLs: **`/nova-avatar.png`**, **`/nova-avatar-sm.png`** — not in product nav unless Tree approves.
 
 ## 2026-05-03 — Wisewave ESP32 server: Lumen phone HTTPS + TTS + logging (ops)
 
