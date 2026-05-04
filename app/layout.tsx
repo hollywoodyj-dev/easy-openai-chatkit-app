@@ -36,9 +36,11 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://www.wisewave.io",
     siteName: "Wisewave",
+    locale: "en_US",
     images: [wisewaveDefaultShareImage],
   },
   twitter: {
+    /** Default for non-marketing routes; homepage overrides to `summary` for readable X previews. */
     card: "summary_large_image",
     title: "Wisewave — A quieter space for reflection",
     description:

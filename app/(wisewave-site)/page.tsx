@@ -15,7 +15,10 @@ export const metadata: Metadata = {
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
-  ...wisewaveMarketingSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, "/"),
+  ...wisewaveMarketingSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, "/", {
+    /** X / Twitter: show subheadline beside image, not logo-only large card. */
+    twitterCard: "summary",
+  }),
 };
 
 export default function WisewaveMarketingHome() {
