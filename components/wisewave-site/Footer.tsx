@@ -2,73 +2,27 @@ import Link from "next/link";
 import { wisewaveLandingCopy } from "@/lib/wisewave-site/wisewave-landing-copy";
 
 export function WisewaveSiteFooter() {
-  const { line, subline } = wisewaveLandingCopy.footer;
+  const { shortLine, extendedLine } = wisewaveLandingCopy.footer;
   return (
     <footer className="border-t border-[#e7e1d8] py-10">
       <div className="mx-auto flex w-full max-w-[51rem] flex-col gap-6 px-6 sm:px-8">
         <div className="max-w-2xl">
-          <p className="text-base font-medium text-[#171717]">{line}</p>
-          <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">{subline}</p>
+          <p className="text-base font-medium text-[#171717]">{shortLine}</p>
+          <p className="mt-2 text-sm leading-7 text-[#5c5c5c]">{extendedLine}</p>
         </div>
-        <div className="grid gap-3 text-sm text-[#5c5c5c] sm:grid-cols-2 md:grid-cols-4">
-          <Link href="/what-is-wisewave" className="hover:text-[#171717]">
-            What Wisewave Is
-          </Link>
-          <Link href="/how-it-works" className="hover:text-[#171717]">
-            How It Works
-          </Link>
-          <Link href="/what-it-is-not" className="hover:text-[#171717]">
-            What It Is Not
-          </Link>
-          <Link href="/reflection-without-advice" className="hover:text-[#171717]">
-            Reflection without advice
+        <div className="grid gap-3 text-sm text-[#5c5c5c] sm:grid-cols-2">
+          <Link href="/about/founder-note" className="hover:text-[#171717]">
+            Founder note
           </Link>
           <Link href="/faq" className="hover:text-[#171717]">
             FAQ
           </Link>
-          <Link href="/privacy" className="hover:text-[#171717]">
-            Privacy
-          </Link>
           <Link href="/terms" className="hover:text-[#171717]">
             Terms
           </Link>
-          <Link
-            href="/how-it-works#conversation-handling"
-            className="hover:text-[#171717]"
-          >
-            Conversation handling
+          <Link href="/privacy" className="hover:text-[#171717]">
+            Privacy
           </Link>
-          <Link href="/subscribe" className="hover:text-[#171717]">
-            Account &amp; subscription
-          </Link>
-          <a href="mailto:info@wisewave.io" className="hover:text-[#171717]">
-            Support
-          </a>
-          <Link href="/about/founder-note" className="hover:text-[#171717]">
-            A note from the founder
-          </Link>
-        </div>
-        <div className="border-t border-[#e7e1d8] pt-6">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.08em] text-[#7a7a7a]">
-            Topics
-          </p>
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#5c5c5c]">
-            <Link href="/reflection-ai" className="hover:text-[#171717]">
-              Reflection AI
-            </Link>
-            <Link href="/self-reflection-app" className="hover:text-[#171717]">
-              Self reflection app
-            </Link>
-            <Link
-              href="/reflection-without-advice"
-              className="hover:text-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-            <Link href="/journaling-alternative" className="hover:text-[#171717]">
-              Journaling alternative
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

@@ -5,6 +5,7 @@ import { trackEvent, type AnalyticsEventName } from "@/lib/wisewave-analytics";
 
 type SectionKey =
   | "hero"
+  | "problem"
   | "user_resonance"
   | "what_wisewave_is"
   | "differentiation"
@@ -15,8 +16,11 @@ type SectionKey =
   | "non_fit"
   | "sample_openings"
   | "beliefs"
+  | "why_people_return"
   | "boundaries"
-  | "final_cta";
+  | "final_cta"
+  | "closing"
+  | "faq";
 
 export function AnalyticsView({
   event,

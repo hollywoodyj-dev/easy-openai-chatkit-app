@@ -2,10 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 const navItems = [
-  { href: "/what-is-wisewave", label: "What Wisewave Is" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/who-its-for", label: "Who It’s For" },
-  { href: "/privacy", label: "Privacy" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/who-its-for", label: "Who it’s for" },
+  { href: "/about/founder-note", label: "Founder note" },
 ];
 
 export function WisewaveSiteHeader() {
@@ -38,10 +37,10 @@ export function WisewaveSiteHeader() {
           ))}
         </nav>
         <Link
-          href="/start?from=nav"
+          href="/login?from=nav"
           className="hidden rounded-full border border-[#e7e1d8] bg-transparent px-4 py-2 text-sm font-medium text-[#171717] transition hover:bg-[#fcfbf8] md:inline-flex"
         >
-          Start
+          Try Wisewave
         </Link>
       </div>
       <nav
@@ -58,10 +57,10 @@ export function WisewaveSiteHeader() {
           </Link>
         ))}
         <Link
-          href="/start?from=nav"
+          href="/login?from=nav"
           className="shrink-0 rounded-full border border-[#e7e1d8] bg-transparent px-4 py-2 text-sm font-medium text-[#171717] transition hover:bg-[#fcfbf8]"
         >
-          Start
+          Try Wisewave
         </Link>
       </nav>
     </header>
