@@ -1,188 +1,138 @@
 {
   "hero": {
-    "headline": "A quiet space to hear yourself more clearly.",
-    "subheadline": "Wisewave offers a low-pressure reflection space where thoughts, emotions, and inner tension can become a little easier to notice.",
-    "ctaPrimary": "Start a conversation",
-    "ctaSecondary": "See how it works",
-    "supportLines": [
-      "Not a search engine.",
-      "Not a productivity tool.",
-      "Not therapy.",
-      "Not coaching.",
-      "Just a quieter space for reflection."
-    ]
-  },
-  "resonance": {
-    "sectionTitle": "Sometimes the difficulty is not a lack of answers.",
-    "body": [
-      "You may already have thought about it deeply.",
-      "You may have searched, analyzed, or tried to make sense of what you feel.",
-      "And still, something may remain unclear.",
-      "Sometimes the difficulty is not missing information.",
-      "It is that too much is happening at once.",
-      "You may feel something strongly but struggle to name it.",
-      "You may keep thinking without becoming clearer.",
-      "You may say a lot, while still not reaching the part that matters most."
+    "headline": "Less advice. Less interference. More room to see clearly.",
+    "subheadline": [
+      "Wisewave is a reflection space for people who want clarity without having their thinking taken over.",
+      "It does not guide, coach, or push.",
+      "It reflects with restraint, so clarity can emerge without replacing your judgment."
     ],
-    "closingLine": "Wisewave does not explain your life for you. It offers space to notice what is already there."
+    "ctaPrimary": "Try Wisewave",
+    "ctaSecondary": "See how it works"
+  },
+  "problem": {
+    "sectionTitle": "When AI becomes too present, clarity gets harder.",
+    "body": [
+      "Most AI systems are built to do more: more answers, more suggestions, more direction.",
+      "That can be useful. But in moments of uncertainty or inner complexity, more system activity is not always what helps.",
+      "Sometimes what is needed is less interference.",
+      "Wisewave is built for those moments."
+    ]
   },
   "whatIs": {
-    "sectionTitle": "What is Wisewave?",
+    "sectionTitle": "A quieter kind of reflection",
     "body": [
-      "Wisewave is a quiet reflection space.",
-      "You can begin with whatever is present: a thought, a feeling, a question, a confusion, or something you cannot fully name yet.",
-      "It does not rush to answer.",
-      "It does not tell you what to do.",
-      "Instead, it responds lightly to what is already in your words — what may be felt, where things seem unclear, and what may be starting to come into view."
+      "Wisewave is not an assistant that acts for you.",
+      "It is not a coach that directs you.",
+      "It is not a system designed to become the strongest voice in the room.",
+      "It creates just enough structure for you to see more clearly for yourself.",
+      "In plain language, that is closest to a quiet reflection space and to reflection without advice: clarity without takeover."
     ],
-    "shortLine": "It does not think for you. It helps you hear yourself more clearly."
+    "shortLine": "Not more direction. More space for authorship."
   },
-  "difference": {
-    "sectionTitle": "Most AI tries to do more. Wisewave does less.",
+  "whatYouReceive": {
+    "sectionTitle": "What the experience offers",
     "cards": [
       {
-        "title": "No rush to answer",
-        "body": "Many AI systems move quickly toward advice or solutions. Wisewave begins by making more room for what you are already saying."
+        "title": "A quieter cognitive space",
+        "body": "Less output, less pressure, more room for your own thinking to come forward."
       },
       {
-        "title": "No need to be fixed",
-        "body": "It does not treat you like a problem to solve. Sometimes what is needed is not correction, but clearer attention."
+        "title": "Precise reflection",
+        "body": "It does not expand your thoughts with generic advice. It reflects what matters, with restraint."
       },
       {
-        "title": "No polished language over complexity",
-        "body": "It does not smooth over difficult or mixed experience with ready-made reassurance."
+        "title": "Preserved judgment",
+        "body": "It does not decide for you or tell you what to do next."
       },
       {
-        "title": "No takeover of direction",
-        "body": "It does not decide what your experience means. You remain the one who determines what feels true."
+        "title": "Low system presence",
+        "body": "It is designed to stay light, so you can remain the author of your own seeing."
       }
     ]
   },
-  "benefits": {
-    "sectionTitle": "Sometimes, a little clarity is enough.",
-    "items": [
-      {
-        "title": "A clearer sense of what is happening inside",
-        "body": "From \"everything feels tangled\" to a more specific sense of where the tension is."
-      },
-      {
-        "title": "More honest emotional awareness",
-        "body": "Feelings that were hard to name, pushed aside, or explained away may become easier to notice."
-      },
-      {
-        "title": "A little more inner space",
-        "body": "Not being rushed past what is real, but having room to stay with it more clearly."
-      },
-      {
-        "title": "A steadier understanding of yourself",
-        "body": "Not a final answer, but a quieter return to what feels true for you."
-      }
-    ]
-  },
-  "useCases": {
-    "sectionTitle": "Use Wisewave when you need a space that does not interrupt you.",
-    "items": [
-      "When you feel a lot, but cannot quite say why",
-      "When you keep returning to the same inner loop",
-      "When something feels stuck, but the stuck point is unclear",
-      "When you do not want more advice yet",
-      "When you need a space that does not define, judge, or push you"
-    ]
-  },
-  "howItWorks": {
-    "sectionTitle": "The way in is simple.",
-    "steps": [
-      {
-        "title": "Start from what is real now",
-        "body": [
-          "You do not need to organize it first.",
-          "You do not need to say it perfectly.",
-          "Start wherever you are."
-        ]
-      },
-      {
-        "title": "Wisewave reflects lightly",
-        "body": [
-          "It responds to the emotions, tensions, and small signals already present in your words."
-        ]
-      },
-      {
-        "title": "Something may become clearer",
-        "body": [
-          "Not all at once.",
-          "Not by being explained.",
-          "But through a conversation with enough room to notice."
-        ]
-      },
-      {
-        "title": "Clarity can bring you closer to yourself",
-        "body": [
-          "Wisewave does not push you forward.",
-          "It simply helps keep the space open."
-        ]
-      }
-    ]
-  },
-  "beliefs": {
-    "sectionTitle": "Wisewave believes",
-    "items": [
-      "Clarity matters more than quick answers",
-      "People do not always need guidance in order to understand themselves",
-      "Inner noise is not a sign of failure",
-      "Some understanding only appears when there is enough space",
-      "A system does not need to take over in order to be useful"
+  "whoItsFor": {
+    "sectionTitle": "Who Wisewave is for",
+    "intro": "Wisewave is for people who already feel the cost of too much direction.",
+    "fitTitle": "It may fit if you want:",
+    "fitItems": [
+      "reflection without guidance",
+      "clarity without pressure",
+      "space without emotional takeover",
+      "language that helps you see, not follow"
     ],
-    "closingLine": "Wisewave is not here to optimize you. It offers a quiet space to return to yourself with a little more clarity."
+    "notFitTitle": "It may not fit if you are looking for:",
+    "notFitItems": [
+      "direct advice",
+      "coaching",
+      "motivational guidance",
+      "step-by-step action plans",
+      "an AI that tells you what to do next"
+    ]
+  },
+  "whyReturn": {
+    "sectionTitle": "Why people subscribe",
+    "body": [
+      "People do not subscribe to Wisewave for more stimulation or more system activity.",
+      "They subscribe for something quieter: a trustworthy place to come back to when clear thinking matters.",
+      "Wisewave is built for repeated use in meaningful moments:"
+    ],
+    "items": [
+      "before moments that need clear thinking",
+      "during periods of inner confusion",
+      "when outside noise becomes too strong",
+      "when reflection is needed without takeover"
+    ],
+    "shortLine": "Not optimized to take over. Designed to step back.",
+    "cta": "Start with Wisewave"
   },
   "boundaries": {
-    "sectionTitle": "What Wisewave is not",
-    "body": [
-      "Wisewave is not therapy.",
-      "It is not a medical service.",
-      "It is not crisis support.",
-      "It is not coaching.",
-      "It is not an authority on your life.",
-      "It does not diagnose you.",
-      "It does not treat you.",
-      "It does not tell you what to do.",
-      "It does not decide what is true for you."
+    "sectionTitle": "Built with boundaries",
+    "intro": "Wisewave is designed:",
+    "items": [
+      "not to dominate the interaction",
+      "not to cultivate dependence",
+      "not to substitute for therapy",
+      "not to simulate emotional attachment",
+      "not to turn reflection into performance"
     ],
-    "supportLine": "If you are in serious psychological distress, immediate danger, or need clinical support, please contact a qualified human professional or your local emergency services."
+    "shortLine": "These boundaries are not added afterward. They are part of how Wisewave works."
   },
-  "finalCta": {
-    "sectionTitle": "If you do not need more answers right now, only a little more room to hear yourself.",
+  "closing": {
+    "headline": "In a world full of answers, some people need a place to see.",
     "body": [
-      "You can begin with one simple conversation.",
-      "No preparation needed.",
-      "No need to be clear first.",
-      "Start from what is real now."
+      "Wisewave is for those people.",
+      "A reflection space that steps back, leaves room, and helps you see more clearly for yourself."
     ],
-    "ctaPrimary": "Start using Wisewave",
-    "ctaSecondary": "Enter the reflection space"
+    "ctaPrimary": "Try Wisewave",
+    "ctaSecondary": "Read the founder note"
+  },
+  "faq": {
+    "sectionTitle": "Frequently asked",
+    "items": [
+      {
+        "question": "How is Wisewave different from other AI systems?",
+        "answer": "Wisewave is not designed to advise, direct, or take over your thinking. It is designed to reflect with restraint, so you can see more clearly without handing over authorship."
+      },
+      {
+        "question": "Does Wisewave give advice?",
+        "answer": "No. Wisewave does not provide advice, coaching, or step-by-step direction. Its purpose is reflection, not instruction."
+      },
+      {
+        "question": "Is Wisewave therapy?",
+        "answer": "No. Wisewave is not therapy and does not replace professional care. It is a reflection space designed to preserve clarity and agency."
+      },
+      {
+        "question": "Who is Wisewave for?",
+        "answer": "Wisewave is for people who want reflection without guidance, clarity without pressure, and space without takeover."
+      },
+      {
+        "question": "Why is the language so minimal?",
+        "answer": "Because restraint is part of how the product works. Wisewave is designed to reduce interference, not increase verbal pressure."
+      }
+    ]
   },
   "footer": {
-    "line": "Wisewave",
-    "subline": "A quiet reflection space for clearer self-understanding."
-  },
-  "implementationNotes": {
-    "designDirection": [
-      "Keep the page visually quiet, spacious, and low-pressure.",
-      "Avoid heavy gradients, emotional-performance imagery, or wellness-app signals.",
-      "Avoid making the product feel like a chatbot assistant, therapy platform, coaching service, or self-optimization tool."
-    ],
-    "ctaToneAvoid": [
-      "Transform yourself",
-      "Get answers",
-      "Heal now",
-      "Unlock your potential",
-      "Start your journey",
-      "Feel better fast"
-    ],
-    "boundaryVisibility": [
-      "not therapy",
-      "not crisis support",
-      "not coaching",
-      "not advice"
-    ]
+    "shortLine": "A quieter reflection space.",
+    "extendedLine": "Wisewave is designed to help people see more clearly without replacing their judgment."
   }
 }

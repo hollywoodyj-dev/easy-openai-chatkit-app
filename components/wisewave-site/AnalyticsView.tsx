@@ -20,7 +20,8 @@ type SectionKey =
   | "boundaries"
   | "final_cta"
   | "closing"
-  | "faq";
+  | "faq"
+  | "related_reading";
 
 export function AnalyticsView({
   event,

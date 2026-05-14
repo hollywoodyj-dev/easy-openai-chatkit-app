@@ -9,7 +9,8 @@ import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-ma
 
 /** Canonical strings: `lib/wisewave-site/wisewave-landing-copy.ts` (+ JSON twin). */
 const HOME_TITLE = "Wisewave — A quiet space to hear yourself more clearly";
-const HOME_DESCRIPTION = copy.hero.subheadline[0];
+/** Micro SEO reinforcement (Lumen): primary cluster, no scope expansion. */
+const HOME_DESCRIPTION = `A quiet reflection space for reflection without advice. ${copy.hero.subheadline[0]}`;
 
 export const metadata: Metadata = {
   title: HOME_TITLE,
@@ -208,6 +209,52 @@ export default function WisewaveMarketingHome() {
             View full FAQ
           </Link>
         </div>
+      </Section>
+
+      <Section title="Related reading">
+        <AnalyticsView section="related_reading" />
+        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+          <li>
+            <Link
+              href="/reflection-without-advice"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection without advice
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/reflection-ai"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection AI without advice or coaching
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/self-reflection-app"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A self reflection app
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/journaling-alternative"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A journaling alternative
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/faq"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Full FAQ
+            </Link>
+          </li>
+        </ul>
       </Section>
     </>
   );

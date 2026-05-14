@@ -89,6 +89,7 @@ export const wisewaveLandingCopy: LandingCopy = {
       "It is not a coach that directs you.",
       "It is not a system designed to become the strongest voice in the room.",
       "It creates just enough structure for you to see more clearly for yourself.",
+      "In plain language, that is closest to a quiet reflection space and to reflection without advice: clarity without takeover.",
     ],
     shortLine: "Not more direction. More space for authorship.",
   },

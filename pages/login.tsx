@@ -1,7 +1,14 @@
 import { useState, FormEvent, useEffect } from "react";
 import type { NextPage } from "next";
+import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
+
+/** Bing / SEO hygiene: descriptive document title (overrides short default in `_app`). */
+const LOGIN_PAGE_TITLE =
+  "Sign in or create an account | Wisewave reflection chat access";
+const LOGIN_PAGE_DESCRIPTION =
+  "Sign in to Wisewave with email and password or Google, Facebook, or X. Opens your reflection chat. Account access only—not the marketing homepage.";
 
 const API_BASE = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -78,8 +85,13 @@ const LoginPage: NextPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#F7F5F2] px-4 py-10">
-      <div className="mx-auto max-w-md">
+    <>
+      <Head>
+        <title>{LOGIN_PAGE_TITLE}</title>
+        <meta name="description" content={LOGIN_PAGE_DESCRIPTION} />
+      </Head>
+      <main className="min-h-screen bg-[#F7F5F2] px-4 py-10">
+        <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
           <div className="mx-auto flex w-full max-w-[280px] min-w-[140px] justify-center">
             <Image
@@ -194,8 +206,9 @@ const LoginPage: NextPage = () => {
             </button>
           </p>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   );
 };
 export default LoginPage;

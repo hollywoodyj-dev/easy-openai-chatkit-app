@@ -10,11 +10,14 @@ export function SeoLandingClosing({
   from,
   relatedHref,
   relatedLabel,
+  extraRelatedLinks,
 }: {
   lead: string;
   from: string;
   relatedHref: string;
   relatedLabel: string;
+  /** Additional internal links (natural anchors; optional). */
+  extraRelatedLinks?: { href: string; label: string }[];
 }) {
   return (
     <Section title="When you are ready">
@@ -58,6 +61,16 @@ export function SeoLandingClosing({
                 {relatedLabel}
               </Link>
             </li>
+            {extraRelatedLinks?.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
       </div>

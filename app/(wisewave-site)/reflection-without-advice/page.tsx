@@ -10,7 +10,7 @@ import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-ma
 
 const SEO_TITLE = "Reflection without advice | Wisewave";
 const SEO_DESCRIPTION =
-  "Wisewave offers reflection without advice, coaching, or direction. A quieter reflection space for people who want clarity without takeover.";
+  "Wisewave offers reflection without advice, coaching, or direction. A quiet reflection space for people who want clarity without takeover.";
 
 export const metadata: Metadata = {
   title: SEO_TITLE,
@@ -127,6 +127,30 @@ export default function ReflectionWithoutAdvicePage() {
         <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
           <li>
             <Link
+              href="/reflection-ai"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection AI without advice or coaching
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/self-reflection-app"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A self reflection app
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/journaling-alternative"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A journaling alternative
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/what-it-is-not"
               className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
             >
@@ -164,7 +188,12 @@ export default function ReflectionWithoutAdvicePage() {
         lead="If you want reflection without advice, Wisewave is designed for that."
         from="seo_reflection_without_advice"
         relatedHref="/reflection-ai"
-        relatedLabel="Reflection AI without taking over"
+        relatedLabel="Reflection AI without advice or coaching"
+        extraRelatedLinks={[
+          { href: "/self-reflection-app", label: "A self reflection app" },
+          { href: "/journaling-alternative", label: "A journaling alternative" },
+          { href: "/faq", label: "FAQ" },
+        ]}
       />
     </>
   );

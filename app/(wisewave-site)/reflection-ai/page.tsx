@@ -9,7 +9,7 @@ import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-ma
 
 const SEO_TITLE = "Reflection AI without advice or coaching | Wisewave";
 const SEO_DESCRIPTION =
-  "Wisewave is a low-presence reflection AI for people who want clarity without advice, coaching, or companion-style AI.";
+  "Wisewave is a low-presence reflection AI for people who want clarity without advice, coaching, or companion-style AI. A quiet reflection space.";
 
 export const metadata: Metadata = {
   title: SEO_TITLE,
@@ -61,6 +61,17 @@ export default function ReflectionAiPage() {
           for reflection.
         </p>
       </SeoLandingHero>
+
+      <Section title="How people describe what they want here">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>
+            Many people arrive while searching for reflection AI without advice
+            or reflection AI without coaching. The through-line is the same: a
+            quiet reflection space where the system stays restrained and your own
+            words stay in front.
+          </p>
+        </div>
+      </Section>
 
       <Section title="What reflection AI usually becomes">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
@@ -140,6 +151,11 @@ export default function ReflectionAiPage() {
         from="seo_reflection_ai"
         relatedHref="/reflection-without-advice"
         relatedLabel="Reflection without advice"
+        extraRelatedLinks={[
+          { href: "/self-reflection-app", label: "A self reflection app" },
+          { href: "/journaling-alternative", label: "A journaling alternative" },
+          { href: "/faq", label: "FAQ" },
+        ]}
       />
     </>
   );

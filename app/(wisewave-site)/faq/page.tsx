@@ -11,7 +11,7 @@ import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-ma
 
 const FAQ_TITLE = "FAQ";
 const FAQ_DESCRIPTION =
-  "Boundary-safe answers about Wisewave: reflection space, not coach, therapy, companion, or crisis support. Data and fit in plain language.";
+  "Boundary-safe answers about Wisewave: reflection without advice, a quiet reflection space, not coach, therapy, companion, or crisis support. Data and fit in plain language.";
 
 export const metadata: Metadata = {
   title: FAQ_TITLE,
@@ -41,6 +41,46 @@ export default function FAQPage() {
       </section>
       <Section title="Related pages">
         <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+          <li>
+            <Link
+              href="/"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Wisewave homepage
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/reflection-without-advice"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection without advice
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/reflection-ai"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection AI without advice or coaching
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/self-reflection-app"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A self reflection app
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/journaling-alternative"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A journaling alternative
+            </Link>
+          </li>
           <li>
             <Link
               href="/what-it-is-not"

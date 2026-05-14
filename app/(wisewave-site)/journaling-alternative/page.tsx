@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
@@ -9,7 +10,7 @@ import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-ma
 
 const SEO_TITLE = "A journaling alternative for people tired of prompts | Wisewave";
 const SEO_DESCRIPTION =
-  "Wisewave is a journaling alternative for people who want reflection without guided prompts, coaching, or companion-style AI.";
+  "Wisewave is a journaling alternative for people who want reflection without guided prompts, coaching, or companion-style AI. A quiet reflection space.";
 
 export const metadata: Metadata = {
   title: SEO_TITLE,
@@ -134,11 +135,61 @@ export default function JournalingAlternativePage() {
         <AccordionFaq items={faqItems} />
       </Section>
 
+      <Section title="Related reading">
+        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+          <li>
+            <Link
+              href="/"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Wisewave homepage
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/reflection-without-advice"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection without advice
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/reflection-ai"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection AI without advice or coaching
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/self-reflection-app"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              A self reflection app
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/faq"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Full FAQ
+            </Link>
+          </li>
+        </ul>
+      </Section>
+
       <SeoLandingClosing
         lead="If you are looking for a quieter alternative to prompt-driven journaling, you can begin here."
         from="seo_journaling_alternative"
         relatedHref="/self-reflection-app"
         relatedLabel="A self reflection app"
+        extraRelatedLinks={[
+          { href: "/reflection-without-advice", label: "Reflection without advice" },
+          { href: "/reflection-ai", label: "Reflection AI without advice or coaching" },
+          { href: "/faq", label: "FAQ" },
+        ]}
       />
     </>
   );
