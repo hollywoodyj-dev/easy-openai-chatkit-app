@@ -6,6 +6,20 @@
 **Scope:** Homepage only — **not** Apple App Store or Google Play (next phase after this pass).  
 **Sources:** Wisewave Public Discovery Assets v1, NOVA Homepage Implementation Brief, Lumen execution order (web first).
 
+**Status (2026-05-19):** **CLOSED — PASS WITH WATCHPOINTS** (Lumen hosted QA; full notes in `docs/QA_HANDOFF.md`). **Apple phase:** clear to start with watchpoints below.
+
+### Lumen verdict summary
+
+| Axis | Result |
+|------|--------|
+| Category integrity | PASS |
+| Recognition (first two screens) | PASS WITH WATCHPOINT — hero slightly abstract vs deeper copy |
+| Value + return | PASS — watch **“quieter kind of support”** on future public assets |
+| Boundaries | PASS |
+| Layout + CTA | PASS WITH WATCHPOINT — copy/structure verified; visual/mobile browser pass not done (Playwright) |
+
+**Carry into App Store / Play copy:** tight category spine; no therapy / support / wellness softening; do **not** reuse “quieter kind of support” on store listings.
+
 ---
 
 ## What shipped
