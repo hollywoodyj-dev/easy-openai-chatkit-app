@@ -8,16 +8,15 @@ import { wisewaveLandingCopy as copy } from "@/lib/wisewave-site/wisewave-landin
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 
 /** Canonical strings: `lib/wisewave-site/wisewave-landing-copy.ts` (+ JSON twin). */
-const HOME_TITLE = "Wisewave — A quiet space to hear yourself more clearly";
-/** Micro SEO reinforcement (Lumen): primary cluster, no scope expansion. */
-const HOME_DESCRIPTION = `A quiet reflection space for reflection without advice. ${copy.hero.subheadline[0]}`;
+const HOME_TITLE = "Wisewave — A quiet reflection space";
+const HOME_DESCRIPTION =
+  "A quiet reflection space for reflection without advice. Wisewave is for people who want clarity without being guided, coached, or taken over.";
 
 export const metadata: Metadata = {
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
   ...wisewaveMarketingSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, "/", {
-    /** X / Twitter: show subheadline beside image, not logo-only large card. */
     twitterCard: "summary",
   }),
 };
@@ -33,11 +32,12 @@ export default function WisewaveMarketingHome() {
             <h1 className="mt-3 text-4xl font-medium leading-tight tracking-[-0.03em] text-[#171717] sm:text-5xl">
               {copy.hero.headline}
             </h1>
-            <div className="mt-5 max-w-2xl space-y-3 text-lg leading-8 text-[#5c5c5c]">
-              {copy.hero.subheadline.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
+            <p className="mt-5 max-w-2xl text-lg font-medium leading-8 text-[#171717]">
+              {copy.hero.spineLine}
+            </p>
+            <p className="mt-3 max-w-2xl text-lg leading-8 text-[#5c5c5c]">
+              {copy.hero.supportLine}
+            </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <TrackButton
                 href="/login?from=hero"
@@ -60,22 +60,17 @@ export default function WisewaveMarketingHome() {
         </div>
       </section>
 
-      <Section title={copy.problem.sectionTitle}>
-        <AnalyticsView section="problem" />
-        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
-          {copy.problem.body.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
-        </div>
-      </Section>
-
-      <Section title={copy.whatIs.sectionTitle}>
-        <AnalyticsView section="what_wisewave_is" />
-        <div className="space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
-          {copy.whatIs.body.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
-          <p className="text-[#171717]">{copy.whatIs.shortLine}</p>
+      <Section title={copy.selfRecognition.sectionTitle}>
+        <AnalyticsView section="self_recognition" />
+        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
+          <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+            {copy.selfRecognition.fitItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="mt-5 text-base leading-[1.75] text-[#171717]">
+            {copy.selfRecognition.exitLine}
+          </p>
         </div>
       </Section>
 
@@ -96,32 +91,18 @@ export default function WisewaveMarketingHome() {
         </div>
       </Section>
 
-      <Section title={copy.whoItsFor.sectionTitle}>
-        <AnalyticsView section="who_its_for" />
-        <div className="space-y-5">
-          <p className="text-base leading-[1.75] text-[#5c5c5c]">{copy.whoItsFor.intro}</p>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6">
-              <h3 className="text-base font-medium text-[#171717]">
-                {copy.whoItsFor.fitTitle}
-              </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-                {copy.whoItsFor.fitItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6">
-              <h3 className="text-base font-medium text-[#171717]">
-                {copy.whoItsFor.notFitTitle}
-              </h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-                {copy.whoItsFor.notFitItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+      <Section title={copy.whatIsNot.sectionTitle}>
+        <AnalyticsView section="what_is_not" />
+        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
+          <p className="text-base leading-[1.75] text-[#5c5c5c]">{copy.whatIsNot.intro}</p>
+          <ul className="mt-4 list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+            {copy.whatIsNot.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="mt-4 text-base leading-[1.75] text-[#171717]">
+            {copy.whatIsNot.shortLine}
+          </p>
         </div>
       </Section>
 
@@ -139,7 +120,7 @@ export default function WisewaveMarketingHome() {
             ))}
           </ul>
           <p className="mt-4 text-base leading-[1.75] text-[#171717]">
-            {copy.whyReturn.shortLine}
+            {copy.whyReturn.subscriptionLine}
           </p>
           <div className="mt-6">
             <TrackButton
@@ -169,35 +150,6 @@ export default function WisewaveMarketingHome() {
         </div>
       </Section>
 
-      <Section title={copy.closing.headline}>
-        <AnalyticsView section="closing" />
-        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
-          <div className="max-w-2xl space-y-3 text-base leading-[1.75] text-[#5c5c5c]">
-            {copy.closing.body.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <TrackButton
-              href="/login?from=final_cta"
-              className="inline-flex items-center justify-center rounded-full bg-[#2d4b52] px-7 py-3.5 text-sm font-medium text-white transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-[#2d4b52] focus:ring-offset-2 focus:ring-offset-[#f7f5f1]"
-              eventName="homepage_primary_cta_click"
-              eventPayload={{ location: "closing" }}
-            >
-              {copy.closing.ctaPrimary}
-            </TrackButton>
-            <TrackButton
-              href="/about/founder-note?from=homepage_closing_secondary"
-              className="inline-flex items-center justify-center rounded-full border border-[#e7e1d8] bg-transparent px-5 py-2.5 text-sm font-medium text-[#171717] transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#2d4b52]/25 focus:ring-offset-2"
-              eventName="homepage_secondary_cta_click"
-              eventPayload={{ location: "closing" }}
-            >
-              {copy.closing.ctaSecondary}
-            </TrackButton>
-          </div>
-        </div>
-      </Section>
-
       <Section title={copy.faq.sectionTitle}>
         <AnalyticsView section="faq" />
         <AccordionFaq items={copy.faq.items} />
@@ -209,52 +161,6 @@ export default function WisewaveMarketingHome() {
             View full FAQ
           </Link>
         </div>
-      </Section>
-
-      <Section title="Related reading">
-        <AnalyticsView section="related_reading" />
-        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-          <li>
-            <Link
-              href="/reflection-without-advice"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/reflection-ai"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection AI without advice or coaching
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/self-reflection-app"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              A self reflection app
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/journaling-alternative"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              A journaling alternative
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/faq"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Full FAQ
-            </Link>
-          </li>
-        </ul>
       </Section>
     </>
   );
