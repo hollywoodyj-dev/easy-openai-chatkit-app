@@ -40,7 +40,7 @@ export function WisewaveSiteHeader() {
           href="/login?from=nav"
           className="hidden rounded-full border border-[#e7e1d8] bg-transparent px-4 py-2 text-sm font-medium text-[#171717] transition hover:bg-[#fcfbf8] md:inline-flex"
         >
-          Try Wisewave
+          Enter Wisewave
         </Link>
       </div>
       <nav
@@ -60,7 +60,7 @@ export function WisewaveSiteHeader() {
           href="/login?from=nav"
           className="shrink-0 rounded-full border border-[#e7e1d8] bg-transparent px-4 py-2 text-sm font-medium text-[#171717] transition hover:bg-[#fcfbf8]"
         >
-          Try Wisewave
+          Enter Wisewave
         </Link>
       </nav>
     </header>

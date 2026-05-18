@@ -5,12 +5,28 @@ interface SectionProps {
   eyebrow?: string;
   title: string;
   intro?: string;
+  /** Extra vertical rhythm for homepage (NOVA brief: slow section pacing). */
+  spacious?: boolean;
   children: ReactNode;
 }
 
-export function Section({ id, eyebrow, title, intro, children }: SectionProps) {
+export function Section({
+  id,
+  eyebrow,
+  title,
+  intro,
+  spacious,
+  children,
+}: SectionProps) {
   return (
-    <section id={id} className="scroll-mt-20 py-10 sm:py-14">
+    <section
+      id={id}
+      className={
+        spacious
+          ? "scroll-mt-20 py-14 sm:py-20"
+          : "scroll-mt-20 py-10 sm:py-14"
+      }
+    >
       <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
         <div className="max-w-3xl">
           {eyebrow ? (

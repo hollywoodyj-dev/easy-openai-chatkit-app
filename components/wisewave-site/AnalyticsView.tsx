@@ -5,7 +5,9 @@ import { trackEvent, type AnalyticsEventName } from "@/lib/wisewave-analytics";
 
 type SectionKey =
   | "hero"
+  | "transition"
   | "self_recognition"
+  | "use_cases"
   | "what_is_not"
   | "user_resonance"
   | "what_wisewave_is"

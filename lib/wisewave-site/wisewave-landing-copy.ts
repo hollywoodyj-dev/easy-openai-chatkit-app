@@ -1,24 +1,30 @@
 /**
  * Wisewave marketing homepage copy (English).
- * Source: Wisewave Public Discovery Assets v1 + Lumen bounded homepage pass.
+ * Source: Wisewave Homepage Final Copy v1 + NOVA implementation brief.
  */
 
 export type LandingCopy = {
   hero: {
     headline: string;
-    spineLine: string;
-    supportLine: string;
+    subheadline: string;
     ctaPrimary: string;
     ctaSecondary: string;
+  };
+  transition: {
+    headline: string;
+    body: string;
   };
   selfRecognition: {
     sectionTitle: string;
     fitItems: string[];
-    exitLine: string;
   };
   whatYouReceive: {
     sectionTitle: string;
     cards: { title: string; body: string }[];
+  };
+  useCases: {
+    sectionTitle: string;
+    items: string[];
   };
   whatIsNot: {
     sectionTitle: string;
@@ -51,26 +57,27 @@ export type LandingCopy = {
 
 export const wisewaveLandingCopy: LandingCopy = {
   hero: {
-    headline:
-      "A quiet reflection space for people who don't want AI to take over their thinking.",
-    spineLine: "Less advice. Less interference. More room to see clearly.",
-    supportLine:
-      "Wisewave reflects with restraint, so you can think more clearly without being pushed, guided, or overwritten.",
-    ctaPrimary: "Try Wisewave",
-    ctaSecondary: "See how it works",
+    headline: "A quieter space to hear your own thinking.",
+    subheadline:
+      "Wisewave reflects with restraint, so you can see more clearly without being guided, coached, or taken over.",
+    ctaPrimary: "Enter Wisewave",
+    ctaSecondary: "See if it fits",
+  },
+
+  transition: {
+    headline: "Not every moment needs more advice.",
+    body: "Sometimes what helps is less interference — room to notice what is already there.",
   },
 
   selfRecognition: {
     sectionTitle: "Wisewave may fit if…",
     fitItems: [
-      "you are tired of advice-heavy AI conversations",
+      "you are tired of AI that moves too quickly to advise or interpret",
       "you want reflection without being guided",
-      "you journal or think in writing",
+      "you think in writing, or need language to sort what is already present",
       "you want clarity without pressure",
-      "you want space to hear your own thinking more clearly",
+      "you want your own judgment to stay central",
     ],
-    exitLine:
-      "It may not fit if you are looking for direct advice, coaching, motivation, or step-by-step guidance.",
   },
 
   whatYouReceive: {
@@ -90,8 +97,19 @@ export const wisewaveLandingCopy: LandingCopy = {
       },
       {
         title: "A place to return to",
-        body: "When your thinking feels crowded or important decisions need clear reflection, Wisewave stays usable without becoming overbearing.",
+        body: "When your thinking feels crowded or clear judgment matters, Wisewave stays usable without becoming overbearing.",
       },
+    ],
+  },
+
+  useCases: {
+    sectionTitle: "Use Wisewave when…",
+    items: [
+      "your thoughts feel noisy and you do not want advice",
+      "you need space to think before deciding",
+      "other AI feels too eager to interpret",
+      "you want reflection, not instruction",
+      "you need a quieter place to sort what is already present",
     ],
   },
 
@@ -123,7 +141,7 @@ export const wisewaveLandingCopy: LandingCopy = {
     ],
     subscriptionLine:
       "Subscribe if you want a quiet reflection space you can return to whenever clear thinking matters.",
-    cta: "Try Wisewave",
+    cta: "Enter Wisewave",
   },
 
   boundaries: {
