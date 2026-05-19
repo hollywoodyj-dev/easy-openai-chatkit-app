@@ -11,17 +11,17 @@ Store copy is **more direct than the homepage hero** (recognition in first visib
 
 ## US App Store — name constraint (2026-05-19)
 
-**`Wisewave` cannot be used as the US App Store *Name* field** (trademark / availability — confirm in App Store Connect).
+**`Wisewave` alone cannot be the US App Store *Name*.** US requires **brand + category descriptor** (e.g. **Wisewave Quiet Reflection**), not standalone **Wisewave**.
 
 | Layer | US guidance |
 |-------|-------------|
-| **App Store Name (US)** | Use a **category-descriptive** name from § US Apple names below — **not** Wisewave |
-| **Brand in description** | OK to link **`https://www.wisewave.io/`** and say *the Wisewave reflection experience* if legal/review allows — confirm with Tree/steward |
-| **Subtitle / screenshots** | Category spine only; no requirement to put Wisewave on icon row |
-| **Google Play (US)** | Confirm separately; this pack still recommends **Wisewave** unless Play blocks the same string |
-| **Home screen label** | `mobile/app.json` → `expo.name` is still **Wisewave** today. Apple prefers **listing name ≈ device label**. If US listing uses another name, plan either: (a) **`ios.infoPlist.CFBundleDisplayName`** aligned to US store name for US builds, or (b) accept review risk — **Tree/CTO decision** before submit |
+| **App Store Name (US)** | **Wisewave** + descriptor — see § US Apple names (30 char max) |
+| **Subtitle** | Carries category spine (*Reflection without advice*) — do not repeat the full name |
+| **Description / promo** | Standard Wisewave body below (brand already in Name) |
+| **Google Play (US)** | Use same rule if Play rejects **Wisewave** only: **Wisewave Quiet Reflection** |
+| **Home screen label** | `expo.name` is **Wisewave** today. Store name **Wisewave Quiet Reflection** may truncate on device; consider **`ios.infoPlist.CFBundleDisplayName`** = `Wisewave Quiet Reflection` or a shorter match — **Tree/CTO** before submit |
 
-**Nova US default (pending Connect availability check):** **Quiet Reflection**
+**Nova US default:** **Wisewave Quiet Reflection** (26 characters)
 
 ## Release order (Lumen)
 
@@ -54,17 +54,17 @@ Store copy is **more direct than the homepage hero** (recognition in first visib
 
 ## Nova recommended paste stack (v1)
 
-### Apple — United States (Name ≠ Wisewave)
+### Apple — United States (Name = Wisewave + descriptor)
 
 | Field | Recommended (US) |
 |-------|------------------|
-| **App Store Name** | **Quiet Reflection** (verify unique in Connect) |
+| **App Store Name** | **Wisewave Quiet Reflection** |
 | **Subtitle** | Reflection without advice |
-| **Promotional text** | US promo below (no Wisewave in name field) |
-| **Description** | **US full description v1** below |
-| **Screenshot captions** | Same six captions (no Wisewave word required) |
+| **Promotional text** | Standard promo below |
+| **Description** | Standard full description below |
+| **Screenshot captions** | Same six captions |
 
-### Apple — other regions (if Wisewave name allowed)
+### Apple — other regions (if **Wisewave** alone is allowed)
 
 | Field | Recommended |
 |-------|-------------|
@@ -72,12 +72,13 @@ Store copy is **more direct than the homepage hero** (recognition in first visib
 | **Subtitle** | Reflection without advice |
 | **Promo / description** | Standard stack below |
 
-### Google Play (default)
+### Google Play
 
-| Field | Recommended |
-|-------|-------------|
-| **App name** | Wisewave (change only if Play blocks it) |
-| **Short / full** | Standard options below |
+| Region | App name |
+|--------|----------|
+| **US** (if **Wisewave** only blocked) | **Wisewave Quiet Reflection** |
+| **Default** | Wisewave |
+| **Short / full description** | Standard options below |
 
 ---
 
@@ -86,8 +87,8 @@ Store copy is **more direct than the homepage hero** (recognition in first visib
 | Field | Value |
 |-------|--------|
 | **Brand / web** | **Wisewave** — `https://www.wisewave.io/` |
-| **iOS home label (repo today)** | **Wisewave** (`mobile/app.json` → `expo.name`) — may need US alignment (see constraint above) |
-| **US App Store Name** | **Not Wisewave** — use § US Apple names |
+| **iOS home label (repo today)** | **Wisewave** (`mobile/app.json` → `expo.name`) — see US name vs device label note above |
+| **US App Store Name** | **Wisewave Quiet Reflection** (not **Wisewave** alone) |
 | **Bundle / package** | `com.wisewave.chatkit` |
 | **Privacy** | `https://www.wisewave.io/privacy` |
 | **Marketing URL** | `https://www.wisewave.io/` |
@@ -97,26 +98,25 @@ Store copy is **more direct than the homepage hero** (recognition in first visib
 
 ## Apple App Store Connect
 
-### US Apple names (30 characters max) — use for US storefront
+### US Apple names (30 characters max)
 
-Do **not** submit **Wisewave** as the US **Name**. Pick one; confirm availability in App Store Connect before paste.
+**Rule:** include **Wisewave** + category words — **not** **Wisewave** by itself.
 
-1. **Quiet Reflection** ← **Nova US default** (18)  
-2. Reflect Without Advice (24)  
-3. Quiet Thinking Space (20)  
-4. Hear Your Thinking (19)  
-5. Still Reflection (16)  
-6. Clear Reflection (16)  
+1. **Wisewave Quiet Reflection** ← **recommended** (26)  
+2. Wisewave: Quiet Reflection (27)  
+3. Wisewave Reflection (19)  
+4. Wisewave Quiet Think (21)  
+5. Wisewave - Reflect (18)  
 
-**Avoid for US name:** Wisewave, Wave*, names that read as therapy/wellness/companion brands.
+Confirm availability in App Store Connect before paste.
 
-### Apple titles — non-US / global (30 characters max)
+### Apple titles — non-US (30 characters max)
 
-Use only where **Wisewave** is allowed as the store name:
+Where **Wisewave** alone is allowed on the storefront:
 
-1. **Wisewave** (matches current `expo.name`)  
+1. **Wisewave**  
 2. Wisewave Reflection  
-3. Wisewave — Quiet Reflect  
+3. Wisewave Quiet Reflection (same as US if you standardize globally)  
 
 ### Apple subtitles (30 characters max)
 
@@ -136,19 +136,11 @@ Use only where **Wisewave** is allowed as the store name:
 
 ### Promotional text (170 characters max)
 
-**US (no Wisewave word):**
-
-```
-Think more clearly without more advice. A quiet reflection space—no coaching, no takeover. Come back when your thinking feels crowded. wisewave.io
-```
-
-(141 characters — trim `wisewave.io` if over limit after Connect validation)
-
-**Non-US / global:**
-
 ```
 Think more clearly without more advice. Wisewave is a quiet reflection space—no coaching, no takeover. Come back when your thinking feels crowded.
 ```
+
+(148 characters)
 
 ### Keywords (100 characters max)
 

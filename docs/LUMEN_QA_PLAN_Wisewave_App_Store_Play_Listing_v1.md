@@ -64,8 +64,8 @@ Titles/subtitles/short descriptions must read clearly in **one glance** (Apple s
 
 - [ ] iOS bundle `com.wisewave.chatkit`; Android package same  
 - [ ] Privacy `https://www.wisewave.io/privacy`; marketing URL resolves  
-- [ ] **US App Store Name is not `Wisewave`** (trademark constraint) — category name + subtitle still clear  
-- [ ] US listing name vs **home screen label** (`expo.name` / `CFBundleDisplayName`) — flag mismatch to steward  
+- [ ] **US App Store Name is not `Wisewave` alone** — must be **Wisewave + descriptor** (e.g. **Wisewave Quiet Reflection**) with subtitle still category-clear  
+- [ ] US listing name vs **home screen label** (`expo.name` / `CFBundleDisplayName`) — flag mismatch if device still shows only **Wisewave**  
 - [ ] Play: app name matches `expo.name` unless Play also blocks **Wisewave** — see `docs/GOOGLE_PLAY_LISTING_ICON_AND_NAME_ALIGNMENT.md`  
 
 ### Axis 5 — Cross-surface consistency
