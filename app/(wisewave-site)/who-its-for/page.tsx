@@ -1,19 +1,36 @@
 import type { Metadata } from "next";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
+import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
 import { PageHero } from "@/components/wisewave-site/PageHero";
 import { Section } from "@/components/wisewave-site/Section";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
+import { WISEWAVE_WHO_ITS_FOR_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+
+const PAGE_HEADLINE = "Who Wisewave is for";
 
 export const metadata: Metadata = {
-  title: "Who Wisewave Is For",
-  description:
-    "Who Wisewave may fit: quiet thinkers, people who are over-advised, journaling dropouts, and those uncomfortable with companion-style AI.",
-  alternates: { canonical: "/who-its-for" },
+  title: WISEWAVE_WHO_ITS_FOR_SEO.title,
+  description: WISEWAVE_WHO_ITS_FOR_SEO.description,
+  alternates: { canonical: WISEWAVE_WHO_ITS_FOR_SEO.canonicalPath },
+  ...wisewaveMarketingSocialMetadata(
+    WISEWAVE_WHO_ITS_FOR_SEO.title,
+    WISEWAVE_WHO_ITS_FOR_SEO.description,
+    WISEWAVE_WHO_ITS_FOR_SEO.canonicalPath,
+  ),
 };
 
 export default function WhoItsForPage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(
+          PAGE_HEADLINE,
+          WISEWAVE_WHO_ITS_FOR_SEO.canonicalPath,
+        )}
+      />
       <PageHero
-        title="Who Wisewave is for"
+        title={PAGE_HEADLINE}
         body="Wisewave is not for everyone. It is built for people who want a quieter, more restrained form of reflection."
       />
       <Section title="It may fit people like this">
@@ -56,6 +73,9 @@ export default function WhoItsForPage() {
             right fit.
           </p>
         </div>
+      </Section>
+      <Section title="Related reading">
+        <MarketingInternalLinks title="" excludeHref="/who-its-for" />
       </Section>
     </>
   );

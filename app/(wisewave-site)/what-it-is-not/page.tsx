@@ -1,13 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
+import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
 import { PageHero } from "@/components/wisewave-site/PageHero";
 import { Section } from "@/components/wisewave-site/Section";
+import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
+import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
+import { WISEWAVE_WHAT_IT_IS_NOT_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+
+const PAGE_HEADLINE = "What Wisewave is not";
 
 export const metadata: Metadata = {
-  title: "What Wisewave Is Not",
-  description:
-    "Wisewave is not therapy, coaching, companion AI, or a productivity assistant. Plain-language boundary definitions you can quote.",
-  alternates: { canonical: "/what-it-is-not" },
+  title: WISEWAVE_WHAT_IT_IS_NOT_SEO.title,
+  description: WISEWAVE_WHAT_IT_IS_NOT_SEO.description,
+  alternates: { canonical: WISEWAVE_WHAT_IT_IS_NOT_SEO.canonicalPath },
+  ...wisewaveMarketingSocialMetadata(
+    WISEWAVE_WHAT_IT_IS_NOT_SEO.title,
+    WISEWAVE_WHAT_IT_IS_NOT_SEO.description,
+    WISEWAVE_WHAT_IT_IS_NOT_SEO.canonicalPath,
+  ),
 };
 
 const DIRECT_ANSWER =
@@ -16,7 +27,13 @@ const DIRECT_ANSWER =
 export default function WhatItIsNotPage() {
   return (
     <>
-      <PageHero title="What Wisewave is not" body={DIRECT_ANSWER} />
+      <BreadcrumbJsonLd
+        items={wisewaveMarketingBreadcrumbTwo(
+          PAGE_HEADLINE,
+          WISEWAVE_WHAT_IT_IS_NOT_SEO.canonicalPath,
+        )}
+      />
+      <PageHero title={PAGE_HEADLINE} body={DIRECT_ANSWER} />
       <Section
         title="Four boundaries"
         intro="Each line below is a deliberate limit on what the product tries to be."
@@ -86,45 +103,24 @@ export default function WhatItIsNotPage() {
           </p>
         </div>
       </Section>
-      <Section title="Related pages">
-        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-          <li>
-            <Link
-              href="/how-it-works"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              How Wisewave works
-            </Link>
-            {" — "}conversation shape and handling.
-          </li>
-          <li>
-            <Link
-              href="/reflection-without-advice"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-            {" — "}how reflection stays non-directive.
-          </li>
-          <li>
-            <Link
-              href="/faq"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              FAQ
-            </Link>
-            {" — "}short boundary Q&amp;As.
-          </li>
-          <li>
-            <Link
-              href="/privacy"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Privacy overview
-            </Link>
-            {" — "}data handling in plain language; link to the full policy.
-          </li>
-        </ul>
+      <Section title="Related reading">
+        <MarketingInternalLinks title="" excludeHref="/what-it-is-not" />
+        <p className="mt-6 text-base leading-[1.75] text-[#5c5c5c]">
+          <Link
+            href="/how-it-works"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            How Wisewave works
+          </Link>
+          {" — "}conversation shape and handling.{" "}
+          <Link
+            href="/privacy"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            Privacy overview
+          </Link>
+          .
+        </p>
       </Section>
     </>
   );

@@ -8,16 +8,18 @@ import { Section } from "@/components/wisewave-site/Section";
 import { WISEWAVE_MARKETING_FAQ_ITEMS } from "@/lib/wisewave-site/wisewave-marketing-faq-items";
 import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
-
-const FAQ_TITLE = "FAQ";
-const FAQ_DESCRIPTION =
-  "Boundary-safe answers about Wisewave: reflection without advice, a quiet reflection space, not coach, therapy, companion, or crisis support. Data and fit in plain language.";
+import { WISEWAVE_FAQ_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
 
 export const metadata: Metadata = {
-  title: FAQ_TITLE,
-  description: FAQ_DESCRIPTION,
-  alternates: { canonical: "/faq" },
-  ...wisewaveMarketingSocialMetadata(FAQ_TITLE, FAQ_DESCRIPTION, "/faq"),
+  title: WISEWAVE_FAQ_SEO.title,
+  description: WISEWAVE_FAQ_SEO.description,
+  alternates: { canonical: WISEWAVE_FAQ_SEO.canonicalPath },
+  ...wisewaveMarketingSocialMetadata(
+    WISEWAVE_FAQ_SEO.title,
+    WISEWAVE_FAQ_SEO.description,
+    WISEWAVE_FAQ_SEO.canonicalPath,
+  ),
 };
 
 /** Visible PageHero H1 — same string as BreadcrumbList leaf `name`. */
@@ -39,81 +41,32 @@ export default function FAQPage() {
           <AccordionFaq items={[...WISEWAVE_MARKETING_FAQ_ITEMS]} />
         </div>
       </section>
-      <Section title="Related pages">
-        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-          <li>
-            <Link
-              href="/"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Wisewave homepage
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/reflection-without-advice"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/reflection-ai"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection AI without advice or coaching
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/self-reflection-app"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              A self reflection app
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/journaling-alternative"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              A journaling alternative
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/what-it-is-not"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              What Wisewave is not
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/how-it-works"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              How Wisewave works
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/privacy"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Privacy overview
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/reflection-without-advice"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-          </li>
-        </ul>
+      <Section title="Related reading">
+        <MarketingInternalLinks title="" excludeHref="/faq" />
+        <p className="mt-6 text-base leading-[1.75] text-[#5c5c5c]">
+          More context:{" "}
+          <Link
+            href="/reflection-ai"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            Reflection AI without advice or coaching
+          </Link>
+          ,{" "}
+          <Link
+            href="/self-reflection-app"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            A self reflection app
+          </Link>
+          ,{" "}
+          <Link
+            href="/journaling-alternative"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            A journaling alternative
+          </Link>
+          .
+        </p>
       </Section>
     </>
   );

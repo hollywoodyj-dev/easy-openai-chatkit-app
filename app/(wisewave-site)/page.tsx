@@ -6,22 +6,23 @@ import { Section } from "@/components/wisewave-site/Section";
 import { TrackButton } from "@/components/wisewave-site/TrackButton";
 import { wisewaveLandingCopy as copy } from "@/lib/wisewave-site/wisewave-landing-copy";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
-
-/** Canonical strings: `lib/wisewave-site/wisewave-landing-copy.ts` (+ JSON twin). */
-const HOME_TITLE = "Wisewave — A quiet reflection space";
-const HOME_DESCRIPTION = copy.hero.subheadline;
+import { WISEWAVE_HOME_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
 
 const listClass =
   "list-disc space-y-3 pl-5 text-base leading-[1.8] text-[#5c5c5c] marker:text-[#9a9a9a]";
 const bodyClass = "text-base leading-[1.8] text-[#5c5c5c]";
 
 export const metadata: Metadata = {
-  title: HOME_TITLE,
-  description: HOME_DESCRIPTION,
-  alternates: { canonical: "/" },
-  ...wisewaveMarketingSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, "/", {
-    twitterCard: "summary",
-  }),
+  title: WISEWAVE_HOME_SEO.title,
+  description: WISEWAVE_HOME_SEO.description,
+  alternates: { canonical: WISEWAVE_HOME_SEO.canonicalPath },
+  ...wisewaveMarketingSocialMetadata(
+    WISEWAVE_HOME_SEO.title,
+    WISEWAVE_HOME_SEO.description,
+    WISEWAVE_HOME_SEO.canonicalPath,
+    { twitterCard: "summary" },
+  ),
 };
 
 export default function WisewaveMarketingHome() {
@@ -154,6 +155,10 @@ export default function WisewaveMarketingHome() {
             {copy.boundaries.shortLine}
           </p>
         </div>
+      </Section>
+
+      <Section title="Before you begin" spacious>
+        <MarketingInternalLinks />
       </Section>
 
       <Section title={copy.faq.sectionTitle} spacious>
