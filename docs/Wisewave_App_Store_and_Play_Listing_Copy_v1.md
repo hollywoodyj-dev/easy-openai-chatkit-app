@@ -9,6 +9,20 @@
 
 Store copy is **more direct than the homepage hero** (recognition in first visible lines). Not ASO-first; not emotional softening.
 
+## US App Store — name constraint (2026-05-19)
+
+**`Wisewave` cannot be used as the US App Store *Name* field** (trademark / availability — confirm in App Store Connect).
+
+| Layer | US guidance |
+|-------|-------------|
+| **App Store Name (US)** | Use a **category-descriptive** name from § US Apple names below — **not** Wisewave |
+| **Brand in description** | OK to link **`https://www.wisewave.io/`** and say *the Wisewave reflection experience* if legal/review allows — confirm with Tree/steward |
+| **Subtitle / screenshots** | Category spine only; no requirement to put Wisewave on icon row |
+| **Google Play (US)** | Confirm separately; this pack still recommends **Wisewave** unless Play blocks the same string |
+| **Home screen label** | `mobile/app.json` → `expo.name` is still **Wisewave** today. Apple prefers **listing name ≈ device label**. If US listing uses another name, plan either: (a) **`ios.infoPlist.CFBundleDisplayName`** aligned to US store name for US builds, or (b) accept review risk — **Tree/CTO decision** before submit |
+
+**Nova US default (pending Connect availability check):** **Quiet Reflection**
+
 ## Release order (Lumen)
 
 1. Paste / stage recommended stack (or Tree-picked options) + screenshots  
@@ -40,16 +54,30 @@ Store copy is **more direct than the homepage hero** (recognition in first visib
 
 ## Nova recommended paste stack (v1)
 
-Use unless Tree picks alternates from option lists below.
+### Apple — United States (Name ≠ Wisewave)
+
+| Field | Recommended (US) |
+|-------|------------------|
+| **App Store Name** | **Quiet Reflection** (verify unique in Connect) |
+| **Subtitle** | Reflection without advice |
+| **Promotional text** | US promo below (no Wisewave in name field) |
+| **Description** | **US full description v1** below |
+| **Screenshot captions** | Same six captions (no Wisewave word required) |
+
+### Apple — other regions (if Wisewave name allowed)
 
 | Field | Recommended |
 |-------|-------------|
-| **Apple name** | Wisewave |
-| **Apple subtitle** | Reflection without advice |
-| **Apple promo text** | Think more clearly without more advice. Wisewave is a quiet reflection space—no coaching, no takeover. Come back when your thinking feels crowded. |
-| **Apple description opening** | First-paragraph option **2** below |
-| **Play short** | Short description option **1** below |
-| **Play full** | Full description v1 below |
+| **App Store Name** | Wisewave |
+| **Subtitle** | Reflection without advice |
+| **Promo / description** | Standard stack below |
+
+### Google Play (default)
+
+| Field | Recommended |
+|-------|-------------|
+| **App name** | Wisewave (change only if Play blocks it) |
+| **Short / full** | Standard options below |
 
 ---
 
@@ -57,7 +85,9 @@ Use unless Tree picks alternates from option lists below.
 
 | Field | Value |
 |-------|--------|
-| **Display name** | **Wisewave** (`mobile/app.json` → `expo.name`) |
+| **Brand / web** | **Wisewave** — `https://www.wisewave.io/` |
+| **iOS home label (repo today)** | **Wisewave** (`mobile/app.json` → `expo.name`) — may need US alignment (see constraint above) |
+| **US App Store Name** | **Not Wisewave** — use § US Apple names |
 | **Bundle / package** | `com.wisewave.chatkit` |
 | **Privacy** | `https://www.wisewave.io/privacy` |
 | **Marketing URL** | `https://www.wisewave.io/` |
@@ -67,9 +97,24 @@ Use unless Tree picks alternates from option lists below.
 
 ## Apple App Store Connect
 
-### Apple titles (30 characters max)
+### US Apple names (30 characters max) — use for US storefront
 
-1. **Wisewave** ← **recommended** (matches on-device label)  
+Do **not** submit **Wisewave** as the US **Name**. Pick one; confirm availability in App Store Connect before paste.
+
+1. **Quiet Reflection** ← **Nova US default** (18)  
+2. Reflect Without Advice (24)  
+3. Quiet Thinking Space (20)  
+4. Hear Your Thinking (19)  
+5. Still Reflection (16)  
+6. Clear Reflection (16)  
+
+**Avoid for US name:** Wisewave, Wave*, names that read as therapy/wellness/companion brands.
+
+### Apple titles — non-US / global (30 characters max)
+
+Use only where **Wisewave** is allowed as the store name:
+
+1. **Wisewave** (matches current `expo.name`)  
 2. Wisewave Reflection  
 3. Wisewave — Quiet Reflect  
 
@@ -91,13 +136,19 @@ Use unless Tree picks alternates from option lists below.
 
 ### Promotional text (170 characters max)
 
-**Recommended:**
+**US (no Wisewave word):**
+
+```
+Think more clearly without more advice. A quiet reflection space—no coaching, no takeover. Come back when your thinking feels crowded. wisewave.io
+```
+
+(141 characters — trim `wisewave.io` if over limit after Connect validation)
+
+**Non-US / global:**
 
 ```
 Think more clearly without more advice. Wisewave is a quiet reflection space—no coaching, no takeover. Come back when your thinking feels crowded.
 ```
-
-(148 characters)
 
 ### Keywords (100 characters max)
 
@@ -105,7 +156,40 @@ Think more clearly without more advice. Wisewave is a quiet reflection space—n
 reflection,thinking,clarity,journal,writing,decisions,judgment,quiet space,reflect
 ```
 
-### Apple description — full paste (v1)
+### Apple description — US full paste (v1)
+
+Replace **Quiet Reflection** below if Tree picks another US name. Brand link at end; adjust first line if legal prefers no “Wisewave” in body.
+
+```
+Not advice-heavy AI. Quiet Reflection gives you room to reflect and hear your own thinking—with less interference and no takeover.
+
+When other tools rush to interpret, guide, or instruct, this app reflects with restraint. You stay in charge of your judgment.
+
+WHAT THIS APP OFFERS
+• A quieter cognitive space—less noise, more room for your own thinking
+• Reflection with restraint—not rushing to interpret or redirect you
+• Clarity without takeover—see more clearly without replacing your judgment
+• A place to return when crowded thinking or clear decisions matter
+
+USE IT WHEN
+• your thoughts feel noisy and you do not want advice
+• you need space to think before deciding
+• other AI feels too eager to interpret
+• you want reflection, not instruction
+
+WHAT IT IS NOT
+Not therapy or clinical care. Not a coach, goal guide, companion, or productivity assistant. Not designed to become the strongest voice in the conversation.
+
+From the Wisewave team. Learn more: https://www.wisewave.io/
+
+SUBSCRIPTION
+Optional subscription for ongoing access. Payment charged to your Apple ID. Manage or cancel in Settings › Apple ID › Subscriptions.
+
+Privacy: https://www.wisewave.io/privacy
+Terms: https://www.wisewave.io/terms
+```
+
+### Apple description — non-US full paste (v1)
 
 Lead paragraph = **option 2** above, then:
 
