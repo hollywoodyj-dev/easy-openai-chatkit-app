@@ -3,7 +3,7 @@
 **For:** Lumen  
 **From:** Nova (pre-submission gate)  
 **Date:** 2026-05-19  
-**Copy source:** `docs/Wisewave_App_Store_and_Play_Listing_Copy_v1.md`  
+**Copy source:** `docs/Wisewave_App_Store_and_Play_Listing_Copy_v1.md` (amended per `docs/APPLE_GOOGLE_PLAY_COPY_BRIEF_V1.md` — more direct than homepage; no support framing)  
 **Upstream gates:** Homepage Final Copy v1 + Google Search SEO v1 — both **PASS WITH WATCHPOINTS**, release **clear**
 
 ## Why this pass is required (Lumen)
