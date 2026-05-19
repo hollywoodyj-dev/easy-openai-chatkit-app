@@ -17,6 +17,7 @@ const PATHS: string[] = [
   "/reflection-ai",
   "/self-reflection-app",
   "/reflection-without-advice",
+  "/quiet-reflection",
   "/journaling-alternative",
   "/about",
   "/about/founder-note",
@@ -30,6 +31,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE}${path}`,
     lastModified: now,
     changeFrequency: path === "/" ? "weekly" : "monthly",
-    priority: path === "/" ? 1 : path.startsWith("/reflection") || path.includes("journal") ? 0.85 : 0.8,
+    priority:
+      path === "/"
+        ? 1
+        : path.startsWith("/reflection") ||
+            path.includes("journal") ||
+            path === "/quiet-reflection"
+          ? 0.85
+          : 0.8,
   }));
 }

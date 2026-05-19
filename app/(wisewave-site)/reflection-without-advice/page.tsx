@@ -160,6 +160,7 @@ export default function ReflectionWithoutAdvicePage() {
         relatedHref="/reflection-ai"
         relatedLabel="Reflection AI without advice or coaching"
         extraRelatedLinks={[
+          { href: "/quiet-reflection", label: "Quiet reflection" },
           { href: "/self-reflection-app", label: "A self reflection app" },
           { href: "/journaling-alternative", label: "A journaling alternative" },
           { href: "/faq", label: "FAQ" },

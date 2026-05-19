@@ -35,6 +35,14 @@ export const WISEWAVE_WHAT_IT_IS_NOT_SEO: WisewaveMarketingSeoEntry = {
 };
 
 /** Lumen watchpoint: "calmer alternative" — keep bounded; avoid wellness/support drift in variants. */
+/** Lumen 2026-05-19: primary-term support page; concrete, not poetic. */
+export const WISEWAVE_QUIET_REFLECTION_SEO: WisewaveMarketingSeoEntry = {
+  title: "Quiet Reflection | Reflection without advice or takeover",
+  description:
+    "Quiet reflection means room to hear your own thinking—not more advice, coaching, or interference. How Wisewave fits and what it is not.",
+  canonicalPath: "/quiet-reflection",
+};
+
 export const WISEWAVE_REFLECTION_WITHOUT_ADVICE_SEO: WisewaveMarketingSeoEntry = {
   title: "Reflection Without Advice | A calmer alternative to advice-heavy AI",
   description:

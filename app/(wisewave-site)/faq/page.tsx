@@ -46,6 +46,13 @@ export default function FAQPage() {
         <p className="mt-6 text-base leading-[1.75] text-[#5c5c5c]">
           More context:{" "}
           <Link
+            href="/quiet-reflection"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            Quiet reflection
+          </Link>
+          ,{" "}
+          <Link
             href="/reflection-ai"
             className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
           >
