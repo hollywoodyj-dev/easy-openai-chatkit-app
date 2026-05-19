@@ -3,8 +3,17 @@
 **For:** Steward (App Store Connect / Play Console paste)  
 **From:** Nova  
 **Date:** 2026-05-19  
-**Gates:** Homepage Final Copy v1 — Lumen **PASS WITH WATCHPOINTS** (Apple phase cleared)  
+**Gates:** Homepage Final Copy v1 + Google Search SEO v1 — Lumen **PASS WITH WATCHPOINTS**, release **clear**  
+**Lumen QA (required before submit):** `docs/LUMEN_QA_PLAN_Wisewave_App_Store_Play_Listing_v1.md`  
 **Aligns with:** `lib/wisewave-site/wisewave-landing-copy.ts`, `https://www.wisewave.io/`
+
+## Release order (Lumen — 2026-05-19)
+
+1. **Paste / stage** this copy pack + screenshots in App Store Connect and Play Console  
+2. **Lumen QA** on platform-facing staged assets (not copy-pack-only review)  
+3. **Finalize submission** after Lumen PASS or PASS WITH WATCHPOINTS  
+
+Copy pack is directionally ready; store compression can still drift category — treat Lumen pass as a **gate**, not optional polish.
 
 ---
 
@@ -213,9 +222,11 @@ Subscribe for a quiet reflection space you can return to when clear thinking mat
 
 ---
 
-## Lumen QA — store copy pass (when pasted)
+## Lumen QA — required gate before submit
 
-After steward pastes into Connect / Play, Lumen can spot-check:
+Full plan: **`docs/LUMEN_QA_PLAN_Wisewave_App_Store_Play_Listing_v1.md`**
+
+Quick spot-check (subset):
 
 - [ ] Subtitle / short description uses **category spine**, not abstract hero alone
 - [ ] No **quieter kind of support** on store
@@ -223,8 +234,6 @@ After steward pastes into Connect / Play, Lumen can spot-check:
 - [ ] “Not therapy / not coaching” present without dominating tone
 - [ ] Screenshots match **current** build name **Wisewave** and icon
 - [ ] Privacy + terms URLs resolve
-
-Report format: append to `docs/QA_HANDOFF.md` as `Lumen (App Store / Play listing copy v1 — hosted QA)`.
 
 ---
 
@@ -234,4 +243,5 @@ Report format: append to `docs/QA_HANDOFF.md` as `Lumen (App Store / Play listin
 2. Paste **Short** + **Full** description into Play Console; confirm **App name** = **Wisewave**.
 3. Upload screenshots per caption table; feature graphic per brand handoff.
 4. Confirm privacy URL and subscription disclosures.
-5. Request Lumen store-copy pass (optional, fast) before wide release marketing push.
+5. **Request Lumen staged-asset QA** per `docs/LUMEN_QA_PLAN_Wisewave_App_Store_Play_Listing_v1.md` — **before** final submit.
+6. Submit only after Lumen **PASS** or **PASS WITH WATCHPOINTS**.
