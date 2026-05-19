@@ -1,6 +1,6 @@
 # Wisewave Google Search SEO — Implementation v1
 
-**Status:** Shipped (Nova)  
+**Status:** Shipped (Nova) — **Lumen QA closed PASS WITH WATCHPOINTS (release clear)**  
 **Date:** 2026-05-19  
 **Governance:** `docs/GOOGLE_SEARCH_SEO_BRIEF_WISEWAVE_V1.md` (Tree / Aurora)  
 **Lumen QA:** `docs/LUMEN_QA_PLAN_Wisewave_Google_Search_SEO_v1.md`  
@@ -60,9 +60,11 @@ Anchor text: See if it fits · What Wisewave is not · Reflection without advice
 
 No new medical/health schema.
 
-## Watchpoints for Lumen
+## Watchpoints (Lumen — carry forward)
 
-- Homepage hero remains softer than title/meta — intentional  
+- Homepage hero remains softer than title/meta — intentional; do not keyword-rewrite hero without evidence  
+- Softer snippet edges: **“calmer alternative”**, **“when it helps”** — monitor so they do not drift wellness/support  
+- Do not spread homepage **“quieter kind of support”** into new SEO pages or store assets  
 - SEO landings (`/reflection-ai`, etc.) not rewritten in this pass  
 - Search Console indexing lag — retest titles via view-source or Rich Results after deploy  
 

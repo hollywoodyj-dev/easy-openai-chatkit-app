@@ -6,6 +6,8 @@
 **Upstream:** `docs/GOOGLE_SEARCH_SEO_BRIEF_WISEWAVE_V1.md`  
 **Implementation:** `lib/wisewave-site/wisewave-marketing-seo-metadata.ts`, support routes, `MarketingInternalLinks`
 
+**Status (2026-05-19):** **CLOSED — PASS WITH WATCHPOINTS** (Lumen hosted QA; full notes in `docs/QA_HANDOFF.md`). **Release posture: clear.**
+
 ## QA objective
 
 Confirm search-facing changes make Wisewave easier to find for **fit users** without making Wisewave easier to **misclassify**.

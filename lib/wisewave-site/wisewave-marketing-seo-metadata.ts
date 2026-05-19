@@ -34,6 +34,7 @@ export const WISEWAVE_WHAT_IT_IS_NOT_SEO: WisewaveMarketingSeoEntry = {
   canonicalPath: "/what-it-is-not",
 };
 
+/** Lumen watchpoint: "calmer alternative" — keep bounded; avoid wellness/support drift in variants. */
 export const WISEWAVE_REFLECTION_WITHOUT_ADVICE_SEO: WisewaveMarketingSeoEntry = {
   title: "Reflection Without Advice | A calmer alternative to advice-heavy AI",
   description:
