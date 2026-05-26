@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/ai-reflection-tool",
+        destination: "/lp/ai-reflection",
+        permanent: false,
+      },
+      {
         source: "/embed",
         destination: "/chat",
         permanent: false,

@@ -10,7 +10,10 @@ export type AnalyticsEventName =
   | "start_page_view"
   | "start_page_enter_click"
   | "faq_open"
-  | "outbound_privacy_click";
+  | "outbound_privacy_click"
+  | "paid_landing_view"
+  | "paid_landing_primary_cta_click"
+  | "paid_landing_secondary_cta_click";
 
 export type AnalyticsPayload = Record<
   string,
