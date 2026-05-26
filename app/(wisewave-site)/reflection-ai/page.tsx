@@ -6,16 +6,18 @@ import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing"
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
 import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
-
-const SEO_TITLE = "Reflection AI without advice or coaching | Wisewave";
-const SEO_DESCRIPTION =
-  "Wisewave is a low-presence reflection AI for people who want clarity without advice, coaching, or companion-style AI. A quiet reflection space.";
+import { WISEWAVE_REFLECTION_AI_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import { TopicClusterHubLink } from "@/components/wisewave-site/TopicClusterHubLink";
 
 export const metadata: Metadata = {
-  title: SEO_TITLE,
-  description: SEO_DESCRIPTION,
-  alternates: { canonical: "/reflection-ai" },
-  ...wisewaveMarketingSocialMetadata(SEO_TITLE, SEO_DESCRIPTION, "/reflection-ai"),
+  title: WISEWAVE_REFLECTION_AI_SEO.title,
+  description: WISEWAVE_REFLECTION_AI_SEO.description,
+  alternates: { canonical: WISEWAVE_REFLECTION_AI_SEO.canonicalPath },
+  ...wisewaveMarketingSocialMetadata(
+    WISEWAVE_REFLECTION_AI_SEO.title,
+    WISEWAVE_REFLECTION_AI_SEO.description,
+    WISEWAVE_REFLECTION_AI_SEO.canonicalPath,
+  ),
 };
 
 const faqItems = [
@@ -50,6 +52,7 @@ export default function ReflectionAiPage() {
       <BreadcrumbJsonLd
         items={wisewaveMarketingBreadcrumbTwo(PAGE_HEADLINE, "/reflection-ai")}
       />
+      <TopicClusterHubLink context="reflection-ai" />
       <SeoLandingHero title={PAGE_HEADLINE}>
         <p>
           Wisewave is not here to guide, advise, or fix you. It reflects what you

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { REFLECTION_WITHOUT_ADVICE_PRIMARY_PATH } from "@/lib/wisewave-site/wisewave-reflection-without-advice-cluster";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { AnalyticsView } from "@/components/wisewave-site/AnalyticsView";
 import { Section } from "@/components/wisewave-site/Section";
@@ -68,6 +69,49 @@ export default function WisewaveMarketingHome() {
         </div>
       </section>
 
+      <Section title={copy.whatIsNot.sectionTitle} spacious>
+        <AnalyticsView section="what_is_not" />
+        <div className="max-w-2xl rounded-lg bg-[#f3f1ec]/80 px-5 py-6 sm:px-6 sm:py-7">
+          <p className={bodyClass}>{copy.whatIsNot.intro}</p>
+          <ul className={`mt-4 ${listClass}`}>
+            {copy.whatIsNot.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="mt-5 text-base leading-[1.8] text-[#171717]">
+            {copy.whatIsNot.shortLine}
+          </p>
+        </div>
+      </Section>
+
+      <section className="py-8 sm:py-10">
+        <div className="mx-auto w-full max-w-[44rem] px-6 sm:px-8">
+          <p className={`max-w-2xl ${bodyClass}`}>
+            Topic guide:{" "}
+            <Link
+              href={REFLECTION_WITHOUT_ADVICE_PRIMARY_PATH}
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection without advice
+            </Link>
+            {" · "}
+            <Link
+              href="/reflection-ai"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              AI reflection without advice
+            </Link>
+            {" · "}
+            <Link
+              href="/quiet-reflection"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Quiet reflection
+            </Link>
+          </p>
+        </div>
+      </section>
+
       <Section title={copy.selfRecognition.sectionTitle} spacious>
         <AnalyticsView section="self_recognition" />
         <ul className={listClass}>
@@ -96,21 +140,6 @@ export default function WisewaveMarketingHome() {
             <li key={item}>{item}</li>
           ))}
         </ul>
-      </Section>
-
-      <Section title={copy.whatIsNot.sectionTitle} spacious>
-        <AnalyticsView section="what_is_not" />
-        <div className="max-w-2xl rounded-lg bg-[#f3f1ec]/80 px-5 py-6 sm:px-6 sm:py-7">
-          <p className={bodyClass}>{copy.whatIsNot.intro}</p>
-          <ul className={`mt-4 ${listClass}`}>
-            {copy.whatIsNot.items.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <p className="mt-5 text-base leading-[1.8] text-[#171717]">
-            {copy.whatIsNot.shortLine}
-          </p>
-        </div>
       </Section>
 
       <Section title={copy.whyReturn.sectionTitle} spacious>

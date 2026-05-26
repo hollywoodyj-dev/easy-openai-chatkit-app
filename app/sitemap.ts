@@ -17,6 +17,9 @@ const PATHS: string[] = [
   "/reflection-ai",
   "/self-reflection-app",
   "/reflection-without-advice",
+  "/reflection-without-advice-vs-coaching",
+  "/what-ai-reflection-without-advice-means",
+  "/self-reflection-without-guidance",
   "/quiet-reflection",
   "/journaling-alternative",
   "/about",
@@ -34,10 +37,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority:
       path === "/"
         ? 1
-        : path.startsWith("/reflection") ||
-            path.includes("journal") ||
-            path === "/quiet-reflection"
-          ? 0.85
-          : 0.8,
+        : path === "/reflection-without-advice"
+          ? 0.9
+          : path.startsWith("/reflection") ||
+              path.includes("journal") ||
+              path === "/quiet-reflection" ||
+              path === "/what-ai-reflection-without-advice-means" ||
+              path === "/self-reflection-without-guidance"
+            ? 0.75
+            : 0.8,
   }));
 }

@@ -7,19 +7,17 @@ import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing"
 import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
 import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
-
-const SEO_TITLE = "A self reflection app for clearer thinking | Wisewave";
-const SEO_DESCRIPTION =
-  "Wisewave is a self reflection app for people who want space, not instructions. A quiet reflection space. No advice, no coaching, no companion-style AI.";
+import { WISEWAVE_SELF_REFLECTION_APP_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import { TopicClusterHubLink } from "@/components/wisewave-site/TopicClusterHubLink";
 
 export const metadata: Metadata = {
-  title: SEO_TITLE,
-  description: SEO_DESCRIPTION,
-  alternates: { canonical: "/self-reflection-app" },
+  title: WISEWAVE_SELF_REFLECTION_APP_SEO.title,
+  description: WISEWAVE_SELF_REFLECTION_APP_SEO.description,
+  alternates: { canonical: WISEWAVE_SELF_REFLECTION_APP_SEO.canonicalPath },
   ...wisewaveMarketingSocialMetadata(
-    SEO_TITLE,
-    SEO_DESCRIPTION,
-    "/self-reflection-app",
+    WISEWAVE_SELF_REFLECTION_APP_SEO.title,
+    WISEWAVE_SELF_REFLECTION_APP_SEO.description,
+    WISEWAVE_SELF_REFLECTION_APP_SEO.canonicalPath,
   ),
 };
 
@@ -58,6 +56,7 @@ export default function SelfReflectionAppPage() {
           "/self-reflection-app",
         )}
       />
+      <TopicClusterHubLink context="self-reflection-app" />
       <SeoLandingHero title={PAGE_HEADLINE}>
         <p>
           Wisewave is a self reflection app, but not in the usual sense. It does
@@ -177,11 +176,11 @@ export default function SelfReflectionAppPage() {
       <SeoLandingClosing
         lead="If you want space, not instructions, you can begin here."
         from="seo_self_reflection_app"
-        relatedHref="/journaling-alternative"
-        relatedLabel="A journaling alternative"
+        relatedHref="/reflection-without-advice"
+        relatedLabel="Reflection without advice"
         extraRelatedLinks={[
-          { href: "/reflection-without-advice", label: "Reflection without advice" },
           { href: "/reflection-ai", label: "Reflection AI without advice or coaching" },
+          { href: "/journaling-alternative", label: "A journaling alternative" },
           { href: "/faq", label: "FAQ" },
         ]}
       />

@@ -37,17 +37,34 @@ export const WISEWAVE_WHAT_IT_IS_NOT_SEO: WisewaveMarketingSeoEntry = {
 /** Lumen watchpoint: "calmer alternative" — keep bounded; avoid wellness/support drift in variants. */
 /** Lumen 2026-05-19: primary-term support page; concrete, not poetic. */
 export const WISEWAVE_QUIET_REFLECTION_SEO: WisewaveMarketingSeoEntry = {
-  title: "Quiet Reflection | Reflection without advice or takeover",
+  title: "Quiet Reflection | A quiet space for reflection without advice",
   description:
-    "Quiet reflection means room to hear your own thinking—not more advice, coaching, or interference. How Wisewave fits and what it is not.",
+    "Quiet reflection and a quiet space for reflection—not more advice or coaching. Support page; see reflection without advice for the primary topic guide.",
   canonicalPath: "/quiet-reflection",
 };
 
+/** Primary topic cluster page — reflection without advice (+ query variants). */
 export const WISEWAVE_REFLECTION_WITHOUT_ADVICE_SEO: WisewaveMarketingSeoEntry = {
-  title: "Reflection Without Advice | A calmer alternative to advice-heavy AI",
+  title: "Reflection Without Advice | Wisewave",
   description:
-    "Explore a quieter way to reflect. Wisewave helps you think more clearly without coaching, takeover, or too much advice.",
+    "Reflection without advice, reflect without advice, and AI reflection without advice — a quiet self reflection space without coaching, direction, or takeover.",
   canonicalPath: "/reflection-without-advice",
+};
+
+/** Support page — AI-intent variant; links to primary cluster URL. */
+export const WISEWAVE_REFLECTION_AI_SEO: WisewaveMarketingSeoEntry = {
+  title: "Reflection AI Without Advice | Wisewave",
+  description:
+    "Reflection AI without advice or coaching: a low-presence space for clarity. See our primary guide on reflection without advice.",
+  canonicalPath: "/reflection-ai",
+};
+
+/** Support page — app-intent variant; links to primary cluster URL. */
+export const WISEWAVE_SELF_REFLECTION_APP_SEO: WisewaveMarketingSeoEntry = {
+  title: "Self Reflection App Without Guidance | Wisewave",
+  description:
+    "A self reflection app for people who want space, not instructions. Links to our guide on reflection without advice.",
+  canonicalPath: "/self-reflection-app",
 };
 
 export const WISEWAVE_WHY_PEOPLE_COME_BACK_SEO: WisewaveMarketingSeoEntry = {
@@ -66,9 +83,12 @@ export const WISEWAVE_FAQ_SEO: WisewaveMarketingSeoEntry = {
 
 /** Calm internal links — homepage + support pages (truthful anchor text). */
 export const WISEWAVE_CORE_INTERNAL_LINKS = [
+  { href: "/reflection-without-advice", label: "Reflection without advice" },
+  { href: "/reflection-ai", label: "AI reflection without advice" },
+  { href: "/self-reflection-app", label: "Self reflection without guidance" },
+  { href: "/quiet-reflection", label: "Quiet reflection" },
   { href: "/who-its-for", label: "See if it fits" },
   { href: "/what-it-is-not", label: "What Wisewave is not" },
-  { href: "/reflection-without-advice", label: "Reflection without advice" },
   { href: "/why-people-come-back", label: "Why people come back" },
   { href: "/faq", label: "Read the FAQ" },
 ] as const;

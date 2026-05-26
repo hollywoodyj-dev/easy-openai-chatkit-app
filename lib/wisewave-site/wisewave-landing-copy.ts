@@ -1,6 +1,7 @@
 /**
  * Wisewave marketing homepage copy (English).
- * Source: Wisewave Homepage Final Copy v1 + NOVA implementation brief.
+ * Source: Wisewave Homepage Final Copy v1 + Aurora Week 1/2 boundary + conversion flow.
+ * Section order on `/` is defined in `app/(wisewave-site)/page.tsx`.
  */
 
 export type LandingCopy = {

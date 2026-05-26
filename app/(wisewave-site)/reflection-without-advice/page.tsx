@@ -60,13 +60,78 @@ export default function ReflectionWithoutAdvicePage() {
         <p>Not every thought needs advice.</p>
         <p>
           Sometimes what helps most is not more direction, but a little more
-          space.
+          space — a quiet reflection space where you can{" "}
+          <strong className="font-medium text-[#171717]">
+            reflect without advice
+          </strong>
+          .
         </p>
         <p>
           Wisewave reflects what you share without coaching, planning, or telling
-          you what to do.
+          you what to do. If you are looking for{" "}
+          <strong className="font-medium text-[#171717]">
+            AI reflection without advice
+          </strong>{" "}
+          or{" "}
+          <strong className="font-medium text-[#171717]">
+            self reflection without advice
+          </strong>
+          , this page is the primary guide to how Wisewave fits that need.
         </p>
       </SeoLandingHero>
+
+      <Section title="What reflection without advice means">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>
+            Reflection without advice means your thinking stays in front. The
+            system does not rush to interpret, instruct, or replace your
+            judgment.
+          </p>
+          <p>
+            It is not anti-help. It is a different moment: before direction is
+            useful, when you need clarity more than a next step.
+          </p>
+          <p className="text-[#171717]">
+            Quieter reflection, in this sense, is reflection with less
+            interference — not silence for its own sake.
+          </p>
+        </div>
+      </Section>
+
+      <Section title="How AI reflection without advice is different from coaching">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>
+            Coaching assumes forward motion: goals, plans, accountability, and
+            someone steering the process.
+          </p>
+          <p>
+            AI reflection without advice assumes the opposite need: room to see
+            what you already think before anything is decided for you.
+          </p>
+          <p>
+            Wisewave does not tell you what to do, optimize your life, or hold
+            you through an emotional arc. It reflects with restraint so your own
+            words stay central.
+          </p>
+        </div>
+      </Section>
+
+      <Section title="A self reflection space without pressure or direction">
+        <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
+          <p>
+            Some people want a self reflection app with prompts, frameworks, and
+            guided exercises. Others want space without guidance.
+          </p>
+          <p>
+            Wisewave is built for the second case: a self reflection space
+            without pressure to perform, improve, or follow a program.
+          </p>
+          <p className="text-[#171717]">
+            Your judgment stays central. The system steps back enough for clarity
+            to emerge on your terms.
+          </p>
+        </div>
+      </Section>
 
       <Section title="Why advice is not always what people need">
         <div className="space-y-4 text-base leading-[1.75] text-[#5c5c5c]">
@@ -128,8 +193,37 @@ export default function ReflectionWithoutAdvicePage() {
           title=""
           excludeHref="/reflection-without-advice"
         />
+        <p className="mt-6 text-base font-medium text-[#171717]">
+          Supporting guides
+        </p>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
+          <li>
+            <Link
+              href="/reflection-without-advice-vs-coaching"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Reflection without advice vs coaching
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/what-ai-reflection-without-advice-means"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              What AI reflection without advice means
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/self-reflection-without-guidance"
+              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+            >
+              Self reflection without guidance
+            </Link>
+          </li>
+        </ul>
         <p className="mt-6 text-base leading-[1.75] text-[#5c5c5c]">
-          More context:{" "}
+          Intent variants (support pages):{" "}
           <Link
             href="/reflection-ai"
             className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
@@ -145,10 +239,10 @@ export default function ReflectionWithoutAdvicePage() {
           </Link>
           ,{" "}
           <Link
-            href="/journaling-alternative"
+            href="/quiet-reflection"
             className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
           >
-            A journaling alternative
+            Quiet reflection
           </Link>
           .
         </p>
@@ -162,7 +256,6 @@ export default function ReflectionWithoutAdvicePage() {
         extraRelatedLinks={[
           { href: "/quiet-reflection", label: "Quiet reflection" },
           { href: "/self-reflection-app", label: "A self reflection app" },
-          { href: "/journaling-alternative", label: "A journaling alternative" },
           { href: "/faq", label: "FAQ" },
         ]}
       />

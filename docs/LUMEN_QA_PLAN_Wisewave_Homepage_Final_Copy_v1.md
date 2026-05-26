@@ -28,13 +28,15 @@ Homepage implements **nine sections** in this order:
 
 1. Hero — *A quieter space to hear your own thinking.*
 2. Transition — *Not every moment needs more advice.*
-3. Wisewave may fit if…
-4. What the experience offers (light 2×2, no heavy SaaS cards)
-5. Use Wisewave when…
-6. What Wisewave is not
+3. **What Wisewave is not** (early boundary — Aurora Week 1/2)
+4. Wisewave may fit if…
+5. What the experience offers (light 2×2, no heavy SaaS cards)
+6. Use Wisewave when…
 7. Why people come back (+ subscription line)
 8. Built with boundaries
 9. Frequently asked (+ link to `/faq`)
+
+Plus **Before you begin** (related reading) before FAQ.
 
 **CTAs:** `Enter Wisewave` on hero and “Why people come back” only. Secondary: `See if it fits` → `/who-its-for`. Nav: `Enter Wisewave`.
 
