@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { PaidGetAppLink } from "@/components/wisewave-site/AppStoreDownloadLinks";
 import { Section } from "@/components/wisewave-site/Section";
 import { trackEvent } from "@/lib/wisewave-analytics";
 import type { PaidLandingConfig } from "@/lib/wisewave-site/wisewave-paid-landing-copy";
 
 export function PaidLandingShell({ config }: { config: PaidLandingConfig }) {
   const startHref = `/start?from=paid_lp&lp=${encodeURIComponent(config.slug)}`;
-  const subscribeHref = `/subscribe?from=paid_lp&lp=${encodeURIComponent(config.slug)}`;
 
   useEffect(() => {
     trackEvent("paid_landing_view", {
@@ -53,23 +53,11 @@ export function PaidLandingShell({ config }: { config: PaidLandingConfig }) {
             >
               Start a reflection in your browser
             </Link>
-            <Link
-              href={subscribeHref}
-              className="inline-flex items-center justify-center rounded-full border border-[#e7e1d8] bg-transparent px-5 py-3 text-sm font-medium text-[#171717] transition hover:bg-white"
-              onClick={() =>
-                trackEvent("paid_landing_secondary_cta_click", {
-                  lp: config.slug,
-                  ad_group: config.adGroup,
-                  target: "subscribe",
-                })
-              }
-            >
-              Get the app / subscribe
-            </Link>
+            <PaidGetAppLink lp={config.slug} adGroup={config.adGroup} />
           </div>
           <p className="mt-4 text-sm leading-relaxed text-[#5c5c5c]">
-            Primary path is the web — start reflecting in your browser. App and
-            subscription are available when you want them.
+            Primary path is the web — start reflecting in your browser. Use
+            Get the app for App Store and Google Play links.
           </p>
         </div>
       </section>

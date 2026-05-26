@@ -13,7 +13,8 @@ export type AnalyticsEventName =
   | "outbound_privacy_click"
   | "paid_landing_view"
   | "paid_landing_primary_cta_click"
-  | "paid_landing_secondary_cta_click";
+  | "paid_landing_secondary_cta_click"
+  | "app_store_download_click";
 
 export type AnalyticsPayload = Record<
   string,
