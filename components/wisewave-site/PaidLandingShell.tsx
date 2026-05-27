@@ -51,13 +51,13 @@ export function PaidLandingShell({ config }: { config: PaidLandingConfig }) {
                 })
               }
             >
-              Start a reflection in your browser
+              Start a reflection
             </Link>
             <PaidGetAppLink lp={config.slug} adGroup={config.adGroup} />
           </div>
           <p className="mt-4 text-sm leading-relaxed text-[#5c5c5c]">
-            Primary path is the web — start reflecting in your browser. Use
-            Get the app for App Store and Google Play links.
+            Begin in your browser — no app required. Get the app is optional
+            (App Store or Google Play).
           </p>
         </div>
       </section>
@@ -84,7 +84,7 @@ export function PaidLandingShell({ config }: { config: PaidLandingConfig }) {
               })
             }
           >
-            Try Wisewave in your browser
+            Start a reflection
           </Link>
         </div>
       </Section>

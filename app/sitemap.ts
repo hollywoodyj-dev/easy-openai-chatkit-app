@@ -6,6 +6,7 @@ const SITE = "https://www.wisewave.io";
 const PATHS: string[] = [
   "/",
   "/start",
+  "/app",
   "/what-is-wisewave",
   "/how-it-works",
   "/who-its-for",

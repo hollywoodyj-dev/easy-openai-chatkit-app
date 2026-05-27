@@ -37,7 +37,7 @@ export const PAID_LANDING_SELF_REFLECTION: PaidLandingConfig = {
     {
       question: "What is Wisewave?",
       answer:
-        "A quiet reflection space in your browser. You write; Wisewave reflects with restraint — it does not coach, advise, or take over your process.",
+        "A quiet reflection space in your browser. You write, and Wisewave helps you see your own thinking more clearly — without advice, coaching, or direction.",
     },
     {
       question: "What is it not?",
@@ -70,14 +70,14 @@ export const PAID_LANDING_SELF_REFLECTION: PaidLandingConfig = {
 export const PAID_LANDING_AI_REFLECTION: PaidLandingConfig = {
   slug: "ai-reflection",
   adGroup: "ag2_ai_reflection",
-  headline: "AI reflection — kept simple and restrained",
+  headline: "A quieter kind of AI reflection",
   subhead:
-    "You are open to AI for reflection but may not want advice-heavy or coaching-style AI. Wisewave reflects what you write without directing you.",
+    "For people who want space to think without advice, coaching, or takeover. Wisewave works in your browser first — start with a short reflection, not another voice directing you.",
   answers: [
     {
       question: "What is Wisewave?",
       answer:
-        "Reflection AI with a low-presence stance: it mirrors and clarifies what you bring instead of pushing goals, tips, or emotional support.",
+        "AI reflection without coaching, advice, or emotional dependency. Wisewave helps you notice your own thinking instead of pushing goals, tips, or takeover.",
     },
     {
       question: "What is it not?",
@@ -117,7 +117,7 @@ export const PAID_LANDING_REFLECTION_WITHOUT_ADVICE: PaidLandingConfig = {
     {
       question: "What is Wisewave?",
       answer:
-        "A reflection space where the system stays restrained: it reflects what you share without advice, coaching, or takeover.",
+        "A reflection space that helps you reflect without advice, coaching, or takeover — with room for your own judgment.",
     },
     {
       question: "What is it not?",
