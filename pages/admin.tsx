@@ -68,6 +68,7 @@ interface ConversionTrackingData {
   primaryKpi: { event: string; count30d: number };
   catalog: ConversionCatalogEntry[];
   paidLpBreakdown: { lp: string; count: number }[];
+  pageViewBreakdown?: { path: string; count: number }[];
   recentEvents: {
     id: string;
     eventName: string;
@@ -424,6 +425,13 @@ const AdminPage: NextPage = () => {
                     <div style={styles.statLabel}>{row.lp}</div>
                     <div style={styles.statValue}>{row.count}</div>
                     <div style={styles.statSub}>paid LP events</div>
+                  </div>
+                ))}
+                {(conversion.pageViewBreakdown ?? []).map((row) => (
+                  <div key={row.path} style={styles.statCard}>
+                    <div style={styles.statLabel}>{row.path}</div>
+                    <div style={styles.statValue}>{row.count}</div>
+                    <div style={styles.statSub}>page views</div>
                   </div>
                 ))}
               </div>

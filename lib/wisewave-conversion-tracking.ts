@@ -78,6 +78,36 @@ export const CONVERSION_EVENT_CATALOG: ConversionEventCatalogEntry[] = [
     tier: "funnel",
     description: "Enter Wisewave from /start.",
   },
+  {
+    name: "page_view",
+    label: "Page view",
+    tier: "funnel",
+    description: "Marketing page load (path in event metadata).",
+  },
+  {
+    name: "homepage_view",
+    label: "Homepage view",
+    tier: "funnel",
+    description: "View of / homepage.",
+  },
+  {
+    name: "homepage_primary_cta_click",
+    label: "Homepage / nav primary CTA",
+    tier: "funnel",
+    description: "Enter Wisewave click from homepage or header nav.",
+  },
+  {
+    name: "homepage_secondary_cta_click",
+    label: "Homepage secondary CTA",
+    tier: "funnel",
+    description: "See if it fits / who-its-for link from homepage.",
+  },
+  {
+    name: "start_page_view",
+    label: "Start page view",
+    tier: "funnel",
+    description: "View of /start expectations page.",
+  },
 ];
 
 export const PERSISTED_CONVERSION_EVENT_NAMES = new Set(

@@ -25,7 +25,7 @@ export default async function handler(
   try {
     const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
-    const [counts, recent, paidLpBreakdown] = await Promise.all([
+    const [counts, recent, paidLpBreakdown, pageViewBreakdown] = await Promise.all([
       prisma.marketingConversionEvent.groupBy({
         by: ["eventName"],
         where: { createdAt: { gte: since } },
@@ -56,6 +56,17 @@ export default async function handler(
         },
         _count: { _all: true },
       }),
+      prisma.marketingConversionEvent.groupBy({
+        by: ["path"],
+        where: {
+          createdAt: { gte: since },
+          eventName: "page_view",
+          path: { not: null },
+        },
+        _count: { _all: true },
+        orderBy: { _count: { path: "desc" } },
+        take: 12,
+      }),
     ]);
 
     const countMap = new Map(
@@ -83,6 +94,12 @@ export default async function handler(
         .filter((row) => row.lp)
         .map((row) => ({
           lp: row.lp,
+          count: row._count._all,
+        })),
+      pageViewBreakdown: pageViewBreakdown
+        .filter((row) => row.path)
+        .map((row) => ({
+          path: row.path,
           count: row._count._all,
         })),
       recentEvents: recent.map((row) => ({

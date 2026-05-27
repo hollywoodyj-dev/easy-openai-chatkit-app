@@ -1,6 +1,8 @@
 import { PERSISTED_CONVERSION_EVENT_NAMES } from "@/lib/wisewave-conversion-tracking";
 
 export type AnalyticsEventName =
+  | "page_view"
+  | "homepage_view"
   | "homepage_primary_cta_click"
   | "homepage_secondary_cta_click"
   | "section_view"
@@ -55,7 +57,10 @@ function persistConversionBeacon(
           : undefined,
     platform:
       typeof payload.platform === "string" ? payload.platform : undefined,
-    path: window.location.pathname,
+    path:
+      typeof payload.path === "string"
+        ? payload.path
+        : window.location.pathname,
     metadata: payload,
   };
 
@@ -97,7 +102,8 @@ export function trackEvent(
 
   if (
     name === "paid_landing_primary_cta_click" ||
-    name === "start_page_enter_click"
+    name === "start_page_enter_click" ||
+    name === "homepage_primary_cta_click"
   ) {
     persistConversionBeacon("web_cta_click", {
       ...payload,

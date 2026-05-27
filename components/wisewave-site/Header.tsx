@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { NavEnterLink } from "@/components/wisewave-site/NavEnterLink";
 
 const navItems = [
   { href: "/how-it-works", label: "How it works" },
@@ -36,12 +37,9 @@ export function WisewaveSiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/login?from=nav"
+        <NavEnterLink
           className="hidden rounded-full border border-[#e7e1d8] bg-transparent px-4 py-2 text-sm font-medium text-[#171717] transition hover:bg-[#fcfbf8] md:inline-flex"
-        >
-          Enter Wisewave
-        </Link>
+        />
       </div>
       <nav
         aria-label="Mobile"
@@ -56,12 +54,10 @@ export function WisewaveSiteHeader() {
             {item.label}
           </Link>
         ))}
-        <Link
-          href="/login?from=nav"
+        <NavEnterLink
+          mobile
           className="shrink-0 rounded-full border border-[#e7e1d8] bg-transparent px-4 py-2 text-sm font-medium text-[#171717] transition hover:bg-[#fcfbf8]"
-        >
-          Enter Wisewave
-        </Link>
+        />
       </nav>
     </header>
   );

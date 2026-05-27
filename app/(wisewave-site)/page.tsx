@@ -5,6 +5,7 @@ import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { AnalyticsView } from "@/components/wisewave-site/AnalyticsView";
 import { Section } from "@/components/wisewave-site/Section";
 import { TrackButton } from "@/components/wisewave-site/TrackButton";
+import { TrackLink } from "@/components/wisewave-site/TrackLink";
 import { wisewaveLandingCopy as copy } from "@/lib/wisewave-site/wisewave-landing-copy";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 import { WISEWAVE_HOME_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
@@ -48,12 +49,14 @@ export default function WisewaveMarketingHome() {
               >
                 {copy.hero.ctaPrimary}
               </TrackButton>
-              <Link
+              <TrackLink
                 href="/who-its-for"
                 className="text-sm text-[#5c5c5c] underline decoration-[#e7e1d8] underline-offset-4 transition hover:text-[#171717] hover:decoration-[#171717]"
+                eventName="homepage_secondary_cta_click"
+                eventPayload={{ location: "hero" }}
               >
                 {copy.hero.ctaSecondary}
-              </Link>
+              </TrackLink>
             </div>
           </div>
         </div>
