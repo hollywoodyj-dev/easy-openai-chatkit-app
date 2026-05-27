@@ -60,7 +60,7 @@ export const wisewaveLandingCopy: LandingCopy = {
   hero: {
     headline: "A quieter space to hear your own thinking.",
     subheadline:
-      "Wisewave reflects with restraint, so you can see more clearly without being guided, coached, or taken over.",
+      "You get room to notice what you already think—without advice, coaching, or something else taking the lead.",
     ctaPrimary: "Enter Wisewave",
     ctaSecondary: "See if it fits",
   },
@@ -89,11 +89,11 @@ export const wisewaveLandingCopy: LandingCopy = {
         body: "Less pressure, less noise, more room for your own thinking to come forward.",
       },
       {
-        title: "Reflection with restraint",
+        title: "Room for what you bring",
         body: "Wisewave does not rush to interpret, expand, or redirect what you say.",
       },
       {
-        title: "Clarity without takeover",
+        title: "Clearer thinking, still yours",
         body: "It helps you see more clearly without replacing your judgment.",
       },
       {
@@ -132,7 +132,7 @@ export const wisewaveLandingCopy: LandingCopy = {
     sectionTitle: "Why people come back",
     body: [
       "People do not return to Wisewave for more stimulation or more system activity.",
-      "They return because some moments need a quieter kind of support:",
+      "They return because some moments need more room—not another voice in the room:",
     ],
     items: [
       "before decisions that require clear judgment",
