@@ -278,3 +278,22 @@ model HObservationReviewLog {
   reasonShort               String @map("reason_short") @db.Text
   notesOptional             String? @map("notes_optional") @db.Text
 }
+
+/// Marketing / paid-search conversion events (admin review + funnel counts).
+model MarketingConversionEvent {
+  id        String   @id @default(cuid())
+  eventName String   @map("event_name")
+  userId    String?  @map("user_id")
+  sessionId String?  @map("session_id")
+  source    String?
+  lp        String?
+  adGroup   String?  @map("ad_group")
+  platform  String?
+  path      String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventName, createdAt])
+  @@index([createdAt])
+  @@map("marketing_conversion_events")
+}

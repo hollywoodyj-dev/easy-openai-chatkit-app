@@ -1,6 +1,7 @@
 import Script from "next/script";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { GoogleAnalytics } from "@/components/wisewave-site/GoogleAnalytics";
 import { wisewaveDefaultShareImage } from "@/lib/wisewave-site/wisewave-default-share-image";
 
 export const metadata: Metadata = {
@@ -81,7 +82,10 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className="antialiased min-h-[100dvh] bg-white">{children}</body>
+      <body className="antialiased min-h-[100dvh] bg-white">
+        <GoogleAnalytics />
+        {children}
+      </body>
     </html>
   );
 }

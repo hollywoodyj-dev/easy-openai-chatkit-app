@@ -2,6 +2,7 @@ import { useState, FormEvent, useEffect } from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import { trackEvent } from "@/lib/wisewave-analytics";
 import { useRouter } from "next/router";
 
 /** Bing / SEO hygiene: descriptive document title (overrides short default in `_app`). */
@@ -70,6 +71,9 @@ const LoginPage: NextPage = () => {
         return;
       }
       const isAdmin = Boolean(data?.isAdmin);
+      if (mode === "signup") {
+        trackEvent("signup_completed", { source: "email_register" });
+      }
       const target = isAdmin ? "/admin" : "/chat";
       await router.replace(`${target}?token=${encodeURIComponent(token)}`);
     } catch {

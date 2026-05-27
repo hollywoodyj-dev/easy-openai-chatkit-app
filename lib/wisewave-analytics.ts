@@ -1,3 +1,5 @@
+import { PERSISTED_CONVERSION_EVENT_NAMES } from "@/lib/wisewave-conversion-tracking";
+
 export type AnalyticsEventName =
   | "homepage_primary_cta_click"
   | "homepage_secondary_cta_click"
@@ -14,7 +16,13 @@ export type AnalyticsEventName =
   | "paid_landing_view"
   | "paid_landing_primary_cta_click"
   | "paid_landing_secondary_cta_click"
-  | "app_store_download_click";
+  | "app_store_download_click"
+  | "signup_completed"
+  | "first_reflection_started"
+  | "first_reflection_completed"
+  | "subscription_completed"
+  | "checkout_started"
+  | "web_cta_click";
 
 export type AnalyticsPayload = Record<
   string,
@@ -28,9 +36,42 @@ declare global {
   }
 }
 
+function persistConversionBeacon(
+  name: string,
+  payload: AnalyticsPayload,
+): void {
+  if (!PERSISTED_CONVERSION_EVENT_NAMES.has(name)) return;
+  if (typeof window === "undefined") return;
+
+  const body = {
+    eventName: name,
+    source: typeof payload.source === "string" ? payload.source : undefined,
+    lp: typeof payload.lp === "string" ? payload.lp : undefined,
+    adGroup:
+      typeof payload.ad_group === "string"
+        ? payload.ad_group
+        : typeof payload.adGroup === "string"
+          ? payload.adGroup
+          : undefined,
+    platform:
+      typeof payload.platform === "string" ? payload.platform : undefined,
+    path: window.location.pathname,
+    metadata: payload,
+  };
+
+  void fetch("/api/marketing/conversion-event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    keepalive: true,
+  }).catch(() => {
+    /* best-effort */
+  });
+}
+
 export function trackEvent(
   name: AnalyticsEventName,
-  payload: AnalyticsPayload = {}
+  payload: AnalyticsPayload = {},
 ) {
   if (typeof window === "undefined") return;
 
@@ -46,15 +87,27 @@ export function trackEvent(
 
   if (typeof window.gtag === "function") {
     window.gtag("event", name, flat);
-    return;
-  }
-
-  if (Array.isArray(window.dataLayer)) {
+  } else if (Array.isArray(window.dataLayer)) {
     window.dataLayer.push({ event: name, ...flat });
-    return;
+  } else if (process.env.NODE_ENV !== "production") {
+    console.info("[analytics]", name, flat);
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    console.info("[analytics]", name, flat);
+  persistConversionBeacon(name, payload);
+
+  if (
+    name === "paid_landing_primary_cta_click" ||
+    name === "start_page_enter_click"
+  ) {
+    persistConversionBeacon("web_cta_click", {
+      ...payload,
+      web_cta_source: name,
+    });
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "web_cta_click", {
+        ...flat,
+        web_cta_source: name,
+      });
+    }
   }
 }

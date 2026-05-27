@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { verifyUserToken } from "@/lib/auth";
 import { SUBSCRIPTION_PLANS, type PlanId } from "@/lib/subscription-plans";
+import { recordConversionEvent } from "@/lib/record-conversion-event";
 
 const PAYPAL_API_BASE =
   process.env.PAYPAL_SANDBOX === "true"
@@ -124,6 +125,14 @@ export default async function handler(
         },
       });
     }
+
+    void recordConversionEvent({
+      eventName: "subscription_completed",
+      userId: user.id,
+      source: "stripe_web_paypal",
+      path: "/api/subscription/capture-paypal",
+      metadata: { plan: planId },
+    });
 
     return res.status(200).json({
       success: true,

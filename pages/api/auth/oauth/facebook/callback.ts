@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { signUserToken } from "@/lib/auth";
+import { recordConversionEvent } from "@/lib/record-conversion-event";
 
 /**
  * Facebook OAuth callback handler
@@ -136,6 +137,13 @@ export default async function handler(
             take: 1,
           },
         },
+      });
+
+      void recordConversionEvent({
+        eventName: "signup_completed",
+        userId: user.id,
+        source: "oauth_facebook",
+        path: "/api/auth/oauth/facebook/callback",
       });
     }
 

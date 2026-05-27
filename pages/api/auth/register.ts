@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, signUserToken } from "@/lib/auth";
 import { updateUserCountryFromRequest } from "@/lib/geoip";
+import { recordConversionEvent } from "@/lib/record-conversion-event";
 
 export default async function handler(
   req: NextApiRequest,
@@ -74,6 +75,13 @@ export default async function handler(
 
     // Best-effort: set user.country based on signup IP.
     await updateUserCountryFromRequest(user.id, req);
+
+    void recordConversionEvent({
+      eventName: "signup_completed",
+      userId: user.id,
+      source: "email_register",
+      path: "/api/auth/register",
+    });
 
     return res.status(201).json({
       token,

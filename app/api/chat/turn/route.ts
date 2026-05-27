@@ -6,6 +6,7 @@ import {
   phase4NarrowReflectiveCarveOut,
 } from "@/lib/phase4-user-turn-admissible";
 import { resolveChatUserId } from "@/lib/chat-identity";
+import { recordConversionEvent } from "@/lib/record-conversion-event";
 import { verifyUserToken } from "@/lib/auth";
 import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
 import {
@@ -1975,6 +1976,32 @@ export async function POST(request: Request) {
       phase: "assistant",
       success: true,
     });
+
+    void (async () => {
+      const priorUserTurns = await prisma.message.count({
+        where: {
+          userId,
+          role: "user",
+          id: { not: userMsg.id },
+        },
+      });
+      if (priorUserTurns > 0) return;
+
+      await recordConversionEvent({
+        eventName: "first_reflection_started",
+        userId,
+        sessionId,
+        source: "chat_turn",
+        path: "/api/chat/turn",
+      });
+      await recordConversionEvent({
+        eventName: "first_reflection_completed",
+        userId,
+        sessionId,
+        source: "chat_turn",
+        path: "/api/chat/turn",
+      });
+    })();
   } catch (e) {
     console.error("[chat/turn] assistant message save failed", e);
     console.debug("[ticket7][chat/turn] message_save", {

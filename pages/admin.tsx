@@ -52,6 +52,35 @@ interface AdminStats {
   generatedAt: string;
 }
 
+interface ConversionCatalogEntry {
+  name: string;
+  label: string;
+  tier: string;
+  description: string;
+  count30d: number;
+}
+
+interface ConversionTrackingData {
+  windowDays: number;
+  generatedAt: string;
+  ga4Configured: boolean;
+  ga4MeasurementId: string | null;
+  primaryKpi: { event: string; count30d: number };
+  catalog: ConversionCatalogEntry[];
+  paidLpBreakdown: { lp: string; count: number }[];
+  recentEvents: {
+    id: string;
+    eventName: string;
+    userId: string | null;
+    source: string | null;
+    lp: string | null;
+    adGroup: string | null;
+    platform: string | null;
+    path: string | null;
+    createdAt: string;
+  }[];
+}
+
 const AdminPage: NextPage = () => {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -60,6 +89,10 @@ const AdminPage: NextPage = () => {
   const [clearingUserId, setClearingUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [conversion, setConversion] = useState<ConversionTrackingData | null>(
+    null,
+  );
+  const [conversionError, setConversionError] = useState<string | null>(null);
 
   const token =
     typeof router.query.token === "string" ? router.query.token : "";
@@ -83,16 +116,12 @@ const AdminPage: NextPage = () => {
     setError(null);
     (async () => {
       try {
-        const [usersRes, statsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/admin/users`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch(`${API_BASE}/api/admin/stats`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const authHeaders = { Authorization: `Bearer ${token}` };
+        const [usersRes, statsRes, conversionRes] = await Promise.all([
+          fetch(`${API_BASE}/api/admin/users`, { headers: authHeaders }),
+          fetch(`${API_BASE}/api/admin/stats`, { headers: authHeaders }),
+          fetch(`${API_BASE}/api/admin/conversion-tracking`, {
+            headers: authHeaders,
           }),
         ]);
 
@@ -113,6 +142,18 @@ const AdminPage: NextPage = () => {
           return;
         }
         setStats(statsData as AdminStats);
+
+        const conversionData = await conversionRes.json().catch(() => ({}));
+        if (!conversionRes.ok) {
+          setConversion(null);
+          setConversionError(
+            (conversionData.error as string) ||
+              "Failed to load conversion tracking",
+          );
+        } else {
+          setConversion(conversionData as ConversionTrackingData);
+          setConversionError(null);
+        }
       } catch {
         setError("Network error while loading admin data");
       } finally {
@@ -343,6 +384,112 @@ const AdminPage: NextPage = () => {
               .join(", ")}
           </p>
         )}
+
+        <section style={styles.trackingSection}>
+          <h2 style={styles.trackingTitle}>Conversion tracking (last 30 days)</h2>
+          {conversionError && (
+            <p style={styles.error}>{conversionError}</p>
+          )}
+          {conversion && (
+            <>
+              <p style={styles.text}>
+                GA4:{" "}
+                {conversion.ga4Configured ? (
+                  <>
+                    configured (<code style={styles.inlineCode}>
+                      {conversion.ga4MeasurementId}
+                    </code>
+                    )
+                  </>
+                ) : (
+                  <strong>not configured</strong>
+                )}{" "}
+                — set <code style={styles.inlineCode}>
+                  NEXT_PUBLIC_GA_MEASUREMENT_ID
+                </code>{" "}
+                on Vercel for client events.
+              </p>
+              <div style={styles.statsRow}>
+                <div style={styles.statCard}>
+                  <div style={styles.statLabel}>Primary KPI</div>
+                  <div style={styles.statValue}>
+                    {conversion.primaryKpi.count30d}
+                  </div>
+                  <div style={styles.statSub}>
+                    {conversion.primaryKpi.event}
+                  </div>
+                </div>
+                {conversion.paidLpBreakdown.map((row) => (
+                  <div key={row.lp} style={styles.statCard}>
+                    <div style={styles.statLabel}>{row.lp}</div>
+                    <div style={styles.statValue}>{row.count}</div>
+                    <div style={styles.statSub}>paid LP events</div>
+                  </div>
+                ))}
+              </div>
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Event</th>
+                      <th style={styles.th}>Tier</th>
+                      <th style={styles.th}>30d count</th>
+                      <th style={styles.th}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {conversion.catalog.map((entry) => (
+                      <tr key={entry.name}>
+                        <td style={styles.td}>
+                          <span style={styles.mono}>{entry.name}</span>
+                        </td>
+                        <td style={styles.td}>{entry.tier}</td>
+                        <td style={styles.td}>{entry.count30d}</td>
+                        <td style={styles.td}>{entry.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <h3 style={styles.trackingSubtitle}>Recent events</h3>
+              <div style={styles.tableWrapper}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>When</th>
+                      <th style={styles.th}>Event</th>
+                      <th style={styles.th}>Source</th>
+                      <th style={styles.th}>LP / ad group</th>
+                      <th style={styles.th}>Path</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {conversion.recentEvents.map((ev) => (
+                      <tr key={ev.id}>
+                        <td style={styles.td}>
+                          {new Date(ev.createdAt).toLocaleString()}
+                        </td>
+                        <td style={styles.td}>
+                          <span style={styles.mono}>{ev.eventName}</span>
+                        </td>
+                        <td style={styles.td}>{ev.source ?? "—"}</td>
+                        <td style={styles.td}>
+                          {[ev.lp, ev.adGroup].filter(Boolean).join(" · ") ||
+                            "—"}
+                        </td>
+                        <td style={styles.td}>{ev.path ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {!conversion && !conversionError && loading && (
+            <p style={styles.text}>Loading conversion data…</p>
+          )}
+        </section>
+
         <p style={styles.text}>
           Below is the full user list with their latest subscription. You can
           update status and active-until date. For App Store subscriptions,
@@ -710,6 +857,23 @@ const styles = {
     marginTop: 2,
     fontSize: 12,
     color: "#4A5568",
+  },
+  trackingSection: {
+    marginBottom: 24,
+    paddingTop: 8,
+    borderTop: "1px solid #E2E8F0",
+  },
+  trackingTitle: {
+    margin: "0 0 12px",
+    fontSize: 18,
+    fontWeight: 500,
+    color: "#2D3748",
+  },
+  trackingSubtitle: {
+    margin: "16px 0 8px",
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#2D3748",
   },
 };
 

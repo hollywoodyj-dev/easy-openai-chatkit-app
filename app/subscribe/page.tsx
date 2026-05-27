@@ -4,6 +4,7 @@ import { useCallback, Suspense, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { SUBSCRIPTION_PLANS, type PlanId } from "@/lib/subscription-plans";
+import { trackEvent } from "@/lib/wisewave-analytics";
 
 const API_BASE = typeof window !== "undefined" ? window.location.origin : "";
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
@@ -24,6 +25,16 @@ function SubscribeContent() {
   const [error, setError] = useState<string | null>(null);
   const paypalMonthlyRendered = useRef(false);
   const paypalYearlyRendered = useRef(false);
+  const checkoutTracked = useRef(false);
+
+  useEffect(() => {
+    if (!token || checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    trackEvent("checkout_started", {
+      source: "subscribe_page",
+      path: "/subscribe",
+    });
+  }, [token]);
 
   const isEmbedMobile = Boolean(
     typeof window !== "undefined" &&
