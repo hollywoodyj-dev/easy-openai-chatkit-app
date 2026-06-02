@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { NavEnterLink } from "@/components/wisewave-site/NavEnterLink";
+import { isPaidLpPath } from "@/lib/wisewave-site/is-paid-lp-path";
 
 const navItems = [
   { href: "/how-it-works", label: "How it works" },
@@ -9,12 +13,19 @@ const navItems = [
 ];
 
 export function WisewaveSiteHeader() {
+  const pathname = usePathname();
+  const showInnerpro = isPaidLpPath(pathname);
+
   return (
     <header className="border-b border-[#e7e1d8] bg-[#f7f5f1]/95 backdrop-blur-sm">
       <div className="mx-auto flex min-h-16 w-full max-w-[51rem] items-center justify-between gap-6 px-6 py-4 sm:px-8">
         <Link
           href="/"
-          className="inline-flex items-center"
+          className={
+            showInnerpro
+              ? "inline-flex w-fit flex-col items-stretch"
+              : "inline-flex items-center"
+          }
           aria-label="Wisewave home"
         >
           <Image
@@ -25,6 +36,11 @@ export function WisewaveSiteHeader() {
             className="h-auto w-[140px] object-contain sm:w-[172px]"
             priority
           />
+          {showInnerpro ? (
+            <span className="mt-1 text-right text-[11px] tracking-[0.08em] text-[#7b746b]">
+              by Innerpro
+            </span>
+          ) : null}
         </Link>
         <nav aria-label="Primary" className="hidden gap-6 md:flex">
           {navItems.map((item) => (

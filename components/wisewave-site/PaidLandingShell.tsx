@@ -21,7 +21,9 @@ export function PaidLandingShell({ config }: { config: PaidLandingConfig }) {
     <>
       <section className="py-12 sm:py-16">
         <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
-          <p className="text-sm tracking-[0.02em] text-[#5c5c5c]">Wisewave</p>
+          <p className="text-sm tracking-[0.02em] text-[#5c5c5c]">
+            Wisewave <span className="text-[#7b746b]">by Innerpro</span>
+          </p>
           <h1 className="mt-3 text-4xl font-medium leading-tight tracking-[-0.03em] text-[#171717] sm:text-5xl">
             {config.headline}
           </h1>
