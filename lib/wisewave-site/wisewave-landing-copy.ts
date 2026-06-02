@@ -58,7 +58,7 @@ export type LandingCopy = {
 
 export const wisewaveLandingCopy: LandingCopy = {
   hero: {
-    headline: "A quieter space to hear your own thinking.",
+    headline: "A quieter space to hear your own thinking",
     subheadline:
       "You get room to notice what you already think—without advice, coaching, or something else taking the lead.",
     ctaPrimary: "Enter Wisewave",

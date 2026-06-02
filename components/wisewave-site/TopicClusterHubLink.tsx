@@ -27,11 +27,7 @@ export function TopicClusterHubLink({
           >
             Reflection without advice
           </Link>
-          <span className="text-[#5c5c5c]">
-            {" "}
-            — reflect without advice, AI reflection without advice, and self
-            reflection without pressure or direction.
-          </span>
+          <span className="text-[#5c5c5c]"> — the primary guide on this topic.</span>
         </p>
       </div>
     </div>

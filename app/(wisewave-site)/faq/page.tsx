@@ -10,6 +10,7 @@ import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-mar
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 import { WISEWAVE_FAQ_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
 import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
+import { WISEWAVE_FAQ_INTERNAL_LINKS } from "@/lib/wisewave-site/wisewave-week3-page-internal-links";
 
 export const metadata: Metadata = {
   title: WISEWAVE_FAQ_SEO.title,
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 /** Visible PageHero H1 — same string as BreadcrumbList leaf `name`. */
-const PAGE_HEADLINE = "FAQ";
+const PAGE_HEADLINE = "Frequently asked questions";
 
 export default function FAQPage() {
   return (
@@ -34,7 +35,7 @@ export default function FAQPage() {
       />
       <PageHero
         title={PAGE_HEADLINE}
-        body="Short, boundary-safe answers: what Wisewave is, what it is not, and a few practical limits—without expanding what the product promises."
+        body="Direct answers about what Wisewave is, what it is not, who it fits, and where its limits are—without therapy, coaching, or companion framing."
       />
       <section className="pb-6 pt-0 sm:pb-8">
         <div className="mx-auto w-full max-w-[48rem] px-6 sm:px-8">
@@ -42,35 +43,18 @@ export default function FAQPage() {
         </div>
       </section>
       <Section title="Related reading">
-        <MarketingInternalLinks title="" excludeHref="/faq" />
+        <MarketingInternalLinks
+          title=""
+          excludeHref="/faq"
+          links={WISEWAVE_FAQ_INTERNAL_LINKS}
+        />
         <p className="mt-6 text-base leading-[1.75] text-[#5c5c5c]">
-          More context:{" "}
+          Comparison:{" "}
           <Link
-            href="/quiet-reflection"
+            href="/reflection-without-advice-vs-coaching"
             className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
           >
-            Quiet reflection
-          </Link>
-          ,{" "}
-          <Link
-            href="/reflection-ai"
-            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-          >
-            Reflection AI without advice or coaching
-          </Link>
-          ,{" "}
-          <Link
-            href="/self-reflection-app"
-            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-          >
-            A self reflection app
-          </Link>
-          ,{" "}
-          <Link
-            href="/journaling-alternative"
-            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-          >
-            A journaling alternative
+            Reflection without advice vs coaching
           </Link>
           .
         </p>

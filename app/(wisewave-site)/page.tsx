@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { REFLECTION_WITHOUT_ADVICE_PRIMARY_PATH } from "@/lib/wisewave-site/wisewave-reflection-without-advice-cluster";
 import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { AnalyticsView } from "@/components/wisewave-site/AnalyticsView";
 import { Section } from "@/components/wisewave-site/Section";
@@ -10,6 +9,7 @@ import { wisewaveLandingCopy as copy } from "@/lib/wisewave-site/wisewave-landin
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 import { WISEWAVE_HOME_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
 import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
+import { WISEWAVE_HOME_INTERNAL_LINKS } from "@/lib/wisewave-site/wisewave-week3-page-internal-links";
 
 const listClass =
   "list-disc space-y-3 pl-5 text-base leading-[1.8] text-[#5c5c5c] marker:text-[#9a9a9a]";
@@ -90,27 +90,17 @@ export default function WisewaveMarketingHome() {
       <section className="py-8 sm:py-10">
         <div className="mx-auto w-full max-w-[44rem] px-6 sm:px-8">
           <p className={`max-w-2xl ${bodyClass}`}>
-            Topic guide:{" "}
-            <Link
-              href={REFLECTION_WITHOUT_ADVICE_PRIMARY_PATH}
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-            {" · "}
-            <Link
-              href="/reflection-ai"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              AI reflection without advice
-            </Link>
-            {" · "}
-            <Link
-              href="/quiet-reflection"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Quiet reflection
-            </Link>
+            {WISEWAVE_HOME_INTERNAL_LINKS.map((item, index) => (
+              <span key={item.href}>
+                {index > 0 ? " · " : null}
+                <Link
+                  href={item.href}
+                  className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+                >
+                  {item.label}
+                </Link>
+              </span>
+            ))}
           </p>
         </div>
       </section>
@@ -190,7 +180,7 @@ export default function WisewaveMarketingHome() {
       </Section>
 
       <Section title="Before you begin" spacious>
-        <MarketingInternalLinks />
+        <MarketingInternalLinks links={WISEWAVE_HOME_INTERNAL_LINKS} />
       </Section>
 
       <Section title={copy.faq.sectionTitle} spacious>

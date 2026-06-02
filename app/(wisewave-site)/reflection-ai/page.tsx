@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
@@ -7,7 +6,9 @@ import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
 import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 import { WISEWAVE_REFLECTION_AI_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
 import { TopicClusterHubLink } from "@/components/wisewave-site/TopicClusterHubLink";
+import { WISEWAVE_REFLECTION_AI_INTERNAL_LINKS } from "@/lib/wisewave-site/wisewave-week3-page-internal-links";
 
 export const metadata: Metadata = {
   title: WISEWAVE_REFLECTION_AI_SEO.title,
@@ -19,29 +20,6 @@ export const metadata: Metadata = {
     WISEWAVE_REFLECTION_AI_SEO.canonicalPath,
   ),
 };
-
-const faqItems = [
-  {
-    question: "Is Wisewave an AI coach?",
-    answer:
-      "No. Wisewave does not give advice, direction, goals, or action plans.",
-  },
-  {
-    question: "Is Wisewave therapy?",
-    answer:
-      "No. Wisewave is not therapy, diagnosis, treatment, or crisis support.",
-  },
-  {
-    question: "Is Wisewave an AI journal?",
-    answer:
-      "Not exactly. It can support reflection, but it is not a prompt-driven journaling tool.",
-  },
-  {
-    question: "What does Wisewave actually do?",
-    answer:
-      "It reflects what you share in a restrained way, so you can see your own thoughts more clearly.",
-  },
-];
 
 /** Visible hero H1 — same string in BreadcrumbList leaf `name`. */
 const PAGE_HEADLINE = "Reflection AI without taking over";
@@ -131,22 +109,12 @@ export default function ReflectionAiPage() {
         </div>
       </Section>
 
-      <Section title="Who it is for">
-        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
-          <p className="mb-4 text-base font-medium text-[#171717]">
-            Wisewave may fit if:
-          </p>
-          <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-            <li>you want space without advice</li>
-            <li>you are tired of being guided</li>
-            <li>you want reflection without companion-style AI</li>
-            <li>you want clarity without being managed</li>
-          </ul>
-        </div>
-      </Section>
-
-      <Section title="FAQ">
-        <AccordionFaq items={faqItems} />
+      <Section title="Related reading">
+        <MarketingInternalLinks
+          title=""
+          excludeHref="/reflection-ai"
+          links={WISEWAVE_REFLECTION_AI_INTERNAL_LINKS}
+        />
       </Section>
 
       <SeoLandingClosing
@@ -155,9 +123,8 @@ export default function ReflectionAiPage() {
         relatedHref="/reflection-without-advice"
         relatedLabel="Reflection without advice"
         extraRelatedLinks={[
-          { href: "/self-reflection-app", label: "A self reflection app" },
-          { href: "/journaling-alternative", label: "A journaling alternative" },
-          { href: "/faq", label: "FAQ" },
+          { href: "/how-it-works", label: "How Wisewave works" },
+          { href: "/what-it-is-not", label: "What Wisewave is not" },
         ]}
       />
     </>

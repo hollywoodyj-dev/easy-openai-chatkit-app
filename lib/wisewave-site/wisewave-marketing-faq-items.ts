@@ -8,6 +8,16 @@ export type WisewaveMarketingFaqItem = {
 /** WISEWAVE_FAQ_BOUNDARY_LINES_v1 (primary + secondary) + minimal operational lines. */
 export const WISEWAVE_MARKETING_FAQ_ITEMS: readonly WisewaveMarketingFaqItem[] = [
   {
+    question: "What is Wisewave?",
+    answer:
+      "Wisewave is a quiet reflection space in your browser. You write what is on your mind; Wisewave reflects it back lightly so you can hear your own thinking more clearly—without advice, coaching, or direction.",
+  },
+  {
+    question: "When should I use Wisewave?",
+    answer:
+      "When your thoughts feel crowded and you want space to think—not when you want a coach, therapist, companion, or step-by-step guidance. If you mainly want clear answers or someone to organize your next moves, Wisewave may not be the right fit.",
+  },
+  {
     question: "Is Wisewave an AI journal?",
     answer:
       "Not exactly. Wisewave can support reflection, but it is not a journaling prompt engine. It reflects what you share without guiding or structuring your process.",

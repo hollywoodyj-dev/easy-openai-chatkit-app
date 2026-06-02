@@ -1,20 +1,23 @@
 import Link from "next/link";
 import { WISEWAVE_CORE_INTERNAL_LINKS } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import type { WisewavePageInternalLink } from "@/lib/wisewave-site/wisewave-week3-page-internal-links";
 
 /**
  * Low-density internal links for Google IA + fit-user navigation.
  * Omit `excludeHref` on a page to avoid self-link (e.g. on /faq).
+ * Pass `links` for Week 3 per-page anchor sets (overrides site-wide default list).
  */
 export function MarketingInternalLinks({
   title = "Related reading",
   excludeHref,
+  links: linksOverride,
 }: {
   title?: string;
   excludeHref?: string;
+  links?: readonly WisewavePageInternalLink[];
 }) {
-  const links = WISEWAVE_CORE_INTERNAL_LINKS.filter(
-    (item) => item.href !== excludeHref,
-  );
+  const source = linksOverride ?? WISEWAVE_CORE_INTERNAL_LINKS;
+  const links = source.filter((item) => item.href !== excludeHref);
   if (links.length === 0) return null;
 
   return (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
+import { WISEWAVE_WHO_ITS_FOR_INTERNAL_LINKS } from "@/lib/wisewave-site/wisewave-week3-page-internal-links";
 import { PageHero } from "@/components/wisewave-site/PageHero";
 import { Section } from "@/components/wisewave-site/Section";
 import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
@@ -75,7 +76,11 @@ export default function WhoItsForPage() {
         </div>
       </Section>
       <Section title="Related reading">
-        <MarketingInternalLinks title="" excludeHref="/who-its-for" />
+        <MarketingInternalLinks
+          title=""
+          excludeHref="/who-its-for"
+          links={WISEWAVE_WHO_ITS_FOR_INTERNAL_LINKS}
+        />
       </Section>
     </>
   );

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AccordionFaq } from "@/components/wisewave-site/AccordionFaq";
 import { BreadcrumbJsonLd } from "@/components/wisewave-site/BreadcrumbJsonLd";
 import { Section } from "@/components/wisewave-site/Section";
 import { SeoLandingClosing } from "@/components/wisewave-site/SeoLandingClosing";
@@ -8,7 +7,9 @@ import { SeoLandingHero } from "@/components/wisewave-site/SeoLandingHero";
 import { wisewaveMarketingBreadcrumbTwo } from "@/lib/wisewave-site/wisewave-marketing-breadcrumbs";
 import { wisewaveMarketingSocialMetadata } from "@/lib/wisewave-site/wisewave-marketing-social-metadata";
 import { WISEWAVE_SELF_REFLECTION_APP_SEO } from "@/lib/wisewave-site/wisewave-marketing-seo-metadata";
+import { MarketingInternalLinks } from "@/components/wisewave-site/MarketingInternalLinks";
 import { TopicClusterHubLink } from "@/components/wisewave-site/TopicClusterHubLink";
+import { WISEWAVE_SELF_REFLECTION_APP_INTERNAL_LINKS } from "@/lib/wisewave-site/wisewave-week3-page-internal-links";
 
 export const metadata: Metadata = {
   title: WISEWAVE_SELF_REFLECTION_APP_SEO.title,
@@ -20,29 +21,6 @@ export const metadata: Metadata = {
     WISEWAVE_SELF_REFLECTION_APP_SEO.canonicalPath,
   ),
 };
-
-const faqItems = [
-  {
-    question: "Is Wisewave a journaling app?",
-    answer:
-      "Not exactly. It can support reflection, but it is not a journaling prompt engine.",
-  },
-  {
-    question: "Does Wisewave tell me what to do?",
-    answer:
-      "No. It reflects what you share without directing your process.",
-  },
-  {
-    question: "Is Wisewave for personal growth coaching?",
-    answer:
-      "No. It is not a coaching or self-improvement guidance system.",
-  },
-  {
-    question: "Who is Wisewave for?",
-    answer:
-      "People who want space, not instructions — especially when their thoughts feel crowded.",
-  },
-];
 
 const PAGE_HEADLINE =
   "A self reflection app for people who do not want to be guided";
@@ -110,67 +88,33 @@ export default function SelfReflectionAppPage() {
         </div>
       </Section>
 
-      <Section title="Who this may fit">
-        <div className="rounded-2xl border border-[#e7e1d8] bg-[#fcfbf8] p-6 sm:p-8">
-          <p className="mb-4 text-base font-medium text-[#171717]">
-            Wisewave may be useful if:
-          </p>
-          <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-            <li>blank-page journaling does not quite work for you</li>
-            <li>you want support for reflection, but not guidance</li>
-            <li>you want space without advice</li>
-            <li>you do not want companion-style AI</li>
-          </ul>
-        </div>
-      </Section>
-
-      <Section title="FAQ">
-        <AccordionFaq items={faqItems} />
+      <Section title="Fit and boundaries">
+        <p className="text-base leading-[1.75] text-[#5c5c5c]">
+          This page is for the self reflection app query—space without prompts or
+          guidance. For audience fit, see{" "}
+          <Link
+            href="/who-its-for"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            who Wisewave is for
+          </Link>
+          ; for boundaries, see the{" "}
+          <Link
+            href="/faq"
+            className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
+          >
+            FAQ
+          </Link>
+          .
+        </p>
       </Section>
 
       <Section title="Related reading">
-        <ul className="list-disc space-y-2 pl-5 text-base leading-[1.75] text-[#5c5c5c]">
-          <li>
-            <Link
-              href="/"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Wisewave homepage
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/reflection-without-advice"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection without advice
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/reflection-ai"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Reflection AI without advice or coaching
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/journaling-alternative"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              A journaling alternative
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/faq"
-              className="font-medium text-[#171717] underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#171717]"
-            >
-              Full FAQ
-            </Link>
-          </li>
-        </ul>
+        <MarketingInternalLinks
+          title=""
+          excludeHref="/self-reflection-app"
+          links={WISEWAVE_SELF_REFLECTION_APP_INTERNAL_LINKS}
+        />
       </Section>
 
       <SeoLandingClosing
@@ -179,9 +123,9 @@ export default function SelfReflectionAppPage() {
         relatedHref="/reflection-without-advice"
         relatedLabel="Reflection without advice"
         extraRelatedLinks={[
-          { href: "/reflection-ai", label: "Reflection AI without advice or coaching" },
-          { href: "/journaling-alternative", label: "A journaling alternative" },
-          { href: "/faq", label: "FAQ" },
+          { href: "/journaling-alternative", label: "Journaling alternative" },
+          { href: "/who-its-for", label: "Who Wisewave is for" },
+          { href: "/faq", label: "Common questions about Wisewave" },
         ]}
       />
     </>

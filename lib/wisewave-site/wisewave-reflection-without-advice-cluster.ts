@@ -19,7 +19,7 @@ export const REFLECTION_WITHOUT_ADVICE_SUPPORT_PAGES: readonly SupportPageEntry[
     canonicalPath: "/reflection-without-advice-vs-coaching",
     title: "Reflection Without Advice vs Coaching | Wisewave",
     description:
-      "How reflection without advice differs from coaching—and when a quieter self reflection space fits better than goals and next steps.",
+      "When coaching helps versus reflection without advice—and where Wisewave fits if you want clarity without goals, accountability, or direction.",
     headline: "Reflection without advice vs coaching",
   },
   {
