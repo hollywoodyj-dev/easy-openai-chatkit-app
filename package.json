@@ -20,6 +20,8 @@
     "test:phase7-continue": "vitest run lib/wisewave-phase7-continue.test.ts",
     "test:model-router": "vitest run lib/wisewave-model-router.test.ts",
     "test:drift-linter": "vitest run lib/drift/linter.test.ts",
+    "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",
+    "semantic:check": "node scripts/semantic-governance-check.cjs",
     "phase7:evidence:probes": "node scripts/phase7-evidence-probes.cjs",
     "test:continue-reentry": "vitest run lib/wisewave-continue-reentry-turn.test.ts",
     "model-compat:report": "node scripts/model-compat-check.cjs --mode=warn",

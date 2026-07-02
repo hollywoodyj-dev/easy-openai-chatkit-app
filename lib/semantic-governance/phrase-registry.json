@@ -1,0 +1,200 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-07-03",
+  "entries": [
+    {
+      "phrase": "reflection without advice",
+      "layer": "identity",
+      "allowed_surfaces": ["*"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Identity anchor — Governance Lock v1.1"
+    },
+    {
+      "phrase": "low-presence reflection space",
+      "layer": "identity",
+      "allowed_surfaces": ["*"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Identity anchor — Governance Lock v1.1"
+    },
+    {
+      "phrase": "reflects rather than advises",
+      "layer": "identity",
+      "allowed_surfaces": ["*"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Identity anchor — Governance Lock v1.1"
+    },
+    {
+      "phrase": "not an assistant",
+      "layer": "misclassification_boundary",
+      "allowed_surfaces": ["*"],
+      "prohibited_surfaces": [],
+      "distortion_flags": ["assistant_drift"],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Misclassification boundary — not identity definition (Lock v1.1)"
+    },
+    {
+      "phrase": "not a therapist",
+      "layer": "misclassification_boundary",
+      "allowed_surfaces": ["*"],
+      "prohibited_surfaces": [],
+      "distortion_flags": ["therapy_drift"],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Misclassification boundary — not identity definition (Lock v1.1)"
+    },
+    {
+      "phrase": "not a coach",
+      "layer": "misclassification_boundary",
+      "allowed_surfaces": ["*"],
+      "prohibited_surfaces": [],
+      "distortion_flags": ["coaching_drift"],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Misclassification boundary — not identity definition (Lock v1.1)"
+    },
+    {
+      "phrase": "Reflection AI",
+      "layer": "category",
+      "allowed_surfaces": [
+        "paid_landing",
+        "seo_landing",
+        "store_metadata",
+        "comparison_pages",
+        "external_materials"
+      ],
+      "prohibited_surfaces": [
+        "homepage",
+        "onboarding",
+        "product_interior",
+        "source_of_truth_docs",
+        "internal_specs"
+      ],
+      "distortion_flags": [
+        "assistant_drift",
+        "therapy_drift",
+        "coaching_drift",
+        "productivity_drift",
+        "emotional_support_drift"
+      ],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "pairing_required": true,
+      "notes": "Category bridge — market translation only; pairing required on identity-sensitive surfaces (Lock v1.1)"
+    },
+    {
+      "phrase": "self-reflection app",
+      "layer": "discovery",
+      "allowed_surfaces": [
+        "paid_landing",
+        "seo_landing",
+        "store_metadata",
+        "comparison_pages"
+      ],
+      "prohibited_surfaces": ["homepage", "onboarding", "product_interior"],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Grandfathered live inventory — not permanent semantic endorsement (Tree 2026-07-03)"
+    },
+    {
+      "phrase": "AI reflection",
+      "layer": "discovery",
+      "allowed_surfaces": [
+        "paid_landing",
+        "seo_landing",
+        "store_metadata",
+        "comparison_pages"
+      ],
+      "prohibited_surfaces": ["homepage", "onboarding", "product_interior"],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Grandfathered live inventory — not permanent semantic endorsement (Tree 2026-07-03)"
+    },
+    {
+      "phrase": "journaling alternative",
+      "layer": "discovery",
+      "allowed_surfaces": ["seo_landing", "comparison_pages"],
+      "prohibited_surfaces": ["homepage", "onboarding", "product_interior"],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Grandfathered live inventory — not permanent semantic endorsement (Tree 2026-07-03)"
+    },
+    {
+      "phrase": "quiet reflection",
+      "layer": "discovery",
+      "allowed_surfaces": ["seo_landing", "store_metadata", "comparison_pages"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Grandfathered live inventory — not permanent semantic endorsement (Tree 2026-07-03)"
+    },
+    {
+      "phrase": "self reflection without guidance",
+      "layer": "discovery",
+      "allowed_surfaces": ["seo_landing", "comparison_pages"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Grandfathered live inventory — SEO cluster page headline (Tree 2026-07-03)"
+    },
+    {
+      "phrase": "reflection without guidance",
+      "layer": "discovery",
+      "allowed_surfaces": ["seo_landing", "comparison_pages"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "approved",
+      "review": null,
+      "notes": "Grandfathered live inventory — SEO metadata variant (Tree 2026-07-03)"
+    },
+    {
+      "phrase": "A quieter space to hear your own thinking",
+      "layer": "discovery",
+      "allowed_surfaces": ["homepage", "paid_landing", "seo_landing"],
+      "prohibited_surfaces": [],
+      "distortion_flags": [],
+      "owner": "Tree",
+      "approval_state": "escalated",
+      "review": null,
+      "notes": "Live homepage hero headline — identity-adjacent; layer classification pending Tree ruling (Nova inventory 2026-07-03)"
+    },
+    {
+      "phrase": "Reflection AI without taking over",
+      "layer": "discovery",
+      "allowed_surfaces": ["seo_landing"],
+      "prohibited_surfaces": ["homepage", "onboarding", "product_interior"],
+      "distortion_flags": ["assistant_drift", "coaching_drift"],
+      "owner": "Tree",
+      "approval_state": "escalated",
+      "review": null,
+      "notes": "Live /reflection-ai H1 — category/discovery boundary variant pending Tree ruling (Nova inventory 2026-07-03)"
+    }
+  ]
+}

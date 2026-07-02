@@ -4,7 +4,7 @@
 **Author:** Nova
 **For review by:** Tree (per Semantic Governance Lock **v1.1**, Operational status item 5)
 **Governing docs:** `docs/Wisewave_Semantic_Governance_Lock_v1.1.md`, `docs/Wisewave_Semantic_Implementation_Directive_v1.md`
-**Status:** DRAFT — awaiting Tree approval before any code is written
+**Status:** **APPROVED by Tree 2026-07-03** — infrastructure implementation in progress / complete per `docs/Wisewave_Semantic_Governance_Infrastructure_Report_2026-07-03.md`
 
 ---
 
