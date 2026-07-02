@@ -24,12 +24,20 @@ export type AnalyticsEventName =
   | "first_reflection_completed"
   | "subscription_completed"
   | "checkout_started"
+  | "payment_button_clicked"
   | "web_cta_click";
 
 export type AnalyticsPayload = Record<
   string,
   string | number | boolean | null | undefined
 >;
+
+/**
+ * Payload key carrying the user's auth JWT so the conversion beacon can be
+ * attributed to an account server-side. Stripped before anything is sent to
+ * GA4/dataLayer and never stored in event metadata.
+ */
+export const AUTH_TOKEN_PAYLOAD_KEY = "auth_token";
 
 declare global {
   interface Window {
@@ -45,8 +53,11 @@ function persistConversionBeacon(
   if (!PERSISTED_CONVERSION_EVENT_NAMES.has(name)) return;
   if (typeof window === "undefined") return;
 
+  const { [AUTH_TOKEN_PAYLOAD_KEY]: authToken, ...metadata } = payload;
+
   const body = {
     eventName: name,
+    token: typeof authToken === "string" ? authToken : undefined,
     source: typeof payload.source === "string" ? payload.source : undefined,
     lp: typeof payload.lp === "string" ? payload.lp : undefined,
     adGroup:
@@ -61,7 +72,7 @@ function persistConversionBeacon(
       typeof payload.path === "string"
         ? payload.path
         : window.location.pathname,
-    metadata: payload,
+    metadata,
   };
 
   void fetch("/api/marketing/conversion-event", {
@@ -82,6 +93,7 @@ export function trackEvent(
 
   const flat: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(payload)) {
+    if (k === AUTH_TOKEN_PAYLOAD_KEY) continue;
     if (v === null || v === undefined) continue;
     if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
       flat[k] = v;

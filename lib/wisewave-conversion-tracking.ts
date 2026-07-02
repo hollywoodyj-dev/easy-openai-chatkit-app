@@ -43,6 +43,13 @@ export const CONVERSION_EVENT_CATALOG: ConversionEventCatalogEntry[] = [
     description: "User opened subscribe flow with auth (PayPal / plan selection).",
   },
   {
+    name: "payment_button_clicked",
+    label: "Payment button clicked",
+    tier: "funnel",
+    description:
+      "PayPal button clicked on /subscribe (splits 'opened pricing' from 'attempted payment').",
+  },
+  {
     name: "app_store_download_click",
     label: "App download click",
     tier: "recommended",

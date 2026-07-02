@@ -33,6 +33,7 @@ function SubscribeContent() {
     trackEvent("checkout_started", {
       source: "subscribe_page",
       path: "/subscribe",
+      auth_token: token,
     });
   }, [token]);
 
@@ -91,6 +92,12 @@ function SubscribeContent() {
             _data: unknown,
             actions: { subscription: { create: (opts: { plan_id: string }) => Promise<unknown> } }
           ) {
+            trackEvent("payment_button_clicked", {
+              source: "paypal_subscription_button",
+              plan: "monthly",
+              path: "/subscribe",
+              auth_token: token,
+            });
             return actions.subscription.create({
               plan_id: PAYPAL_MONTHLY_PLAN_ID,
             });
@@ -126,6 +133,12 @@ function SubscribeContent() {
             _data: unknown,
             actions: { subscription: { create: (opts: { plan_id: string }) => Promise<unknown> } }
           ) {
+            trackEvent("payment_button_clicked", {
+              source: "paypal_subscription_button",
+              plan: "yearly",
+              path: "/subscribe",
+              auth_token: token,
+            });
             return actions.subscription.create({
               plan_id: PAYPAL_YEARLY_PLAN_ID,
             });
@@ -188,6 +201,12 @@ function SubscribeContent() {
         return;
       }
       setError(null);
+      trackEvent("payment_button_clicked", {
+        source: isEmbedMobile ? "embed_mobile_subscribe_button" : "paypal_order_button",
+        plan: planId,
+        path: "/subscribe",
+        auth_token: token,
+      });
 
       if (isEmbedMobile) {
         if (typeof window !== "undefined" && (window as unknown as { ReactNativeWebView?: { postMessage: (s: string) => void } }).ReactNativeWebView) {
