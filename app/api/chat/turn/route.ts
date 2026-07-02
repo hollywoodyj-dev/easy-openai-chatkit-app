@@ -1959,6 +1959,7 @@ export async function POST(request: Request) {
 
   // V1: persist assistant message after successful generation.
   let assistantMsgId: string | null = null;
+  const turnConversionEvents: string[] = [];
   try {
     const assistantMsg = await prisma.message.create({
       data: {
@@ -1977,7 +1978,9 @@ export async function POST(request: Request) {
       success: true,
     });
 
-    void (async () => {
+    // Awaited (not fire-and-forget) so the response can tell the client which
+    // conversion moments this turn crossed; the client mirrors them to GA4.
+    try {
       const priorUserTurns = await prisma.message.count({
         where: {
           userId,
@@ -1985,23 +1988,55 @@ export async function POST(request: Request) {
           id: { not: userMsg.id },
         },
       });
-      if (priorUserTurns > 0) return;
-
-      await recordConversionEvent({
-        eventName: "first_reflection_started",
-        userId,
-        sessionId,
-        source: "chat_turn",
-        path: "/api/chat/turn",
-      });
-      await recordConversionEvent({
-        eventName: "first_reflection_completed",
-        userId,
-        sessionId,
-        source: "chat_turn",
-        path: "/api/chat/turn",
-      });
-    })();
+      if (priorUserTurns === 0) {
+        await recordConversionEvent({
+          eventName: "first_reflection_started",
+          userId,
+          sessionId,
+          source: "chat_turn",
+          path: "/api/chat/turn",
+        });
+        await recordConversionEvent({
+          eventName: "first_reflection_completed",
+          userId,
+          sessionId,
+          source: "chat_turn",
+          path: "/api/chat/turn",
+        });
+        turnConversionEvents.push(
+          "first_reflection_started",
+          "first_reflection_completed",
+        );
+      } else {
+        // day_7_return: first reflective turn >= 7 days after account creation
+        // (registered accounts only; anonymous/embed ids have no User row).
+        const account = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { createdAt: true },
+        });
+        if (
+          account &&
+          Date.now() - account.createdAt.getTime() >= 7 * 24 * 60 * 60 * 1000
+        ) {
+          const existing = await prisma.marketingConversionEvent.findFirst({
+            where: { eventName: "day_7_return", userId },
+            select: { id: true },
+          });
+          if (!existing) {
+            await recordConversionEvent({
+              eventName: "day_7_return",
+              userId,
+              sessionId,
+              source: "chat_turn",
+              path: "/api/chat/turn",
+            });
+            turnConversionEvents.push("day_7_return");
+          }
+        }
+      }
+    } catch (conversionError) {
+      console.error("[chat/turn] conversion event check failed", conversionError);
+    }
   } catch (e) {
     console.error("[chat/turn] assistant message save failed", e);
     console.debug("[ticket7][chat/turn] message_save", {
@@ -3617,6 +3652,9 @@ export async function POST(request: Request) {
     },
     assistant_message: assistantContent,
     ...(assistantMsgId ? { assistant_message_id: assistantMsgId } : {}),
+    ...(turnConversionEvents.length > 0
+      ? { conversion_events: turnConversionEvents }
+      : {}),
     ...(reflectionState && { reflection_state: reflectionState }),
     ...(responseContinuityInsight && {
       continuity_insight: {

@@ -50,6 +50,13 @@ export const CONVERSION_EVENT_CATALOG: ConversionEventCatalogEntry[] = [
       "PayPal button clicked on /subscribe (splits 'opened pricing' from 'attempted payment').",
   },
   {
+    name: "day_7_return",
+    label: "Day-7 return",
+    tier: "recommended",
+    description:
+      "First reflective chat turn at least 7 days after account creation (once per user).",
+  },
+  {
     name: "app_store_download_click",
     label: "App download click",
     tier: "recommended",

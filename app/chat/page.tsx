@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { trackEvent, type AnalyticsEventName } from "@/lib/wisewave-analytics";
 import {
   CHAT_AUTH_CHECK_ENDPOINT,
   CHAT_MESSAGES_ENDPOINT,
@@ -39,6 +40,8 @@ type TurnResponseBody = {
   conversation_id?: string;
   assistant_message?: string;
   response?: AssistantPayload;
+  /** Conversion moments this turn crossed (server-persisted; client mirrors to GA4 only). */
+  conversion_events?: string[];
   phase_4?: {
     thread_legibility?: string;
     current_space_marker?: string | null;
@@ -1270,6 +1273,23 @@ function ChatContent() {
         phase3ReentryNextTurnRef.current = false;
       }
       const data = (await response.json()) as TurnResponseBody;
+      // Mirror server-recorded conversion moments into GA4 (browser session has
+      // the ads attribution context the server lacks). Beacon skipped: the DB
+      // row already exists server-side.
+      const GA4_MIRRORED_CONVERSION_EVENTS = new Set<AnalyticsEventName>([
+        "first_reflection_started",
+        "first_reflection_completed",
+        "day_7_return",
+      ]);
+      for (const eventName of data.conversion_events ?? []) {
+        if (GA4_MIRRORED_CONVERSION_EVENTS.has(eventName as AnalyticsEventName)) {
+          trackEvent(
+            eventName as AnalyticsEventName,
+            { source: "chat_turn", path: "/chat" },
+            { skipBeacon: true },
+          );
+        }
+      }
       const payload = extractAssistantPayload(data);
       if (data.phase_4) {
         setPhase4Space({

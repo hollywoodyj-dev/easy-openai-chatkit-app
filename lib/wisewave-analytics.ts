@@ -25,6 +25,7 @@ export type AnalyticsEventName =
   | "subscription_completed"
   | "checkout_started"
   | "payment_button_clicked"
+  | "day_7_return"
   | "web_cta_click";
 
 export type AnalyticsPayload = Record<
@@ -85,9 +86,19 @@ function persistConversionBeacon(
   });
 }
 
+export type TrackEventOptions = {
+  /**
+   * Skip the server persistence beacon. Use when the server already recorded
+   * this event (e.g. chat-turn conversion moments) and the client call exists
+   * only to mirror it into GA4.
+   */
+  skipBeacon?: boolean;
+};
+
 export function trackEvent(
   name: AnalyticsEventName,
   payload: AnalyticsPayload = {},
+  options: TrackEventOptions = {},
 ) {
   if (typeof window === "undefined") return;
 
@@ -110,7 +121,9 @@ export function trackEvent(
     console.info("[analytics]", name, flat);
   }
 
-  persistConversionBeacon(name, payload);
+  if (!options.skipBeacon) {
+    persistConversionBeacon(name, payload);
+  }
 
   if (
     name === "paid_landing_primary_cta_click" ||

@@ -249,3 +249,31 @@ Ad clicks **37** → paid LP views **~123** → LP primary CTA **10** → `/star
 **Governance note:** re-engagement mechanics (email, notifications, stronger Continue surfacing) are a **scope decision for Tree/Lumen** under the Phase 8/9 restraint posture — this section is evidence for that discussion, not a Nova action item.
 
 **Data hygiene:** account-level stats include steward test accounts (`lu…@example.com`, `ho…@*`, `Te…@wisewave.com`) — exclude/tag before quoting totals. `Message` table holds ~1,700 distinct user IDs vs 106 registered accounts (embed/anonymous path writes under non-account IDs); registered-account joins are the reliable slice.
+
+---
+
+## 2026-07-02 — Console setup completed (steward, with Nova assist)
+
+1. **GA4 measurement ID corrected twice:** production had been sending to `G-VBCMX20WDP` (a stream not owned by the linked wisewave property); steward switched Vercel to the property's stream ID, which turned out to be **invalid on Google's tag servers (gtag/js 404 — cause of empty Realtime)**. Steward created a **new web stream**; canonical ID is now **`G-XCZJHENLZ8`** (property **wisewave / 539278365**, matches Google Ads link). Verified live: gtag/js 200, Realtime shows traffic. Historical GA4 events before this date are split across dead/mismatched streams — treat GA4 history as starting fresh 2026-07-02; server-side DB events remain the continuous record.
+2. **Key event + Ads import:** `paid_landing_primary_cta_click` marked as GA4 key event and imported into Google Ads as primary conversion (intent-level proxy; `signup_completed` / `first_reflection_started` remain the deeper KPIs — first reflection is still DB-only, not in GA4).
+3. **Negative keywords applied to BOTH campaigns** (phrase match): `free, journal, journaling, diary, gratitude, prompts, template, planner, therapy, youper`.
+4. **Keyword watchpoint:** `"self reflection tool"` shows Eligible (Limited) / low Quality Score — partly stale (no-recent-impressions feedback loop). Hold 2 weeks post-negatives; if persistent, add "tool" phrasing to one ad headline (and optionally LP copy, via Wisewave copy review).
+
+## 2026-07-02 — Wisewave/Aurora strategic feedback received (pointer for Tree)
+
+Steward relayed a long-form Wisewave assessment of this doc: paid-search execution is sound, but the intent leakage documented above is a **category-recognition problem** — Google does not yet know what Wisewave is, so it routes journal-app demand to us. Proposal: shift from keyword competition to **semantic entity building** ("Wisewave = Reflection AI"): four-layer keyword model, Reflection AI hub IA, structured data, store-listing category language, external mentions, white paper, annual OKRs for Aurora/Nova.
+
+**Nova read:** diagnosis matches our funnel data. Partial infrastructure already shipped (site-wide Organization/WebSite JSON-LD, FAQ + Breadcrumb schema, `/reflection-without-advice` topic cluster incl. comparison pages). Genuine Nova gaps: SoftwareApplication schema, CTA unification audit, `first_reflection_started` → GA4, Day-7 retention event. **Scope note:** hub IA restructure, 100-article plan, store retitling, and "Reflection AI" vs "Reflection Without Advice" as primary category handle are **Tree + Wisewave language-lock decisions** — not started unilaterally.
+
+## 2026-07-02 — Aurora reply + measurement layer shipped (Nova)
+
+**Aurora working rules received:** Measurement → proceed immediately. Infrastructure → prepare, no semantic commitment. Meaning (identity/category/surface hierarchy) → frozen, escalated to Tree. Paid search: hold campaign settings 2 weeks; watch query quality post-negatives, LP click → first reflection, first reflection → return, and residual journal/therapy/assistant leakage.
+
+**Shipped same day (build passes):**
+
+1. **`first_reflection_started` / `first_reflection_completed` → GA4.** Turn API response now carries `conversion_events`; `/chat` client mirrors them to GA4 with the browser's ads-attribution context (`skipBeacon` — server DB row is the source of truth, no double count). Once one fires on production: mark as GA4 key event → import into Google Ads → consider swapping primary conversion from `paid_landing_primary_cta_click` to `first_reflection_started`.
+2. **`day_7_return`** — first reflective turn ≥ 7 days after account creation, once per user, registered accounts only. Directly measures the retention constraint from the per-account read (4-of-5 one-and-done). Server-persisted + GA4-mirrored.
+3. **SoftwareApplication schema prepared, NOT mounted** (`components/wisewave-site/SoftwareApplicationJsonLd.tsx`) — facts only; `applicationCategory`/`description`/`keywords` absent pending category-language lock.
+4. **CTA audit delivered** — `docs/Wisewave_CTA_Audit_2026-07-02.md` (inventory only; five verb families across surfaces; organic says "Enter Wisewave", paid says "Start a reflection"; verb decision escalated to Tree + Aurora + Wisewave).
+
+**Escalated to Tree (unchanged):** identity/category/discovery hierarchy; permitted scope of "Reflection AI"; its relationship to "Reflection Without Advice"; which public surfaces stay frozen vs bridge-term usage.

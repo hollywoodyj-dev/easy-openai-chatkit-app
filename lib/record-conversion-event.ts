@@ -11,6 +11,7 @@ const DEDUPE_ONCE_PER_USER = new Set([
   "first_reflection_completed",
   "subscription_completed",
   "checkout_started",
+  "day_7_return",
 ]);
 
 export async function recordConversionEvent(
