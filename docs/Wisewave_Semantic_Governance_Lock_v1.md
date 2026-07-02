@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-03 Sydney
 **Owner:** Tree
-**Status:** Active governance lock — received 2026-07-03 via steward
+**Status:** **Superseded by v1.1** — see `docs/Wisewave_Semantic_Governance_Lock_v1.1.md`
 **Supersedes for execution:** the shorthand `Identity → Category → Discovery` in Milestone S1 (`docs/Wisewave_Semantic_Implementation_Directive_v1.md`)
 
 ## Final governance decision

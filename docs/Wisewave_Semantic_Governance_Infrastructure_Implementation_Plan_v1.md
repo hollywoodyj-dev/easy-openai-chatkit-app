@@ -2,8 +2,8 @@
 
 **Date:** 2026-07-03
 **Author:** Nova
-**For review by:** Tree (per Semantic Governance Lock v1, Operational status item 5)
-**Governing docs:** `docs/Wisewave_Semantic_Governance_Lock_v1.md`, `docs/Wisewave_Semantic_Implementation_Directive_v1.md`
+**For review by:** Tree (per Semantic Governance Lock **v1.1**, Operational status item 5)
+**Governing docs:** `docs/Wisewave_Semantic_Governance_Lock_v1.1.md`, `docs/Wisewave_Semantic_Implementation_Directive_v1.md`
 **Status:** DRAFT — awaiting Tree approval before any code is written
 
 ---
@@ -43,17 +43,18 @@ Each entry:
 
 Field rules (mirroring the Lock exactly):
 
-- `layer`: `identity` | `category` | `discovery`
+- `layer`: `identity` | `misclassification_boundary` | `category` | `discovery`
 - `allowed_surfaces` / `prohibited_surfaces`: surface IDs from the surface map (§2); `"*"` = all
 - `distortion_flags`: subset of `assistant_drift`, `therapy_drift`, `coaching_drift`, `productivity_drift`, `emotional_support_drift`
 - `approval_state`: `approved` | `experimental` | `escalated` | `rejected`
 - `review`: required (ISO date) when `approval_state` is `experimental`; otherwise null
 - Optional `pairing_required: true` — encodes the `Reflection AI` rule: on identity-sensitive surfaces the phrase must co-occur with an identity anchor
 
-**Seed content (v1, no new phrases invented — inventory of what is already live):**
+**Seed content (v1.1, no new phrases invented — inventory of what is already live):**
 
-- **Identity anchors (approved, owner Tree):** reflection without advice · low-presence reflection space · reflects rather than advises · not an assistant · not a therapist · not a coach
-- **Category (approved bridge, pairing_required, flags: all five):** Reflection AI
+- **Identity anchors (approved, owner Tree):** reflection without advice · low-presence reflection space · reflects rather than advises
+- **Misclassification boundaries (approved, owner Tree, allowed on `*` surfaces):** not an assistant · not a therapist · not a coach — protected boundary language per Lock v1.1; **not** identity definition
+- **Category (approved bridge, pairing_required, flags: all five):** Reflection AI — market translation only, not internal product definition
 - **Discovery (existing live SEO/paid phrases, recorded as-is for classification, owner Tree, approval state `approved` because already shipped pre-Lock):** self-reflection app · AI reflection · journaling alternative · quiet reflection · a quieter space to think · less advice, more room — sourced from `lib/wisewave-site/wisewave-landing-copy.ts`, `wisewave-paid-landing-copy.ts`, `wisewave-marketing-seo-metadata.ts`, and the live page set
 
 Nova does **not** add any phrase not already shipped. If inventory turns up a live phrase
@@ -81,7 +82,10 @@ Two tiers per the Lock, with concrete route/file mapping:
 
 The map exports `getSurfaceForPath(path)` so validation (§4) can classify a source file
 automatically, plus the tier rule: identity-sensitive surfaces are identity-primary and
-enforce the pairing rule for category-layer phrases.
+enforce the pairing rule for category-layer phrases. Per Lock v1.1, acquisition-sensitive
+surfaces should retain identity anchors where constraints allow — validation may warn
+(warn-level) when an acquisition page uses category/discovery language with no identity
+anchor present, without failing the check in v1.
 
 ## 3. Distortion phrase checks
 
