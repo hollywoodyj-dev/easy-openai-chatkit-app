@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-07-05 — Semantic Governance Infrastructure v1 accepted (Tree)
+
+- **Delivery accepted:** commit `4684b17` — infrastructure only; public copy unchanged.
+- **Registry v1.0.1:** two former escalated phrases ruled — homepage hero *A quieter space to hear your own thinking* (Public Positioning, approved with watchpoint: emotional-support/wellness); `/reflection-ai` H1 *Reflection AI without taking over* (Category, approved with caution; boundary via "without taking over"). Escalated inventory = 0.
+- **Build gate:** `semantic:check` stays standalone (not `npm run build`) until observation cycle + acquisition warn review + EN stability + ZH scope/deferral.
+- **Report addendum:** `docs/Wisewave_Semantic_Governance_Infrastructure_Report_2026-07-03.md` § Addendum 2026-07-05.
+
 ## 2026-05-11 — AnYu Pilot Step 10 ↔ Wisewave ESP32 server (latency acceptance)
 
 - **AnYu forwardable spec:** `anyu-cn-website` → `docs/anyu/Step10_ESP_Server_Latency_And_Fast_Path_Spec.md` (§0–§8: trace segments, Layer 1 ack, fast path, QA script expectations; **server Risk L0–L4 canonical** — no on-device override of Risk Engine).

@@ -163,3 +163,20 @@ ZH follow-up: `docs/Wisewave_Semantic_Governance_ZH_Parity_Followup.md`
 ---
 
 *Nova — Semantic Governance Infrastructure v1 delivered under Tree approval 2026-07-03.*
+
+---
+
+## Addendum — Tree acceptance + layer rulings (2026-07-05)
+
+**Delivery accepted:** commit `4684b17` = Semantic Governance Infrastructure v1 **complete** (infrastructure only; no public copy changed).
+
+**Layer rulings applied in `phrase-registry.json` v1.0.1:**
+
+| Phrase | Tree ruling | Registry update |
+|--------|-------------|-----------------|
+| A quieter space to hear your own thinking | Meaning Layer / Public Positioning — **approved with watchpoint** | `approval_state: approved`; watchpoint flags: emotional_support, productivity; no copy edit |
+| Reflection AI without taking over | Category Layer / Public Positioning — **approved with caution** | `layer: category`; `approval_state: approved`; all five distortion flags; no copy edit |
+
+**Build gate:** remain **standalone** until (1) one clean observation cycle, (2) warn-only acquisition identity-anchor gaps reviewed, (3) EN registry stable, (4) ZH parity scoped or deferred.
+
+**Escalated inventory:** **cleared** (0 entries in `escalated` state).

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "updated": "2026-07-03",
+  "version": "1.0.1",
+  "updated": "2026-07-05",
   "entries": [
     {
       "phrase": "reflection without advice",
@@ -179,22 +179,28 @@
       "layer": "discovery",
       "allowed_surfaces": ["homepage", "paid_landing", "seo_landing"],
       "prohibited_surfaces": [],
-      "distortion_flags": [],
+      "distortion_flags": ["emotional_support_drift", "productivity_drift"],
       "owner": "Tree",
-      "approval_state": "escalated",
+      "approval_state": "approved",
       "review": null,
-      "notes": "Live homepage hero headline — identity-adjacent; layer classification pending Tree ruling (Nova inventory 2026-07-03)"
+      "notes": "Tree 2026-07-05: Meaning Layer / Public Positioning — approved with watchpoint. No edit required. Monitor emotional-support or wellness misreadings. Live homepage hero (wisewave-landing-copy.ts)."
     },
     {
       "phrase": "Reflection AI without taking over",
-      "layer": "discovery",
+      "layer": "category",
       "allowed_surfaces": ["seo_landing"],
       "prohibited_surfaces": ["homepage", "onboarding", "product_interior"],
-      "distortion_flags": ["assistant_drift", "coaching_drift"],
+      "distortion_flags": [
+        "assistant_drift",
+        "therapy_drift",
+        "coaching_drift",
+        "productivity_drift",
+        "emotional_support_drift"
+      ],
       "owner": "Tree",
-      "approval_state": "escalated",
+      "approval_state": "approved",
       "review": null,
-      "notes": "Live /reflection-ai H1 — category/discovery boundary variant pending Tree ruling (Nova inventory 2026-07-03)"
+      "notes": "Tree 2026-07-05: Category Layer / Public Positioning — approved with caution. No edit required; 'without taking over' carries the necessary boundary. Live /reflection-ai H1."
     }
   ]
 }
