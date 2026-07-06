@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import { MarketingSiteAnalytics } from "@/components/wisewave-site/MarketingSiteAnalytics";
 import { MarketingSiteWideJsonLd } from "@/components/wisewave-site/MarketingSiteWideJsonLd";
+import { MobileOpenAppBanner } from "@/components/wisewave-site/MobileOpenAppBanner";
 import { WisewaveSiteFooter } from "@/components/wisewave-site/Footer";
 import { WisewaveSiteHeader } from "@/components/wisewave-site/Header";
 
@@ -19,6 +20,7 @@ export default function WisewaveSiteLayout({
     >
       <MarketingSiteAnalytics />
       <MarketingSiteWideJsonLd />
+      <MobileOpenAppBanner />
       <WisewaveSiteHeader />
       <main>{children}</main>
       <WisewaveSiteFooter />
