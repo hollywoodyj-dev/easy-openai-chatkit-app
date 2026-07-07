@@ -303,3 +303,5 @@ First 30-day read of the **Apple Search Ads** campaign (separate channel from Go
 4. **Negative keywords (broad)** added at campaign level: `free, journal, journaling, diary, gratitude, prompts, template, planner, therapy` — inert while Search Match is off, insurance if re-enabled.
 
 **Governance pointer (for Tree):** this is the first **measured acquisition cost of the store-metadata freeze** — Apple Search Ads cannot target meaningfully until App Store metadata (title/subtitle/keyword field) establishes a category, and that surface is frozen under Semantic Governance Lock v1.1. Not an argument to unfreeze now; it is concrete data for when Tree prioritizes the store-metadata decision. Total spend on the lesson: **$6.80**.
+
+5. **US added** to the "reflection" ad group's countries (same day) — exact-match keywords now serve AU + US. US volume is much larger, so the tripwire may produce real impressions; cost remains bounded (exact match only, $3.50 max CPT, Search Match off, campaign daily budget).
