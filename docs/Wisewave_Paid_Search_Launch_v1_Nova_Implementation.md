@@ -277,3 +277,29 @@ Steward relayed a long-form Wisewave assessment of this doc: paid-search executi
 4. **CTA audit delivered** — `docs/Wisewave_CTA_Audit_2026-07-02.md` (inventory only; five verb families across surfaces; organic says "Enter Wisewave", paid says "Start a reflection"; verb decision escalated to Tree + Aurora + Wisewave).
 
 **Escalated to Tree (unchanged):** identity/category/discovery hierarchy; permitted scope of "Reflection AI"; its relationship to "Reflection Without Advice"; which public surfaces stay frozen vs bridge-term usage.
+
+## 2026-07-07 — Apple Search Ads read: Search Match serves junk without category metadata
+
+First 30-day read of the **Apple Search Ads** campaign (separate channel from Google; the Google 2-week no-touch hold does not apply here).
+
+**Setup found:** one campaign, ad group "reflection" with 7 **exact-match** keywords at $3.50 max CPT (`daily reflection`, `reflection app`, `self awareness`, `mental clarity`, `reflection ai`, `ai reflection`, `self reflection`) **plus Search Match ON** at $1.92 default CPT.
+
+**Numbers (30 days):**
+
+| Source | Impressions | Taps | Spend |
+|--------|-------------|------|-------|
+| Exact keywords (all 7) | **2** | 0 | $0.00 |
+| Search Match | **1,084** | 6 | $6.80 |
+
+**Search-terms detail (the important part):** Search Match impressions were almost entirely **unrelated brand/app queries** — `tempr`, `sonder`, `timely`, `spotlight`, `ausclimate` (dehumidifiers), `active world`, `second thought`, `daybreak`, `spacetalk`, `zeekr` (car brand), `суточно ру` — plus 740 impressions in Apple's hidden "(Low volume terms)" bucket which consumed $4.88 of the $6.80. **Zero visible reflection-intent queries.**
+
+**Diagnosis:** Search Match places ads based on what Apple understands from the **store listing**. Wisewave's deliberately quiet, category-abstract metadata gives Apple no category anchor, so it serves the ad on random low-competition queries. This is the App Store expression of the same category-recognition problem Aurora diagnosed on Google search — the platform does not yet know what Wisewave is. Exact keywords meanwhile have near-zero organic App Store search volume (2 impressions / 30 days), confirming that conceptual phrases like "reflection ai" are not what App Store users type.
+
+**Actions (steward, 2026-07-07):**
+
+1. **Search Match OFF** on ad group "reflection" — the visible junk can be negated but the "(Low volume terms)" majority cannot; the channel buys noise until metadata teaches Apple the category.
+2. **"reflection AI AUTO" ad group paused** (was created same day as a Search-Match discovery group before the search-terms read showed discovery had already run and returned junk).
+3. **Exact-match keywords left running** — ~free tripwire ($0 spend / 30 days) that catches any real reflection-app searches at bounded cost.
+4. **Negative keywords (broad)** added at campaign level: `free, journal, journaling, diary, gratitude, prompts, template, planner, therapy` — inert while Search Match is off, insurance if re-enabled.
+
+**Governance pointer (for Tree):** this is the first **measured acquisition cost of the store-metadata freeze** — Apple Search Ads cannot target meaningfully until App Store metadata (title/subtitle/keyword field) establishes a category, and that surface is frozen under Semantic Governance Lock v1.1. Not an argument to unfreeze now; it is concrete data for when Tree prioritizes the store-metadata decision. Total spend on the lesson: **$6.80**.
