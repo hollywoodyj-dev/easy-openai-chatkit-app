@@ -17,6 +17,10 @@
 
 **Next:** Rerun full fixture set on **Vercel Preview** only (see below). Re-enable Production only after full Lumen pass + explicit `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`.
 
+**Blocker (2026-07-08):** Preview deployment is behind **Vercel Authentication** before app code. Steward must create **Protection Bypass for Automation** (see below). Lumen then uses `x-vercel-protection-bypass` header (API probes) or bypass URL (browser fixtures).
+
+**Current Preview URL (Lumen):** `https://wisewave-chatkit-app-v2-gzwegmzbz-jing-yangs-projects-db5d1ce8.vercel.app`
+
 ---
 
 ## Preview-only QA path (Slice 1)
@@ -39,6 +43,56 @@
    `set P0_BASE_URL=https://<preview-deployment-url>&& set P0_TOKEN=<jwt>&& npm run p0:entry:hosted-probes`  
 7. Run manual fixtures P0-F01–F08 + ZH parity on the same Preview URL.  
 8. After full pass: steward may set Production flag + `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1` and redeploy.
+
+---
+
+## Vercel Authentication bypass (Preview QA)
+
+Preview deployments may be protected by **Vercel Authentication** (SSO gate before Next.js). API probes and `/chat` fixtures need a bypass secret.
+
+### Steward — create bypass secret (one-time, ~2 min)
+
+Nova **cannot** create this from the repo; steward action in Vercel dashboard:
+
+1. [Vercel Dashboard](https://vercel.com) → project **`wisewave-chatkit-app-v2`** (or current Wisewave chat project).  
+2. **Settings** → **Deployment Protection**.  
+3. Under **Protection Bypass for Automation**, click **Create** (or add secret).  
+4. Label: e.g. `Lumen P0 Slice 1 QA`.  
+5. Copy the generated secret — **share with Lumen via a secure channel** (password manager, DM). **Do not commit** to git or docs.  
+6. **Do not** set `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION` yet.
+
+Optional alternative (less preferred): **Deployment Protection Exceptions** — add the specific Preview hostname to the allowlist. Bypass secret is preferred for automation.
+
+### Lumen — automated hosted probes
+
+```powershell
+set P0_BASE_URL=https://wisewave-chatkit-app-v2-gzwegmzbz-jing-yangs-projects-db5d1ce8.vercel.app
+set P0_TOKEN=<jwt>
+set P0_VERCEL_PROTECTION_BYPASS=<secret from steward>
+npm run p0:entry:hosted-probes
+```
+
+The script sends header `x-vercel-protection-bypass: <secret>` on every API request. Also accepts `VERCEL_AUTOMATION_BYPASS_SECRET`.
+
+**curl example (turn probe):**
+
+```bash
+curl -X POST "$P0_BASE_URL/api/chat/turn" \
+  -H "Authorization: Bearer $P0_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "x-vercel-protection-bypass: $P0_VERCEL_PROTECTION_BYPASS" \
+  -d '{"session_id":"<id>","message":"Hi"}'
+```
+
+### Lumen — manual browser fixtures (P0-F01–F08 + ZH)
+
+Open once to set bypass cookie, then use `/chat` normally:
+
+```
+https://<preview-url>/?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=true
+```
+
+Then navigate to `/chat`, log in with app credentials, run fixtures. Do not paste the secret into QA result docs.
 
 ---
 
@@ -206,7 +260,12 @@ Repeat **P0-F02** and **P0-F04** with Chinese user messages; same debug expectat
 ## Steward setup for hosted probes
 
 1. Vercel: set `ENABLE_P0_REFLECTION_ENTRY=1` on **Preview** only.  
-2. Redeploy Preview (push or manual redeploy).  
-3. Run against the **Preview URL**:  
-   `set P0_BASE_URL=https://<your-preview-url>&& set P0_TOKEN=<jwt>&& npm run p0:entry:hosted-probes`  
-4. Do **not** point probes at Production until Slice 1 is fully signed off.
+2. Vercel: create **Protection Bypass for Automation** secret; share with Lumen (not in git).  
+3. Redeploy Preview if needed after env changes.  
+4. Run against the **Preview URL**:  
+   `set P0_BASE_URL=https://<your-preview-url>`  
+   `set P0_TOKEN=<jwt>`  
+   `set P0_VERCEL_PROTECTION_BYPASS=<secret>`  
+   `npm run p0:entry:hosted-probes`  
+5. Do **not** point probes at Production until Slice 1 is fully signed off.  
+6. Do **not** set `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION` until after full Lumen pass.

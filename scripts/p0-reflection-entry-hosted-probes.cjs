@@ -7,16 +7,28 @@
  * Usage:
  *   set P0_BASE_URL=https://<preview-deployment-url>
  *   set P0_TOKEN=<jwt>
+ *   set P0_VERCEL_PROTECTION_BYPASS=<secret from Vercel Deployment Protection>
  *   node scripts/p0-reflection-entry-hosted-probes.cjs
  *
  * Optional: set P0_VERBOSE=1
  * Optional: set P0_ALLOW_PRODUCTION=1 to run against prod after sign-off (expects allow key on server)
+ *
+ * Vercel Authentication on Preview: steward creates "Protection Bypass for Automation" in
+ * Project Settings → Deployment Protection, then shares the secret with Lumen (never commit).
+ * Also accepts VERCEL_AUTOMATION_BYPASS_SECRET (Vercel system env name).
  */
 
 const BASE_URL = (process.env.P0_BASE_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
 const TOKEN = (process.env.P0_TOKEN || "").trim();
+const VERCEL_BYPASS = (
+  process.env.P0_VERCEL_PROTECTION_BYPASS ||
+  process.env.VERCEL_AUTOMATION_BYPASS_SECRET ||
+  ""
+).trim();
 const VERBOSE = process.env.P0_VERBOSE === "1";
 const ALLOW_PRODUCTION = process.env.P0_ALLOW_PRODUCTION === "1";
+const IS_VERCEL_HOST =
+  BASE_URL.includes(".vercel.app") || BASE_URL.includes("wisewave.io");
 
 if (BASE_URL.includes("wisewave.io") && !ALLOW_PRODUCTION) {
   console.error(
@@ -26,21 +38,60 @@ if (BASE_URL.includes("wisewave.io") && !ALLOW_PRODUCTION) {
   process.exit(1);
 }
 
+if (IS_VERCEL_HOST && !VERCEL_BYPASS) {
+  console.error(
+    "Missing P0_VERCEL_PROTECTION_BYPASS (or VERCEL_AUTOMATION_BYPASS_SECRET)."
+  );
+  console.error(
+    "Preview is behind Vercel Authentication. Steward: Vercel → Project → Settings →"
+  );
+  console.error(
+    "Deployment Protection → Protection Bypass for Automation → Create secret."
+  );
+  console.error("Share the secret with Lumen locally — do not commit it.");
+  process.exit(1);
+}
+
 if (!TOKEN) {
   console.error("Missing P0_TOKEN (Bearer JWT with chat access).");
   process.exit(1);
 }
 
-function authHeaders() {
-  return {
+function requestHeaders() {
+  const headers = {
     Authorization: `Bearer ${TOKEN}`,
     "Content-Type": "application/json",
   };
+  if (VERCEL_BYPASS) {
+    headers["x-vercel-protection-bypass"] = VERCEL_BYPASS;
+  }
+  return headers;
+}
+
+function looksLikeVercelAuthWall(status, text) {
+  if (status !== 401 && status !== 403) return false;
+  const sample = text.slice(0, 500).toLowerCase();
+  return (
+    sample.includes("authentication required") ||
+    sample.includes("vercel authentication") ||
+    sample.includes("<!doctype html")
+  );
+}
+
+function vercelAuthHelp() {
+  return (
+    "Blocked by Vercel Authentication before app code. " +
+    "Set P0_VERCEL_PROTECTION_BYPASS to the Protection Bypass for Automation secret " +
+    "(Project Settings → Deployment Protection)."
+  );
 }
 
 async function jfetch(path, init) {
   const res = await fetch(`${BASE_URL}${path}`, init);
   const text = await res.text();
+  if (looksLikeVercelAuthWall(res.status, text)) {
+    throw new Error(vercelAuthHelp());
+  }
   let data;
   try {
     data = JSON.parse(text);
@@ -68,7 +119,7 @@ function assert(cond, msg, detail) {
 async function createSession() {
   const data = await jfetch("/api/chat/session", {
     method: "POST",
-    headers: authHeaders(),
+    headers: requestHeaders(),
     body: "{}",
   });
   assert(typeof data?.session_id === "string", "session_id missing", data);
@@ -78,7 +129,7 @@ async function createSession() {
 async function sendTurn(sessionId, message) {
   return jfetch("/api/chat/turn", {
     method: "POST",
-    headers: authHeaders(),
+    headers: requestHeaders(),
     body: JSON.stringify({ session_id: sessionId, message }),
   });
 }
