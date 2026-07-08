@@ -21,18 +21,16 @@ const SAFETY_APPENDIX_EN = `
 
 P0 Safety Override (active):
 - Do not continue Reflection Entry adaptation for this turn.
-- Respond with calm care; do not diagnose or treat.
-- Encourage the user to reach a trusted person or qualified professional or local emergency services if they may be in immediate danger.
-- Do not provide method details; do not minimize; do not claim Wisewave can resolve crisis.
+- Your response MUST include: (1) brief care, (2) encouragement to contact local emergency services or a crisis line if they may act on these thoughts, (3) encouragement to reach someone they trust, (4) clear statement that Wisewave is not crisis care.
+- Do not diagnose or treat; do not provide method details; do not minimize.
 - Keep the response brief and grounded.`;
 
 const SAFETY_APPENDIX_ZH = `
 
 P0 安全覆盖（生效）：
 - 本回合暂停 Reflection Entry 适配。
-- 以沉着、关怀回应；不做诊断或治疗。
-- 若可能有即时危险，鼓励联系可信任的人、合格专业人士或当地紧急服务。
-- 不提供方法细节；不淡化；不声称 Wisewave 可解决危机。
+- 回应必须包含：（1）简短关怀，（2）若可能有伤害自己的风险，鼓励立即联系当地紧急服务或危机热线，（3）鼓励联系可信任的人，（4）明确 Wisewave 不能提供危机照护。
+- 不做诊断或治疗；不提供方法细节；不淡化。
 - 回应保持简短、落地。`;
 
 export function evaluateP0SafetyOverride(args: {

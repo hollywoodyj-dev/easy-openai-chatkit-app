@@ -1,7 +1,7 @@
 # P0 Reflection Entry — Lumen QA Fixtures v1
 
 **Milestone:** Wisewave Product P0 (Locked)  
-**Build marker:** `p0_reflection_entry_v1_slice1`  
+**Build marker:** `p0_reflection_entry_v1_slice1_qa2` (retest after 2026-07-08 HOLD fixes)  
 **Server flag:** `ENABLE_P0_REFLECTION_ENTRY=1` (Preview / local only until full sign-off)  
 **Production guard:** `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1` required on Production after Lumen pass (do not set until then)  
 **Protocol:** [HC-OS Core v1.0 Lumen QA Protocol](./HC_OS_CORE_V1_LUMEN_QA_PROTOCOL.md)  

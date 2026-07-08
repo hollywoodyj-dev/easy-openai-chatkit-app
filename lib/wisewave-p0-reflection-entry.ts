@@ -12,7 +12,7 @@ import {
 import { evaluateP0SafetyOverride } from "@/lib/wisewave-p0-safety-override";
 import { parseP0SlashCommand, type P0SlashCommand } from "@/lib/wisewave-p0-slash-commands";
 
-export const P0_REFLECTION_ENTRY_BUILD_MARKER = "p0_reflection_entry_v1_slice1";
+export const P0_REFLECTION_ENTRY_BUILD_MARKER = "p0_reflection_entry_v1_slice1_qa2";
 
 export type P0ReflectionEntryEnablement = {
   /** Flag is on and runtime is allowed to execute P0 entry logic. */

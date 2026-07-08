@@ -34,11 +34,11 @@ const QUESTION_REQUEST_ZH_RE = /(问我|给我一些问题|问一些问题|提�
 const WRITING_DIFFICULTY_RE =
   /\b(i\s*(don'?t|do not)\s*(even\s+)?know\s*(where to start|what to write|how to start)|not sure what to write|blank page|don'?t\s+even\s+know\s+where\s+to\s+start)\b/i;
 const WRITING_DIFFICULTY_ZH_RE =
-  /(不知道(从)?哪里开始|不知道写什么|不知道怎么开始|无从下笔|没有头绪)/u;
+  /(不知道(从)?哪里开始|不知道写什么|不知道怎么开始|无从下笔|没有头绪|从哪里开始)/u;
 const EMOTIONAL_RE =
   /\b(i feel|i am feeling|i'm feeling|i feel like|worried|anxious|sad|angry|overwhelmed|heartbroken|exhausted|stressed|lost|confused|empty|whole|心累|迷茫|烦|难过|焦虑|担心|害怕|累|空)\b/i;
 const EMOTIONAL_ZH_RE =
-  /(我觉得|我感到|我很|我心|今天.*(不好|心累|烦|迷茫)|担心|害怕|焦虑|难过|心累|空|相反)/u;
+  /(我觉得|我感到|我很|我心|今天.*(不好|心累|烦|迷茫)|担心|害怕|焦虑|难过|心累|空|相反|撑不下去|撑不住|撑不到|撑下去)/u;
 
 const DOCUMENT_MIN_CHARS = 400;
 const LONG_CONTEXT_MIN_CHARS = 200;
@@ -75,6 +75,10 @@ export function detectP0OpeningType(userMessage: string): P0OpeningDetectionResu
     return { type: "writing_difficulty", confidence: "high" };
   }
 
+  if (EMOTIONAL_RE.test(text) || EMOTIONAL_ZH_RE.test(text)) {
+    return { type: "emotional_opening", confidence: "medium" };
+  }
+
   if (text.length >= DOCUMENT_MIN_CHARS) {
     return { type: "document_upload", confidence: "medium" };
   }
@@ -83,19 +87,23 @@ export function detectP0OpeningType(userMessage: string): P0OpeningDetectionResu
     return { type: "long_context", confidence: "medium" };
   }
 
-  if (EMOTIONAL_RE.test(text) || EMOTIONAL_ZH_RE.test(text)) {
-    return { type: "emotional_opening", confidence: "medium" };
-  }
-
   if (/\b(today|yesterday|when|then|after|before|during|while)\b/i.test(text) && text.length >= 48) {
     return { type: "story", confidence: "low" };
   }
 
-  if (hasCjk(text) && text.length >= 12 && !isShortGreeting(text)) {
-    return { type: "emotional_opening", confidence: "low" };
+  if (hasCjk(text) && !isShortGreeting(text)) {
+    if (WRITING_DIFFICULTY_ZH_RE.test(text)) {
+      return { type: "writing_difficulty", confidence: "medium" };
+    }
+    if (EMOTIONAL_ZH_RE.test(text)) {
+      return { type: "emotional_opening", confidence: "medium" };
+    }
+    if (text.length >= 8) {
+      return { type: "emotional_opening", confidence: "low" };
+    }
   }
 
-  if (text.length <= 16) {
+  if (text.length <= 16 && !hasCjk(text)) {
     return { type: "greeting", confidence: "low" };
   }
 

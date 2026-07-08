@@ -159,7 +159,7 @@ async function main() {
       turn
     );
     assert(
-      turn.debug_p0_reflection_entry_build_marker === "p0_reflection_entry_v1_slice1",
+      turn.debug_p0_reflection_entry_build_marker === "p0_reflection_entry_v1_slice1_qa2",
       "unexpected build marker",
       turn
     );

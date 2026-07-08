@@ -29,6 +29,19 @@ describe("detectP0OpeningType", () => {
     );
   });
 
+  it("detects ZH emotional opening (Lumen P0-ZH-F02)", () => {
+    expect(detectP0OpeningType("我担心自己撑不下去了").type).toBe("emotional_opening");
+  });
+
+  it("detects ZH writing difficulty (Lumen P0-ZH-F04)", () => {
+    expect(detectP0OpeningType("我都不知道从哪里开始。").type).toBe("writing_difficulty");
+  });
+
+  it("does not classify short ZH emotional lines as greeting", () => {
+    expect(detectP0OpeningType("我担心自己撑不下去了").type).not.toBe("greeting");
+    expect(detectP0OpeningType("我都不知道从哪里开始。").type).not.toBe("greeting");
+  });
+
   it("detects document upload by length", () => {
     const long = "During my placement ".repeat(40);
     expect(detectP0OpeningType(long).type).toBe("document_upload");

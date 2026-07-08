@@ -74,6 +74,11 @@ import {
   computeP0ReflectionEntryTurn,
   resolveP0ReflectionEntryEnablement,
 } from "@/lib/wisewave-p0-reflection-entry";
+import {
+  getP0AdviceClarifyFallback,
+  getP0SafetyGuardedResponse,
+  responseMeetsP0SafetyMinimum,
+} from "@/lib/wisewave-p0-guarded-responses";
 
 export const dynamic = "force-dynamic";
 
@@ -2127,6 +2132,8 @@ export async function POST(request: Request) {
     matched: string;
     reason: string;
   }> = [];
+  let debugP0GuardedResponseApplied = false;
+  let debugP0GuardedResponseKind: "safety" | "advice_clarify" | null = null;
   let debugAnchorV2ContinuitySave: AnchorSemanticWeightV2Debug | null = null;
   let debugAnchorV2LastInsightRead: AnchorSemanticWeightV2Debug | null = null;
   let responseContinuityInsight:
@@ -3601,6 +3608,53 @@ export async function POST(request: Request) {
     }
   }
 
+  if (p0Entry.enabled && p0Entry.safetyOverride) {
+    if (!responseMeetsP0SafetyMinimum(assistantContent, wantsChinese)) {
+      assistantContent = getP0SafetyGuardedResponse(wantsChinese);
+      debugP0GuardedResponseApplied = true;
+      debugP0GuardedResponseKind = "safety";
+      debugDriftHighSeveritySuppressed = false;
+      debugDriftPassed = true;
+      debugDriftScore = 1;
+      debugDriftViolations = [];
+      debugSecondarySuppressedReason = null;
+      if (assistantMsgId) {
+        try {
+          await prisma.message.update({
+            where: { id: assistantMsgId },
+            data: { message: assistantContent },
+          });
+        } catch (e) {
+          console.warn("[chat/turn] P0 safety guarded response update failed", e);
+        }
+      }
+    }
+  } else if (
+    p0Entry.enabled &&
+    debugDriftHighSeveritySuppressed &&
+    p0Entry.openingType === "advice_seeking" &&
+    p0Entry.reflectionMode === "clarify"
+  ) {
+    assistantContent = getP0AdviceClarifyFallback(wantsChinese);
+    debugP0GuardedResponseApplied = true;
+    debugP0GuardedResponseKind = "advice_clarify";
+    debugDriftHighSeveritySuppressed = false;
+    debugDriftPassed = true;
+    debugDriftScore = 1;
+    debugDriftViolations = [];
+    debugSecondarySuppressedReason = null;
+    if (assistantMsgId) {
+      try {
+        await prisma.message.update({
+          where: { id: assistantMsgId },
+          data: { message: assistantContent },
+        });
+      } catch (e) {
+        console.warn("[chat/turn] P0 advice clarify fallback update failed", e);
+      }
+    }
+  }
+
   // Debug: indicate which secondary layer survives de-dup + suppression-first.
   if (keptLastInsight) {
     debugSecondaryLayerType = "last_insight";
@@ -3943,6 +3997,8 @@ export async function POST(request: Request) {
     debug_p0_mode_applied: p0Entry.modeApplied,
     debug_p0_mode_cleared: p0Entry.modeCleared,
     debug_p0_system_appendix_applied: p0Entry.systemAppendix.length > 0,
+    debug_p0_guarded_response_applied: debugP0GuardedResponseApplied,
+    debug_p0_guarded_response_kind: debugP0GuardedResponseKind,
     ...(body.debug
       ? {
           debug: {
