@@ -20,7 +20,7 @@
 - **Real-user export (Wisewave analysis):** `tmp_reflection_export_2026-07-08.json` — 7 real users, 72 msgs (steward-filtered); opening styles match P0.1 taxonomy (Hi, advice-seek, question-request, document paste, direct emotion).
 - **AGENTS.md** updated with HC-OS Core v1 + P0 governance bullets and QA artifact links.
 - **Slice 0 shipped (2026-07-08):** `lib/wisewave-p0-*`, turn route `debug_p0_*`, `ENABLE_P0_REFLECTION_ENTRY` (default off), `npm run test:p0-reflection-entry`.
-- **Slice 1 shipped (2026-07-08):** turn-1 Deepen for emotional/document; mode clears turn 2+; relationship-first document appendix; Lumen fixtures `docs/qa/P0_REFLECTION_ENTRY_LUMEN_FIXTURES_v1.md`; hosted probes `npm run p0:entry:hosted-probes`. **Awaiting:** steward sets `ENABLE_P0_REFLECTION_ENTRY=1` on Vercel + Lumen hosted pass.
+- **Slice 1 Preview sign-off (2026-07-08):** Lumen QA2 **PASS** — `docs/qa/P0_REFLECTION_ENTRY_SLICE1_LUMEN_PREVIEW_QA2_2026-07-08.md`; marker `p0_reflection_entry_v1_slice1_qa2`; guarded safety/advice fallbacks; Preview-only guard + Vercel bypass path. **Production still off** — awaits Tree/steward + both env keys. **Slice 2** (P0.7 analytics) next when Tree clears.
 
 ## 2026-07-05 — Semantic Governance Infrastructure v1 accepted (Tree)
 

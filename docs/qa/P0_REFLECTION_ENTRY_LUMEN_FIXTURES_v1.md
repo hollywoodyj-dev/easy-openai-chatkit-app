@@ -11,15 +11,13 @@
 
 ## QA status (2026-07-08)
 
-**Partial pass — not signed off.** Lumen verified unit probes (15/15) and hosted debug probes (greeting → Mirror, emotional → Deepen T1, mode clears T2, question → Clarify, safety override). Full manual fixtures **P0-F01–P0-F08** plus **ZH parity** were interrupted.
+**Signed off on Preview (QA2).** Lumen **`docs/qa/P0_REFLECTION_ENTRY_SLICE1_LUMEN_PREVIEW_QA2_2026-07-08.md`**: unit **23/23**; fixtures **10/10** (P0-F01–F08 + ZH parity); marker **`p0_reflection_entry_v1_slice1_qa2`**; commit **`0ebf580`**.
 
-**Production:** `ENABLE_P0_REFLECTION_ENTRY` removed from Production; prod now shows `debug_p0_reflection_entry_enabled: false`, `active: false` (marker still in build).
+**Production:** still gated/off (`flag_set: false`, `enabled: false`, `active: false`). Do **not** enable until Tree/steward sets both `ENABLE_P0_REFLECTION_ENTRY=1` and `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`, redeploys Production, and runs production smoke.
 
-**Next:** Rerun full fixture set on **Vercel Preview** only (see below). Re-enable Production only after full Lumen pass + explicit `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`.
+**Encoding note:** QA1 ZH failures were harness mojibake (PowerShell inline Chinese → `????????`), not app regression. Use Unicode escapes or UTF-8 files for ZH API fixtures.
 
-**Blocker (2026-07-08):** Preview deployment is behind **Vercel Authentication** before app code. Steward must create **Protection Bypass for Automation** (see below). Lumen then uses `x-vercel-protection-bypass` header (API probes) or bypass URL (browser fixtures).
-
-**Current Preview URL (Lumen):** `https://wisewave-chatkit-app-v2-gzwegmzbz-jing-yangs-projects-db5d1ce8.vercel.app`
+**Prior artifacts:** partial QA — `docs/qa/P0_REFLECTION_ENTRY_SLICE1_LUMEN_PREVIEW_QA_2026-07-08.md` (HOLD, superseded by QA2).
 
 ---
 
@@ -250,10 +248,10 @@ Repeat **P0-F02** and **P0-F04** with Chinese user messages; same debug expectat
 
 ## Release gate (Slice 1)
 
-- [ ] All 8 fixtures pass debug expectations on **Preview** (not Production until signed off)
-- [ ] No Red drift on assistant responses
-- [ ] No visible mode / onboarding language
-- [ ] Tree notified before Production flag + `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`
+- [x] All 8 fixtures + ZH parity pass on **Preview** (Lumen QA2 2026-07-08)
+- [x] No Red drift on assistant responses (QA2)
+- [x] No visible mode / onboarding language (QA2)
+- [ ] Tree/steward production enable decision + Production smoke after both env keys set
 
 ---
 

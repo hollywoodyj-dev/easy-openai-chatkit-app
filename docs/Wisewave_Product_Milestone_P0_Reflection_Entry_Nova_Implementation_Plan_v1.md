@@ -324,7 +324,7 @@ No buttons, no templates, no “choose a topic.”
 - [x] Document relationship-first deepen appendix
 - [x] Lumen fixtures doc: `docs/qa/P0_REFLECTION_ENTRY_LUMEN_FIXTURES_v1.md`
 - [x] Hosted probes: `npm run p0:entry:hosted-probes`
-- [ ] Lumen hosted pass on **Preview** with `ENABLE_P0_REFLECTION_ENTRY=1` (Production blocked until `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`)
+- [x] Lumen hosted pass on **Preview** with `ENABLE_P0_REFLECTION_ENTRY=1` — **PASS QA2 2026-07-08** (`docs/qa/P0_REFLECTION_ENTRY_SLICE1_LUMEN_PREVIEW_QA2_2026-07-08.md`). Production still gated until steward sets `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`.
 
 ### Slice 2 — P0.7 analytics
 
@@ -440,7 +440,7 @@ Each: assert no visible mode label, mode clears by turn 2, Green/Yellow rating p
 | **5** | `/start` + homepage permission copy | **Aurora** then **Lumen** semantic | Before deploy | `npm run semantic:check`; no performance-pressure framing |
 | **6** | Tree exit | **Tree** | All above | P0 exit criteria in addendum |
 
-**Rule:** Do **not** enable P0 on **Production** until **Lumen Slice 1** full hosted pass. Use **Preview-only** QA: `ENABLE_P0_REFLECTION_ENTRY=1` on Preview; Production requires **`P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`** after sign-off.
+**Rule:** Slice 1 **signed off on Preview** (Lumen QA2 2026-07-08). Do **not** enable P0 on **Production** until Tree/steward intentionally sets **`ENABLE_P0_REFLECTION_ENTRY=1`** and **`P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`**, redeploys, and runs production smoke.
 
 ### Preview-only guard (Slice 1 QA path)
 
@@ -455,7 +455,7 @@ Debug on turn: `debug_p0_reflection_entry_flag_set`, `debug_p0_reflection_entry_
 
 ## 11. Immediate next step (Nova)
 
-**Start Slice 1 QA on Preview:** steward sets `ENABLE_P0_REFLECTION_ENTRY=1` on **Preview** only; Lumen runs full fixtures; Production stays blocked until sign-off + `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`. No public copy until Slice 5 Aurora review.
+**Slice 1 closed on Preview (Lumen QA2).** Await Tree/steward production enable decision. **Nova next (when cleared):** Slice 2 P0.7 analytics, or production smoke support after steward sets both env keys. No public copy until Slice 5 Aurora review.
 
 ---
 
