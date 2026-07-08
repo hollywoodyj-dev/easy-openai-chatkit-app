@@ -72,7 +72,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import {
   computeP0ReflectionEntryTurn,
-  isP0ReflectionEntryEnabled,
+  resolveP0ReflectionEntryEnablement,
 } from "@/lib/wisewave-p0-reflection-entry";
 
 export const dynamic = "force-dynamic";
@@ -1731,6 +1731,7 @@ export async function POST(request: Request) {
     priorUserMessages: p0PriorUserMessages,
     wantsChinese,
   });
+  const p0Enablement = resolveP0ReflectionEntryEnablement();
   const priorUserTextForHeuristics =
     userMessagesForHeuristics.length >= 2
       ? (userMessagesForHeuristics[userMessagesForHeuristics.length - 2]?.message ??
@@ -3925,9 +3926,12 @@ export async function POST(request: Request) {
     debug_milestone_j_allow_render_mode: debugMilestoneJAllowRenderMode,
     debug_milestone_j_reasons: debugMilestoneJReasons,
     debug_milestone_j_rollback_risk: debugMilestoneJRollbackRisk,
-    debug_p0_reflection_entry_enabled: isP0ReflectionEntryEnabled(),
+    debug_p0_reflection_entry_flag_set: p0Enablement.flagSet,
+    debug_p0_reflection_entry_enabled: p0Enablement.enabled,
     debug_p0_reflection_entry_build_marker: p0Entry.buildMarker,
     debug_p0_reflection_entry_active: p0Entry.enabled,
+    debug_p0_reflection_entry_vercel_env: p0Enablement.vercelEnv,
+    debug_p0_reflection_entry_blocked_on_production: p0Enablement.blockedOnProduction,
     debug_p0_safety_override: p0Entry.safetyOverride,
     debug_p0_safety_matched_pattern: p0Entry.safetyMatchedPattern,
     debug_p0_slash_command: p0Entry.slashCommand,

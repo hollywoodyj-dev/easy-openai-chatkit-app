@@ -14,9 +14,41 @@ import { parseP0SlashCommand, type P0SlashCommand } from "@/lib/wisewave-p0-slas
 
 export const P0_REFLECTION_ENTRY_BUILD_MARKER = "p0_reflection_entry_v1_slice1";
 
+export type P0ReflectionEntryEnablement = {
+  /** Flag is on and runtime is allowed to execute P0 entry logic. */
+  enabled: boolean;
+  /** ENABLE_P0_REFLECTION_ENTRY is set to a truthy value. */
+  flagSet: boolean;
+  /** Vercel runtime label when present: production | preview | development */
+  vercelEnv: string | null;
+  /** Flag set on production but blocked until Slice 1 full sign-off. */
+  blockedOnProduction: boolean;
+};
+
+/**
+ * Slice 1 QA path: Preview (and local) only by default.
+ * Production requires an explicit second key after full Lumen sign-off:
+ * P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1
+ */
+export function resolveP0ReflectionEntryEnablement(): P0ReflectionEntryEnablement {
+  const raw = process.env.ENABLE_P0_REFLECTION_ENTRY?.trim().toLowerCase();
+  const flagSet = raw === "true" || raw === "1" || raw === "yes";
+  const vercelEnv = process.env.VERCEL_ENV?.trim() || null;
+  const blockedOnProduction =
+    flagSet &&
+    vercelEnv === "production" &&
+    process.env.P0_REFLECTION_ENTRY_ALLOW_PRODUCTION?.trim() !== "1";
+
+  return {
+    enabled: flagSet && !blockedOnProduction,
+    flagSet,
+    vercelEnv,
+    blockedOnProduction,
+  };
+}
+
 export function isP0ReflectionEntryEnabled(): boolean {
-  const v = process.env.ENABLE_P0_REFLECTION_ENTRY?.trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
+  return resolveP0ReflectionEntryEnablement().enabled;
 }
 
 export type P0ReflectionEntryTurnInput = {

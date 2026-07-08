@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   computeP0ReflectionEntryTurn,
   isP0ReflectionEntryEnabled,
+  resolveP0ReflectionEntryEnablement,
 } from "@/lib/wisewave-p0-reflection-entry";
 
 describe("computeP0ReflectionEntryTurn", () => {
@@ -10,10 +11,14 @@ describe("computeP0ReflectionEntryTurn", () => {
   afterEach(() => {
     if (orig === undefined) delete process.env.ENABLE_P0_REFLECTION_ENTRY;
     else process.env.ENABLE_P0_REFLECTION_ENTRY = orig;
+    delete process.env.VERCEL_ENV;
+    delete process.env.P0_REFLECTION_ENTRY_ALLOW_PRODUCTION;
   });
 
   it("is disabled by default", () => {
     delete process.env.ENABLE_P0_REFLECTION_ENTRY;
+    delete process.env.VERCEL_ENV;
+    delete process.env.P0_REFLECTION_ENTRY_ALLOW_PRODUCTION;
     expect(isP0ReflectionEntryEnabled()).toBe(false);
     const result = computeP0ReflectionEntryTurn({
       userMessage: "Hi",
@@ -127,5 +132,29 @@ describe("computeP0ReflectionEntryTurn", () => {
     });
     expect(result.slashCommand).toBe("slow");
     expect(result.reflectionMode).toBe("slow");
+  });
+
+  it("blocks production when allow-production key is unset", () => {
+    process.env.ENABLE_P0_REFLECTION_ENTRY = "1";
+    process.env.VERCEL_ENV = "production";
+    delete process.env.P0_REFLECTION_ENTRY_ALLOW_PRODUCTION;
+    const enablement = resolveP0ReflectionEntryEnablement();
+    expect(enablement.flagSet).toBe(true);
+    expect(enablement.blockedOnProduction).toBe(true);
+    expect(enablement.enabled).toBe(false);
+    const result = computeP0ReflectionEntryTurn({
+      userMessage: "Hi",
+      userTurnIndex: 1,
+      priorUserMessages: [],
+      wantsChinese: false,
+    });
+    expect(result.enabled).toBe(false);
+  });
+
+  it("allows production only with explicit allow key", () => {
+    process.env.ENABLE_P0_REFLECTION_ENTRY = "1";
+    process.env.VERCEL_ENV = "production";
+    process.env.P0_REFLECTION_ENTRY_ALLOW_PRODUCTION = "1";
+    expect(resolveP0ReflectionEntryEnablement().enabled).toBe(true);
   });
 });

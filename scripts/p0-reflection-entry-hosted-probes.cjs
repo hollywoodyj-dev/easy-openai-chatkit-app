@@ -2,18 +2,29 @@
  * P0 Reflection Entry — hosted QA probes (Slice 1).
  *
  * Validates debug_p0_* on POST /api/chat/turn when ENABLE_P0_REFLECTION_ENTRY=1 on server.
+ * Use a **Vercel Preview** deployment URL — Production stays off until Lumen full sign-off.
  *
  * Usage:
- *   set P0_BASE_URL=https://www.wisewave.io
+ *   set P0_BASE_URL=https://<preview-deployment-url>
  *   set P0_TOKEN=<jwt>
  *   node scripts/p0-reflection-entry-hosted-probes.cjs
  *
  * Optional: set P0_VERBOSE=1
+ * Optional: set P0_ALLOW_PRODUCTION=1 to run against prod after sign-off (expects allow key on server)
  */
 
 const BASE_URL = (process.env.P0_BASE_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
 const TOKEN = (process.env.P0_TOKEN || "").trim();
 const VERBOSE = process.env.P0_VERBOSE === "1";
+const ALLOW_PRODUCTION = process.env.P0_ALLOW_PRODUCTION === "1";
+
+if (BASE_URL.includes("wisewave.io") && !ALLOW_PRODUCTION) {
+  console.error(
+    "P0 hosted probes target Preview only. Set P0_BASE_URL to a Vercel Preview URL, not production."
+  );
+  console.error("After full Lumen sign-off, set P0_ALLOW_PRODUCTION=1 to probe production.");
+  process.exit(1);
+}
 
 if (!TOKEN) {
   console.error("Missing P0_TOKEN (Bearer JWT with chat access).");
@@ -88,7 +99,14 @@ async function main() {
     const sessionId = await createSession();
     const turn = await sendTurn(sessionId, "Hi");
     logStep("turn", turn);
-    assert(turn.debug_p0_reflection_entry_enabled === true, "P0 flag off on server", turn);
+    assert(turn.debug_p0_reflection_entry_flag_set === true, "P0 flag not set on server", turn);
+    assert(turn.debug_p0_reflection_entry_enabled === true, "P0 not enabled on server", turn);
+    assert(turn.debug_p0_reflection_entry_active === true, "P0 not active on turn", turn);
+    assert(
+      turn.debug_p0_reflection_entry_blocked_on_production !== true,
+      "P0 blocked on production guard",
+      turn
+    );
     assert(
       turn.debug_p0_reflection_entry_build_marker === "p0_reflection_entry_v1_slice1",
       "unexpected build marker",

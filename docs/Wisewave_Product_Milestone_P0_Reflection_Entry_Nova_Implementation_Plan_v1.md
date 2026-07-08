@@ -324,7 +324,7 @@ No buttons, no templates, no “choose a topic.”
 - [x] Document relationship-first deepen appendix
 - [x] Lumen fixtures doc: `docs/qa/P0_REFLECTION_ENTRY_LUMEN_FIXTURES_v1.md`
 - [x] Hosted probes: `npm run p0:entry:hosted-probes`
-- [ ] Lumen hosted pass with `ENABLE_P0_REFLECTION_ENTRY=1`
+- [ ] Lumen hosted pass on **Preview** with `ENABLE_P0_REFLECTION_ENTRY=1` (Production blocked until `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`)
 
 ### Slice 2 — P0.7 analytics
 
@@ -440,13 +440,22 @@ Each: assert no visible mode label, mode clears by turn 2, Green/Yellow rating p
 | **5** | `/start` + homepage permission copy | **Aurora** then **Lumen** semantic | Before deploy | `npm run semantic:check`; no performance-pressure framing |
 | **6** | Tree exit | **Tree** | All above | P0 exit criteria in addendum |
 
-**Rule:** Do **not** enable `ENABLE_P0_REFLECTION_ENTRY` in production until **Lumen Slice 1** hosted pass.
+**Rule:** Do **not** enable P0 on **Production** until **Lumen Slice 1** full hosted pass. Use **Preview-only** QA: `ENABLE_P0_REFLECTION_ENTRY=1` on Preview; Production requires **`P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`** after sign-off.
+
+### Preview-only guard (Slice 1 QA path)
+
+| Variable | Preview | Production (QA) | Production (post sign-off) |
+|----------|---------|-----------------|----------------------------|
+| `ENABLE_P0_REFLECTION_ENTRY` | `1` | unset / `0` | `1` |
+| `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION` | unset | unset | `1` |
+
+Debug on turn: `debug_p0_reflection_entry_flag_set`, `debug_p0_reflection_entry_enabled`, `debug_p0_reflection_entry_blocked_on_production`, `debug_p0_reflection_entry_vercel_env`.
 
 ---
 
 ## 11. Immediate next step (Nova)
 
-**Start Slice 1:** enable flag on **staging/hosted** for Lumen; tune mode appendices from fixture results. No public copy until Slice 5 Aurora review.
+**Start Slice 1 QA on Preview:** steward sets `ENABLE_P0_REFLECTION_ENTRY=1` on **Preview** only; Lumen runs full fixtures; Production stays blocked until sign-off + `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`. No public copy until Slice 5 Aurora review.
 
 ---
 

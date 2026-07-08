@@ -2,9 +2,43 @@
 
 **Milestone:** Wisewave Product P0 (Locked)  
 **Build marker:** `p0_reflection_entry_v1_slice1`  
-**Server flag:** `ENABLE_P0_REFLECTION_ENTRY=1`  
+**Server flag:** `ENABLE_P0_REFLECTION_ENTRY=1` (Preview / local only until full sign-off)  
+**Production guard:** `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1` required on Production after Lumen pass (do not set until then)  
 **Protocol:** [HC-OS Core v1.0 Lumen QA Protocol](./HC_OS_CORE_V1_LUMEN_QA_PROTOCOL.md)  
 **Spec:** [P0 Implementation Addendum v1.0 (Locked)](../Wisewave_Product_Milestone_P0_Reflection_Entry_Implementation_Addendum_v1_LOCKED.md)
+
+---
+
+## QA status (2026-07-08)
+
+**Partial pass — not signed off.** Lumen verified unit probes (15/15) and hosted debug probes (greeting → Mirror, emotional → Deepen T1, mode clears T2, question → Clarify, safety override). Full manual fixtures **P0-F01–P0-F08** plus **ZH parity** were interrupted.
+
+**Production:** `ENABLE_P0_REFLECTION_ENTRY` removed from Production; prod now shows `debug_p0_reflection_entry_enabled: false`, `active: false` (marker still in build).
+
+**Next:** Rerun full fixture set on **Vercel Preview** only (see below). Re-enable Production only after full Lumen pass + explicit `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`.
+
+---
+
+## Preview-only QA path (Slice 1)
+
+| Environment | `ENABLE_P0_REFLECTION_ENTRY` | `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION` | Expected `debug_p0_*` |
+|-------------|------------------------------|----------------------------------------|------------------------|
+| **Preview** | `1` | unset | `flag_set: true`, `enabled: true`, `active: true`, `blocked_on_production: false`, `vercel_env: preview` |
+| **Production** | unset or `0` | unset | `flag_set: false`, `enabled: false`, `active: false` |
+| **Production (accidental flag)** | `1` | unset | `flag_set: true`, `enabled: false`, `blocked_on_production: true` — P0 logic does not run |
+| **Production (post sign-off)** | `1` | `1` | `enabled: true`, `active: true` — only after Tree/Lumen approve |
+
+**Steward steps (Preview QA):**
+
+1. Vercel → Project → Settings → Environment Variables  
+2. Set **`ENABLE_P0_REFLECTION_ENTRY=1`** on **Preview** only (not Production).  
+3. Do **not** set `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION` anywhere yet.  
+4. Redeploy or push a commit so Preview rebuilds.  
+5. Open the **Preview deployment URL** (not `www.wisewave.io`) and log in for chat.  
+6. Run automated pre-check:  
+   `set P0_BASE_URL=https://<preview-deployment-url>&& set P0_TOKEN=<jwt>&& npm run p0:entry:hosted-probes`  
+7. Run manual fixtures P0-F01–F08 + ZH parity on the same Preview URL.  
+8. After full pass: steward may set Production flag + `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1` and redeploy.
 
 ---
 
@@ -24,7 +58,11 @@ Each fixture = **new chat session** unless noted.
 
 | Field | Check |
 |-------|--------|
-| `debug_p0_reflection_entry_enabled` | `true` |
+| `debug_p0_reflection_entry_flag_set` | `true` when env flag is on |
+| `debug_p0_reflection_entry_enabled` | `true` on Preview with flag; `false` on Production without allow key |
+| `debug_p0_reflection_entry_active` | same as enabled when turn runs P0 logic |
+| `debug_p0_reflection_entry_vercel_env` | `preview` on Preview deployments |
+| `debug_p0_reflection_entry_blocked_on_production` | `false` on Preview; `true` if flag set on Production without allow key |
 | `debug_p0_opening_type` | expected type |
 | `debug_p0_reflection_mode` | expected mode (turn 1) or `null` (after begun) |
 | `debug_p0_mode_applied` | `true` turn 1 entry; `false` after reflection begun |
@@ -158,15 +196,17 @@ Repeat **P0-F02** and **P0-F04** with Chinese user messages; same debug expectat
 
 ## Release gate (Slice 1)
 
-- [ ] All 8 fixtures pass debug expectations on hosted
+- [ ] All 8 fixtures pass debug expectations on **Preview** (not Production until signed off)
 - [ ] No Red drift on assistant responses
 - [ ] No visible mode / onboarding language
-- [ ] Tree notified before production flag stays on
+- [ ] Tree notified before Production flag + `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`
 
 ---
 
 ## Steward setup for hosted probes
 
-1. Vercel: set `ENABLE_P0_REFLECTION_ENTRY=1` on preview or production (preview first).
-2. Redeploy.
-3. Run: `set P0_BASE_URL=https://www.wisewave.io&& set P0_TOKEN=<jwt>&& npm run p0:entry:hosted-probes`
+1. Vercel: set `ENABLE_P0_REFLECTION_ENTRY=1` on **Preview** only.  
+2. Redeploy Preview (push or manual redeploy).  
+3. Run against the **Preview URL**:  
+   `set P0_BASE_URL=https://<your-preview-url>&& set P0_TOKEN=<jwt>&& npm run p0:entry:hosted-probes`  
+4. Do **not** point probes at Production until Slice 1 is fully signed off.
