@@ -70,6 +70,10 @@ import {
 } from "@/lib/wisewave-anchor-semantic-weight-v2";
 import { readFileSync } from "fs";
 import { join } from "path";
+import {
+  computeP0ReflectionEntryTurn,
+  isP0ReflectionEntryEnabled,
+} from "@/lib/wisewave-p0-reflection-entry";
 
 export const dynamic = "force-dynamic";
 
@@ -1717,6 +1721,16 @@ export async function POST(request: Request) {
   /** Milestone H Wisewave Light Mode v2: whether main-reflection appendix was appended (QA / Lumen Pass 5). */
   let debugMilestoneHLightModeAppendixApplied = false;
   const userMessagesForHeuristics = allMessages.filter((m) => m.role === "user");
+  const p0UserTurnIndex = userMessagesForHeuristics.length;
+  const p0PriorUserMessages = userMessagesForHeuristics
+    .slice(0, -1)
+    .map((m) => m.message);
+  const p0Entry = computeP0ReflectionEntryTurn({
+    userMessage: message,
+    userTurnIndex: p0UserTurnIndex,
+    priorUserMessages: p0PriorUserMessages,
+    wantsChinese,
+  });
   const priorUserTextForHeuristics =
     userMessagesForHeuristics.length >= 2
       ? (userMessagesForHeuristics[userMessagesForHeuristics.length - 2]?.message ??
@@ -1863,6 +1877,7 @@ export async function POST(request: Request) {
         continuationHint +
         summaryBlock +
         reflectionBlock +
+        p0Entry.systemAppendix +
         milestoneGAppendix +
         milestoneHLightAppendix +
         v3TurnFocusAppendix +
@@ -3910,6 +3925,20 @@ export async function POST(request: Request) {
     debug_milestone_j_allow_render_mode: debugMilestoneJAllowRenderMode,
     debug_milestone_j_reasons: debugMilestoneJReasons,
     debug_milestone_j_rollback_risk: debugMilestoneJRollbackRisk,
+    debug_p0_reflection_entry_enabled: isP0ReflectionEntryEnabled(),
+    debug_p0_reflection_entry_build_marker: p0Entry.buildMarker,
+    debug_p0_reflection_entry_active: p0Entry.enabled,
+    debug_p0_safety_override: p0Entry.safetyOverride,
+    debug_p0_safety_matched_pattern: p0Entry.safetyMatchedPattern,
+    debug_p0_slash_command: p0Entry.slashCommand,
+    debug_p0_opening_type: p0Entry.openingType,
+    debug_p0_opening_confidence: p0Entry.openingConfidence,
+    debug_p0_reflection_mode: p0Entry.reflectionMode,
+    debug_p0_entry_phase: p0Entry.entryPhase,
+    debug_p0_reflection_begun: p0Entry.reflectionBegun,
+    debug_p0_mode_applied: p0Entry.modeApplied,
+    debug_p0_mode_cleared: p0Entry.modeCleared,
+    debug_p0_system_appendix_applied: p0Entry.systemAppendix.length > 0,
     ...(body.debug
       ? {
           debug: {

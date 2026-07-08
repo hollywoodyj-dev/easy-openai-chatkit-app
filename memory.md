@@ -10,6 +10,18 @@
 
 <!-- Memory entries below -->
 
+## 2026-07-08 — HC-OS Core v1.0 Lock + P0 Reflection Entry (Tree / Wisewave)
+
+- **Three docs received from Tree/Wisewave and markdowned in repo:**
+  1. **Nova directive** — `docs/hc-os/HC_OS_CORE_V1_LOCK_NOVA_IMPLEMENTATION_DIRECTIVE.md` — consolidate A–J into Core v1 Lock; **not Milestone K**; Phase 1 = governance docs before behavior change.
+  2. **Lumen QA protocol** — `docs/qa/HC_OS_CORE_V1_LUMEN_QA_PROTOCOL.md` — Green/Yellow/Orange/Red; 75 minimum fixtures; distortion map; release gate.
+  3. **P0 Reflection Entry (locked v1.0)** — `docs/Wisewave_Product_Milestone_P0_Reflection_Entry_Implementation_Addendum_v1_LOCKED.md` — constitutional entry spec (invisible Opening Detection, ephemeral Reflection Modes, no prompt library/onboarding/retention). Roadmap: P0 locked · P1 Recognition · P2 Living Reflection · P3 Integration (research).
+- **Nova implementation plan:** `docs/Wisewave_Product_Milestone_P0_Reflection_Entry_Nova_Implementation_Plan_v1.md` — maps P0.1–P0.7 to existing files; Aurora gate on P0.4/P0.5 copy.
+- **Real-user export (Wisewave analysis):** `tmp_reflection_export_2026-07-08.json` — 7 real users, 72 msgs (steward-filtered); opening styles match P0.1 taxonomy (Hi, advice-seek, question-request, document paste, direct emotion).
+- **AGENTS.md** updated with HC-OS Core v1 + P0 governance bullets and QA artifact links.
+- **Slice 0 shipped (2026-07-08):** `lib/wisewave-p0-*`, turn route `debug_p0_*`, `ENABLE_P0_REFLECTION_ENTRY` (default off), `npm run test:p0-reflection-entry`.
+- **Slice 1 shipped (2026-07-08):** turn-1 Deepen for emotional/document; mode clears turn 2+; relationship-first document appendix; Lumen fixtures `docs/qa/P0_REFLECTION_ENTRY_LUMEN_FIXTURES_v1.md`; hosted probes `npm run p0:entry:hosted-probes`. **Awaiting:** steward sets `ENABLE_P0_REFLECTION_ENTRY=1` on Vercel + Lumen hosted pass.
+
 ## 2026-07-05 — Semantic Governance Infrastructure v1 accepted (Tree)
 
 - **Delivery accepted:** commit `4684b17` — infrastructure only; public copy unchanged.
