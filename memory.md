@@ -20,7 +20,7 @@
 - **Real-user export (Wisewave analysis):** `tmp_reflection_export_2026-07-08.json` — 7 real users, 72 msgs (steward-filtered); opening styles match P0.1 taxonomy (Hi, advice-seek, question-request, document paste, direct emotion).
 - **AGENTS.md** updated with HC-OS Core v1 + P0 governance bullets and QA artifact links.
 - **Slice 0 shipped (2026-07-08):** `lib/wisewave-p0-*`, turn route `debug_p0_*`, `ENABLE_P0_REFLECTION_ENTRY` (default off), `npm run test:p0-reflection-entry`.
-- **Slice 1 Preview sign-off (2026-07-08):** Lumen QA2 **PASS** — `docs/qa/P0_REFLECTION_ENTRY_SLICE1_LUMEN_PREVIEW_QA2_2026-07-08.md`. **Production live (2026-07-09):** both env keys on Production scope; Nova smoke PASS on `www.wisewave.io`. **Slice 2** (P0.7 analytics) next when Tree clears.
+- **Slice 1 Preview sign-off (2026-07-08):** Lumen QA2 **PASS**. **Production live (2026-07-09).** **Slice 2 shipped (code):** P0.7 entry analytics catalog + server persist + GA4 mirror — await Lumen measurement QA. **Slice 3:** abandon beacon + client empty state.
 
 ## 2026-07-05 — Semantic Governance Infrastructure v1 accepted (Tree)
 

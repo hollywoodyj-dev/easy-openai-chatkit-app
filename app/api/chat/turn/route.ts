@@ -7,6 +7,7 @@ import {
 } from "@/lib/phase4-user-turn-admissible";
 import { resolveChatUserId } from "@/lib/chat-identity";
 import { recordConversionEvent } from "@/lib/record-conversion-event";
+import { recordP0EntryAnalyticsForTurn } from "@/lib/wisewave-p0-entry-analytics";
 import { verifyUserToken } from "@/lib/auth";
 import { checkUserSubscriptionAccess } from "@/lib/subscription-access";
 import {
@@ -2054,6 +2055,23 @@ export async function POST(request: Request) {
             turnConversionEvents.push("day_7_return");
           }
         }
+      }
+
+      if (p0Entry.enabled) {
+        const p0AnalyticsLang: "en" | "zh" =
+          body.lang === "zh" || body.lang === "en"
+            ? body.lang
+            : wantsChinese
+              ? "zh"
+              : "en";
+        const p0Recorded = await recordP0EntryAnalyticsForTurn({
+          userId,
+          sessionId,
+          responseLang: p0AnalyticsLang,
+          p0Entry,
+          userTurnIndex: p0UserTurnIndex,
+        });
+        turnConversionEvents.push(...p0Recorded);
       }
     } catch (conversionError) {
       console.error("[chat/turn] conversion event check failed", conversionError);

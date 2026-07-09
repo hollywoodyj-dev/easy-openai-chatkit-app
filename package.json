@@ -21,7 +21,7 @@
     "test:model-router": "vitest run lib/wisewave-model-router.test.ts",
     "test:drift-linter": "vitest run lib/drift/linter.test.ts",
     "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",
-    "test:p0-reflection-entry": "vitest run lib/wisewave-p0-opening-detection.test.ts lib/wisewave-p0-reflection-entry.test.ts lib/wisewave-p0-guarded-responses.test.ts",
+    "test:p0-reflection-entry": "vitest run lib/wisewave-p0-opening-detection.test.ts lib/wisewave-p0-reflection-entry.test.ts lib/wisewave-p0-guarded-responses.test.ts lib/wisewave-p0-entry-analytics.test.ts",
     "p0:entry:probes": "npm run test:p0-reflection-entry",
     "p0:entry:hosted-probes": "node scripts/p0-reflection-entry-hosted-probes.cjs",
     "semantic:check": "node scripts/semantic-governance-check.cjs",

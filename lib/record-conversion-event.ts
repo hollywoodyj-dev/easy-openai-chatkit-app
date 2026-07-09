@@ -14,6 +14,17 @@ const DEDUPE_ONCE_PER_USER = new Set([
   "day_7_return",
 ]);
 
+/** P0.7 entry analytics — once per conversation session. */
+const DEDUPE_ONCE_PER_SESSION = new Set([
+  "entry_type_detected",
+  "reflection_mode_selected",
+  "conversation_started",
+  "reflection_started",
+  "conversation_entered_reflection",
+  "reflection_depth_reached",
+  "conversation_abandoned_before_reflection",
+]);
+
 export async function recordConversionEvent(
   input: RecordConversionEventInput,
 ): Promise<void> {
@@ -24,6 +35,14 @@ export async function recordConversionEvent(
   if (DEDUPE_ONCE_PER_USER.has(input.eventName) && input.userId) {
     const existing = await prisma.marketingConversionEvent.findFirst({
       where: { eventName: input.eventName, userId: input.userId },
+      select: { id: true },
+    });
+    if (existing) return;
+  }
+
+  if (DEDUPE_ONCE_PER_SESSION.has(input.eventName) && input.sessionId) {
+    const existing = await prisma.marketingConversionEvent.findFirst({
+      where: { eventName: input.eventName, sessionId: input.sessionId },
       select: { id: true },
     });
     if (existing) return;

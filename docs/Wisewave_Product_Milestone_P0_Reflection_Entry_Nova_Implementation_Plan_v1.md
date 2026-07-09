@@ -328,8 +328,10 @@ No buttons, no templates, no “choose a topic.”
 
 ### Slice 2 — P0.7 analytics
 
-- [ ] Catalog + server persist + turn/client beacons
-- [ ] Admin readable in existing conversion tooling
+- [x] Catalog + server persist + turn/client GA4 mirror (`lib/wisewave-p0-entry-analytics.ts`)
+- [x] Session dedupe in `record-conversion-event.ts`
+- [ ] Lumen measurement QA on hosted (admin conversion table shows P0 events)
+- [ ] `conversation_abandoned_before_reflection` client beacon (Slice 3)
 
 ### Slice 3 — P0.5 + P0.6 (client)
 
@@ -455,7 +457,7 @@ Debug on turn: `debug_p0_reflection_entry_flag_set`, `debug_p0_reflection_entry_
 
 ## 11. Immediate next step (Nova)
 
-**Slice 1 closed on Preview (Lumen QA2).** Await Tree/steward production enable decision. **Nova next (when cleared):** Slice 2 P0.7 analytics, or production smoke support after steward sets both env keys. No public copy until Slice 5 Aurora review.
+**Slice 1 closed on Preview (Lumen QA2).** **Production live (2026-07-09).** **Slice 2 in progress:** P0.7 entry analytics — catalog + server persist + client GA4 mirror. Abandon beacon remains Slice 3.
 
 ---
 

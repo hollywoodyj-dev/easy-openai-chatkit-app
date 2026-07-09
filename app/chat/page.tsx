@@ -1280,6 +1280,13 @@ function ChatContent() {
         "first_reflection_started",
         "first_reflection_completed",
         "day_7_return",
+        "entry_type_detected",
+        "reflection_mode_selected",
+        "slash_command_used",
+        "conversation_started",
+        "reflection_started",
+        "conversation_entered_reflection",
+        "reflection_depth_reached",
       ]);
       for (const eventName of data.conversion_events ?? []) {
         if (GA4_MIRRORED_CONVERSION_EVENTS.has(eventName as AnalyticsEventName)) {

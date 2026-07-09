@@ -26,7 +26,15 @@ export type AnalyticsEventName =
   | "checkout_started"
   | "payment_button_clicked"
   | "day_7_return"
-  | "web_cta_click";
+  | "web_cta_click"
+  | "entry_type_detected"
+  | "reflection_mode_selected"
+  | "slash_command_used"
+  | "conversation_started"
+  | "reflection_started"
+  | "conversation_entered_reflection"
+  | "reflection_depth_reached"
+  | "conversation_abandoned_before_reflection";
 
 export type AnalyticsPayload = Record<
   string,

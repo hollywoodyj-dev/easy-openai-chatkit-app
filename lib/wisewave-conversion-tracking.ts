@@ -122,6 +122,57 @@ export const CONVERSION_EVENT_CATALOG: ConversionEventCatalogEntry[] = [
     tier: "funnel",
     description: "View of /start expectations page.",
   },
+  {
+    name: "entry_type_detected",
+    label: "P0 entry type detected",
+    tier: "recommended",
+    description:
+      "Internal opening classification on early turn (observation for P1; no user message text).",
+  },
+  {
+    name: "reflection_mode_selected",
+    label: "P0 reflection mode selected",
+    tier: "recommended",
+    description: "Ephemeral entry mode applied (mirror/clarify/deepen/etc.; internal only).",
+  },
+  {
+    name: "slash_command_used",
+    label: "P0 slash command used",
+    tier: "funnel",
+    description: "Optional /slow or /mirror entry friction reduction.",
+  },
+  {
+    name: "conversation_started",
+    label: "P0 conversation started",
+    tier: "recommended",
+    description: "First user turn in a chat session (P0 entry observation).",
+  },
+  {
+    name: "reflection_started",
+    label: "P0 reflection started",
+    tier: "recommended",
+    description:
+      "Authentic reflection begun (P0); complements first_reflection_started for entry path observation.",
+  },
+  {
+    name: "conversation_entered_reflection",
+    label: "P0 entered reflection",
+    tier: "recommended",
+    description: "Entry assistance cleared; user reflection underway.",
+  },
+  {
+    name: "reflection_depth_reached",
+    label: "P0 reflection depth reached",
+    tier: "funnel",
+    description: "Turn 3+ depth signal for P1 prep (non-gamified).",
+  },
+  {
+    name: "conversation_abandoned_before_reflection",
+    label: "P0 abandoned before reflection",
+    tier: "recommended",
+    description:
+      "Session left before reflection began (client beacon; friction signal, not retention trigger).",
+  },
 ];
 
 export const PERSISTED_CONVERSION_EVENT_NAMES = new Set(
