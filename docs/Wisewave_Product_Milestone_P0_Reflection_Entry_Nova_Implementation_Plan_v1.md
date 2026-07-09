@@ -331,13 +331,13 @@ No buttons, no templates, no “choose a topic.”
 - [x] Catalog + server persist + turn/client GA4 mirror (`lib/wisewave-p0-entry-analytics.ts`)
 - [x] Session dedupe in `record-conversion-event.ts`
 - [x] Lumen measurement QA on Production — **PASS 2026-07-09** (`docs/qa/P0_REFLECTION_ENTRY_SLICE2_LUMEN_PRODUCTION_MEASUREMENT_QA_2026-07-09.md`)
-- [ ] `conversation_abandoned_before_reflection` client beacon (Slice 3)
+- [x] `conversation_abandoned_before_reflection` client beacon (Slice 3)
 
 ### Slice 3 — P0.5 + P0.6 (client)
 
-- [ ] Disable perception hint on empty thread
-- [ ] Permission empty state copy (Aurora approved)
-- [ ] Early exit one-invitation + abandon event
+- [x] Disable perception hint on empty thread
+- [x] Permission empty state copy (Aurora approved)
+- [x] Early exit one-invitation + abandon event
 
 ### Slice 4 — P0.3 slash commands
 
@@ -457,7 +457,7 @@ Debug on turn: `debug_p0_reflection_entry_flag_set`, `debug_p0_reflection_entry_
 
 ## 11. Immediate next step (Nova)
 
-**Slice 1 + Slice 2 closed on Production (Lumen 2026-07-09).** **Next:** Slice 3 — empty state + `conversation_abandoned_before_reflection` beacon (awaits Tree/steward). Slice 4 slash / Slice 5 Aurora copy unchanged.
+**Slice 1 + Slice 2 closed on Production (Lumen 2026-07-09).** **Slice 3 shipped (Nova 2026-07-09)** — empty state + abandon beacon; awaits steward **`NEXT_PUBLIC_ENABLE_P0_REFLECTION_ENTRY=1`** on Production + Lumen QA. Slice 4 slash / Slice 5 Aurora copy unchanged.
 
 ---
 

@@ -67,6 +67,12 @@ function persistConversionBeacon(
   const body = {
     eventName: name,
     token: typeof authToken === "string" ? authToken : undefined,
+    sessionId:
+      typeof payload.session_id === "string"
+        ? payload.session_id
+        : typeof payload.sessionId === "string"
+          ? payload.sessionId
+          : undefined,
     source: typeof payload.source === "string" ? payload.source : undefined,
     lp: typeof payload.lp === "string" ? payload.lp : undefined,
     adGroup:

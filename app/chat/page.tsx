@@ -2,7 +2,20 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { trackEvent, type AnalyticsEventName } from "@/lib/wisewave-analytics";
+import { trackEvent, AUTH_TOKEN_PAYLOAD_KEY, type AnalyticsEventName } from "@/lib/wisewave-analytics";
+import {
+  countUserMessages,
+  isP0ReflectionEntryClientEnabled,
+  markAbandonBeaconFired,
+  markP0ExitInvitationShown,
+  P0_EARLY_EXIT_IDLE_MS,
+  resolveP0EmptyStateCopy,
+  shouldFireP0AbandonBeacon,
+  shouldShowP0ExitInvitation,
+  shouldSuppressPerceptionOnEmptyThread,
+  shouldUseP0EmptyThread,
+  p0EmptyThreadMessages,
+} from "@/lib/wisewave-p0-early-exit";
 import {
   CHAT_AUTH_CHECK_ENDPOINT,
   CHAT_MESSAGES_ENDPOINT,
@@ -58,6 +71,10 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     },
   },
 ];
+
+function emptyThreadMessages(): ChatMessage[] {
+  return shouldUseP0EmptyThread(0) ? p0EmptyThreadMessages() : INITIAL_MESSAGES;
+}
 
 function cn(...classes: Array<string | false | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -671,7 +688,10 @@ function ChatContent() {
   }, [token]);
 
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const p0ClientEnabled = isP0ReflectionEntryClientEnabled();
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    p0ClientEnabled ? p0EmptyThreadMessages() : INITIAL_MESSAGES
+  );
   const [input, setInput] = useState("");
   const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -703,9 +723,11 @@ function ChatContent() {
   const [perceptionHintVisible, setPerceptionHintVisible] = useState(false);
   const [perceptionHasShownThisSession, setPerceptionHasShownThisSession] = useState(false);
   const [isFirstEntryThisSession, setIsFirstEntryThisSession] = useState(true);
+  const [p0ExitInviteVisible, setP0ExitInviteVisible] = useState(false);
   const userHasTypedRef = useRef(false);
   const userHasScrolledRef = useRef(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const p0IdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefillAppliedRef = useRef(false);
 
@@ -714,6 +736,7 @@ function ChatContent() {
       if (continueHighlightTimerRef.current) clearTimeout(continueHighlightTimerRef.current);
       if (continuePlaceholderTimerRef.current) clearTimeout(continuePlaceholderTimerRef.current);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (p0IdleTimerRef.current) clearTimeout(p0IdleTimerRef.current);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, []);
@@ -742,6 +765,13 @@ function ChatContent() {
   }, [prefill]);
 
   const canSend = useMemo(() => input.trim().length > 0 && !isWaiting, [input, isWaiting]);
+  const userMessageCount = useMemo(() => countUserMessages(messages), [messages]);
+  const p0EmptyThread = p0ClientEnabled && userMessageCount === 0;
+  const p0EmptyCopy = useMemo(() => {
+    const browserLang =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
+    return resolveP0EmptyStateCopy(browserLang.startsWith("zh"));
+  }, []);
   const anchorFromMessages = useMemo(() => {
     const assistants = messages.filter((m): m is Extract<ChatMessage, { role: "assistant" }> => m.role === "assistant");
     for (let i = assistants.length - 1; i >= 0; i -= 1) {
@@ -837,6 +867,7 @@ function ChatContent() {
   }, [sessionLoading, refreshSessionsList]);
 
   const showPerceptionHint = useCallback(() => {
+    if (shouldSuppressPerceptionOnEmptyThread(userMessageCount, p0ClientEnabled)) return;
     if (perceptionHasShownThisSession) return;
     const now = Date.now();
     if (typeof window !== "undefined") {
@@ -868,10 +899,77 @@ function ChatContent() {
       setPerceptionHintVisible(false);
       setTimeout(() => setPerceptionHintText(null), 320);
     }, PERCEPTION_STAY_MS);
-  }, [messages, perceptionHasShownThisSession]);
+  }, [messages, perceptionHasShownThisSession, p0ClientEnabled, userMessageCount]);
+
+  const fireP0AbandonBeacon = useCallback(() => {
+    if (
+      !shouldFireP0AbandonBeacon({
+        conversationId,
+        userMessageCount,
+        userHasTyped: userHasTypedRef.current,
+        p0Enabled: p0ClientEnabled,
+      })
+    ) {
+      return;
+    }
+    markAbandonBeaconFired(conversationId!);
+    const beaconPayload: Record<string, string> = {
+      session_id: conversationId!,
+      source: "p0_early_exit",
+      path: "/chat",
+      platform: "web",
+    };
+    if (token) beaconPayload[AUTH_TOKEN_PAYLOAD_KEY] = token;
+    trackEvent("conversation_abandoned_before_reflection", beaconPayload);
+  }, [conversationId, p0ClientEnabled, token, userMessageCount]);
+
+  useEffect(() => {
+    if (sessionLoading || !p0ClientEnabled) return;
+    if (shouldShowP0ExitInvitation()) {
+      setP0ExitInviteVisible(true);
+      markP0ExitInvitationShown();
+    }
+  }, [p0ClientEnabled, sessionLoading]);
+
+  useEffect(() => {
+    if (!p0ClientEnabled || sessionLoading || !conversationId) return;
+    if (userMessageCount > 0 || userHasTypedRef.current) return;
+
+    if (p0IdleTimerRef.current) clearTimeout(p0IdleTimerRef.current);
+    p0IdleTimerRef.current = setTimeout(() => {
+      if (input.trim().length > 0) return;
+      fireP0AbandonBeacon();
+    }, P0_EARLY_EXIT_IDLE_MS);
+
+    return () => {
+      if (p0IdleTimerRef.current) clearTimeout(p0IdleTimerRef.current);
+    };
+  }, [
+    conversationId,
+    fireP0AbandonBeacon,
+    input,
+    p0ClientEnabled,
+    sessionLoading,
+    userMessageCount,
+  ]);
+
+  useEffect(() => {
+    if (!p0ClientEnabled) return;
+    const onLeave = () => fireP0AbandonBeacon();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") onLeave();
+    };
+    window.addEventListener("pagehide", onLeave);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", onLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [fireP0AbandonBeacon, p0ClientEnabled]);
 
   useEffect(() => {
     if (sessionLoading || !isFirstEntryThisSession) return;
+    if (shouldSuppressPerceptionOnEmptyThread(userMessageCount, p0ClientEnabled)) return;
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
       idleTimerRef.current = null;
@@ -912,6 +1010,8 @@ function ChatContent() {
     sessionsList.length,
     sessionLoading,
     showPerceptionHint,
+    p0ClientEnabled,
+    userMessageCount,
   ]);
 
   useEffect(() => {
@@ -1174,7 +1274,7 @@ function ChatContent() {
           if (loaded.length > 0) {
             setMessages(loaded);
           } else {
-            setMessages(INITIAL_MESSAGES);
+            setMessages(emptyThreadMessages());
           }
         } else if (!cancelled && msgRes.status === 404) {
           if (typeof window !== "undefined") {
@@ -1204,9 +1304,9 @@ function ChatContent() {
               setConversationId(freshId);
             }
           }
-          setMessages(INITIAL_MESSAGES);
+          setMessages(emptyThreadMessages());
         } else if (!cancelled) {
-          setMessages(INITIAL_MESSAGES);
+          setMessages(emptyThreadMessages());
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to initialize chat");
@@ -1407,11 +1507,13 @@ function ChatContent() {
         )}
       >
         <div>
-          <div className="mb-8 max-w-2xl">
-          <div className="inline-flex rounded-full border border-black/6 bg-white/60 px-4 py-2 text-[12px] tracking-[0.16em] text-[#7A7A7A] backdrop-blur-sm">
-            low presence · human-tech · warm minimal
-          </div>
-        </div>
+          {!p0EmptyThread ? (
+            <div className="mb-8 max-w-2xl">
+              <div className="inline-flex rounded-full border border-black/6 bg-white/60 px-4 py-2 text-[12px] tracking-[0.16em] text-[#7A7A7A] backdrop-blur-sm">
+                low presence · human-tech · warm minimal
+              </div>
+            </div>
+          ) : null}
 
         {error ? <ErrorBanner message={error} /> : null}
           <CurrentSpaceMarker
@@ -1419,6 +1521,16 @@ function ChatContent() {
             marker={phase4Space?.current_space_marker}
           />
           <InsightAnchor text={anchorText} />
+          {p0EmptyThread ? (
+            <p className="mb-6 max-w-xl text-[15px] leading-relaxed text-[#7A7A7A]">
+              {p0EmptyCopy.permission}
+            </p>
+          ) : null}
+          {p0ExitInviteVisible && p0EmptyThread ? (
+            <p className="mb-6 max-w-xl text-[14px] leading-relaxed text-[#9A9A9A]">
+              {p0EmptyCopy.exitInvitation}
+            </p>
+          ) : null}
           <PerceptionHint text={perceptionHintText} visible={perceptionHintVisible} />
 
           <div className="space-y-6 md:space-y-8">
