@@ -13,7 +13,7 @@
 
 **Signed off on Preview (QA2).** Lumen **`docs/qa/P0_REFLECTION_ENTRY_SLICE1_LUMEN_PREVIEW_QA2_2026-07-08.md`**: unit **23/23**; fixtures **10/10** (P0-F01–F08 + ZH parity); marker **`p0_reflection_entry_v1_slice1_qa2`**; commit **`0ebf580`**.
 
-**Production:** still gated/off (`flag_set: false`, `enabled: false`, `active: false`). Do **not** enable until Tree/steward sets both `ENABLE_P0_REFLECTION_ENTRY=1` and `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1`, redeploys Production, and runs production smoke.
+**Production:** enabled after steward set both env keys on **Production** scope (2026-07-09). Smoke **PASS** on `www.wisewave.io`.
 
 **Encoding note:** QA1 ZH failures were harness mojibake (PowerShell inline Chinese → `????????`), not app regression. Use Unicode escapes or UTF-8 files for ZH API fixtures.
 
@@ -251,19 +251,14 @@ Repeat **P0-F02** and **P0-F04** with Chinese user messages; same debug expectat
 - [x] All 8 fixtures + ZH parity pass on **Preview** (Lumen QA2 2026-07-08)
 - [x] No Red drift on assistant responses (QA2)
 - [x] No visible mode / onboarding language (QA2)
-- [ ] Tree/steward production enable decision + Production smoke after both env keys set
+- [x] Tree/steward production enable + Production smoke (2026-07-09 PASS on `www.wisewave.io`)
 
----
+**Production smoke (2026-07-09):** **PASS** — steward fixed Vercel env scope (both keys on **Production**); `www.wisewave.io` shows `flag_set/enabled/active: true`, F01 Mirror, F07 guarded safety with emergency boundary.
 
 ## Steward setup for hosted probes
 
-1. Vercel: set `ENABLE_P0_REFLECTION_ENTRY=1` on **Preview** only.  
-2. Vercel: create **Protection Bypass for Automation** secret; share with Lumen (not in git).  
-3. Redeploy Preview if needed after env changes.  
-4. Run against the **Preview URL**:  
-   `set P0_BASE_URL=https://<your-preview-url>`  
-   `set P0_TOKEN=<jwt>`  
-   `set P0_VERCEL_PROTECTION_BYPASS=<secret>`  
-   `npm run p0:entry:hosted-probes`  
-5. Do **not** point probes at Production until Slice 1 is fully signed off.  
-6. Do **not** set `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION` until after full Lumen pass.
+1. **Preview QA:** `ENABLE_P0_REFLECTION_ENTRY=1` on Preview; bypass secret for Vercel Authentication.  
+2. **Production (after Preview sign-off):** both `ENABLE_P0_REFLECTION_ENTRY=1` and `P0_REFLECTION_ENTRY_ALLOW_PRODUCTION=1` on **Production** (both checkboxes required).  
+3. Run hosted probes:  
+   `set P0_BASE_URL=https://<url>` + `P0_VERCEL_PROTECTION_BYPASS` (Preview) or `P0_ALLOW_PRODUCTION=1` (prod)  
+   `npm run p0:entry:hosted-probes`
