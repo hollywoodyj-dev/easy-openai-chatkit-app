@@ -255,6 +255,8 @@ Repeat **P0-F02** and **P0-F04** with Chinese user messages; same debug expectat
 
 **Production smoke (2026-07-09):** **PASS** — steward fixed Vercel env scope (both keys on **Production**); `www.wisewave.io` shows `flag_set/enabled/active: true`, F01 Mirror, F07 guarded safety with emergency boundary.
 
+**Slice 2 measurement (2026-07-09):** **PASS** — Lumen `docs/qa/P0_REFLECTION_ENTRY_SLICE2_LUMEN_PRODUCTION_MEASUREMENT_QA_2026-07-09.md`.
+
 ## Steward setup for hosted probes
 
 1. **Preview QA:** `ENABLE_P0_REFLECTION_ENTRY=1` on Preview; bypass secret for Vercel Authentication.  
