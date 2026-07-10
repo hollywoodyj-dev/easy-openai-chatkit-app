@@ -80,6 +80,7 @@ import {
   getP0SafetyGuardedResponse,
   responseMeetsP0SafetyMinimum,
 } from "@/lib/wisewave-p0-guarded-responses";
+import { getDriftSuppressionFallback } from "@/lib/wisewave-drift-suppression-fallback";
 
 export const dynamic = "force-dynamic";
 
@@ -2144,6 +2145,7 @@ export async function POST(request: Request) {
   let debugDriftPassed = true;
   let debugDriftScore = 1;
   let debugDriftHighSeveritySuppressed = false;
+  let debugDriftSuppressionFallbackApplied = false;
   let debugDriftViolations: Array<{
     type: string;
     severity: string;
@@ -3596,7 +3598,12 @@ export async function POST(request: Request) {
 
   if (hasHighSeverityDrift(driftLint)) {
     debugDriftHighSeveritySuppressed = true;
-    assistantContent = "";
+    // Discard the drifted text, but never leave an empty stored message —
+    // an empty bubble on reload was the "empty response" bug in the
+    // 2026-07-08 real-user export. The fallback is neutral, linter-clean,
+    // and already-shipped client copy.
+    assistantContent = getDriftSuppressionFallback(wantsChinese);
+    debugDriftSuppressionFallbackApplied = true;
     keptLastInsight = null;
     keptSoftContinuity = null;
     keptPatternSurfacing = null;
@@ -3618,7 +3625,7 @@ export async function POST(request: Request) {
       try {
         await prisma.message.update({
           where: { id: assistantMsgId },
-          data: { message: "" },
+          data: { message: assistantContent },
         });
       } catch (e) {
         console.warn("[chat/turn] drift suppression message update failed", e);
@@ -3632,6 +3639,7 @@ export async function POST(request: Request) {
       debugP0GuardedResponseApplied = true;
       debugP0GuardedResponseKind = "safety";
       debugDriftHighSeveritySuppressed = false;
+      debugDriftSuppressionFallbackApplied = false;
       debugDriftPassed = true;
       debugDriftScore = 1;
       debugDriftViolations = [];
@@ -3657,6 +3665,7 @@ export async function POST(request: Request) {
     debugP0GuardedResponseApplied = true;
     debugP0GuardedResponseKind = "advice_clarify";
     debugDriftHighSeveritySuppressed = false;
+    debugDriftSuppressionFallbackApplied = false;
     debugDriftPassed = true;
     debugDriftScore = 1;
     debugDriftViolations = [];
@@ -3861,6 +3870,7 @@ export async function POST(request: Request) {
     debug_drift_linter_passed: debugDriftPassed,
     debug_drift_linter_score: debugDriftScore,
     debug_drift_linter_high_severity_suppressed: debugDriftHighSeveritySuppressed,
+    debug_drift_suppression_fallback_applied: debugDriftSuppressionFallbackApplied,
     debug_drift_linter_violations: debugDriftViolations,
     debug_rejected_phrase_hit: debugRejectedPhraseHit,
     debug_insight_core_pattern: debugInsightCorePattern,
