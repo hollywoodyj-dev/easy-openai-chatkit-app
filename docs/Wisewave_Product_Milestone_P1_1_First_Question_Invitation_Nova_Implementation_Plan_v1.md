@@ -4,26 +4,28 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Planning approved — **no Production behavior change** |
-| **Tree decision** | 2026-07-11 (Vicky Lu / Tree) — Nova may plan behind default-off flag |
+| **Status** | Planning valid — **Slice 1 coding held** (Tree 2026-07-13) · no Production behavior change |
+| **Tree decision** | 2026-07-11 planning approved · 2026-07-13 coexistence question open before code |
 | **Aurora** | Category/copy review received 2026-07-10 — candidate supported, default-off |
 | **Lumen fixtures** | `docs/qa/P1_1_FIRST_QUESTION_INVITATION_LUMEN_FIXTURES_2026-07-11.md` (F01–F11) |
-| **Authority** | [P1 Addendum (Locked)](./Wisewave_Product_Milestone_P1_Reflection_Experience_Implementation_Addendum_v1_LOCKED.md) · Tree P1.1 candidate note (2026-07-10/11) |
+| **Authority** | [P1 Addendum (Locked)](./Wisewave_Product_Milestone_P1_Reflection_Experience_Implementation_Addendum_v1_LOCKED.md) · [Tree P1 series 1/4–4/4](./Wisewave_Tree_Decision_P1_Interaction_Legibility_and_First_Question_2026-07-13.md) |
 | **Owner** | Nova (implementation) · Aurora (copy) · Lumen (QA) · Tree (Production gate) |
 
 ---
 
-## 1. Governing line
+## 1. Governing principles
+
+> **Legibility before interaction.** (Tree 2/4)
 
 > **Wisewave may open the door, but it must not lead the user through it.**
 
-Product principle:
-
 > **Wisewave can ask first.**
 
-This P1.1 slice is a **narrow exception** to P1 Principle 1 (*Presence Follows Reflection*): it helps users who do not yet know what kind of material belongs in the space. It is **not** onboarding, coaching, guided intake, or a prompt library.
+This P1.1 slice addresses **initiation uncertainty** only (*"How do I begin?"*). **Interaction uncertainty** (*"What kind of thing belongs in this space?"*) is the **Interaction Legibility Layer** — deferred, plain text, validation before implementation. **P1.2 Reflection Strategy Engine** (Mirror/Clarify/Deepen/Slow/Continue) is **design-only**, invisible, separate track.
 
-**Explicitly out of this plan:** Entry Examples surface (chips/cards), RCL mode selector, multi-question flows, GR-1 linter changes, Production enablement.
+It is **not** onboarding, coaching, guided intake, or a prompt library.
+
+**Explicitly out of this plan:** Entry Examples as interactive UI (chips/cards/buttons/workflow), RCL mode selector, multi-question flows, GR-1 linter changes, Production enablement, **Slice 1 code** (not authorized per Tree memo 2/4).
 
 ---
 
@@ -37,6 +39,19 @@ This P1.1 slice is a **narrow exception** to P1 Principle 1 (*Presence Follows R
 | Tree | Explicit Production approval before any user-facing enable |
 
 Until all gates pass: **no Production UI change**.
+
+**Coding hold (Tree 2/4–4/4):** P1.1 Slice 1 **not authorized** until Tree/steward explicitly requests. Product validation before implementation. Series **complete** (2026-07-13).
+
+---
+
+## 2a. Two uncertainties (Tree + Wisewave 2026-07-13)
+
+| Layer | Answers | Form (approved direction) |
+|-------|---------|---------------------------|
+| **Interaction Legibility** | What kind of thing belongs in this space? | Plain-text legibility — **not** chips, buttons, cards, prompt UI, or workflow |
+| **First Question Invitation (P1.1)** | How do I begin? | Optional one-question tap — this plan |
+
+Entry Examples concept is **retained** under the Interaction Legibility reframe; **not discarded**, **not implemented** as interactive UI, **not combined** with P1.1 until Tree decides coexistence.
 
 ---
 
@@ -118,6 +133,8 @@ Tree-approved 2026-07-11. No code.
 
 ### Slice 1 — Flag infrastructure + copy module
 
+**Status: HELD** — Tree 2026-07-13; await 2/4–4/4 and coexistence resolution.
+
 - [ ] `lib/wisewave-p1-first-question-invitation.ts`
 - [ ] Server/client enable helpers + Production guard
 - [ ] `.env.example` entries
@@ -194,7 +211,7 @@ Tree-approved 2026-07-11. No code.
 ## 9. Non-goals (Tree-forbidden)
 
 - Prompt library, mode chips, menus, wizards, questionnaires
-- Multiple simultaneous entry paths (Entry Examples + invitation combined)
+- Multiple simultaneous entry paths (Interaction Legibility + invitation combined **without Tree approval**)
 - Auto follow-up questions after the first
 - Repeated push if ignored
 - Production UI without Tree approval
@@ -207,14 +224,18 @@ Tree-approved 2026-07-11. No code.
 
 | Item | Owner | Blocker? |
 |------|-------|----------|
+| **Coexistence / validation strategy** | Tree | **Hard** — product validation before any P1 entry-support code (Tree memo 2/4) |
+| Wisewave + Tree documents **3/4–4/4** | Tree/Wisewave | **Complete** (2026-07-13) |
+| P1.2 Design v1 (Reflection Strategy Engine) | Nova | **Drafted** — `docs/Wisewave_Product_Milestone_P1_2_Reflection_Strategy_Engine_Design_v1.md`; implementation **not approved** |
+| Aurora: "Reflection Strategy Engine" naming | Aurora | **Never** public product copy or user-facing UI (internal/governance only) |
 | ZH first-question text (not just invitation) | Aurora | Hard before ZH F10 sign-off |
 | Confirm UI-only persistence model | Tree | Soft — recommended in this plan |
-| Entry Examples vs invitation (mutually exclusive variants) | Tree/Aurora/Lumen | **Hard for Entry Examples** — invitation-only for this plan |
+| Interaction Legibility layer design (non-interactive) | Tree/Wisewave/Aurora | Separate from P1.1; not discarded |
 
 ---
 
 ## 11. Nova stance
 
-P1.1 is the smallest evidence-backed move from real-user data: one optional door, one question, then silence. Entry Examples remain a **separate P1 candidate** — not combined in this plan per Tree 2026-07-10/11.
+P1.1 addresses **initiation** only. Interaction Legibility and P1.2 are separate governed tracks. Tree P1 series **complete (4/4)**. Nova may draft **P1.2 Design v1**; holds all **code** until Tree/steward authorizes Slice 1 or P1.2 implementation.
 
-**Next authorized step:** implement Slice 1–4 on a branch or behind flags on Preview when steward requests; until then this plan is the deliverable for Tree's 2026-07-11 directive.
+**Next (design only, done):** `docs/Wisewave_Product_Milestone_P1_2_Reflection_Strategy_Engine_Design_v1.md` drafted 2026-07-13. **No code** until Tree/steward authorizes P1.1 Slice 1 or P1.2 implementation.
