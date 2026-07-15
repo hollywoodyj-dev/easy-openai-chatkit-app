@@ -2,7 +2,8 @@
 
 **Date:** 2026-07-13 (Tree memo 4/4 received Nova 2026-07-13)  
 **Owner:** Lumen  
-**Status:** Validation thinking only — **no Production approval**  
+**Status:** **Active validation** — Interaction Legibility only (Tree 2026-07-16)  
+**Tree gate:** Pass/hold recommendation required before any P1 code authorization  
 **Authority:** [Tree P1 series record](../Wisewave_Tree_Decision_P1_Interaction_Legibility_and_First_Question_2026-07-13.md)
 
 ---
@@ -26,6 +27,8 @@ Legibility before interaction.
 ## Lumen scope
 
 Prepare **validation thinking**, not implementation approval.
+
+**Tree 2026-07-16:** Lumen may **proceed** with Interaction Legibility validation now. Deliver a clear **pass/hold** recommendation. Do **not** validate or approve: P1.1 code, P1.2 behavior, Production UI, flags, or GR-1 linter changes.
 
 Do not request Production enablement until Tree explicitly opens that stage.
 

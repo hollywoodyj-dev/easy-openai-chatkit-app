@@ -281,14 +281,50 @@ Do not approve Production behavior change.
 |-------|--------|-----------|
 | Track A / P0 stability | **Closed** | None unless new defect |
 | GR-1 | Separate | Tree + OctopusMind after fixture review |
-| P1.1 First Question | Planning only | Slice 1 when Tree/steward authorizes |
-| Interaction Legibility | Deferred validation | Lumen validation thinking (4/4) |
+| P1.1 First Question | Planning accepted | **Hold Slice 1** until Lumen Interaction Legibility validation + Tree authorization |
+| Interaction Legibility | **Lumen validation active** | Pass/hold recommendation → Tree decides first code move |
 | P1.2 Strategy Engine | Design-only | Nova **P1.2 Design v1** doc (authorized) |
 | Production | **Closed** | — |
 
 **Nova authorized (design docs only):** ~~prepare~~ **`docs/Wisewave_Product_Milestone_P1_2_Reflection_Strategy_Engine_Design_v1.md`** — **drafted 2026-07-13**
 
 **Nova not authorized:** P1.1 Slice 1 code, P1.2 behavior, any Production UI, GR-1 rule changes.
+
+---
+
+## Tree P1 handoff acceptance (2026-07-16)
+
+Tree accepts the P1 handoff as **complete**.
+
+| Artifact | Tree verdict |
+|----------|--------------|
+| P1.1 Nova implementation plan | **Accepted** — planning-ready |
+| P1.2 Design v1 | **Accepted** — design-only |
+| Any implementation | **Not authorized** |
+
+### Nova hold (reaffirmed)
+
+- P1.1 Slice 1 code
+- P1.2 behavior implementation
+- Interaction Legibility UI
+- Production flags / UI
+- GR-1 linter changes
+
+### Next dependency chain
+
+1. **Lumen** — validation of **Interaction Legibility only** (plain-text legibility layer)
+2. **Tree** — pass/hold recommendation from Lumen
+3. **Tree** — then decides whether to authorize **P1.1 Slice 1** as the first code move
+
+Lumen validation scope (Interaction Legibility only):
+
+- Plain-text legibility layer
+- Reduces uncertainty about what Wisewave is doing?
+- Preserves Low Presence?
+- Avoids UI guidance, coaching, or workflow?
+- Remains separate from P1.1 and P1.2?
+
+**Out of scope for Lumen at this stage:** P1.1 code, P1.2 behavior, Production UI, flags, GR-1 linter changes.
 
 ---
 

@@ -4,7 +4,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Planning valid — **Slice 1 coding held** (Tree 2026-07-13) · no Production behavior change |
+| **Status** | Planning accepted (Tree 2026-07-16) — **Slice 1 coding held** · no Production behavior change |
 | **Tree decision** | 2026-07-11 planning approved · 2026-07-13 coexistence question open before code |
 | **Aurora** | Category/copy review received 2026-07-10 — candidate supported, default-off |
 | **Lumen fixtures** | `docs/qa/P1_1_FIRST_QUESTION_INVITATION_LUMEN_FIXTURES_2026-07-11.md` (F01–F11) |
