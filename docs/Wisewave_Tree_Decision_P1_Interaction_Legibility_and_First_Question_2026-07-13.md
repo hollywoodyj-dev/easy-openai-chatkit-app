@@ -282,7 +282,7 @@ Do not approve Production behavior change.
 | Track A / P0 stability | **Closed** | None unless new defect |
 | GR-1 | Separate | Tree + OctopusMind after fixture review |
 | P1.1 First Question | Planning accepted | **Hold Slice 1** until Lumen Interaction Legibility validation + Tree authorization |
-| Interaction Legibility | **Lumen validation active** | Pass/hold recommendation → Tree decides first code move |
+| Interaction Legibility | **Lumen PASS WITH WATCHPOINTS** (2026-07-16) | Tree decides: P1.1 Slice 1 first vs plain-text legibility slice first |
 | P1.2 Strategy Engine | Design-only | Nova **P1.2 Design v1** doc (authorized) |
 | Production | **Closed** | — |
 
@@ -312,9 +312,9 @@ Tree accepts the P1 handoff as **complete**.
 
 ### Next dependency chain
 
-1. **Lumen** — validation of **Interaction Legibility only** (plain-text legibility layer)
-2. **Tree** — pass/hold recommendation from Lumen
-3. **Tree** — then decides whether to authorize **P1.1 Slice 1** as the first code move
+1. ~~**Lumen** — validation of **Interaction Legibility only**~~ **Done 2026-07-16 — PASS WITH WATCHPOINTS**
+2. **Tree** — receive Lumen recommendation; decide first code move
+3. **Tree** — may authorize **P1.1 Slice 1** and/or a **separate default-off plain-text legibility slice** (not combined without explicit approval)
 
 Lumen validation scope (Interaction Legibility only):
 
@@ -325,6 +325,29 @@ Lumen validation scope (Interaction Legibility only):
 - Remains separate from P1.1 and P1.2?
 
 **Out of scope for Lumen at this stage:** P1.1 code, P1.2 behavior, Production UI, flags, GR-1 linter changes.
+
+---
+
+## Lumen Interaction Legibility validation (2026-07-16)
+
+**Verdict:** **PASS WITH WATCHPOINTS** — plain-text Interaction Legibility acceptable as product direction.
+
+**Artifact:** `docs/qa/P1_INTERACTION_LEGIBILITY_LUMEN_VALIDATION_2026-07-16.md`
+
+**Core recommendation to Tree:** Static plain-text layer is valid — reduces uncertainty about what belongs in Wisewave while preserving Low Presence.
+
+**Pass applies to legibility block only** (not the P1.1 "ask one question first" line — that remains separate).
+
+**Watchpoints if implementation authorized:** no chips/cards/buttons/prompt UI; no onboarding headings; avoid therapy/journaling framing on "feeling" line; do not merge P1.1 invitation without Tree approval; text must not persist after user types/expresses.
+
+**Lumen recommendation for Tree next decision:**
+
+- Authorize **P1.1 Slice 1** as first code move, **or**
+- Authorize a **separate default-off plain-text legibility slice** first
+
+If P1.1 goes first: P1.1 must not absorb legibility into an interactive prompt system.
+
+**Nova status:** All implementation **still on hold** until Tree explicitly authorizes a slice.
 
 ---
 
@@ -342,3 +365,4 @@ Lumen validation scope (Interaction Legibility only):
 | P1.2 design request (referenced, await) | `WISEWAVE_P1_2_REFLECTION_STRATEGY_ENGINE_DESIGN_REQUEST_2026-07-11.md` |
 | Lumen validation direction (4/4) | `docs/qa/P1_VALIDATION_DIRECTION_INTERACTION_LEGIBILITY_AND_P1_2_QA_2026-07-13.md` |
 | P1.2 Design v1 (Nova deliverable) | `docs/Wisewave_Product_Milestone_P1_2_Reflection_Strategy_Engine_Design_v1.md` |
+| Lumen Interaction Legibility validation | `docs/qa/P1_INTERACTION_LEGIBILITY_LUMEN_VALIDATION_2026-07-16.md` |
