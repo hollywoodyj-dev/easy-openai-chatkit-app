@@ -128,6 +128,27 @@ Hide when **any** true:
 3. No database migration or server flag required — client-only slice.  
 4. P0 behaviour unaffected when legibility flag off.
 
+## Hosted Preview QA (after steward sets Preview env)
+
+**Prerequisite (steward):** `NEXT_PUBLIC_ENABLE_P1_INTERACTION_LEGIBILITY=1` on Vercel **Preview** scope only. Do **not** set `NEXT_PUBLIC_P1_INTERACTION_LEGIBILITY_ALLOW_PRODUCTION`.
+
+**Trigger Preview deploy:** open PR from branch `qa/p1-legibility-preview` (not a `main` push — `main` deploys to Production).
+
+**Reach protected Preview:**
+
+1. Steward: Vercel → Deployment Protection → Protection Bypass for Automation → share secret with Lumen securely.
+2. Browser cookie path (same as P0):
+
+```text
+https://<preview-deployment-url>/chat?x-vercel-protection-bypass=<secret>&x-vercel-set-bypass-cookie=true
+```
+
+3. API/script path: header `x-vercel-protection-bypass: <secret>` (local env `P0_VERCEL_PROTECTION_BYPASS` or `VERCEL_AUTOMATION_BYPASS_SECRET`).
+
+**Verify flag baked in:** empty `/chat` shows `[data-testid="p1-interaction-legibility-preview"]` and `Many people begin with:`.
+
+**Production must stay clean:** `https://www.wisewave.io/chat` must **not** show the P1 block.
+
 ## Local gate
 
 ```bash

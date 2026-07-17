@@ -5,6 +5,7 @@
 **Scope:** P1 Interaction Legibility preview slice only  
 **Fixture pack:** `docs/qa/P1_INTERACTION_LEGIBILITY_PREVIEW_SLICE_LUMEN_FIXTURES_2026-07-17.md`  
 **Local commit checked:** `7740ef2`  
+**Hosted retest commit checked:** `3a228eb`  
 **Verdict:** **HOLD - Preview deployment/access not confirmable; local Preview-flag behavior passes.**
 
 ## Summary
@@ -121,20 +122,53 @@ After sending the first expression:
 
 `https://www.wisewave.io/chat` returned the normal Wisewave page and did not include the P1 legibility test hook or `Many people begin with:` text.
 
+## Hosted Retest Addendum - 2026-07-17 15:45 AEST
+
+Nova reported the slice was on `main` at commit `3a228eb` and asked Lumen to wait for a fresh Vercel Preview deployment from that commit, with Preview env `NEXT_PUBLIC_ENABLE_P1_INTERACTION_LEGIBILITY=1`, a Vercel Protection bypass secret, and the Preview deployment URL.
+
+Lumen confirmed local `HEAD` and commit `3a228eb`:
+
+```text
+3a228ebe693a10f1d64a3a3aa6deed8981b641d9 feat(chat): ship P1 Interaction Legibility preview slice (default-off)
+```
+
+Vercel deployment list and inspection showed the fresh deployment for this commit as Production, not Preview:
+
+```text
+Deployment: https://wisewave-chatkit-app-v2-6e3grdxae-jing-yangs-projects-db5d1ce8.vercel.app
+Target: production
+Created: Fri Jul 17 2026 15:36:28 AEST
+Aliases: https://www.wisewave.io, https://wisewave.io, project aliases, git-main alias
+```
+
+The deployment URL `/chat` returned Vercel Login from this machine. No environment variable named like `P0_VERCEL_PROTECTION_BYPASS`, `VERCEL_AUTOMATION_BYPASS_SECRET`, `P0_TOKEN`, or `PROTECTION_BYPASS` was present in the current shell.
+
+Production guard was rechecked after the `3a228eb` production-target deploy:
+
+```text
+URL: https://www.wisewave.io/chat
+Status: 200
+HAS_P1_TESTID=False
+HAS_MANY_PEOPLE=False
+HAS_BEGIN_ANYWHERE=False
+```
+
+Result: production remains clean, but hosted Preview IL-P02 through IL-P09 still cannot be rerun until Steward provides the reachable Preview URL and Vercel Protection bypass.
+
 ## HOLD Reason
 
 This cannot be signed off as Preview QA because the actual protected Preview deployment was not reachable from this environment:
 
 - No automation bypass secret was available.
 - Candidate deployment URLs showed the Vercel login page.
-- Vercel CLI did not show a fresh 2026-07-17 `target preview` deployment in the visible page; the fresh deployment inspected was `target production`.
+- Vercel CLI did not show a fresh 2026-07-17 `target preview` deployment in the visible page; the fresh deployments inspected were `target production`, including commit `3a228eb` at 15:36 AEST.
 
 ## Required Next Step
 
 Provide either:
 
 1. A reachable 2026-07-17 Preview deployment URL plus Vercel Protection bypass secret/cookie path, or
-2. Confirmation that the 15:10 deployment is intentionally the Preview test target despite Vercel reporting `target production`.
+2. Confirmation that the 15:36 deployment for commit `3a228eb` is intentionally the Preview test target despite Vercel reporting `target production`.
 
 Then rerun IL-P02 through IL-P09 on the hosted Preview and replace this HOLD with a hosted verdict.
 
