@@ -592,5 +592,7 @@
 - **2026-07-16 Lumen Interaction Legibility:** PASS WITH WATCHPOINTS — plain-text direction valid; Tree decides first code slice (P1.1 vs legibility).
 - **2026-07-17 Tree authorizes Interaction Legibility preview slice:** client-only default-off flag `NEXT_PUBLIC_ENABLE_P1_INTERACTION_LEGIBILITY`; `lib/wisewave-p1-interaction-legibility.ts` + `app/chat/page.tsx`; Lumen fixtures `docs/qa/P1_INTERACTION_LEGIBILITY_PREVIEW_SLICE_LUMEN_FIXTURES_2026-07-17.md`. No P1.1 line, no turn changes, Production HOLD. P1.1 Slice 1 still on hold.
 - **2026-07-17 Lumen P1 legibility Preview QA:** **PASS** (hosted Preview). Preview `hur5l61tl`, commit `8b24d1a`; IL-P02–IL-P09 pass EN/ZH.
-- **2026-07-17 Tree Production observation authorized:** Rollout approved standalone; flags `NEXT_PUBLIC_ENABLE_P1_INTERACTION_LEGIBILITY=1` + `ALLOW_PRODUCTION=1` on Production; observation **2026-07-17 → 2026-07-31**. **P1.1 Slice 1 ON HOLD** until observation closes. Records: `docs/Wisewave_Tree_Decision_P1_Interaction_Legibility_Production_Rollout_2026-07-17.md`, deploy checklist `docs/qa/P1_INTERACTION_LEGIBILITY_PRODUCTION_DEPLOY_CHECKLIST_2026-07-17.md`. **Steward:** set Production env vars + redeploy.
+- **2026-07-17 Tree Production observation authorized:** … **Steward:** set Production env vars + redeploy.
+- **2026-07-17 Steward Production deploy:** Both P1 Production flags set; redeployed. `main` at `9bcffcc`.
+- **2026-07-17 Lumen Production smoke:** **PASS** on `www.wisewave.io/chat` — EN empty/typing/first-expression, ZH spot-check, no P1.1/chips/onboarding. Evidence `qa-artifacts/p1-il-production-*-2026-07-17.*`. **Observation → 2026-07-31.** **P1.1 ON HOLD.** No Nova code changes until observation review.
 

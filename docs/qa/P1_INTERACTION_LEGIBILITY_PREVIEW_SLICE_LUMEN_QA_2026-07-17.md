@@ -226,8 +226,46 @@ State evidence saved:
 qa-artifacts/p1-il-hosted-preview-state-2026-07-17.json
 ```
 
+## Production Smoke Addendum - 2026-07-17 23:11 AEST
+
+Nova reported Steward enabled the Production flags and redeployed `main` at commit `9bcffcc`:
+
+```text
+NEXT_PUBLIC_ENABLE_P1_INTERACTION_LEGIBILITY=1
+NEXT_PUBLIC_P1_INTERACTION_LEGIBILITY_ALLOW_PRODUCTION=1
+URL: https://www.wisewave.io/chat
+Observation window: 2026-07-17 -> 2026-07-31
+```
+
+Lumen ran a clean anonymous browser smoke against Production with Playwright at 390px mobile width.
+
+Production observations:
+
+- Empty EN thread: `[data-testid="p1-interaction-legibility-preview"]` present and visible above the input.
+- Authorized EN static block present: `You can begin anywhere.`, `Many people begin with:`, and all four example lines.
+- `You can begin anywhere.` appeared exactly once in the empty state.
+- Typing `I feel a little unsure where to begin` hid the P1 block immediately while preserving the typed text in the input.
+- After first expression send, the user message appeared, the assistant responded normally, the input cleared, and the P1 block stayed hidden.
+- No P1.1 invitation line appeared.
+- No buttons, links, chips, cards, menus, tap targets, or selectable examples appeared inside the legibility block.
+- No onboarding headings such as `Get started`, `Choose an option`, or `Select one` appeared.
+- ZH locale spot-check (`zh-CN`) showed the ZH opening, lead, and four example lines.
+
+State evidence saved:
+
+```text
+qa-artifacts/p1-il-production-smoke-state-2026-07-17.json
+```
+
+Screenshots saved:
+
+- `qa-artifacts/p1-il-production-empty-2026-07-17.png`
+- `qa-artifacts/p1-il-production-typing-2026-07-17.png`
+- `qa-artifacts/p1-il-production-after-first-expression-2026-07-17.png`
+- `qa-artifacts/p1-il-production-zh-empty-2026-07-17.png`
+
 ## Verdict
 
 **PASS**.
 
-Hosted Preview IL-P02 through IL-P09 pass. Production remains clean. P1.1 and GR-1 remain separate and not approved by this result.
+Hosted Preview IL-P02 through IL-P09 pass. Production smoke passes after intentional Production flag enablement. P1.1 and GR-1 remain separate and not approved by this result.

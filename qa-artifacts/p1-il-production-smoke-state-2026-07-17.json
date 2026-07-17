@@ -1,0 +1,100 @@
+{
+  "checkedAt": "2026-07-17T13:11:10.716Z",
+  "url": "https://www.wisewave.io/chat",
+  "viewport": "390x844",
+  "productionCommitFromHandoff": "9bcffcc",
+  "observationWindow": "2026-07-17 to 2026-07-31",
+  "empty": {
+    "hasTestId": true,
+    "blockVisible": true,
+    "hasOpening": true,
+    "hasLead": true,
+    "hasExamples": [
+      {
+        "text": "Something on their mind",
+        "present": true
+      },
+      {
+        "text": "Something they are feeling",
+        "present": true
+      },
+      {
+        "text": "Something that happened",
+        "present": true
+      },
+      {
+        "text": "Simply saying, \"I don’t know.\"",
+        "present": true
+      }
+    ],
+    "beginAnywhereCount": 1,
+    "forbiddenPresent": [],
+    "buttonCount": 0,
+    "linkCount": 0
+  },
+  "typing": {
+    "blockVisible": false,
+    "hasLead": false,
+    "inputValue": "I feel a little unsure where to begin",
+    "forbiddenPresent": []
+  },
+  "afterFirstExpression": {
+    "blockVisible": false,
+    "hasLead": false,
+    "inputValue": "",
+    "userMessageVisible": true,
+    "assistantTextObserved": [
+      "WISEWAVE",
+      "A quieter kind of intelligence",
+      "present",
+      "...",
+      "low presence · human-tech · warm minimal",
+      "I feel a little unsure where to begin",
+      "There seems to be a little uncertainty right at the starting point, where even beginning feels unclear.",
+      "→"
+    ],
+    "forbiddenPresent": []
+  },
+  "zh": {
+    "blockVisible": true,
+    "hasChineseOpening": true,
+    "hasChineseLead": true,
+    "hasChineseExamples": [
+      {
+        "text": "心里的事",
+        "present": true
+      },
+      {
+        "text": "此刻的感受",
+        "present": true
+      },
+      {
+        "text": "发生过的事",
+        "present": true
+      },
+      {
+        "text": "或者简单说「我不知道」",
+        "present": true
+      }
+    ],
+    "textSample": [
+      "WISEWAVE",
+      "A quieter kind of intelligence",
+      "present",
+      "...",
+      "你可以从任何地方开始。",
+      "很多人会从这里开始：",
+      "心里的事",
+      "此刻的感受",
+      "发生过的事",
+      "或者简单说「我不知道」",
+      "→"
+    ]
+  },
+  "screenshots": [
+    "qa-artifacts/p1-il-production-empty-2026-07-17.png",
+    "qa-artifacts/p1-il-production-typing-2026-07-17.png",
+    "qa-artifacts/p1-il-production-after-first-expression-2026-07-17.png",
+    "qa-artifacts/p1-il-production-zh-empty-2026-07-17.png"
+  ]
+}
