@@ -281,8 +281,8 @@ Do not approve Production behavior change.
 |-------|--------|-----------|
 | Track A / P0 stability | **Closed** | None unless new defect |
 | GR-1 | Separate | Tree + OctopusMind after fixture review |
-| P1.1 First Question | Planning accepted | **Hold Slice 1** until Lumen Interaction Legibility validation + Tree authorization |
-| Interaction Legibility | **Lumen PASS WITH WATCHPOINTS** (2026-07-16) | Tree decides: P1.1 Slice 1 first vs plain-text legibility slice first |
+| P1.1 First Question | Planning accepted | **Hold Slice 1** — separate Tree decision after legibility Preview QA |
+| Interaction Legibility | **Preview slice AUTHORIZED** (2026-07-17); **Lumen HOLD** (hosted Preview) | Commit/push slice; Preview env + bypass; Lumen retest IL-P02–P09 on hosted Preview |
 | P1.2 Strategy Engine | Design-only | Nova **P1.2 Design v1** doc (authorized) |
 | Production | **Closed** | — |
 
@@ -366,3 +366,4 @@ If P1.1 goes first: P1.1 must not absorb legibility into an interactive prompt s
 | Lumen validation direction (4/4) | `docs/qa/P1_VALIDATION_DIRECTION_INTERACTION_LEGIBILITY_AND_P1_2_QA_2026-07-13.md` |
 | P1.2 Design v1 (Nova deliverable) | `docs/Wisewave_Product_Milestone_P1_2_Reflection_Strategy_Engine_Design_v1.md` |
 | Lumen Interaction Legibility validation | `docs/qa/P1_INTERACTION_LEGIBILITY_LUMEN_VALIDATION_2026-07-16.md` |
+| Interaction Legibility preview slice (Tree auth 2026-07-17) | `docs/qa/P1_INTERACTION_LEGIBILITY_PREVIEW_SLICE_LUMEN_FIXTURES_2026-07-17.md` |

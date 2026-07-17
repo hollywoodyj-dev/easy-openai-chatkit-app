@@ -17,6 +17,11 @@ import {
   p0EmptyThreadMessages,
 } from "@/lib/wisewave-p0-early-exit";
 import {
+  isP1InteractionLegibilityClientEnabled,
+  resolveP1InteractionLegibilityCopy,
+  shouldShowP1InteractionLegibility,
+} from "@/lib/wisewave-p1-interaction-legibility";
+import {
   CHAT_AUTH_CHECK_ENDPOINT,
   CHAT_MESSAGES_ENDPOINT,
   CHAT_SESSION_ENDPOINT,
@@ -608,6 +613,30 @@ function ErrorBanner({ message }: { message: string }) {
   );
 }
 
+function InteractionLegibilityPreview({
+  copy,
+}: {
+  copy: ReturnType<typeof resolveP1InteractionLegibilityCopy>;
+}) {
+  return (
+    <div
+      className="mx-auto max-w-4xl px-5 pb-2 pt-1 md:px-8"
+      data-testid="p1-interaction-legibility-preview"
+      aria-live="polite"
+    >
+      <div className="max-w-xl text-[13px] leading-relaxed text-[#9A9A9A]">
+        <p>{copy.opening}</p>
+        <p className="mt-3">{copy.examplesLead}</p>
+        <div className="mt-2 space-y-1">
+          {copy.examples.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function looksLikeChinese(text: string): boolean {
   return /[\u4e00-\u9fff]/.test(text);
 }
@@ -689,6 +718,7 @@ function ChatContent() {
 
   const [conversationId, setConversationId] = useState<string | undefined>();
   const p0ClientEnabled = isP0ReflectionEntryClientEnabled();
+  const p1LegibilityEnabled = isP1InteractionLegibilityClientEnabled();
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     p0ClientEnabled ? p0EmptyThreadMessages() : INITIAL_MESSAGES
   );
@@ -772,6 +802,20 @@ function ChatContent() {
       typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
     return resolveP0EmptyStateCopy(browserLang.startsWith("zh"));
   }, []);
+  const p1LegibilityCopy = useMemo(() => {
+    const browserLang =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
+    return resolveP1InteractionLegibilityCopy(browserLang.startsWith("zh"));
+  }, []);
+  const interactionLegibilityVisible = useMemo(
+    () =>
+      shouldShowP1InteractionLegibility({
+        enabled: p1LegibilityEnabled,
+        userMessageCount,
+        inputHasContent: input.trim().length > 0,
+      }),
+    [input, p1LegibilityEnabled, userMessageCount]
+  );
   const anchorFromMessages = useMemo(() => {
     const assistants = messages.filter((m): m is Extract<ChatMessage, { role: "assistant" }> => m.role === "assistant");
     for (let i = assistants.length - 1; i >= 0; i -= 1) {
@@ -1521,7 +1565,7 @@ function ChatContent() {
             marker={phase4Space?.current_space_marker}
           />
           <InsightAnchor text={anchorText} />
-          {p0EmptyThread ? (
+          {p0EmptyThread && !interactionLegibilityVisible ? (
             <p className="mb-6 max-w-xl text-[15px] leading-relaxed text-[#7A7A7A]">
               {p0EmptyCopy.permission}
             </p>
@@ -1562,6 +1606,9 @@ function ChatContent() {
         onClose={() => setSubscriptionModalOpen(false)}
       />
 
+      {interactionLegibilityVisible ? (
+        <InteractionLegibilityPreview copy={p1LegibilityCopy} />
+      ) : null}
       <InputBar
         value={input}
         onChange={(value) => {
