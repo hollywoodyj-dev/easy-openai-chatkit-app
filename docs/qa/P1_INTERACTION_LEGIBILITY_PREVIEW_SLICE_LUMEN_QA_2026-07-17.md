@@ -5,14 +5,14 @@
 **Scope:** P1 Interaction Legibility preview slice only  
 **Fixture pack:** `docs/qa/P1_INTERACTION_LEGIBILITY_PREVIEW_SLICE_LUMEN_FIXTURES_2026-07-17.md`  
 **Local commit checked:** `7740ef2`  
-**Hosted retest commit checked:** `3a228eb`  
-**Verdict:** **HOLD - Preview deployment/access not confirmable; local Preview-flag behavior passes.**
+**Hosted retest commits checked:** `3a228eb`, `8b24d1a`  
+**Verdict:** **PASS - hosted Preview fixtures IL-P02 through IL-P09 pass.**
 
 ## Summary
 
-The slice behavior passes in local Preview-flag conditions: static plain text appears on an empty thread, disappears on typing, stays gone after the first expression, has no chips/cards/buttons, does not show the P1.1 invitation line, and does not duplicate the P0 `You can begin anywhere.` line when both P0 and P1 client flags are enabled.
+The slice behavior passes on hosted Preview `hur5l61tl` after Vercel Protection bypass was provided. Static plain text appears on an empty thread, disappears on typing, stays gone after the first expression, has no chips/cards/buttons/selectable examples, does not show the P1.1 invitation line, and does not duplicate the P0 `You can begin anywhere.` line in the empty state.
 
-The actual Vercel Preview deployment could not be verified from this machine. Candidate Preview URLs are behind Vercel Authentication, and no `P0_VERCEL_PROTECTION_BYPASS` / `VERCEL_AUTOMATION_BYPASS_SECRET` was available in the environment. Vercel CLI also showed the fresh 2026-07-17 deployment as `target production`, while the visible `target preview` deployment was from 2026-07-08.
+ZH visual parity was verified with browser locale `zh-CN`: the ZH opening, lead, and four example lines rendered with the same empty-state rule.
 
 Production guard was checked on `https://www.wisewave.io/chat`: the P1 Interaction Legibility block is not present.
 
@@ -30,6 +30,13 @@ Production guard was checked on `https://www.wisewave.io/chat`: the P1 Interacti
 
 ### Vercel / Hosted Checks
 
+- Final hosted Preview deployment checked:
+  - `https://wisewave-chatkit-app-v2-hur5l61tl-jing-yangs-projects-db5d1ce8.vercel.app/chat`
+  - Vercel target: `preview`
+  - Created: 2026-07-17 15:52:12 AEST
+  - Branch: `qa/p1-legibility-preview`
+  - Commit: `8b24d1a23df99c177ec500b2e91c4164482efd8b`
+  - Access: Vercel Protection bypass supplied by steward
 - Latest deployment inspected:
   - `https://wisewave-chatkit-app-v2-lsen882u5-jing-yangs-projects-db5d1ce8.vercel.app`
   - Vercel target: `production`
@@ -54,30 +61,35 @@ PASS - 6/6 tests
 | Fixture | Result | Evidence |
 |---|---:|---|
 | IL-P01 - Flag default off | PASS BY UNIT / PROD GUARD | Unit gate covers off/production guard. Production `www.wisewave.io/chat` had no P1 legibility block. |
-| IL-P02 - Empty state visible EN | PASS LOCAL | Local Preview-flag browser showed the authorized EN opening, lead, and four example lines above the input. |
-| IL-P03 - Typing hides copy | PASS LOCAL | Typing into the input removed the P1 four-line legibility block immediately. |
-| IL-P04 - First expression hides copy | PASS LOCAL | After first user expression, the P1 block stayed gone and the conversation became primary. |
-| IL-P05 - ZH parity | PASS BY UNIT / NOT BROWSER-VERIFIED | Unit gate covers ZH copy map. `agent-browser` stayed `navigator.language=en-GB`; visual ZH browser state was not verified. |
-| IL-P06 - Visual hierarchy | PASS LOCAL WITH WATCHPOINT | Local rendering is quiet plain text above input, smaller/lighter than conversation and input. |
-| IL-P07 - No turn behaviour change | PASS BY SCOPE / LOCAL SMOKE | Slice is client-only. Local first turn completed normally with no P1 UI persistence. |
-| IL-P08 - Production guard | PASS | Production showed no legibility block. |
-| IL-P09 - P0 coexistence | PASS LOCAL | With P0 and P1 client flags on, empty state showed one full legibility block and only one `You can begin anywhere.` occurrence. |
+| IL-P02 - Empty state visible EN | PASS HOSTED | Hosted Preview showed the authorized EN opening, lead, and four example lines above the input via `[data-testid="p1-interaction-legibility-preview"]`. |
+| IL-P03 - Typing hides copy | PASS HOSTED | Typing into the input removed the P1 legibility block immediately; `Many people begin with:` count became 0. |
+| IL-P04 - First expression hides copy | PASS HOSTED | After first user expression, the P1 block stayed gone, input cleared, and conversation became primary. |
+| IL-P05 - ZH parity | PASS HOSTED | Browser locale `zh-CN` rendered the ZH opening, lead, and four example lines with the same empty-state rule. |
+| IL-P06 - Visual hierarchy | PASS HOSTED | Hosted rendering is quiet static text above the input, no card/picker/onboarding treatment. |
+| IL-P07 - No turn behaviour change | PASS HOSTED | First turn completed normally; no P1 UI persisted after send. |
+| IL-P08 - Production guard | PASS | Production showed no legibility block, no test hook, and no `Many people begin with:` text. |
+| IL-P09 - P0 coexistence | PASS HOSTED | Empty hosted Preview state showed one full legibility block and exactly one `You can begin anywhere.` occurrence. |
 
 ## Screenshots
 
 Saved in `qa-artifacts/`:
 
+- `qa-artifacts/p1-il-empty-hosted-preview-2026-07-17.png`
+- `qa-artifacts/p1-il-typing-hosted-preview-2026-07-17.png`
+- `qa-artifacts/p1-il-after-first-expression-hosted-preview-2026-07-17.png`
+- `qa-artifacts/p1-il-zh-empty-hosted-preview-2026-07-17.png`
+- `qa-artifacts/p1-il-hosted-preview-state-2026-07-17.json`
 - `qa-artifacts/p1-il-empty-local-preview-2026-07-17.png`
 - `qa-artifacts/p1-il-typing-local-preview-2026-07-17.png`
 - `qa-artifacts/p1-il-after-first-expression-local-preview-2026-07-17.png`
 
-These screenshots are local Preview-flag evidence, not hosted Preview evidence.
+The hosted screenshots are the signoff evidence; the local screenshots remain earlier supporting evidence.
 
 ## Detailed Observations
 
 ### Empty Thread
 
-Local Preview-flag state showed:
+Hosted Preview state showed:
 
 ```text
 You can begin anywhere.
@@ -113,7 +125,7 @@ After typing `I feel a little unsure where to begin`:
 After sending the first expression:
 
 - The user message appeared in the conversation.
-- Assistant response completed: `What's here first is just uncertainty.`
+- Assistant response completed normally: `the uncertainty is less about the reflection itself and more about not knowing where to place your first step.`
 - The P1 block was absent.
 - `Many people begin with:` was absent.
 - Input cleared.
@@ -155,25 +167,67 @@ HAS_BEGIN_ANYWHERE=False
 
 Result: production remains clean, but hosted Preview IL-P02 through IL-P09 still cannot be rerun until Steward provides the reachable Preview URL and Vercel Protection bypass.
 
-## HOLD Reason
+## Hosted Preview Access Attempt - 2026-07-17 16:10 AEST
 
-This cannot be signed off as Preview QA because the actual protected Preview deployment was not reachable from this environment:
+Nova/Steward provided a fresh Preview deployment URL:
 
-- No automation bypass secret was available.
-- Candidate deployment URLs showed the Vercel login page.
-- Vercel CLI did not show a fresh 2026-07-17 `target preview` deployment in the visible page; the fresh deployments inspected were `target production`, including commit `3a228eb` at 15:36 AEST.
+```text
+https://wisewave-chatkit-app-v2-hur5l61tl-jing-yangs-projects-db5d1ce8.vercel.app/chat
+```
 
-## Required Next Step
+Vercel inspection confirms this deployment is the intended Preview target:
 
-Provide either:
+```text
+Deployment: https://wisewave-chatkit-app-v2-hur5l61tl-jing-yangs-projects-db5d1ce8.vercel.app
+Target: preview
+Status: Ready
+Created: Fri Jul 17 2026 15:52:12 AEST
+Branch: qa/p1-legibility-preview
+Commit checked locally: 8b24d1a23df99c177ec500b2e91c4164482efd8b
+```
 
-1. A reachable 2026-07-17 Preview deployment URL plus Vercel Protection bypass secret/cookie path, or
-2. Confirmation that the 15:36 deployment for commit `3a228eb` is intentionally the Preview test target despite Vercel reporting `target production`.
+Access is still blocked from Lumen's environment:
 
-Then rerun IL-P02 through IL-P09 on the hosted Preview and replace this HOLD with a hosted verdict.
+- HTTP request to `/chat` returned the Vercel Login page.
+- `agent-browser` also landed on `Login - Vercel` / `https://vercel.com/login?...`.
+- No environment variable named like `P0_VERCEL_PROTECTION_BYPASS`, `VERCEL_AUTOMATION_BYPASS_SECRET`, `P0_TOKEN`, or `PROTECTION_BYPASS` was present in the current shell.
+
+Production guard was rechecked again:
+
+```text
+URL: https://www.wisewave.io/chat
+Status: 200
+HAS_P1_TESTID=False
+HAS_MANY_PEOPLE=False
+HAS_BEGIN_ANYWHERE=False
+```
+
+Result: deployment target is now correct (`preview`), but IL-P02 through IL-P07 and IL-P09 cannot be executed, and hosted screenshots cannot be captured, until Steward provides the Vercel Protection bypass secret.
+
+## Hosted Preview Retest - 2026-07-17 16:24 AEST
+
+Steward provided the Vercel Protection bypass secret. Lumen reran hosted Preview QA on `hur5l61tl` with Playwright using the bypass header/cookie path.
+
+Hosted observations:
+
+- Empty EN: P1 block present with authorized opening, lead, and four examples.
+- Typing: P1 block absent immediately; typed text remained in input.
+- After first expression: P1 block absent; conversation visible; input cleared.
+- ZH empty state: `navigator.language=zh-CN`; ZH opening, lead, and four examples rendered.
+- No P1.1 invitation line.
+- No buttons, links, chips, cards, menus, tap targets, or selectable examples inside the block.
+- No onboarding headings (`Get started`, `Choose an option`) and no prompt-picker / therapy / journaling / companion treatment.
+- P0 coexistence: empty hosted Preview had exactly one `You can begin anywhere.` occurrence.
+- Production guard stayed clean.
+
+State evidence saved:
+
+```text
+qa-artifacts/p1-il-hosted-preview-state-2026-07-17.json
+```
 
 ## Verdict
 
-**HOLD** for hosted Preview signoff.
+**PASS**.
 
-Local implementation behavior is promising and matches the slice boundaries, but Tree's requested Preview/internal QA cannot be completed until hosted Preview access/deployment target is clarified.
+Hosted Preview IL-P02 through IL-P09 pass. Production remains clean. P1.1 and GR-1 remain separate and not approved by this result.
