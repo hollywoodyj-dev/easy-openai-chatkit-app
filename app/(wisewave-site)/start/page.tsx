@@ -52,6 +52,14 @@ export default function StartPage() {
               Read the FAQ
             </Link>
           </div>
+          <p className="mt-6 text-sm leading-7 text-[#7b746b]">
+            <Link
+              href="/articles/dont-come-with-a-question"
+              className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#7b746b]"
+            >
+              How to begin: come with what is real right now
+            </Link>
+          </p>
         </div>
       </PageHero>
     </>

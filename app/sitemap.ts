@@ -23,6 +23,7 @@ const PATHS: string[] = [
   "/self-reflection-without-guidance",
   "/quiet-reflection",
   "/journaling-alternative",
+  "/articles/dont-come-with-a-question",
   "/about",
   "/about/founder-note",
   "/legal/privacy",
