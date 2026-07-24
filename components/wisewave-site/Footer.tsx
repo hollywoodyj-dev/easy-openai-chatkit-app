@@ -30,6 +30,12 @@ export function WisewaveSiteFooter() {
           >
             How to begin
           </Link>
+          <Link
+            href="/articles/how-to-ask-without-giving-away-your-knowing"
+            className="hover:text-[#171717]"
+          >
+            How to ask
+          </Link>
           <Link href="/faq" className="hover:text-[#171717]">
             FAQ
           </Link>

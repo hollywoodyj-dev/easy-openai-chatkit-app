@@ -597,4 +597,5 @@
 - **2026-07-17 Lumen Production smoke:** **PASS** on `www.wisewave.io/chat` — EN empty/typing/first-expression, ZH spot-check, no P1.1/chips/onboarding. Evidence `qa-artifacts/p1-il-production-*-2026-07-17.*`. **Observation → 2026-07-31.** **P1.1 ON HOLD.** No Nova code changes until observation review.
 - **2026-07-23 Wisewave Article 1:** `/articles/dont-come-with-a-question` usage-education essay published (typography-first; light CTA; `/start` cross-link; sitemap). Await deploy + Lumen hosted category check.
 - **2026-07-23 Ambient Moment API:** `POST /api/ambient/moment` for Beach Window Meteor Moments; `lib/wisewave-ambient-moment.ts`; 10/10 unit tests. No chat turn / memory coupling.
+- **2026-07-24 Wisewave Article 2:** `/articles/how-to-ask-without-giving-away-your-knowing` (usage-orientation part 2); sequence links with Article 1; quiet discovery (footer / home / FAQ / start). Not committed until steward asks.
 

@@ -174,7 +174,7 @@ export default function DontComeWithAQuestionArticlePage() {
               That kind of seeing may not immediately become action.
             </p>
             <p>But it changes your relationship to the problem.</p>
-            <p>This is the posture Wisewave asks for:</p>
+            <p>A quieter way to begin may be:</p>
             <p>
               Come with what is real right now.
               <br />
@@ -210,6 +210,13 @@ export default function DontComeWithAQuestionArticlePage() {
               </TrackButton>
             </div>
             <p className="mt-8 text-sm leading-7 text-[#8a847a]">
+              <Link
+                href="/articles/how-to-ask-without-giving-away-your-knowing"
+                className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#8a847a]"
+              >
+                Part 2: Ask without giving away your knowing
+              </Link>
+              {" · "}
               <Link
                 href="/start"
                 className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#8a847a]"

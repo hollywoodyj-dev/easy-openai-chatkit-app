@@ -24,6 +24,7 @@ const PATHS: string[] = [
   "/quiet-reflection",
   "/journaling-alternative",
   "/articles/dont-come-with-a-question",
+  "/articles/how-to-ask-without-giving-away-your-knowing",
   "/about",
   "/about/founder-note",
   "/legal/privacy",

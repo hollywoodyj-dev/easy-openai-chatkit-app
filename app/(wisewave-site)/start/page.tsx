@@ -59,6 +59,13 @@ export default function StartPage() {
             >
               How to begin: come with what is real right now
             </Link>
+            <span className="mx-2 text-[#cfc8bc]">·</span>
+            <Link
+              href="/articles/how-to-ask-without-giving-away-your-knowing"
+              className="underline decoration-[#e7e1d8] underline-offset-4 hover:decoration-[#7b746b]"
+            >
+              How to ask without giving away your knowing
+            </Link>
           </p>
         </div>
       </PageHero>

@@ -13,6 +13,10 @@ export const WISEWAVE_HOME_INTERNAL_LINKS: readonly WisewavePageInternalLink[] =
     href: "/articles/dont-come-with-a-question",
     label: "How to begin",
   },
+  {
+    href: "/articles/how-to-ask-without-giving-away-your-knowing",
+    label: "How to ask",
+  },
   { href: "/reflection-without-advice", label: "Reflection without advice" },
   { href: "/how-it-works", label: "How Wisewave works" },
   { href: "/who-its-for", label: "Who Wisewave is for" },
@@ -58,6 +62,10 @@ export const WISEWAVE_FAQ_INTERNAL_LINKS: readonly WisewavePageInternalLink[] = 
   {
     href: "/articles/dont-come-with-a-question",
     label: "How to begin in Wisewave",
+  },
+  {
+    href: "/articles/how-to-ask-without-giving-away-your-knowing",
+    label: "How to ask without giving away your knowing",
   },
   { href: "/what-is-wisewave", label: "What Wisewave is" },
   { href: "/what-it-is-not", label: "What Wisewave is not" },
