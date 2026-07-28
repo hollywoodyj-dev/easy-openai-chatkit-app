@@ -188,7 +188,18 @@ const UNGROUNDED_INNER_CLAIM_PATTERNS: Array<{ pattern: RegExp; label: string }>
     pattern: /\bwhat(?:'s| is) happening (?:in you|inside|internally) is\b/i,
     label: "asserted inner process",
   },
+  // Live GPT-5.4 miss shapes (thin meta-questions): invented hurt / feeling / verdict / process
+  { pattern: /\bwhat hurts (here|is)\b/i, label: "invented hurt" },
+  { pattern: /\bthe feeling itself\b/i, label: "invented feeling-itself" },
+  { pattern: /\bverdict about you\b/i, label: "invented self-verdict" },
+  { pattern: /\bturns into a verdict\b/i, label: "invented verdict process" },
+  { pattern: /\bbefore the reaction\b/i, label: "invented pre-reaction process" },
+  { pattern: /\bwasn'?t clear yet\b/i, label: "invented unclarity process" },
+  { pattern: /\binside you\b/i, label: "asserted inside-you process" },
+  { pattern: /\bprobably (wasn'?t|was not|isn'?t|is not)\b/i, label: "probabilistic inner claim" },
   { pattern: /有一部分还?卡/, label: "zh stuck claim" },
+  { pattern: /卡住了/, label: "zh stuck assertion" },
+  { pattern: /最真的/, label: "zh asserted deepest truth" },
   { pattern: /羞耻|自我批判|自我苛责/, label: "zh invented emotion" },
   { pattern: /快速的?(解读|判断|不确定)/, label: "zh invented process" },
   { pattern: /你可以对自己说|试着说一句/, label: "zh prescribed line" },
@@ -218,3 +229,4 @@ export function detectUngroundedInnerInvention(
   }
   return null;
 }
+

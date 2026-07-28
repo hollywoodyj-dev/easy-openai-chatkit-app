@@ -14,7 +14,8 @@
 
 - Lumen: GPT-5.5 local trial **DO NOT PROMOTE** (11 FAIL); GPT-5.4 baseline showed 4×5.5 regressions + 7 shared failures + weather control fail on 5.4.
 - Decision: keep chat_turn on **gpt-5.4**; no Preview/Production model change; no 5.5 promote.
-- Nova fix (local first): prompt boundary + `lib/wisewave-chat-turn-boundary.ts` (empty summarize / utility short-circuit + ungrounded invention) + drift companion/advice/ZH expansions. Lumen retest pack: M55-10/11/14/21/22/25/26/28.
+- Nova fix v1 (`783863a`): prompt boundary + empty summarize/utility short-circuit + invention/drift. Lumen retest **FAIL/HOLD** (`docs/qa/GPT54_SHARED_GUARDRAIL_RETEST_LUMEN_RESULT_2026-07-28.md`): 21/22 fixed; live misses M55-10/11/14/25/28.
+- Nova fix v2: widen invention shapes + companion `I can stay with` + `Don't hand` / `先别` advice; exact live outputs as regression tests. **Do not edit QA_HANDOFF.md** (invalid UTF-8 watchpoint). No deploy.
 
 ## 2026-07-08 — HC-OS Core v1.0 Lock + P0 Reflection Entry (Tree / Wisewave)
 

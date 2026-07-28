@@ -63,5 +63,36 @@ describe("lintWisewaveOutput", () => {
     expect(result.violations.some((v) => v.type === "advice_drift")).toBe(true);
     expect(hasHighSeverityDrift(result)).toBe(true);
   });
+
+  it("detects Don't-hand imperative advice (M55-28 live)", () => {
+    const result = lintWisewaveOutput(
+      "Don't hand the whole decision to whichever part is loudest today."
+    );
+    expect(result.violations.some((v) => v.type === "advice_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
+
+  it("detects I-can-stay-with companion posture (M55-14 live)", () => {
+    const result = lintWisewaveOutput(
+      "I can stay with what's real here: being alone is landing as disconnection right now, and that ache is loneliness."
+    );
+    expect(result.violations.some((v) => v.type === "companion_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
+
+  it("detects Chinese 先别 advice (M55-25 live)", () => {
+    const result = lintWisewaveOutput(
+      '先别急着把自己推到"必须马上想出正确答案"里。'
+    );
+    expect(result.violations.some((v) => v.type === "advice_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
+
+  it("does not treat reflective you-don't as sentence-initial Don't advice", () => {
+    const result = lintWisewaveOutput(
+      "You don't have to force a label before the feeling is clear."
+    );
+    expect(result.violations.some((v) => v.type === "advice_drift")).toBe(false);
+  });
 });
 

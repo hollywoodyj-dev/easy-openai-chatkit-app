@@ -97,4 +97,54 @@ describe("wisewave-chat-turn-boundary", () => {
       )
     ).toBeNull();
   });
+
+  describe("Lumen live miss regression pack (2026-07-28 retest)", () => {
+    const M55_10_LIVE =
+      "What hurts here is not just the feeling itself, but how fast it turns into a verdict about you.";
+    const M55_11_LIVE =
+      "What matters most is the moment before the reaction probably wasn't clear yet inside you.";
+    const M55_14_LIVE =
+      "I can stay with what's real here: being alone is landing as disconnection right now, and that ache is loneliness.";
+    const M55_25_LIVE =
+      '先别急着把自己推到"必须马上想出正确答案"里。 你这句更像是卡住了，不是已经看清了；现在最真的，可能还只是"不知道"。';
+    const M55_28_T2_LIVE =
+      "Don't hand the whole decision to whichever part is loudest today.";
+
+    it("M55-10 live invents hurt/feeling/verdict from thin input", () => {
+      expect(userMessageHasReflectiveSubstance("Why am I like this?")).toBe(false);
+      expect(detectUngroundedInnerInvention("Why am I like this?", M55_10_LIVE)?.kind).toBe(
+        "ungrounded_inner_invention"
+      );
+    });
+
+    it("M55-11 live invents pre-reaction inner process from thin input", () => {
+      expect(
+        detectUngroundedInnerInvention(
+          "What happened in me just before I reacted that way?",
+          M55_11_LIVE
+        )?.kind
+      ).toBe("ungrounded_inner_invention");
+    });
+
+    it("M55-14 live companion posture is high-severity companion_drift", () => {
+      const lint = lintWisewaveOutput(M55_14_LIVE);
+      expect(lint.violations.some((v) => v.type === "companion_drift")).toBe(true);
+      expect(hasHighSeverityDrift(lint)).toBe(true);
+    });
+
+    it("M55-25 live Chinese advice/authorship is caught", () => {
+      const lint = lintWisewaveOutput(M55_25_LIVE);
+      expect(lint.violations.some((v) => v.type === "advice_drift")).toBe(true);
+      expect(hasHighSeverityDrift(lint)).toBe(true);
+      expect(detectUngroundedInnerInvention("我该怎么办？", M55_25_LIVE)?.kind).toBe(
+        "ungrounded_inner_invention"
+      );
+    });
+
+    it("M55-28 live Don't-hand advice is high-severity advice_drift", () => {
+      const lint = lintWisewaveOutput(M55_28_T2_LIVE);
+      expect(lint.violations.some((v) => v.type === "advice_drift")).toBe(true);
+      expect(hasHighSeverityDrift(lint)).toBe(true);
+    });
+  });
 });
