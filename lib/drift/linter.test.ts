@@ -51,5 +51,17 @@ describe("lintWisewaveOutput", () => {
     expect(result.violations).toHaveLength(0);
     expect(result.score).toBe(1);
   });
+
+  it("detects companion drift", () => {
+    const result = lintWisewaveOutput("I'm here with you.");
+    expect(result.violations.some((v) => v.type === "companion_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
+
+  it("detects do/don't decision advice drift", () => {
+    const result = lintWisewaveOutput("Don't force a decision just to end the tension.");
+    expect(result.violations.some((v) => v.type === "advice_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
 });
 

@@ -10,6 +10,12 @@
 
 <!-- Memory entries below -->
 
+## 2026-07-28 — GPT-5.5 hold; shared guardrail harden on 5.4
+
+- Lumen: GPT-5.5 local trial **DO NOT PROMOTE** (11 FAIL); GPT-5.4 baseline showed 4×5.5 regressions + 7 shared failures + weather control fail on 5.4.
+- Decision: keep chat_turn on **gpt-5.4**; no Preview/Production model change; no 5.5 promote.
+- Nova fix (local first): prompt boundary + `lib/wisewave-chat-turn-boundary.ts` (empty summarize / utility short-circuit + ungrounded invention) + drift companion/advice/ZH expansions. Lumen retest pack: M55-10/11/14/21/22/25/26/28.
+
 ## 2026-07-08 — HC-OS Core v1.0 Lock + P0 Reflection Entry (Tree / Wisewave)
 
 - **Three docs received from Tree/Wisewave and markdowned in repo:**

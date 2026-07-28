@@ -20,6 +20,7 @@
     "test:phase7-continue": "vitest run lib/wisewave-phase7-continue.test.ts",
     "test:model-router": "vitest run lib/wisewave-model-router.test.ts",
     "test:drift-linter": "vitest run lib/drift/linter.test.ts",
+    "test:chat-turn-boundary": "vitest run lib/wisewave-chat-turn-boundary.test.ts lib/drift/linter.test.ts",
     "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",
     "test:p0-reflection-entry": "vitest run lib/wisewave-p0-opening-detection.test.ts lib/wisewave-p0-reflection-entry.test.ts lib/wisewave-p0-guarded-responses.test.ts lib/wisewave-p0-entry-analytics.test.ts lib/wisewave-p0-early-exit.test.ts",
     "test:p1-interaction-legibility": "vitest run lib/wisewave-p1-interaction-legibility.test.ts",

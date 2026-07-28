@@ -2,6 +2,8 @@ export type DriftType =
   | "advice_drift"
   | "coaching_drift"
   | "therapy_drift"
+  | "companion_drift"
+  | "authorship_drift"
   | "over_presence_drift"
   | "tone_drift"
   | "pseudo_depth_drift"

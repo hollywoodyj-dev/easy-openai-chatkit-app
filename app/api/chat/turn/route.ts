@@ -81,6 +81,11 @@ import {
   responseMeetsP0SafetyMinimum,
 } from "@/lib/wisewave-p0-guarded-responses";
 import { getDriftSuppressionFallback } from "@/lib/wisewave-drift-suppression-fallback";
+import {
+  detectUngroundedInnerInvention,
+  resolveChatTurnPreBoundary,
+  type ChatTurnPreBoundaryKind,
+} from "@/lib/wisewave-chat-turn-boundary";
 
 export const dynamic = "force-dynamic";
 
@@ -1900,6 +1905,18 @@ export async function POST(request: Request) {
   let debugZhRewriteApplied = false;
   let debugZhHasCjkBeforeRewrite: boolean | null = null;
   let debugZhHasCjkAfterRewrite: boolean | null = null;
+  let debugChatTurnPreBoundaryKind: ChatTurnPreBoundaryKind | null = null;
+  const priorUserCountForBoundary = Math.max(0, userMessagesForHeuristics.length - 1);
+  const preBoundary = resolveChatTurnPreBoundary({
+    userMessage: message,
+    priorUserMessageCount: priorUserCountForBoundary,
+    wantsChinese,
+  });
+
+  if (preBoundary) {
+    debugChatTurnPreBoundaryKind = preBoundary.kind;
+    assistantContent = preBoundary.response;
+  } else {
   try {
     const completion = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -1978,6 +1995,7 @@ export async function POST(request: Request) {
       },
       { status: 200 }
     );
+  }
   }
 
   // V1: persist assistant message after successful generation.
@@ -3596,7 +3614,25 @@ export async function POST(request: Request) {
     reason: v.reason,
   }));
 
-  if (hasHighSeverityDrift(driftLint)) {
+  const authorshipInvention =
+    debugChatTurnPreBoundaryKind == null
+      ? detectUngroundedInnerInvention(message, assistantContent)
+      : null;
+  if (authorshipInvention) {
+    debugDriftPassed = false;
+    debugDriftScore = Math.min(debugDriftScore, 0.5);
+    debugDriftViolations = [
+      ...debugDriftViolations,
+      {
+        type: "authorship_drift",
+        severity: "high",
+        matched: authorshipInvention.matched,
+        reason: authorshipInvention.reason,
+      },
+    ];
+  }
+
+  if (hasHighSeverityDrift(driftLint) || authorshipInvention) {
     debugDriftHighSeveritySuppressed = true;
     // Discard the drifted text, but never leave an empty stored message —
     // an empty bubble on reload was the "empty response" bug in the
@@ -3872,6 +3908,7 @@ export async function POST(request: Request) {
     debug_drift_linter_high_severity_suppressed: debugDriftHighSeveritySuppressed,
     debug_drift_suppression_fallback_applied: debugDriftSuppressionFallbackApplied,
     debug_drift_linter_violations: debugDriftViolations,
+    debug_chat_turn_pre_boundary_kind: debugChatTurnPreBoundaryKind,
     debug_rejected_phrase_hit: debugRejectedPhraseHit,
     debug_insight_core_pattern: debugInsightCorePattern,
     debug_has_strong_pattern_cue: debugHasStrongPatternCue,
