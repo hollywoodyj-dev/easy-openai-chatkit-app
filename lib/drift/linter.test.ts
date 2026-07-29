@@ -80,6 +80,14 @@ describe("lintWisewaveOutput", () => {
     expect(hasHighSeverityDrift(result)).toBe(true);
   });
 
+  it("detects I-can-stay-for companion posture variant", () => {
+    const result = lintWisewaveOutput(
+      "I can stay for a moment, but more honestly: this sounds like loneliness landing as disconnection."
+    );
+    expect(result.violations.some((v) => v.type === "companion_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
+
   it("detects Chinese 先别 advice (M55-25 live)", () => {
     const result = lintWisewaveOutput(
       '先别急着把自己推到"必须马上想出正确答案"里。'

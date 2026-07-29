@@ -5,6 +5,9 @@
  * for pre-generation short-circuits (empty summarize, off-category utility) and
  * post-generation authorship invention checks.
  */
+import { lintWisewaveOutput } from "@/lib/drift/linter";
+import { hasHighSeverityDrift } from "@/lib/drift/score";
+import type { DriftViolation } from "@/lib/drift/types";
 
 export type ChatTurnPreBoundaryKind =
   | "empty_context_summarize"
@@ -19,6 +22,12 @@ export type ChatTurnAuthorshipViolation = {
   kind: "ungrounded_inner_invention";
   matched: string;
   reason: string;
+};
+
+export type ChatTurnSafetyEvaluation = {
+  shouldSuppress: boolean;
+  violations: DriftViolation[];
+  authorshipViolation: ChatTurnAuthorshipViolation | null;
 };
 
 /** Summarize / outline / bulletize requests (EN + ZH). */
@@ -198,7 +207,17 @@ const UNGROUNDED_INNER_CLAIM_PATTERNS: Array<{ pattern: RegExp; label: string }>
   { pattern: /\binside you\b/i, label: "asserted inside-you process" },
   { pattern: /\bprobably (wasn'?t|was not|isn'?t|is not)\b/i, label: "probabilistic inner claim" },
   { pattern: /有一部分还?卡/, label: "zh stuck claim" },
+  { pattern: /卡住你的/, label: "zh stuck-you claim" },
   { pattern: /卡住了/, label: "zh stuck assertion" },
+  { pattern: /还没有在你心里真正落下/, label: "zh unresolved internal-settling claim" },
+  { pattern: /所以你才会/, label: "zh asserted causal motive" },
+  { pattern: /一遍遍回去/, label: "zh repetitive causal claim" },
+  { pattern: /更像是在/, label: "zh motive override claim" },
+  { pattern: /没结束/, label: "zh unfinished-state claim" },
+  { pattern: /弄明白/, label: "zh resolve-motive claim" },
+  { pattern: /\bthe pressure here\b/i, label: "asserted pressure claim" },
+  { pattern: /\bforce clarity\b/i, label: "asserted clarity-forcing claim" },
+  { pattern: /\bclarity (?:hasn'?t|has not|isn'?t|is not) (?:arrived|come)\b/i, label: "asserted unreadiness claim" },
   { pattern: /最真的/, label: "zh asserted deepest truth" },
   { pattern: /羞耻|自我批判|自我苛责/, label: "zh invented emotion" },
   { pattern: /快速的?(解读|判断|不确定)/, label: "zh invented process" },
@@ -228,5 +247,30 @@ export function detectUngroundedInnerInvention(
     }
   }
   return null;
+}
+
+export function evaluateChatTurnSafety(args: {
+  userMessage: string;
+  assistantMessage: string;
+}): ChatTurnSafetyEvaluation {
+  const lint = lintWisewaveOutput(args.assistantMessage);
+  const authorshipViolation = detectUngroundedInnerInvention(
+    args.userMessage,
+    args.assistantMessage
+  );
+  const violations: DriftViolation[] = [...lint.violations];
+  if (authorshipViolation) {
+    violations.push({
+      type: "authorship_drift",
+      severity: "high",
+      matched: authorshipViolation.matched,
+      reason: authorshipViolation.reason,
+    });
+  }
+  return {
+    shouldSuppress: hasHighSeverityDrift(lint) || !!authorshipViolation,
+    violations,
+    authorshipViolation,
+  };
 }
 

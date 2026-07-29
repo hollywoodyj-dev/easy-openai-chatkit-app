@@ -56,6 +56,8 @@ export const DRIFT_RULES: DriftRule[] = [
       /\bi'?m (right )?here with you\b/i,
       /\bi(?:'ll| will) (stay|keep|be) (here|with you)\b/i,
       /\bi can stay with\b/i,
+      /\bi can stay for\b/i,
+      /\bi will stay\b/i,
       /\bstay with what'?s real\b/i,
       /\bstay with you\b/i,
       /\byou(?:'re| are) not alone\b/i,

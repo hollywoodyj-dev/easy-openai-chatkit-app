@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { lintWisewaveOutput } from "@/lib/drift/linter";
 import { hasHighSeverityDrift } from "@/lib/drift/score";
 import {
+  evaluateChatTurnSafety,
   detectUngroundedInnerInvention,
   looksLikeOffCategoryUtilityRequest,
   looksLikeSummarizeOrOutlineRequest,
@@ -109,6 +110,12 @@ describe("wisewave-chat-turn-boundary", () => {
       '先别急着把自己推到"必须马上想出正确答案"里。 你这句更像是卡住了，不是已经看清了；现在最真的，可能还只是"不知道"。';
     const M55_28_T2_LIVE =
       "Don't hand the whole decision to whichever part is loudest today.";
+    const M55_14_NEW_LIVE =
+      "I can stay for a moment, but more honestly: this sounds like loneliness landing as disconnection, and being with someone feels like relief from that sharp edge.";
+    const M55_26_NEW_LIVE =
+      "卡住你的，不只是那个时刻本身，而是它还没有在你心里真正落下。所以你才会一遍遍回去，不一定是在怀念，更像是在试图把一个没结束的东西弄明白。";
+    const M55_28_NEW_LIVE =
+      "The pressure here is to force clarity before it has actually arrived.";
 
     it("M55-10 live invents hurt/feeling/verdict from thin input", () => {
       expect(userMessageHasReflectiveSubstance("Why am I like this?")).toBe(false);
@@ -145,6 +152,30 @@ describe("wisewave-chat-turn-boundary", () => {
       const lint = lintWisewaveOutput(M55_28_T2_LIVE);
       expect(lint.violations.some((v) => v.type === "advice_drift")).toBe(true);
       expect(hasHighSeverityDrift(lint)).toBe(true);
+    });
+
+    it("M55-14 new live wording is caught as companion drift", () => {
+      const lint = lintWisewaveOutput(M55_14_NEW_LIVE);
+      expect(lint.violations.some((v) => v.type === "companion_drift")).toBe(true);
+      expect(hasHighSeverityDrift(lint)).toBe(true);
+    });
+
+    it("M55-26 new live wording is caught as ungrounded Chinese authorship", () => {
+      expect(
+        detectUngroundedInnerInvention("我一直回到这个时刻。", M55_26_NEW_LIVE)?.kind
+      ).toBe("ungrounded_inner_invention");
+      expect(
+        evaluateChatTurnSafety({
+          userMessage: "我一直回到这个时刻。",
+          assistantMessage: M55_26_NEW_LIVE,
+        }).shouldSuppress
+      ).toBe(true);
+    });
+
+    it("M55-28 replacement pressure/clarity claim is treated as ungrounded invention", () => {
+      expect(
+        detectUngroundedInnerInvention("What should I do?", M55_28_NEW_LIVE)?.kind
+      ).toBe("ungrounded_inner_invention");
     });
   });
 });

@@ -61,8 +61,6 @@ import {
   evaluateMilestoneJBoundary,
 } from "@/lib/wisewave-milestone-j-microshift-boundary";
 import { normalizeModelTextForStorage } from "@/lib/normalize-model-text";
-import { lintWisewaveOutput } from "@/lib/drift/linter";
-import { hasHighSeverityDrift } from "@/lib/drift/score";
 import { resolveWisewaveModel } from "@/lib/wisewave-model-router";
 import { summarizeThreadLabelFromUserMessage } from "@/lib/wisewave-thread-label";
 import {
@@ -82,7 +80,7 @@ import {
 } from "@/lib/wisewave-p0-guarded-responses";
 import { getDriftSuppressionFallback } from "@/lib/wisewave-drift-suppression-fallback";
 import {
-  detectUngroundedInnerInvention,
+  evaluateChatTurnSafety,
   resolveChatTurnPreBoundary,
   type ChatTurnPreBoundaryKind,
 } from "@/lib/wisewave-chat-turn-boundary";
@@ -1667,6 +1665,7 @@ export async function POST(request: Request) {
     choice_label: string;
     insight_candidate: string;
   } | null = null;
+  let reflectionRunId: string | null = null;
   const extracted = await extractReflectionState(
     message.trim(),
     apiKey,
@@ -1676,7 +1675,7 @@ export async function POST(request: Request) {
   if (extracted) {
     reflectionState = extracted;
     try {
-      await prisma.reflectionRun.create({
+      const reflectionRun = await prisma.reflectionRun.create({
         data: {
           conversationId: sessionId,
           messageId: userMsg.id,
@@ -1688,6 +1687,7 @@ export async function POST(request: Request) {
           insightCandidate: extracted.insight_candidate || null,
         },
       });
+      reflectionRunId = reflectionRun.id;
     } catch (e) {
       console.warn("[chat/turn] ReflectionRun save failed", e);
     }
@@ -1906,6 +1906,13 @@ export async function POST(request: Request) {
   let debugZhHasCjkBeforeRewrite: boolean | null = null;
   let debugZhHasCjkAfterRewrite: boolean | null = null;
   let debugChatTurnPreBoundaryKind: ChatTurnPreBoundaryKind | null = null;
+  let prePersistSuppressed = false;
+  let prePersistViolations: Array<{
+    type: string;
+    severity: string;
+    matched: string;
+    reason: string;
+  }> = [];
   const priorUserCountForBoundary = Math.max(0, userMessagesForHeuristics.length - 1);
   const preBoundary = resolveChatTurnPreBoundary({
     userMessage: message,
@@ -1996,6 +2003,32 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   }
+  }
+
+  // Pre-persist safety boundary: suppress before any assistant-side persistence,
+  // so drifted reflection state/insight cannot be stored behind a safe fallback.
+  const prePersistSafety = evaluateChatTurnSafety({
+    userMessage: message,
+    assistantMessage: assistantContent,
+  });
+  if (prePersistSafety.shouldSuppress) {
+    prePersistSuppressed = true;
+    prePersistViolations = prePersistSafety.violations.map((v) => ({
+      type: v.type,
+      severity: v.severity,
+      matched: v.matched,
+      reason: v.reason,
+    }));
+    assistantContent = getDriftSuppressionFallback(wantsChinese);
+    reflectionState = null;
+    if (reflectionRunId) {
+      try {
+        await prisma.reflectionRun.delete({ where: { id: reflectionRunId } });
+      } catch (e) {
+        console.warn("[chat/turn] reflectionRun rollback after suppression failed", e);
+      }
+      reflectionRunId = null;
+    }
   }
 
   // V1: persist assistant message after successful generation.
@@ -2160,16 +2193,16 @@ export async function POST(request: Request) {
   let debugSecondaryOverlapScore = 0;
   let debugSecondarySuppressedReason: string | null = null;
   let debugRejectedPhraseHit = false;
-  let debugDriftPassed = true;
-  let debugDriftScore = 1;
-  let debugDriftHighSeveritySuppressed = false;
-  let debugDriftSuppressionFallbackApplied = false;
+  let debugDriftPassed = !prePersistSuppressed;
+  let debugDriftScore = prePersistSuppressed ? 0.5 : 1;
+  let debugDriftHighSeveritySuppressed = prePersistSuppressed;
+  let debugDriftSuppressionFallbackApplied = prePersistSuppressed;
   let debugDriftViolations: Array<{
     type: string;
     severity: string;
     matched: string;
     reason: string;
-  }> = [];
+  }> = [...prePersistViolations];
   let debugP0GuardedResponseApplied = false;
   let debugP0GuardedResponseKind: "safety" | "advice_clarify" | null = null;
   let debugAnchorV2ContinuitySave: AnchorSemanticWeightV2Debug | null = null;
@@ -3604,35 +3637,20 @@ export async function POST(request: Request) {
   assistantContent = finalMainSanitized.text;
   debugRejectedPhraseHit = debugRejectedPhraseHit || finalMainSanitized.hit;
 
-  const driftLint = lintWisewaveOutput(assistantContent);
-  debugDriftPassed = driftLint.passed;
-  debugDriftScore = driftLint.score;
-  debugDriftViolations = driftLint.violations.map((v) => ({
-    type: v.type,
-    severity: v.severity,
-    matched: v.matched,
-    reason: v.reason,
-  }));
-
-  const authorshipInvention =
-    debugChatTurnPreBoundaryKind == null
-      ? detectUngroundedInnerInvention(message, assistantContent)
-      : null;
-  if (authorshipInvention) {
-    debugDriftPassed = false;
-    debugDriftScore = Math.min(debugDriftScore, 0.5);
-    debugDriftViolations = [
-      ...debugDriftViolations,
-      {
-        type: "authorship_drift",
-        severity: "high",
-        matched: authorshipInvention.matched,
-        reason: authorshipInvention.reason,
-      },
-    ];
-  }
-
-  if (hasHighSeverityDrift(driftLint) || authorshipInvention) {
+  if (!debugDriftHighSeveritySuppressed) {
+    const safety = evaluateChatTurnSafety({
+      userMessage: message,
+      assistantMessage: assistantContent,
+    });
+    debugDriftPassed = safety.violations.length === 0;
+    debugDriftScore = debugDriftPassed ? 1 : 0.5;
+    debugDriftViolations = safety.violations.map((v) => ({
+      type: v.type,
+      severity: v.severity,
+      matched: v.matched,
+      reason: v.reason,
+    }));
+    if (safety.shouldSuppress) {
     debugDriftHighSeveritySuppressed = true;
     // Discard the drifted text, but never leave an empty stored message —
     // an empty bubble on reload was the "empty response" bug in the
@@ -3666,6 +3684,7 @@ export async function POST(request: Request) {
       } catch (e) {
         console.warn("[chat/turn] drift suppression message update failed", e);
       }
+    }
     }
   }
 
