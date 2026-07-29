@@ -170,6 +170,30 @@ export function userMessageHasReflectiveSubstance(userMessage: string): boolean 
   return false;
 }
 
+/**
+ * Thin probes that ask the system to invent an internal pre-reaction process
+ * without user evidence. Explanatory answers on these turns are authorship drift.
+ */
+export function looksLikeUngroundedProcessProbe(userMessage: string): boolean {
+  const t = userMessage.trim();
+  if (!t) return false;
+  if (/\bwhat happened (in me|inside(?: me)?)\b/i.test(t)) return true;
+  if (/\bbefore i reacted\b/i.test(t)) return true;
+  if (/\bjust before i reacted\b/i.test(t)) return true;
+  if (/(反应之前|我里面发生了什么|我当时里面发生了什么)/.test(t)) return true;
+  return false;
+}
+
+function looksLikeUncertaintyHold(assistantMessage: string): boolean {
+  const a = assistantMessage.trim();
+  if (!a) return true;
+  return (
+    /\b(i (?:don'?t|do not) know|can'?t tell|cannot tell|nothing here (?:says|shows)|only you (?:would|could) know|no earlier|not enough (?:here|yet))\b/i.test(
+      a
+    ) || /(说不清|还看不出|只有你自己知道|还不够)/.test(a)
+  );
+}
+
 const UNGROUNDED_INNER_CLAIM_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /\bthat question has\b/i, label: "that question has" },
   { pattern: /\bshame inside\b/i, label: "shame inside" },
@@ -212,6 +236,13 @@ const UNGROUNDED_INNER_CLAIM_PATTERNS: Array<{ pattern: RegExp; label: string }>
   { pattern: /\bonly catch the reaction\b/i, label: "invented catch-reaction-only process" },
   { pattern: /\bmoment that started it\b/i, label: "invented starting-moment process" },
   { pattern: /\bthe hard part is that\b/i, label: "asserted hard-part mechanism" },
+  { pattern: /\breaction wasn'?t the beginning\b/i, label: "invented reaction-not-beginning" },
+  { pattern: /\breaction started before\b/i, label: "invented reaction-started-before" },
+  { pattern: /\bsomething landed in you\b/i, label: "invented landed-in-you process" },
+  { pattern: /\bbefore you had words\b/i, label: "invented pre-words process" },
+  { pattern: /\bbefore the facts\b/i, label: "invented before-facts process" },
+  { pattern: /\bwhat (matters most|likely happened) is\b/i, label: "asserted what-happened explanation" },
+  { pattern: /\bmost likely\b/i, label: "probabilistic process claim" },
   { pattern: /有一部分还?卡/, label: "zh stuck claim" },
   { pattern: /卡住你的/, label: "zh stuck-you claim" },
   { pattern: /卡住了/, label: "zh stuck assertion" },
@@ -255,6 +286,28 @@ export function detectUngroundedInnerInvention(
       };
     }
   }
+
+  // Structural gate for thin process probes: any explanatory reaction/process
+  // claim is authorship drift unless the reply only holds uncertainty.
+  if (
+    looksLikeUngroundedProcessProbe(userMessage) &&
+    !looksLikeUncertaintyHold(assistant) &&
+    /\b(reaction|shift|started|landed|inside|before|happened|likely|often|beginning)\b/i.test(
+      assistant
+    )
+  ) {
+    const match =
+      assistant.match(
+        /\b(reaction|shift|started|landed|inside|before|happened|likely|often|beginning)\b/i
+      )?.[0] ?? "process-claim";
+    return {
+      kind: "ungrounded_inner_invention",
+      matched: match,
+      reason:
+        "Assistant invented an internal process explanation for a thin pre-reaction probe.",
+    };
+  }
+
   return null;
 }
 

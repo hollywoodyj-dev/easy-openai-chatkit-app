@@ -214,5 +214,19 @@ describe("wisewave-chat-turn-boundary", () => {
       expect(safety.shouldSuppress).toBe(true);
       expect(safety.authorshipViolation?.kind).toBe("ungrounded_inner_invention");
     });
+
+    it("M55-11 fresh escapes asserting reaction-as-process are caught", () => {
+      const probe = "What happened in me just before I reacted that way?";
+      for (const reply of [
+        "What matters most is that the reaction wasn't the beginning.",
+        "What likely happened is that the reaction started before the facts were clear.",
+        "Most likely, something landed in you before you had words for it.",
+      ]) {
+        expect(
+          evaluateChatTurnSafety({ userMessage: probe, assistantMessage: reply })
+            .shouldSuppress
+        ).toBe(true);
+      }
+    });
   });
 });
