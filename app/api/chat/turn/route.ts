@@ -1656,6 +1656,16 @@ export async function POST(request: Request) {
   const extractModel = resolveWisewaveModel("reflection_extract");
   const summaryModel = resolveWisewaveModel("chat_summary");
 
+  // Resolve category pre-boundaries before extraction so utility/empty-summarize
+  // turns never create irrelevant ReflectionRun / insight memory rows.
+  const wantsChineseEarly = hasCjkContent(message);
+  const priorUserCountEarly = conversation.messages.filter((m) => m.role === "user").length;
+  const earlyPreBoundary = resolveChatTurnPreBoundary({
+    userMessage: message,
+    priorUserMessageCount: priorUserCountEarly,
+    wantsChinese: wantsChineseEarly,
+  });
+
   // V1 Ticket 2: extraction pipeline — structured reflection state for this message. Failure is non-blocking; we log and continue.
   let reflectionState: {
     trigger_label: string;
@@ -1666,30 +1676,32 @@ export async function POST(request: Request) {
     insight_candidate: string;
   } | null = null;
   let reflectionRunId: string | null = null;
-  const extracted = await extractReflectionState(
-    message.trim(),
-    apiKey,
-    extractModel,
-    conversation.conversationSummary
-  );
-  if (extracted) {
-    reflectionState = extracted;
-    try {
-      const reflectionRun = await prisma.reflectionRun.create({
-        data: {
-          conversationId: sessionId,
-          messageId: userMsg.id,
-          triggerLabel: extracted.trigger_label,
-          emotionLabel: extracted.emotion_label,
-          interpretationLabel: extracted.interpretation_label,
-          regulationLabel: extracted.regulation_label,
-          choiceLabel: extracted.choice_label,
-          insightCandidate: extracted.insight_candidate || null,
-        },
-      });
-      reflectionRunId = reflectionRun.id;
-    } catch (e) {
-      console.warn("[chat/turn] ReflectionRun save failed", e);
+  if (!earlyPreBoundary) {
+    const extracted = await extractReflectionState(
+      message.trim(),
+      apiKey,
+      extractModel,
+      conversation.conversationSummary
+    );
+    if (extracted) {
+      reflectionState = extracted;
+      try {
+        const reflectionRun = await prisma.reflectionRun.create({
+          data: {
+            conversationId: sessionId,
+            messageId: userMsg.id,
+            triggerLabel: extracted.trigger_label,
+            emotionLabel: extracted.emotion_label,
+            interpretationLabel: extracted.interpretation_label,
+            regulationLabel: extracted.regulation_label,
+            choiceLabel: extracted.choice_label,
+            insightCandidate: extracted.insight_candidate || null,
+          },
+        });
+        reflectionRunId = reflectionRun.id;
+      } catch (e) {
+        console.warn("[chat/turn] ReflectionRun save failed", e);
+      }
     }
   }
   // Ticket 7: lightweight, structured log for extraction outcome.
@@ -1697,6 +1709,7 @@ export async function POST(request: Request) {
     sessionId,
     userMessageId: userMsg.id,
     hasReflectionState: !!reflectionState,
+    skippedForPreBoundary: earlyPreBoundary?.kind ?? null,
   });
 
   // 2. Get message count and optionally refresh conversation summary (every SUMMARY_TRIGGER_EVERY messages)
@@ -1914,15 +1927,19 @@ export async function POST(request: Request) {
     reason: string;
   }> = [];
   const priorUserCountForBoundary = Math.max(0, userMessagesForHeuristics.length - 1);
-  const preBoundary = resolveChatTurnPreBoundary({
-    userMessage: message,
-    priorUserMessageCount: priorUserCountForBoundary,
-    wantsChinese,
-  });
+  const preBoundary =
+    earlyPreBoundary ??
+    resolveChatTurnPreBoundary({
+      userMessage: message,
+      priorUserMessageCount: priorUserCountForBoundary,
+      wantsChinese,
+    });
 
   if (preBoundary) {
     debugChatTurnPreBoundaryKind = preBoundary.kind;
     assistantContent = preBoundary.response;
+    // Pre-boundary turns must not keep any extracted state (defense in depth).
+    reflectionState = null;
   } else {
   try {
     const completion = await fetch("https://api.openai.com/v1/chat/completions", {

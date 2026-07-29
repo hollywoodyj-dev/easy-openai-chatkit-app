@@ -102,5 +102,21 @@ describe("lintWisewaveOutput", () => {
     );
     expect(result.violations.some((v) => v.type === "advice_drift")).toBe(false);
   });
+
+  it("detects qualified I-can-stay quiet-with-you companion posture", () => {
+    const result = lintWisewaveOutput(
+      "I can stay quiet and real with you for a moment, but not be company in the usual sense."
+    );
+    expect(result.violations.some((v) => v.type === "companion_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
+
+  it("detects indirect forcing-answer decision advice", () => {
+    const result = lintWisewaveOutput(
+      "When both sides are still alive, forcing a clean answer too early usually just hands power to whichever side is louder that day."
+    );
+    expect(result.violations.some((v) => v.type === "advice_drift")).toBe(true);
+    expect(hasHighSeverityDrift(result)).toBe(true);
+  });
 });
 
