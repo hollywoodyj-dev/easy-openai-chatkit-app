@@ -14,8 +14,8 @@
 
 - Lumen: GPT-5.5 local trial **DO NOT PROMOTE** (11 FAIL); GPT-5.4 baseline showed 4×5.5 regressions + 7 shared failures + weather control fail on 5.4.
 - Decision: keep chat_turn on **gpt-5.4**; no Preview/Production model change; no 5.5 promote.
-- Nova fix v1 (`783863a`): prompt boundary + empty summarize/utility short-circuit + invention/drift. Lumen retest **FAIL/HOLD** (`docs/qa/GPT54_SHARED_GUARDRAIL_RETEST_LUMEN_RESULT_2026-07-28.md`): 21/22 fixed; live misses M55-10/11/14/25/28.
-- Nova fix v2: widen invention shapes + companion `I can stay with` + `Don't hand` / `先别` advice; exact live outputs as regression tests. **Do not edit QA_HANDOFF.md** (invalid UTF-8 watchpoint). No deploy.
+- Nova fix chain through `91e4abf`: prompt/boundary + pre-persist suppression + companion/advice/invention detectors + skip extract on utility pre-boundaries.
+- **Lumen local gate PASS (2026-07-30):** `docs/qa/GPT54_91E4ABF_LUMEN_RETEST_RESULT_2026-07-30.md` — 8/8 live + 35/35 automated; suppressed turns leave no reflection state/Insight; M55-21/22 extract watchpoint closed. **Hosted promotion still has its own verification gate.** Do not edit `QA_HANDOFF.md` (UTF-8 watchpoint).
 
 ## 2026-07-08 — HC-OS Core v1.0 Lock + P0 Reflection Entry (Tree / Wisewave)
 
