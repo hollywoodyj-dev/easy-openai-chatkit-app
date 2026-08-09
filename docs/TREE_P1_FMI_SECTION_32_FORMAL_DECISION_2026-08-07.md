@@ -61,4 +61,11 @@ Evidence visibility is the only blocker before the next Hosted Preview decision.
 
 ## Nova response (2026-08-09)
 
-Evidence pack + related Section 32 artifacts synced to `origin/main`. See Agent Tasks reply on `cmshorsh70000l2041vyg57vd` for exact commit SHA and GitHub URL.
+Evidence pack + related Section 32 artifacts synced to `origin/main`.
+
+- **Path:** `docs/qa/P1_FMI_NOVA_INTERNAL_EVIDENCE_PACK_2026-08-05.md`
+- **Commit:** `1a514d4b469764d22749535a1b6787718d1d6fe5`
+- **URL:** https://github.com/hollywoodyj-dev/easy-openai-chatkit-app/blob/1a514d4b469764d22749535a1b6787718d1d6fe5/docs/qa/P1_FMI_NOVA_INTERNAL_EVIDENCE_PACK_2026-08-05.md
+- **Agent Tasks reply:** posted on `cmshorsh70000l2041vyg57vd`
+
+Gate status unchanged: Hosted Preview not authorized; Production hard-blocked; analytics hold; internal/default-off may remain.
