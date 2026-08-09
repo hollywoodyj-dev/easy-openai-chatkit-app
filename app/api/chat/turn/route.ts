@@ -78,6 +78,13 @@ import {
   getP0SafetyGuardedResponse,
   responseMeetsP0SafetyMinimum,
 } from "@/lib/wisewave-p0-guarded-responses";
+import {
+  buildFMIMessageMetadata,
+  computeP1FirstMildInsightTurn,
+  finalizeFMIAfterGeneration,
+  resolveP1FirstMildInsightEnablement,
+  type FirstMildInsightTurnResult,
+} from "@/lib/wisewave-p1-first-mild-insight";
 import { getDriftSuppressionFallback } from "@/lib/wisewave-drift-suppression-fallback";
 import {
   evaluateChatTurnSafety,
@@ -1757,6 +1764,39 @@ export async function POST(request: Request) {
     wantsChinese,
   });
   const p0Enablement = resolveP0ReflectionEntryEnablement();
+  const fmiEnablement = resolveP1FirstMildInsightEnablement();
+  let fmiTurn: FirstMildInsightTurnResult = computeP1FirstMildInsightTurn({
+    userMessage: message,
+    conversationId: sessionId,
+    committedUserTurnId: userMsg.id,
+    userMessageCount: p0UserTurnIndex,
+    priorMessages: allMessages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      message: m.message,
+      metadata: m.metadata,
+    })),
+    wantsChinese,
+    safetyOverrideActive: p0Entry.safetyOverride,
+  });
+  // Persist eligibility decision on the committed user turn (idempotency / retry reuse).
+  if (fmiTurn.enabled) {
+    try {
+      const prevMeta =
+        userMsg.metadata &&
+        typeof userMsg.metadata === "object" &&
+        !Array.isArray(userMsg.metadata)
+          ? { ...(userMsg.metadata as Record<string, unknown>) }
+          : {};
+      Object.assign(prevMeta, buildFMIMessageMetadata(fmiTurn));
+      await prisma.message.update({
+        where: { id: userMsg.id },
+        data: { metadata: prevMeta as object },
+      });
+    } catch (e) {
+      console.warn("[chat/turn] P1-FMI user eligibility metadata write failed", e);
+    }
+  }
   const priorUserTextForHeuristics =
     userMessagesForHeuristics.length >= 2
       ? (userMessagesForHeuristics[userMessagesForHeuristics.length - 2]?.message ??
@@ -1904,6 +1944,7 @@ export async function POST(request: Request) {
         summaryBlock +
         reflectionBlock +
         p0Entry.systemAppendix +
+        fmiTurn.systemAppendix +
         milestoneGAppendix +
         milestoneHLightAppendix +
         v3TurnFocusAppendix +
@@ -3754,6 +3795,57 @@ export async function POST(request: Request) {
     }
   }
 
+  // P1-FMI: post-generation validator + rendered commit (operational metadata only).
+  if (fmiTurn.enabled) {
+    fmiTurn = finalizeFMIAfterGeneration({
+      turn: fmiTurn,
+      userMessage: message,
+      assistantMessage: assistantContent,
+      safetyOverrideActive:
+        p0Entry.safetyOverride || debugDriftHighSeveritySuppressed === true,
+    });
+    if (fmiTurn.suppressSecondaryLayers) {
+      keptLastInsight = null;
+      keptSoftContinuity = null;
+      keptPatternSurfacing = null;
+      keptMicroAwareness = null;
+      keptMicroShift = null;
+      if (!debugLastInsightSuppressedReason) {
+        debugLastInsightSuppressedReason = "p1_fmi_secondary_hide";
+      }
+      if (!debugSoftContinuitySuppressedReason) {
+        debugSoftContinuitySuppressedReason = "p1_fmi_secondary_hide";
+      }
+      if (!debugSecondarySuppressedReason) {
+        debugSecondarySuppressedReason = "p1_fmi_secondary_hide";
+      }
+    }
+    if (assistantMsgId) {
+      try {
+        const row = await prisma.message.findUnique({
+          where: { id: assistantMsgId },
+          select: { metadata: true },
+        });
+        const prevMeta =
+          row?.metadata &&
+          typeof row.metadata === "object" &&
+          !Array.isArray(row.metadata)
+            ? (row.metadata as Record<string, unknown>)
+            : {};
+        const merged = { ...prevMeta, ...buildFMIMessageMetadata(fmiTurn) };
+        await prisma.message.update({
+          where: { id: assistantMsgId },
+          data: {
+            message: assistantContent,
+            metadata: merged as object,
+          },
+        });
+      } catch (e) {
+        console.warn("[chat/turn] P1-FMI assistant metadata write failed", e);
+      }
+    }
+  }
+
   // Debug: indicate which secondary layer survives de-dup + suppression-first.
   if (keptLastInsight) {
     debugSecondaryLayerType = "last_insight";
@@ -4103,6 +4195,27 @@ export async function POST(request: Request) {
     debug_p0_system_appendix_applied: p0Entry.systemAppendix.length > 0,
     debug_p0_guarded_response_applied: debugP0GuardedResponseApplied,
     debug_p0_guarded_response_kind: debugP0GuardedResponseKind,
+    debug_p1_fmi_flag_set: fmiEnablement.flagSet,
+    debug_p1_fmi_enabled: fmiEnablement.enabled,
+    debug_p1_fmi_blocked_on_hosted: fmiEnablement.blockedOnHosted,
+    debug_p1_fmi_blocked_on_production: fmiEnablement.blockedOnProduction,
+    debug_p1_fmi_blocked_on_preview: fmiEnablement.blockedOnPreview,
+    debug_p1_fmi_allow_hosted_preview_set: fmiEnablement.allowHostedPreviewSet,
+    debug_p1_fmi_vercel_env: fmiEnablement.vercelEnv,
+    debug_p1_fmi_build_marker: fmiTurn.buildMarker,
+    debug_p1_fmi_state: fmiTurn.debug.state,
+    debug_p1_fmi_rendered: fmiTurn.rendered,
+    debug_p1_fmi_suppression_reason: fmiTurn.suppressionReason,
+    debug_p1_fmi_input_type: fmiTurn.debug.input_type,
+    debug_p1_fmi_input_signal_strength: fmiTurn.debug.input_signal_strength,
+    debug_p1_fmi_has_explicit_personal_relationship:
+      fmiTurn.debug.has_explicit_personal_relationship,
+    debug_p1_fmi_eligibility_reused: fmiTurn.eligibilityReused,
+    debug_p1_fmi_system_appendix_applied: fmiTurn.debug.system_appendix_applied,
+    debug_p1_fmi_secondary_layers_suppressed: fmiTurn.suppressSecondaryLayers,
+    debug_p1_fmi_validator_passed: fmiTurn.debug.validator_passed,
+    debug_p1_fmi_validator: fmiTurn.debug.validator,
+    debug_p1_fmi_committed_user_turn_id: fmiTurn.debug.committed_user_turn_id,
     ...(body.debug
       ? {
           debug: {
