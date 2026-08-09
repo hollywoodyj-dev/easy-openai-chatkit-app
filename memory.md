@@ -10,6 +10,22 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-09 — Semantic Authority Program Phase 2 (Tree planning auth)
+
+- **Tree Spec v1.0 (planning only):** `docs/WISEWAVE_SEMANTIC_AUTHORITY_PROGRAM_PHASE_2_REFLECTION_AI_KNOWLEDGE_SYSTEM_NOVA_SPEC_v1.md` — not SEO traffic/volume; Reflection AI category LOCKED; Production content preservation; no runtime product changes; no bulk articles.
+- **Nova planning reply (§31):** `docs/NOVA_PLANNING_REPLY_SEMANTIC_AUTHORITY_PROGRAM_PHASE_2_2026-08-09.md` — Hub = existing `/reflection-ai`; glossary shells unpublished; article registry wraps Article 1 without rewrite; Slice 1 infra only after Tree Slice Auth.
+- Aurora judgment: `docs/AURORA_JUDGMENT_GOOGLE_SEMANTIC_CATEGORY_2026-08-09.md`. Prior Wisewave receipt superseded as program frame.
+- **Not started:** Slice 1 build, Production publish, bulk glossary, Research.
+
+## 2026-08-05 — P1-FMI First Mild Insight (internal-only)
+
+- Tree authorized **internal implementation only** (default-off; EN+ZH; **no** hosted Preview / Production / analytics).
+- Lock: `docs/Wisewave_Product_Milestone_P1_FMI_First_Mild_Insight_Nova_Implementation_Addendum_v1_1_LOCKED.md`
+- Code: `lib/wisewave-p1-first-mild-insight.ts` + turn route `debug_p1_fmi_*`; flag `ENABLE_P1_FIRST_MILD_INSIGHT` (blocked on Vercel preview/production).
+- Evidence: `docs/qa/P1_FMI_NOVA_INTERNAL_EVIDENCE_PACK_2026-08-05.md`; tests `npm run test:p1-fmi`.
+- Visible surface remains `main_reflection` only. No UI / schema / analytics. Next gate is Tree hosted Preview — do not deploy.
+- **2026-08-06 Tree Section 32 review open:** acknowledgement `docs/TREE_TO_NOVA_P1_FMI_SECTION_32_EVIDENCE_REVIEW_2026-08-06.md`. Nova revised evidence pack + added independent Preview allow `P1_FMI_ALLOW_HOSTED_PREVIEW` (Production still hard-blocked). Tests 33/33. Preview still not authorized; no deploy.
+
 ## 2026-07-28 — GPT-5.5 hold; shared guardrail harden on 5.4
 
 - Lumen: GPT-5.5 local trial **DO NOT PROMOTE** (11 FAIL); GPT-5.4 baseline showed 4×5.5 regressions + 7 shared failures + weather control fail on 5.4.

@@ -1,7 +1,8 @@
 # Message to Wisewave — combined Google understanding pack
 
-**Status:** Ready to send  
-**Date:** 2026-08-06  
+**Status:** Sent / answered  
+**Date:** 2026-08-06 (packs) · **Aurora reply filed 2026-08-09**  
+**Aurora judgment:** `docs/AURORA_JUDGMENT_GOOGLE_SEMANTIC_CATEGORY_2026-08-09.md`  
 **Note:** Links assume files are on `origin/main`. If a link 404s, push the `docs/qa/` packs first.
 
 ---
