@@ -10,6 +10,12 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-09 — Light Entry v1.1 Living Library Pattern Test (planning)
+
+- Tree Spec: `docs/TREE_LIGHT_ENTRY_INVITATION_V1_1_LIVING_LIBRARY_PATTERN_TEST_NOVA_SPEC_v1.md` — planning authorized; code not yet.
+- Nova §32 plan: `docs/NOVA_PLANNING_REPLY_LIGHT_ENTRY_V1_1_LIVING_LIBRARY_2026-08-09.md` — inspire/do not prefill; hide-on-type; analytics-free; mutual exclusion over IL/P0/P1.1; Production blocked; flag `NEXT_PUBLIC_ENABLE_LIGHT_ENTRY_LIVING_LIBRARY_TEST`.
+- Separate from Semantic Authority Phase 2 (awaiting Tree reply on that plan).
+
 ## 2026-08-09 — Semantic Authority Program Phase 2 (Tree planning auth)
 
 - **Tree Spec v1.0 (planning only):** `docs/WISEWAVE_SEMANTIC_AUTHORITY_PROGRAM_PHASE_2_REFLECTION_AI_KNOWLEDGE_SYSTEM_NOVA_SPEC_v1.md` — not SEO traffic/volume; Reflection AI category LOCKED; Production content preservation; no runtime product changes; no bulk articles.
