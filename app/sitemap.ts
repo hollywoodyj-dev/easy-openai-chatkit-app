@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { mergeSitemapPaths } from "@/lib/wisewave-knowledge/sitemap-paths";
 
 const SITE = "https://www.wisewave.io";
 
@@ -31,9 +32,18 @@ const PATHS: string[] = [
   "/legal/data-deletion",
 ];
 
+/** Exported for tests — marketing PATHS only (no unpublished glossary). */
+export function getMarketingSitemapBasePaths(): readonly string[] {
+  return PATHS;
+}
+
+export function buildSitemapPaths(): string[] {
+  return mergeSitemapPaths(PATHS);
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return PATHS.map((path) => ({
+  return buildSitemapPaths().map((path) => ({
     url: `${SITE}${path}`,
     lastModified: now,
     changeFrequency: path === "/" ? "weekly" : "monthly",

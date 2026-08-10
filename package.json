@@ -24,6 +24,7 @@
     "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",
     "test:p0-reflection-entry": "vitest run lib/wisewave-p0-opening-detection.test.ts lib/wisewave-p0-reflection-entry.test.ts lib/wisewave-p0-guarded-responses.test.ts lib/wisewave-p0-entry-analytics.test.ts lib/wisewave-p0-early-exit.test.ts",
     "test:p1-fmi": "vitest run lib/wisewave-p1-first-mild-insight.test.ts",
+    "test:p2-knowledge": "vitest run lib/wisewave-knowledge/wisewave-knowledge.test.ts",
     "test:p1-interaction-legibility": "vitest run lib/wisewave-p1-interaction-legibility.test.ts",
     "test:ambient-moment": "vitest run lib/wisewave-ambient-moment.test.ts",
     "p0:entry:probes": "npm run test:p0-reflection-entry",

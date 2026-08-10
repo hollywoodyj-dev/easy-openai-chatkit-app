@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-10 — Semantic Authority P2 Slice 1 (knowledge infra)
+
+- Tree Slice 1 build auth: `docs/TREE_SEMANTIC_AUTHORITY_PHASE_2_SLICE_1_BUILD_AUTH_2026-08-10.md`
+- Implemented: `lib/wisewave-knowledge/**`, `/glossary` shells (noindex), sitemap publish gate, Article 1 legacy overlay
+- Evidence: `docs/qa/P2_SLICE1_KNOWLEDGE_INFRA_EVIDENCE_2026-08-10.md`; tests `npm run test:p2-knowledge` 9/9
+- Hosted Preview / Production / public glossary / Hub deepen: NOT authorized
+
 ## 2026-08-09 — Light Entry v1.1 Living Library Pattern Test (planning)
 
 - Tree Spec: `docs/TREE_LIGHT_ENTRY_INVITATION_V1_1_LIVING_LIBRARY_PATTERN_TEST_NOVA_SPEC_v1.md` — planning authorized; code not yet.
