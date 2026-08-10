@@ -10,6 +10,19 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-11 — Identity Deepen Spec + full EN content proposal
+
+- Tree Spec v1.0: `docs/WISEWAVE_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_CONTENT_SEMANTIC_SPEC_v1.md`
+- Nova §34 reply (audit + full EN copy, no impl): `docs/NOVA_REPLY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_CONTENT_PROPOSAL_2026-08-11.md`
+- Next: Aurora PASS / corrections; implementation NOT started
+- Light Entry internal build ACCEPTED (separate track)
+
+## 2026-08-11 — Light Entry v1.1 internal build ACCEPTED
+
+- Tree review PASS: `docs/TREE_LIGHT_ENTRY_V1_1_INTERNAL_BUILD_REVIEW_PASS_2026-08-11.md`
+- Next: Aurora semantic review of intro + EN/ZH examples only
+- Hosted Preview NOT authorized; Production HOLD; no expansion of examples/behavior/analytics
+
 ## 2026-08-11 — P2 Slice 1 CLOSED; Identity Deepen proposal only
 
 - Tree Slice 1 CLOSED: `docs/TREE_SEMANTIC_AUTHORITY_PHASE_2_SLICE_1_CLOSED_2026-08-11.md`
