@@ -10,6 +10,12 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-11 — P2 Slice 1 CLOSED; Identity Deepen proposal only
+
+- Tree Slice 1 CLOSED: `docs/TREE_SEMANTIC_AUTHORITY_PHASE_2_SLICE_1_CLOSED_2026-08-11.md`
+- Next track (proposal only, no impl): `/reflection-without-advice` Identity Deepen — `docs/NOVA_PROPOSAL_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_2026-08-11.md`
+- Hub deepen + glossary publish: held
+
 ## 2026-08-10 — Light Entry v1.1 Living Library (internal build)
 
 - Tree build auth: `docs/TREE_LIGHT_ENTRY_V1_1_LIVING_LIBRARY_BUILD_AUTH_2026-08-10.md`
