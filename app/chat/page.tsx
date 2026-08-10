@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trackEvent, AUTH_TOKEN_PAYLOAD_KEY, type AnalyticsEventName } from "@/lib/wisewave-analytics";
 import {
@@ -21,6 +21,14 @@ import {
   resolveP1InteractionLegibilityCopy,
   shouldShowP1InteractionLegibility,
 } from "@/lib/wisewave-p1-interaction-legibility";
+import {
+  DEFAULT_COMPOSER_PLACEHOLDER,
+  isLightEntryLivingLibraryClientEnabled,
+  resolveLightEntryLivingLibraryCopy,
+  shouldShowLightEntryLivingLibrary,
+  shouldSuppressOtherEntryExperiments,
+  type LightEntryLivingLibraryCopy,
+} from "@/lib/wisewave-light-entry-living-library";
 import {
   CHAT_AUTH_CHECK_ENDPOINT,
   CHAT_MESSAGES_ENDPOINT,
@@ -637,6 +645,45 @@ function InteractionLegibilityPreview({
   );
 }
 
+function LivingLibraryEntrySurface({
+  copy,
+  onExampleClick,
+  isEmbedMobile = false,
+}: {
+  copy: LightEntryLivingLibraryCopy;
+  onExampleClick: (example: string) => void;
+  isEmbedMobile?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "mx-auto px-5 pb-1 pt-1 md:px-8",
+        isEmbedMobile ? "max-w-6xl" : "max-w-4xl"
+      )}
+      data-testid="light-entry-living-library"
+    >
+      <section
+        aria-label="Examples of ways to begin"
+        className="max-w-xl text-[13px] leading-relaxed text-[#9A9A9A]"
+      >
+        <p>{copy.intro}</p>
+        <div className="mt-2 space-y-1.5">
+          {copy.examples.map((line) => (
+            <button
+              key={line}
+              type="button"
+              onClick={() => onExampleClick(line)}
+              className="block w-full text-left font-normal text-[13px] leading-relaxed text-[#8B8B8B] hover:text-[#6A6A6A] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[#B0B0B0]"
+            >
+              {line}
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function looksLikeChinese(text: string): boolean {
   return /[\u4e00-\u9fff]/.test(text);
 }
@@ -647,7 +694,8 @@ function InputBar({
   onSubmit,
   disabled,
   isEmbedMobile = false,
-  placeholder = "Speak freely.",
+  placeholder = DEFAULT_COMPOSER_PLACEHOLDER,
+  textareaRef,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -655,6 +703,7 @@ function InputBar({
   disabled: boolean;
   isEmbedMobile?: boolean;
   placeholder?: string;
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
 }) {
   return (
     <div className="sticky bottom-0 z-20 border-t border-black/5 bg-[#F7F5F2]/90 backdrop-blur-xl">
@@ -667,6 +716,7 @@ function InputBar({
         <div className="rounded-[30px] bg-white/78 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.05)] ring-1 ring-black/5 backdrop-blur-sm">
           <div className="flex items-end gap-2 rounded-[24px] px-3 py-2 md:px-4 md:py-3">
             <textarea
+              ref={textareaRef}
               value={value}
               onChange={(e) => onChange(e.target.value)}
               onKeyDown={(e) => {
@@ -719,6 +769,7 @@ function ChatContent() {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const p0ClientEnabled = isP0ReflectionEntryClientEnabled();
   const p1LegibilityEnabled = isP1InteractionLegibilityClientEnabled();
+  const livingLibraryEnabled = isLightEntryLivingLibraryClientEnabled();
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     p0ClientEnabled ? p0EmptyThreadMessages() : INITIAL_MESSAGES
   );
@@ -739,9 +790,10 @@ function ChatContent() {
   const [busyContinueId, setBusyContinueId] = useState<string | null>(null);
   const [continueListLoadError, setContinueListLoadError] = useState<string | null>(null);
   const [continueHighlightId, setContinueHighlightId] = useState<string | null>(null);
-  const [inputPlaceholder, setInputPlaceholder] = useState("Speak freely.");
+  const [inputPlaceholder, setInputPlaceholder] = useState(DEFAULT_COMPOSER_PLACEHOLDER);
   const continueHighlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const continuePlaceholderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const composerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [phase4Space, setPhase4Space] = useState<{
     thread_legibility: string;
     current_space_marker: string | null;
@@ -807,15 +859,55 @@ function ChatContent() {
       typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
     return resolveP1InteractionLegibilityCopy(browserLang.startsWith("zh"));
   }, []);
+  const livingLibraryCopy = useMemo(() => {
+    const browserLang =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
+    return resolveLightEntryLivingLibraryCopy(browserLang.startsWith("zh"));
+  }, []);
+  const livingLibraryVisible = useMemo(
+    () =>
+      shouldShowLightEntryLivingLibrary({
+        enabled: livingLibraryEnabled,
+        userMessageCount,
+        inputHasContent: input.trim().length > 0,
+        hasError: Boolean(error),
+        subscriptionRequired,
+        crisisSurfaceActive: false,
+      }),
+    [
+      error,
+      input,
+      livingLibraryEnabled,
+      subscriptionRequired,
+      userMessageCount,
+    ]
+  );
+  const suppressOtherEntry = shouldSuppressOtherEntryExperiments({
+    livingLibraryVisible,
+  });
   const interactionLegibilityVisible = useMemo(
     () =>
+      !suppressOtherEntry &&
       shouldShowP1InteractionLegibility({
         enabled: p1LegibilityEnabled,
         userMessageCount,
         inputHasContent: input.trim().length > 0,
       }),
-    [input, p1LegibilityEnabled, userMessageCount]
+    [input, p1LegibilityEnabled, suppressOtherEntry, userMessageCount]
   );
+
+  useEffect(() => {
+    if (!livingLibraryVisible) {
+      setInputPlaceholder(DEFAULT_COMPOSER_PLACEHOLDER);
+    }
+  }, [livingLibraryVisible]);
+
+  const handleLivingLibraryExampleClick = useCallback((example: string) => {
+    // inspire, do not prefill — value stays empty; ghost placeholder only
+    setInput("");
+    setInputPlaceholder(example);
+    composerTextareaRef.current?.focus();
+  }, []);
   const anchorFromMessages = useMemo(() => {
     const assistants = messages.filter((m): m is Extract<ChatMessage, { role: "assistant" }> => m.role === "assistant");
     for (let i = assistants.length - 1; i >= 0; i -= 1) {
@@ -1565,12 +1657,12 @@ function ChatContent() {
             marker={phase4Space?.current_space_marker}
           />
           <InsightAnchor text={anchorText} />
-          {p0EmptyThread && !interactionLegibilityVisible ? (
+          {p0EmptyThread && !interactionLegibilityVisible && !suppressOtherEntry ? (
             <p className="mb-6 max-w-xl text-[15px] leading-relaxed text-[#7A7A7A]">
               {p0EmptyCopy.permission}
             </p>
           ) : null}
-          {p0ExitInviteVisible && p0EmptyThread ? (
+          {p0ExitInviteVisible && p0EmptyThread && !suppressOtherEntry ? (
             <p className="mb-6 max-w-xl text-[14px] leading-relaxed text-[#9A9A9A]">
               {p0EmptyCopy.exitInvitation}
             </p>
@@ -1606,6 +1698,13 @@ function ChatContent() {
         onClose={() => setSubscriptionModalOpen(false)}
       />
 
+      {livingLibraryVisible ? (
+        <LivingLibraryEntrySurface
+          copy={livingLibraryCopy}
+          onExampleClick={handleLivingLibraryExampleClick}
+          isEmbedMobile={isEmbedMobile}
+        />
+      ) : null}
       {interactionLegibilityVisible ? (
         <InteractionLegibilityPreview copy={p1LegibilityCopy} />
       ) : null}
@@ -1616,12 +1715,14 @@ function ChatContent() {
           if (value.trim().length > 0) {
             userHasTypedRef.current = true;
             setIsFirstEntryThisSession(false);
+            setInputPlaceholder(DEFAULT_COMPOSER_PLACEHOLDER);
           }
         }}
         onSubmit={handleSubmit}
         disabled={isWaiting}
         isEmbedMobile={isEmbedMobile}
         placeholder={inputPlaceholder}
+        textareaRef={composerTextareaRef}
       />
     </div>
   );

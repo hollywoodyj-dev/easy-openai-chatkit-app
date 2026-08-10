@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-10 — Light Entry v1.1 Living Library (internal build)
+
+- Tree build auth: `docs/TREE_LIGHT_ENTRY_V1_1_LIVING_LIBRARY_BUILD_AUTH_2026-08-10.md`
+- Code: `lib/wisewave-light-entry-living-library.ts` + `app/chat/page.tsx`; flag `NEXT_PUBLIC_ENABLE_LIGHT_ENTRY_LIVING_LIBRARY_TEST` (default off; Production hard-blocked)
+- Evidence: `docs/qa/LIGHT_ENTRY_V1_1_LIVING_LIBRARY_INTERNAL_EVIDENCE_2026-08-10.md`; `npm run test:light-entry-ll` 7/7
+- Hosted Preview / Production / analytics: NOT authorized
+
 ## 2026-08-10 — Semantic Authority P2 Slice 1 (knowledge infra)
 
 - Tree Slice 1 build auth: `docs/TREE_SEMANTIC_AUTHORITY_PHASE_2_SLICE_1_BUILD_AUTH_2026-08-10.md`
