@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-11 — Identity Deepen: Aurora PASS WITH SEMANTIC CORRECTIONS (copy locked)
+
+- Aurora review: `docs/AURORA_IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_SEMANTIC_REVIEW_2026-08-11.md`
+- Nova ack: `docs/NOVA_ACK_AURORA_IDENTITY_DEEPEN_SEMANTIC_REVIEW_2026-08-11.md`
+- Public copy locked (H1, hero, thesis, category, Low Presence, Authorship); ~7-section flow; Identity Deepen ≠ Enlargement
+- **Next:** Tree may authorize URL-only implementation; Nova holds until then
+- Impl / Preview / Production / Hub / glossary: still NOT authorized
+
 ## 2026-08-11 — Light Entry v1.1: Aurora final language review opened
 
 - Tree → Aurora: `docs/TREE_TO_AURORA_LIGHT_ENTRY_V1_1_FINAL_LANGUAGE_REVIEW_2026-08-11.md`
@@ -23,7 +31,7 @@
 - Tree review: `docs/TREE_IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_PROPOSAL_REVIEW_2026-08-11.md`
 - Nova ack (hold): `docs/NOVA_ACK_IDENTITY_DEEPEN_PROPOSAL_REVIEW_PASS_WITH_CORRECTIONS_2026-08-11.md`
 - Architecture approved in principle; five corrections binding (no SEO/process language; natural Reflection AI; quieter Low Presence; softer Authorship; ~7 sections)
-- **Next:** Aurora final copy / PASS → then Tree may consider URL-only impl auth
+- Aurora final copy now locked (see entry above); Tree URL-only impl auth still pending
 - Implementation / Preview / Production / Hub / glossary: still NOT authorized
 
 ## 2026-08-11 — Identity Deepen Spec + full EN content proposal
