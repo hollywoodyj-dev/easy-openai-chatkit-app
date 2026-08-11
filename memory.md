@@ -10,11 +10,19 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-11 — Identity Deepen: Tree PASS WITH SEMANTIC CORRECTIONS
+
+- Tree review: `docs/TREE_IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_PROPOSAL_REVIEW_2026-08-11.md`
+- Nova ack (hold): `docs/NOVA_ACK_IDENTITY_DEEPEN_PROPOSAL_REVIEW_PASS_WITH_CORRECTIONS_2026-08-11.md`
+- Architecture approved in principle; five corrections binding (no SEO/process language; natural Reflection AI; quieter Low Presence; softer Authorship; ~7 sections)
+- **Next:** Aurora final copy / PASS → then Tree may consider URL-only impl auth
+- Implementation / Preview / Production / Hub / glossary: still NOT authorized
+
 ## 2026-08-11 — Identity Deepen Spec + full EN content proposal
 
 - Tree Spec v1.0: `docs/WISEWAVE_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_CONTENT_SEMANTIC_SPEC_v1.md`
 - Nova §34 reply (audit + full EN copy, no impl): `docs/NOVA_REPLY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_CONTENT_PROPOSAL_2026-08-11.md`
-- Next: Aurora PASS / corrections; implementation NOT started
+- Superseded as ship baseline by Tree PASS WITH CORRECTIONS + Aurora final (see entry above)
 - Light Entry internal build ACCEPTED (separate track)
 
 ## 2026-08-11 — Light Entry v1.1 internal build ACCEPTED
