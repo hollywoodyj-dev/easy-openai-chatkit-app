@@ -10,6 +10,12 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-11 — Identity Deepen: corrected final EN copy returned (no impl)
+
+- Nova corrected EN only: `docs/NOVA_CORRECTED_FINAL_EN_COPY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_2026-08-11.md`
+- Applies Tree/Aurora corrections 1–4; steward closings kept; ~7 sections
+- **Next:** Tree decides URL-only impl auth; Nova still holds
+
 ## 2026-08-11 — Identity Deepen: Aurora PASS WITH SEMANTIC CORRECTIONS (copy locked)
 
 - Aurora review: `docs/AURORA_IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_SEMANTIC_REVIEW_2026-08-11.md`
