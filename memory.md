@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-11 — Light Entry v1.1: Aurora final language review opened
+
+- Tree → Aurora: `docs/TREE_TO_AURORA_LIGHT_ENTRY_V1_1_FINAL_LANGUAGE_REVIEW_2026-08-11.md`
+- Nova STOP ack: `docs/NOVA_ACK_LIGHT_ENTRY_V1_1_AURORA_LANGUAGE_REVIEW_STOP_2026-08-11.md`
+- Scope: intro + EN/ZH examples + parity only; no mechanism/UI/behavior review
+- Hosted Preview still NOT AUTHORIZED; Production HOLD; Nova no code expansion
+- Aurora PASS ≠ Production; may only unlock Tree decision on bounded Preview
+
 ## 2026-08-11 — Identity Deepen: Tree PASS WITH SEMANTIC CORRECTIONS
 
 - Tree review: `docs/TREE_IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_PROPOSAL_REVIEW_2026-08-11.md`
