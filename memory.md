@@ -10,11 +10,22 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-12 — Identity Deepen: FINAL EN SEMANTIC COPY LOCKED
+
+- Aurora final: PASS WITH ONE MICRO-EDIT — `docs/TREE_AURORA_IDENTITY_DEEPEN_FINAL_EN_LANGUAGE_REVIEW_2026-08-12.md`
+- Locked baseline (Section 2 micro-edit applied in doc only): `docs/NOVA_CORRECTED_FINAL_EN_COPY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_2026-08-11.md`
+- Semantic copy lock ≠ impl / Preview / Production / Hub / glossary
+- Nova: **no page/code changes**; Tree retains next gate (may authorize URL-only impl separately)
+
+## 2026-08-12 — Identity Deepen: Tree HOLD / STOP confirmed
+
+- Tree gate: `docs/TREE_IDENTITY_DEEPEN_CURRENT_GATE_HOLD_CONFIRMATION_2026-08-12.md`
+- Superseded on public-copy status by FINAL EN LOCK above; STOP on impl still holds
+
 ## 2026-08-11 — Identity Deepen: corrected final EN copy returned (no impl)
 
 - Nova corrected EN only: `docs/NOVA_CORRECTED_FINAL_EN_COPY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_2026-08-11.md`
-- Applies Tree/Aurora corrections 1–4; steward closings kept; ~7 sections
-- **Next:** Tree decides URL-only impl auth; Nova still holds
+- Later locked via Aurora final micro-edit (2026-08-12)
 
 ## 2026-08-11 — Identity Deepen: Aurora PASS WITH SEMANTIC CORRECTIONS (copy locked)
 

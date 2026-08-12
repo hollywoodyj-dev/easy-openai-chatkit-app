@@ -1,13 +1,14 @@
 # Nova — `/reflection-without-advice`  
-## Corrected Final EN Copy (Aurora PASS WITH CORRECTIONS)
+## Final EN Semantic Copy (LOCKED)
 
-**Date:** 2026-08-11  
-**From:** Nova  
+**Dates:** 2026-08-11 (corrected draft) · 2026-08-12 (Aurora final micro-edit)  
+**From:** Nova (baseline custodian)  
 **To:** Tree · Aurora  
-**Authority:** Tree RE Aurora Semantic Corrections · `docs/AURORA_IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_SEMANTIC_REVIEW_2026-08-11.md`  
-**Status:** **CORRECTED FINAL EN COPY ONLY — NO IMPLEMENTATION**
+**Authority:** `docs/TREE_AURORA_IDENTITY_DEEPEN_FINAL_EN_LANGUAGE_REVIEW_2026-08-12.md`  
+**Status:** **FINAL EN SEMANTIC COPY: LOCKED** · **IMPLEMENTATION NOT AUTHORIZED**
 
-Tree may decide whether to authorize narrow implementation for this URL alone.
+Aurora: **PASS WITH ONE MICRO-EDIT** (Section 2 repetition removed).  
+No page/code changes from the language review. Tree retains the next gate.
 
 ---
 
@@ -42,9 +43,6 @@ or taking over the meaning of your experience.
 
 Reflection without advice does not mean less support.  
 It means support without taking over interpretation or direction.
-
-Wisewave can reflect what you bring while leaving the meaning  
-of your experience with you.
 
 The purpose is not to leave you without support.  
 It is to leave the meaning of your experience with you.
@@ -111,6 +109,7 @@ Begin with what is real right now.
 | 2 | Low Presence replaced with Aurora/Tree quieter form |
 | 3 | Removed “leave you with more of yourself” → leave meaning of experience with you |
 | 4 | Meta description set to Tree/Aurora form |
+| 5 | **2026-08-12 Aurora micro-edit:** removed Section 2 duplicate “Wisewave can reflect… leaving the meaning…” |
 | Keep | Steward closings on support / own seeing |
 
 ## Explicitly not done
