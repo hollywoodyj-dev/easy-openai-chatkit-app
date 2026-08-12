@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-12 — Identity Deepen: Semantic Identity Lock / Current Gate (STOP)
+
+- Tree: `docs/TREE_IDENTITY_DEEPEN_SEMANTIC_IDENTITY_LOCK_CURRENT_GATE_2026-08-12.md`
+- Semantic identity LOCKED; public copy semantically locked **not implemented**
+- Aurora language gate complete; **no Nova action**; Tree holds independent impl decision
+- Future auth (if any) must be explicit: “Locked EN Copy Narrow Implementation Authorization” — URL only; does not auto-unlock Preview/Production/Hub/glossary
+
 ## 2026-08-12 — Identity Deepen: FINAL EN SEMANTIC COPY PASS / LOCKED
 
 - Tree lock: `docs/TREE_IDENTITY_DEEPEN_FINAL_EN_SEMANTIC_LOCK_2026-08-12.md`
