@@ -46,7 +46,7 @@ export const WISEWAVE_QUIET_REFLECTION_SEO: WisewaveMarketingSeoEntry = {
 export const WISEWAVE_REFLECTION_WITHOUT_ADVICE_SEO: WisewaveMarketingSeoEntry = {
   title: "Reflection Without Advice | Wisewave",
   description:
-    "Wisewave supports reflection without advice, coaching, or pressure. A quieter way to think clearly without handing over authorship.",
+    "Reflection without advice: a quieter form of Reflection AI that supports reflection without taking over interpretation or direction.",
   canonicalPath: "/reflection-without-advice",
 };
 

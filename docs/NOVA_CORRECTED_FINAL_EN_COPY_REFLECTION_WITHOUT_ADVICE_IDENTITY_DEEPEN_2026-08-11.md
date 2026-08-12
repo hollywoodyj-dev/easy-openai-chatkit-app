@@ -5,12 +5,11 @@
 **From:** Nova (baseline custodian)  
 **To:** Tree · Aurora  
 **Authority:** `docs/TREE_IDENTITY_DEEPEN_FINAL_EN_SEMANTIC_LOCK_2026-08-12.md`  
-**Status:** **FINAL EN SEMANTIC COPY: PASS / LOCKED** · **IMPLEMENTATION NOT AUTHORIZED**
+**Status:** **FINAL EN SEMANTIC COPY: PASS / LOCKED** · **NARROW IMPLEMENTATION AUTHORIZED 2026-08-13** (page render only; Preview/Production still NOT authorized)
 
 Aurora / Tree: **PASS WITH MICRO-CORRECTIONS** (Section 2 repetition; Section 7 permission CTA).  
-Copy record only — no live page or application code changes. Tree retains the next gate.
-
-**Identity frame (locked):** Category = Reflection AI · Identity = Reflection without advice · Core = Support ≠ Takeover · Principles = Low Presence, Authorship Preservation, Non-directive reflection.
+Tree narrow impl auth: `docs/TREE_TO_NOVA_REFLECTION_WITHOUT_ADVICE_NARROW_IMPLEMENTATION_AUTHORIZATION_2026-08-13.md`  
+Identity frame (locked): Category = Reflection AI · Identity = Reflection without advice · Core = Support ≠ Takeover · Principles = Low Presence, Authorship Preservation, Non-directive reflection.
 
 ---
 

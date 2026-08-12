@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-13 — Identity Deepen: narrow impl of locked EN on /reflection-without-advice
+
+- Tree auth: `docs/TREE_TO_NOVA_REFLECTION_WITHOUT_ADVICE_NARROW_IMPLEMENTATION_AUTHORIZATION_2026-08-13.md` (task `cmsq6ffcd0001jm04kfj9z8in`)
+- Code: `app/(wisewave-site)/reflection-without-advice/page.tsx` + locked meta description in `wisewave-marketing-seo-metadata.ts`
+- Evidence: `docs/qa/IDENTITY_DEEPEN_REFLECTION_WITHOUT_ADVICE_NARROW_IMPL_EVIDENCE_2026-08-13.md`
+- Preview / Production / Hub / glossary: still NOT authorized; awaiting Tree review
+
 ## 2026-08-12 — Identity Deepen: Semantic Identity Lock / Current Gate (STOP)
 
 - Tree: `docs/TREE_IDENTITY_DEEPEN_SEMANTIC_IDENTITY_LOCK_CURRENT_GATE_2026-08-12.md`

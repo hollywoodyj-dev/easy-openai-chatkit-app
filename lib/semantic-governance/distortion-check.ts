@@ -218,6 +218,12 @@ export function isAllowlistedDistortionContext(
 
   if (/\bnot\b/i.test(before) || /\bwithout\b/i.test(before)) return true;
 
+  // Category contrast — locked Identity Deepen: Reflection AI centered on reflection
+  // rather than answers / direction / task completion (not assistant positioning).
+  if (/\brather than\b/i.test(before) || /\brather than\b/i.test(line)) {
+    return true;
+  }
+
   if (
     lowerLine.includes(`not ${lowerMatch}`) ||
     lowerLine.includes(`no ${lowerMatch}`) ||

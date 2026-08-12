@@ -40,6 +40,20 @@ describe("distortion-check", () => {
     expect(hits.filter((h) => !h.allowlisted)).toHaveLength(0);
   });
 
+  it("allowlists rather-than category contrast for task completion", () => {
+    const line =
+      "Reflection AI describes a form of AI interaction centered on reflection rather than answers, direction, or task completion.";
+    const hits = scanLineForDistortion(line, 1);
+    expect(hits.filter((h) => !h.allowlisted)).toHaveLength(0);
+  });
+
+  it("allowlists not-designed companion boundary line", () => {
+    const line =
+      "Wisewave is not designed to become your therapist, coach, personal adviser, or companion.";
+    const hits = scanLineForDistortion(line, 1);
+    expect(hits.filter((h) => !h.allowlisted)).toHaveLength(0);
+  });
+
   it("flags affirmative assistant framing", () => {
     const hits = scanTextForDistortionViolations(
       "Download your new AI assistant for reflection.",
