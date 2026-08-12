@@ -1,14 +1,16 @@
 # Nova — `/reflection-without-advice`  
-## Final EN Semantic Copy (LOCKED)
+## Final EN Semantic Copy (PASS / LOCKED)
 
-**Dates:** 2026-08-11 (corrected draft) · 2026-08-12 (Aurora final micro-edit)  
+**Dates:** 2026-08-11 (corrected draft) · 2026-08-12 (Aurora final micro-corrections)  
 **From:** Nova (baseline custodian)  
 **To:** Tree · Aurora  
-**Authority:** `docs/TREE_AURORA_IDENTITY_DEEPEN_FINAL_EN_LANGUAGE_REVIEW_2026-08-12.md`  
-**Status:** **FINAL EN SEMANTIC COPY: LOCKED** · **IMPLEMENTATION NOT AUTHORIZED**
+**Authority:** `docs/TREE_IDENTITY_DEEPEN_FINAL_EN_SEMANTIC_LOCK_2026-08-12.md`  
+**Status:** **FINAL EN SEMANTIC COPY: PASS / LOCKED** · **IMPLEMENTATION NOT AUTHORIZED**
 
-Aurora: **PASS WITH ONE MICRO-EDIT** (Section 2 repetition removed).  
-No page/code changes from the language review. Tree retains the next gate.
+Aurora / Tree: **PASS WITH MICRO-CORRECTIONS** (Section 2 repetition; Section 7 permission CTA).  
+Copy record only — no live page or application code changes. Tree retains the next gate.
+
+**Identity frame (locked):** Category = Reflection AI · Identity = Reflection without advice · Core = Support ≠ Takeover · Principles = Low Presence, Authorship Preservation, Non-directive reflection.
 
 ---
 
@@ -93,7 +95,7 @@ not taking over interpretation or direction.
 
 ### 7. Quiet close / Enter Wisewave
 
-Begin with what is real right now.
+You can begin anywhere.
 
 → Open Wisewave
 
@@ -109,7 +111,8 @@ Begin with what is real right now.
 | 2 | Low Presence replaced with Aurora/Tree quieter form |
 | 3 | Removed “leave you with more of yourself” → leave meaning of experience with you |
 | 4 | Meta description set to Tree/Aurora form |
-| 5 | **2026-08-12 Aurora micro-edit:** removed Section 2 duplicate “Wisewave can reflect… leaving the meaning…” |
+| 5 | **2026-08-12:** Section 2 duplicate removed (Support ≠ Takeover thesis kept) |
+| 6 | **2026-08-12 Final Semantic Lock:** Section 7 CTA → “You can begin anywhere.” (permission, not instruction) |
 | Keep | Steward closings on support / own seeing |
 
 ## Explicitly not done

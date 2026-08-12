@@ -10,12 +10,17 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-12 — Identity Deepen: FINAL EN SEMANTIC COPY PASS / LOCKED
+
+- Tree lock: `docs/TREE_IDENTITY_DEEPEN_FINAL_EN_SEMANTIC_LOCK_2026-08-12.md`
+- Copy record (Section 2 confirmed; Section 7 → “You can begin anywhere.”): `docs/NOVA_CORRECTED_FINAL_EN_COPY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_2026-08-11.md`
+- Prior language-review note: `docs/TREE_AURORA_IDENTITY_DEEPEN_FINAL_EN_LANGUAGE_REVIEW_2026-08-12.md`
+- Semantic lock ≠ impl / Preview / Production / Hub / glossary; **no live page/code**
+- Tree retains next gate
+
 ## 2026-08-12 — Identity Deepen: FINAL EN SEMANTIC COPY LOCKED
 
-- Aurora final: PASS WITH ONE MICRO-EDIT — `docs/TREE_AURORA_IDENTITY_DEEPEN_FINAL_EN_LANGUAGE_REVIEW_2026-08-12.md`
-- Locked baseline (Section 2 micro-edit applied in doc only): `docs/NOVA_CORRECTED_FINAL_EN_COPY_REFLECTION_WITHOUT_ADVICE_IDENTITY_DEEPEN_2026-08-11.md`
-- Semantic copy lock ≠ impl / Preview / Production / Hub / glossary
-- Nova: **no page/code changes**; Tree retains next gate (may authorize URL-only impl separately)
+- Superseded/completed by PASS / LOCKED entry above (adds Section 7 micro-correction)
 
 ## 2026-08-12 — Identity Deepen: Tree HOLD / STOP confirmed
 
