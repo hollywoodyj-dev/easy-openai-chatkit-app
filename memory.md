@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-08-14 — Identity Deepen narrow impl: Tree PASS WITH GOVERNANCE CORRECTION
+
+- Tree review: `docs/TREE_REVIEW_REFLECTION_WITHOUT_ADVICE_NARROW_IMPLEMENTATION_2026-08-14.md`
+- Nova ack (hold A vs B): `docs/NOVA_ACK_TREE_REVIEW_REFLECTION_WITHOUT_ADVICE_NARROW_IMPL_2026-08-14.md`
+- Page ACCEPTED; slice closure PENDING on shared scanner allowlist (A revert vs B separate auth)
+- Preview / Production still NOT authorized; Nova waits for Tree A or B
+
 ## 2026-08-13 — Identity Deepen: narrow impl of locked EN on /reflection-without-advice
 
 - Tree auth: `docs/TREE_TO_NOVA_REFLECTION_WITHOUT_ADVICE_NARROW_IMPLEMENTATION_AUTHORIZATION_2026-08-13.md` (task `cmsq6ffcd0001jm04kfj9z8in`)
