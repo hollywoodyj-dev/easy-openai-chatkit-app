@@ -10,6 +10,125 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-17 — Founder locks 1.1/1.2; complete Stage 1 package submitted
+
+- Founder/Steward Response: submission summary ACCEPTED; Decision **1.1 LOCKED** (Insight rows do not migrate); **1.2 LOCKED** (privacy live before external Preview Keep; max 90d adoption-audit anonymous linkage); visit-boundary deviation ACCEPTED; full semantic fidelity **PENDING** complete-spec line review
+- Spec updated to **DRAFT v1.2**: `docs/Wisewave_First_Conversation_Return_Mechanism_Stage1_Interaction_Spec_v1_DRAFT.md` (§4.2 ACCEPTED, §10.4–10.10, §16.2)
+- Companions: privacy notice+policy list · purge design · S4 relational-promise slice request · measurement scope · payment reconciliation plan
+- Submission: `docs/NOVA_TO_WISEWAVE_STAGE1_COMPLETE_SPEC_SUBMISSION_2026-09-17.md`
+- Authorised separately: measurement-slice **spec**; S4 narrowing **spec/test**; payment **read-only** plan — each needs own deploy decision
+- **NOT authorised:** Stage 1 product code, Preview, Production experience, credential mutation, warmth beyond offline fixtures until S4 passes
+- Still waiting: Founder semantic PASS/PASS WITH CORRECTIONS; Tree scope outcomes; Lumen anti-prefix numeric threshold
+
+## 2026-09-17 — Warmth baseline run COMPLETE (72/72)
+
+
+- Steward approved spend; ran `scripts/warmth-baseline-run.cjs` — model gpt-5.4, live CHAT_SYSTEM_PROMPT, no warmth appendix, 3 reps × 24 fixtures
+- Outputs: `qa-artifacts/warmth-baseline/baseline-outputs-2026-09-17T06-44-37-431Z.json`
+- Stem reports: exact + v1.1 family — EN **17/30 (56.7%)** open with `What stands out…` (prompt-instructed habit); verbatim posture examples **0**
+- Lumen note: `docs/NOVA_TO_LUMEN_WARMTH_BASELINE_SUBMISSION_2026-09-17.md` — threshold still Lumen’s to set; candidate must not inherit EN opener concentration
+- Stage 1 still REVISE/HOLD pending Lumen threshold + Tree + Founder §10.6
+
+## 2026-09-17 — Stage 0 ACCEPTED WITH LIMITS (Lumen)
+
+- Verification: `docs/qa/WISEWAVE_STAGE0_LUMEN_VERIFICATION_2026-09-17.md`
+- Baseline updated in place: `docs/qa/WISEWAVE_STAGE0_BASELINE_2026-09-17.md` — 30d depth **5/7**, return **0/7**; wording: `market` = classification-clean registered, not proven external; signup raw events 5 vs cohort 4/8
+- Classifier forward fix: `--as-of=` + date-stamped filenames + identity_return_table_30d/90d (`scripts/stage0-historical-classifier.cjs`)
+- Stage 1 still **REVISE / HOLD** — fixture baseline run (paid), anti-prefix threshold, Tree silent, Founder §10.6 open
+- Limits still bind: no joined acquisition funnel; 90d rates unstable; steward payment cells pending; no Preview/Production
+
+## 2026-09-17 — Stage 0 consolidated baseline + ledger submitted
+
+- Doc: `docs/qa/WISEWAVE_STAGE0_BASELINE_2026-09-17.md`
+- Classifier: `scripts/stage0-historical-classifier.cjs` (`stage0_hist_class_v1`)
+- Artifacts: `qa-artifacts/stage0-classification-{ledger,summary}-stage0_hist_class_v1-2026-09-17.json`
+- **Key correction under Lumen method:** confirmed QA on first_reflection 90d = **17** (fixture hash), not 229; strict included 234 vs sensitivity 150 → 90d rates **not stable**; 30d clean 7/7 registered
+- Registered multi-day return strict: **3/23** (not zero) — revise prior phrasing
+- OAuth signup gap still live: 4/8 new accounts missing signup_completed (all Google)
+- page_view identity still 0/224
+- Awaiting Lumen verify; steward payment cells still open
+
+## 2026-09-17 — Lumen HOLD; Stage 1 v1.1 + frozen warmth fixtures
+
+- Lumen review: `docs/qa/WISEWAVE_STAGE0_STAGE1_LUMEN_EVIDENCE_REVIEW_2026-09-17.md` — Stage 0 HOLD; Stage 1 REVISE/HOLD; blind scoring ownership ACCEPTED; anti-prefix number NOT invented
+- My response: Spec **DRAFT v1.1** (same path) + `evals/wisewave-warmth/fixtures.v1.manifest.json` (24 fixtures, N_applicable=20, ceil80%=16) + resubmission note `docs/NOVA_TO_LUMEN_STAGE1_V11_RESUBMISSION_2026-09-17.md`
+- Key fixes in v1.1: removed marketing `identity_linked` raw ids → `AdoptionIntent` + minimised `adoption_completed`; Separation escalate/fail rule; server visit-id authority; Production hard-block for adoption reverse; acceptance denominators explicit
+- Still owed: Stage 0 consolidated baseline + classification ledger; paid baseline run (≥3×24) awaits Steward; Tree still silent; Founder §10.6 still open
+- Steward: "暂时不用太在意prompt" — keep live prompt as designed for baseline; don't redesign prompt on this track
+
+## 2026-09-16 — All 12 rulings returned; Stage 1 spec DRAFTED (design only)
+
+- Spec: `docs/Wisewave_First_Conversation_Return_Mechanism_Stage1_Interaction_Spec_v1_DRAFT.md`. Decision sheet that produced it: `docs/NOVA_TO_WISEWAVE_STAGE1_DECISION_SHEET_2026-09-16.md`
+- **All my recommendations accepted** except where Wisewave added qualification: §6 example set governs tone (Decision 4 kept as boundary ref), quiet ending = two distinct behaviours, user anchor suppresses Last insight, Today-path suppression is permitted narrowing, "a line" = sentence-like unit, First Question **not persisted** (use `entry_prompt_id` metadata)
+- **C-1 resolved as Option A — BUILD anonymous→registered adoption.** Copy stays; product must make the promise true. Narrow: only after explicit Keep, only the selected reflection + its anchor, no background linking, atomic + idempotent, no detach before success, honest recoverable failure
+- **Adoption re-keys 5 tables in one transaction** — `Conversation`, `Message` (userId is DENORMALIZED — easy to miss), `ReflectionCheckpoint`, `UserReturnAnchor`, and `Insight` (open decision). `Thread` needs nothing (keyed by conversationId only). Marketing events deliberately **not** re-keyed — would retroactively attach all pre-account browsing to a named account; use `identity_linked` as an explicit auditable join instead
+- **My one genuinely open question (§10.6):** do model-authored `Insight` rows cross into the named account? "No partial transfer" says yes; the Final Principle (*system may remember only what the user knowingly chose to carry forward*) says no. **Recommended no** + set `isContinuityEligible=false`. Needs Founder + privacy
+- **§3 ruling resolved the warmth/validator collision structurally:** acknowledgement of weight is a **supported response function, NOT an FMI insight claim** — so it gets its own proportionality test and must never increment an insight-quality event. Neat fix; I'd framed it as needing a validator amendment, Wisewave reframed it as a classification
+- **§5:** Separation boundary is **both** per-response AND distributional (I'd guessed frequency-only). Soft-block list is a **rewrite trigger, not a token ban** — rejected for *sounding like an assessment*, not for containing "two"
+- **§8:** session = new `reflection_visit_id` (30-min inactivity, NOT conversation lifetime as I'd recommended). Documented deviation: no reliable browser close signal → sessionStorage + authoritative server-side gap; unreliable signal never load-bearing
+- **§13/§14 = new rulings:** relational-promise guard must cover **semantic variants** EN/ZH and is a **hard precondition** for warmth (I enforce in code, not by operator discipline); present-perfect rule narrowed around *source evidence + unsupported temporal continuity, not tense*
+- 6 slices S1–S6, all default-off, Production hard-blocked in code (FMI pattern). 2 schema additions (`UserReturnAnchor`, `AdoptionIntent`). **Did not touch** `lib/wisewave-prompts.ts` — live prompt shared with reflection route
+- **Next:** submit to Founder (semantic fidelity) + Tree (scope/isolation, items 4–7) + Lumen (drift/evidence, items 8–9). **No code until all three recorded**
+
+## 2026-09-16 — Conversational Warmth Addendum (2 of 2) recorded; locked voice is currently UNEMITTABLE
+
+- Addendum: warmth correction — *"Low Presence does not mean low warmth. The user should feel responded to, not processed."* Recognition/Separation/Opening are **internal functions, not a visible template**; output = one unified conversational turn
+- My acknowledgement: `docs/NOVA_ACK_CONVERSATIONAL_WARMTH_ADDENDUM_2026-09-16.md`
+- **BIGGEST FINDING (§6.1):** drift linter is **live in the request path** (`evaluateChatTurnSafety` → `lintWisewaveOutput` → `shouldSuppress: hasHighSeverityDrift(...)` → replaced by `getDriftSuppressionFallback`). `continuity_drift` pattern `/\byou have been\b/i` is **severity high**, and Addendum §6 **Example B** literally opens "**You have been** trying hard…" → **the locked target example would be suppressed at runtime.** Rule is a latent false positive (bare present perfect, not a memory claim). Fix needs Tree: narrow globally vs flag-scope
+- **§6.2:** 3 of 4 §4.4 relational-promise prohibitions are **NOT caught** — "I am always here for you.", "You do not have to face this alone because you have me.", "以后难受的时候都可以来找我。" Only `/陪着你/` fires. Must close **before** enabling any warmth flag
+- **§6.3 gaps:** no rules for sentimental drift (心疼/抱抱/"sending you a hug"), conversational-pressure drift ("Tell me more"/"还有呢"), or "attachment wound". `cold_analytical_drift` is **not regex-able** — register not vocabulary → blind fixture review only
+- **Why output is cold (§2):** `lib/wisewave-prompts.ts` (~325 lines) lists "warm" in tone but **every tie-breaker resolves against it** ("Prefer clarity over comfort" L162, L80, L97, L100). It also **mandates the analytical shape** ("names the rule the user is obeying / the pressure it creates / where the loop begins" L203-207) and **bans the hedges the Addendum requires** ("Avoid opening with … perhaps" L260-264; "Prefer … the pattern here is…" L266-272). The output is cold because the prompt says to be
+- **§2.5:** even a warm `main_reflection` is re-modularised by sibling layers (`last_insight`/`soft_continuity`/`micro_shift`/embodiment/H cue) that route comments force to stay separate → spec must say which are suppressed on early turns
+- **§6.5 ruling needed:** does acknowledgement of weight ("That does not sound easy to carry") pass FMI `evidenceClose`? It mirrors no content. Without an amendment the validator suppresses exactly the permitted warmth. Also `noPatternClaim` (validator) already contradicts "name one real pattern" (prompt) — pre-existing, now settled validator-side
+- **§4.3 ZH copy arrived MOJIBAKE** (UTF-8 read as GBK); recovered via a GBK reverse-map in Node (no python, no iconv-lite; `new TextDecoder('gbk')` + built char→bytes map). 2 of 4 lines lossy → asked for re-send rather than guessing
+- **Plan:** flag `ENABLE_CONVERSATIONAL_WARMTH` + `WARMTH_ALLOW_HOSTED_PREVIEW`, mirroring the FMI gate (**Production hard-blocked in code**). New `lib/wisewave-conversational-warmth.ts` appendix; **do not edit** the live `CHAT_SYSTEM_PROMPT` (shared with reflection route). 24 fixtures (12 categories × EN/ZH)
+- **Useful:** this slice is **independent of C-1**, so it can progress while the account-invitation blocker is decided
+- Tree + Lumen reviews **not yet requested** — holding until §4.3 ZH resolved so they review one complete package
+
+## 2026-09-16 — Wisewave Stage 1 Language Lock (1 of 2) + my constraint audit
+
+- Lock recorded (Decisions 1–8: entry copy, First Question affordance, first-response rule, EN/ZH example sets, quiet ending, account invitation, `user_return_anchor`, re-entry paths). **Verbatim-binding — never paraphrase or normalise the locked EN/ZH copy.**
+- **Q3 resolved my way:** user-authored anchor approved as a **new object beside** Continue, not a conversion. Removes the Phase 8/8.5/9 collision. IL and First Question stay separate slices + separate flags.
+- My audit: `docs/NOVA_STAGE1_TECHNICAL_CONSTRAINT_AUDIT_2026-09-16.md` — 6 constraints force semantic change (C-1…C-6), 4 are implementation-only (C-7…C-10)
+- **C-1 is the blocker:** Decision 6 says "An account is needed to keep it" but **no anonymous→registered migration exists**. `resolveChatUserId` keys `Conversation.userId` on JWT id if present, else the cookie UUID; register + OAuth callback both mint a fresh cuid and never read the anon cookie. So accepting the invitation **loses the reflection** — promise breaks exactly when the user complies. Good news: anon cookie is HttpOnly/SameSite=Lax/30d so it **survives the OAuth redirect** → adoption is buildable
+- C-3: **no session entity in schema** (only Conversation/Thread/Message) so "once per session" is undefined → recommended session = Conversation (stricter, can't over-surface)
+- C-4: First Question makes the first user message a *reply*, which shifts FMI gating (`isNewConversation`/`userMessageCount`) and event order → recommended not persisting it as an assistant turn
+- C-5: `InsightAnchor`/`last_insight` (model-authored, live) would sit beside the user anchor on re-entry → recommended suppressing last_insight when a user anchor exists
+- **Corrected my own imprecision:** P0 permission line and IL opening are the **same string** ("You can begin anywhere."), so live entry is one coherent block — not three competing texts as I earlier implied
+- 10 events proposed, each tied to a scorecard dimension; `return_anchor_revised` is the only way to evidence the Authorship dimension
+- **Waiting on:** Wisewave message **2/2**, plus C-1…C-7 rulings. Stage 1 spec deliberately NOT drafted yet — 8 state diagrams against a partial instruction set would be discarded work
+
+## 2026-09-15 — Directive: First Conversation + Return Mechanism (DIRECTION LOCKED)
+
+- Directive from Founder/Steward; my six-section reply: `docs/NOVA_REPLY_FIRST_CONVERSATION_RETURN_MECHANISM_DIRECTIVE_2026-09-15.md`
+- **Locked order:** recognisable entry → first reflection → voluntary continuation → second return → recurring value → *then* SEO → *then* payment
+- **HOLD:** new SEO pages, HQG publishing, homepage restructuring, pricing/checkout, visible modes, ending rituals, pattern memory, notifications, Production rollout
+- **Stage gates:** 0 baseline/instrumentation → 1 design-spec (Founder semantic + Tree scope) → 2 internal default-off → 3 Preview pilot (≥20 external first sessions) → 4 explicit Production decision. **No code before Stage 1 gate.**
+- **Inventory verdict:** §B2/B3 first-response + First Mild Insight already substantially built (`lib/wisewave-p1-first-mild-insight.ts`, validator gates map onto the directive's "must not" list; Production hard-blocked). §C return mechanism is the real gap — C1 account invitation does not exist; C2 conflicts because **every** existing anchor is AI-authored (`last_insight`, `Thread.label`, Continue labels)
+- **Three entry surfaces overlap:** P0 permission line + P1 IL (both LIVE on Production) + Light Entry Living Library (internal). `shouldSuppressOtherEntryExperiments()` already enforces mutual exclusion. Directive §B1 copy matches none verbatim
+- **Event gaps (5 additions proposed, minimum):** `chat_opened`, `second_user_message`, `quiet_session_end`, `second_session`, `identity_linked`. Plus semantic split of existing `first_reflection_started` (submit) vs `_completed` (render) — currently both fire in the same server block, so counts are identical and the submit→render step is unmeasurable
+- **Corrected my own earlier error:** `subscription_completed` **is** wired — on both PayPal web paths. It is **not** wired on Google Play / App Store. So 0 events in 90d = no PayPal web purchase; store purchases invisible. Fixed in the correction pack §5.3
+- **Live bug confirmed:** 3 of 7 new accounts (all Google OAuth) missing `signup_completed` — the "fixed" OAuth undercount still occurs
+- **Caveat I must not forget:** "zero registered return in 90d" is unverified against identity persistence (fresh cookie/JWT/device would look like a new identity). State it as *no evidence of same-identity return*. Stage 0 task 0.1
+- **9 open questions** await Founder/Steward — biggest: Q3 anchor authorship (recommend new user-authored object beside Continue, since Phase 8/8.5/9 forbid widening Continue), Q6 whether measurement-only code may precede the Stage 1 gate, Q8 pilot sample feasibility (~3 months at current inflow)
+- **Nova posture:** no implementation started; reply + memory only
+
+## 2026-09-15 — Marketing funnel report REJECTED by Wisewave; identity-aware correction
+
+- v1 report (conclusions withdrawn): `docs/qa/WISEWAVE_MARKETING_USER_FUNNEL_STATUS_2026-09-15.md`
+- Correction pack: `docs/qa/WISEWAVE_MARKETING_COHORT_CORRECTION_PACK_2026-09-15.md`
+- Evidence: `qa-artifacts/marketing-cohort-{identity,timeline-payment}-2026-09-15.json`
+- **Wisewave rejected** "binding gap = signup → paid" and the 800→147→15→250→5→0 sequential funnel
+- **Root cause of my error:** 229 of 250 `first_reflection_started` (90d) were **anonymous QA probe traffic** — Lumen fixture sentences repeated 17–42×; spikes match QA campaign weeks; zero anonymous since 2026-08-03
+- Real market: 27 registered identities / 90d; 7 new accounts / 30d
+- **Strongest real signal:** 0 registered identities active on more than one calendar day in 90d → break is first experience → return, not payment
+- Depth among registered conversations is 17/32 (53%) at turn 3+ — weak positive, small n
+- Payment: no paid activation in 90d; all non-trial rows created Feb–Apr 2026; `subscription_completed` never wired to purchase paths; hypothesis — PayPal plan IDs may be unset on Production (explains `payment_button_clicked: 0`)
+- **Bug found:** 3 of 7 new accounts (all Google OAuth) missing `signup_completed` — OAuth undercount not fully fixed
+- **Blocker:** marketing events store no visitor identity (`page_view` 227/227 `userId: null`) → LP→chat per-visitor join impossible without instrumentation change
+- **Nova posture:** analysis only; no code changes; instrumentation proposals in §6 await Wisewave/Tree
+- **Lesson:** always identity-classify and strip QA traffic *before* drawing funnel conclusions
+
 ## 2026-08-14 — Identity Deepen narrow impl: Tree PASS WITH GOVERNANCE CORRECTION
 
 - Tree review: `docs/TREE_REVIEW_REFLECTION_WITHOUT_ADVICE_NARROW_IMPLEMENTATION_2026-08-14.md`
