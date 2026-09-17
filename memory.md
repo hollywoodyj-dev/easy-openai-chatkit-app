@@ -16,6 +16,7 @@
 - Spec updated to **DRAFT v1.2**: `docs/Wisewave_First_Conversation_Return_Mechanism_Stage1_Interaction_Spec_v1_DRAFT.md` (§4.2 ACCEPTED, §10.4–10.10, §16.2)
 - Companions: privacy notice+policy list · purge design · S4 relational-promise slice request · measurement scope · payment reconciliation plan
 - Submission: `docs/NOVA_TO_WISEWAVE_STAGE1_COMPLETE_SPEC_SUBMISSION_2026-09-17.md`
+- **Committed** `ecd2f85` so the cited path is in git (was previously untracked — that is why a remote review workspace could not open it). Push still needed for remote clones.
 - Authorised separately: measurement-slice **spec**; S4 narrowing **spec/test**; payment **read-only** plan — each needs own deploy decision
 - **NOT authorised:** Stage 1 product code, Preview, Production experience, credential mutation, warmth beyond offline fixtures until S4 passes
 - Still waiting: Founder semantic PASS/PASS WITH CORRECTIONS; Tree scope outcomes; Lumen anti-prefix numeric threshold
