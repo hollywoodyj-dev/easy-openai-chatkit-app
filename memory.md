@@ -10,7 +10,17 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-17 — Lumen Stage 1 evidence PASS WITH CORRECTIONS → spec v1.3
+
+- Record: `docs/qa/WISEWAVE_STAGE1_LUMEN_PRECODE_EVIDENCE_CLOSE_2026-09-17.md`
+- QA exclusion standard: `docs/qa/WISEWAVE_HISTORICAL_QA_EXCLUSION_OPERATIONAL_STANDARD_v1_2026-09-17.md`
+- Threshold LOCKED: top semantic-family share **&lt;40%** per language (max 11/30 at N=30); family governs; exact stems diagnostic; verbatim posture 0
+- Protocol: 2/3 pair wins; 8/10 EN + 8/10 ZH; freeze/hash family classifier before candidate gen
+- Spec: DRAFT **v1.3** same path; ack `docs/NOVA_TO_LUMEN_STAGE1_PRECODE_CORRECTIONS_ACK_2026-09-17.md`
+- S4 still unpassed (Tree + frozen matrix). Founder semantic + Tree scope still pending. **No product code / Preview / Production**
+
 ## 2026-09-17 — Founder locks 1.1/1.2; complete Stage 1 package submitted
+
 
 - Founder/Steward Response: submission summary ACCEPTED; Decision **1.1 LOCKED** (Insight rows do not migrate); **1.2 LOCKED** (privacy live before external Preview Keep; max 90d adoption-audit anonymous linkage); visit-boundary deviation ACCEPTED; full semantic fidelity **PENDING** complete-spec line review
 - Spec updated to **DRAFT v1.2**: `docs/Wisewave_First_Conversation_Return_Mechanism_Stage1_Interaction_Spec_v1_DRAFT.md` (§4.2 ACCEPTED, §10.4–10.10, §16.2)
