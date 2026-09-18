@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-18 — Tree Stage 1 scope PASS WITH CORRECTIONS
+
+- Record: `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md`
+- Binding: S4 first (0/0 matrix before S3 beyond fixtures; no S4 Production deploy); S5 flag-scoped; early-turn 1/2 sibling suppress; today-path narrow withhold; schema UserReturnAnchor+AdoptionIntent only; S6 bounded Keep; six-slice isolation + Continue non-widening confirmed
+- Design governance only — **not** implementation / Preview / Production
+- Spec header + §16.2 updated; Founder semantic fidelity remains **blocking**
+- Still need: Founder semantic PASS; Lumen S4 matrix evidence before warmth beyond offline fixtures
+
 ## 2026-09-17 — Lumen Stage 1 evidence PASS WITH CORRECTIONS → spec v1.3
 
 - Record: `docs/qa/WISEWAVE_STAGE1_LUMEN_PRECODE_EVIDENCE_CLOSE_2026-09-17.md`

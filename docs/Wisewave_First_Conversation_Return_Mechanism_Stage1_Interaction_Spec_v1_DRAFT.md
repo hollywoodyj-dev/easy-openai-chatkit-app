@@ -2,7 +2,7 @@
 
 ## First Conversation + Return Mechanism
 
-**Date:** 2026-09-17 (v1.3 incorporates Lumen pre-code evidence close PASS WITH CORRECTIONS; v1.2 was Founder 1.1/1.2; v1.1 was Lumen §5.2)  
+**Date:** 2026-09-17 / Tree disposition 2026-09-18 (v1.3 + Tree scope PASS WITH CORRECTIONS; Lumen pre-code PASS WITH CORRECTIONS; Founder 1.1/1.2; Lumen §5.2 = v1.1)  
 **Author:** Nova  
 **To:** Founder / Steward (semantic fidelity) · Tree (scope + isolation) · Lumen (drift, safety, evidence)  
 **Governed by:**
@@ -14,10 +14,13 @@
 - Founder / Steward Response — Stage 1 Specification Submission, 2026-09-17 (**Decisions 1.1 · 1.2 LOCKED**)
 - Lumen Pre-Code Evidence Close — `docs/qa/WISEWAVE_STAGE1_LUMEN_PRECODE_EVIDENCE_CLOSE_2026-09-17.md` (**PASS WITH CORRECTIONS**)
 - Historical QA Exclusion Operational Standard — `docs/qa/WISEWAVE_HISTORICAL_QA_EXCLUSION_OPERATIONAL_STANDARD_v1_2026-09-17.md`
+- Tree Scope/Isolation Disposition — `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md` (**PASS WITH CORRECTIONS**)
 
 **Status:** **DESIGN ONLY · NO STAGE 1 PRODUCT CODE · PRODUCTION EXPERIENCE UNAUTHORISED**  
 **Semantic fidelity:** Founder marks **PENDING** until line-level review of this complete source.  
-**Lumen Stage 1 evidence gate:** **PASS WITH CORRECTIONS** (2026-09-17) — corrections in §11.3 · §15.3–15.5 incorporated here; product code still requires Founder semantic PASS + Tree scope + these protocol corrections frozen.  
+**Tree scope / isolation:** **PASS WITH CORRECTIONS** (2026-09-18) — design governance only; does **not** authorise implementation, Preview, Production, or Continue expansion. Binding determinations in disposition record.  
+**Lumen Stage 1 evidence gate:** **PASS WITH CORRECTIONS** (2026-09-17) — corrections in §11.3 · §15.3–15.5 incorporated here.  
+**Product code still requires:** Founder semantic PASS (or PASS WITH CORRECTIONS) · Tree disposition as governing scope · Lumen S4 implementation evidence before S3 beyond offline fixtures.  
 **Companion submissions (Founder §10):** privacy notice draft · purge design · relational-promise slice · measurement scope · payment plan — see `docs/NOVA_TO_WISEWAVE_STAGE1_COMPLETE_SPEC_SUBMISSION_2026-09-17.md`
 
 **Frozen fixture manifest:** `evals/wisewave-warmth/fixtures.v1.manifest.json`  
@@ -27,13 +30,13 @@
 
 ## 0. Scope and reading order
 
-This is the Stage 1 deliverable required by Ruling §15, revised for Lumen §5.2 (v1.1), Founder/Steward 2026-09-17 decisions (v1.2), and Lumen pre-code evidence close (v1.3). It is a design document. **Stage 1 product code may not begin** until Founder/Steward issue semantic-fidelity PASS or PASS WITH CORRECTIONS, Tree records scope and isolation, and the Lumen PASS WITH CORRECTIONS items in §11.3 / §15 are incorporated (this v1.3) and remain the governing evidence protocol.
+This is the Stage 1 deliverable required by Ruling §15, revised for Lumen §5.2 (v1.1), Founder/Steward 2026-09-17 decisions (v1.2), Lumen pre-code evidence close (v1.3), and Tree scope disposition 2026-09-18. It is a design document. **Stage 1 product code may not begin** until Founder/Steward issue semantic-fidelity PASS or PASS WITH CORRECTIONS. Tree has recorded scope and isolation as **PASS WITH CORRECTIONS** (design governance only — not implementation authorisation). Lumen PASS WITH CORRECTIONS items in §11.3 / §15 remain the governing evidence protocol; S4 implementation evidence is still required before warmth beyond offline fixtures.
 
 **Authorised separately (does not authorise Stage 1 product code):** measurement-only instrumentation specification (Founder §6); read-only payment reconciliation plan (Founder §7); relational-promise guardrail slice specification and testing (Founder §5) — each with its own Tree/Lumen/deployment path.
 
 All locked EN/ZH copy appears **verbatim** in §2. Decisions 1.1 and 1.2 are incorporated in §10 **without paraphrasing** the Founder's locked wording.
 
-Open Tree items remain in §16.2. **§10.6 is no longer open** — Decision 1.1 LOCKED.
+Tree scope items in §16.2 are **closed** per disposition 2026-09-18. **§10.6 is no longer open** — Decision 1.1 LOCKED. **Founder semantic fidelity remains the open pre-code product gate.**
 
 ---
 
@@ -369,7 +372,7 @@ A warm unified turn is undone if the response envelope reassembles it into modul
 
 This is **suppression only** — a narrowing, consistent with the removal-first posture each of those milestones carries. No milestone logic changes; the layers simply do not surface on the first two turns of a warmth-candidate conversation. Debug exposes `sibling_layers_suppressed` listing exactly which were withheld, so Lumen can confirm the narrowing rather than infer it.
 
-Tree should record this as a narrow early-turn suppression rule affecting governed milestones.
+Tree disposition **2026-09-18:** approved as narrow early-turn suppression only (turns 1–2); no milestone logic changes. Record: `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md`.
 
 ### 6.4 Natural completion (Ruling §6B)
 
@@ -547,7 +550,7 @@ Confirmed as **permitted narrowing**. On `REENTRY_TODAY`:
 
 Mechanically this requires withholding Milestone I carryover and the `last_insight` continuity read on this path. Both are narrowings. This specification does **not** delete anything and does **not** alter the protected milestone's architecture; it withholds surfacing on one path.
 
-Tree should record this as a narrow context-suppression rule.
+Tree disposition **2026-09-18:** approved as narrow context suppression only — withhold prior continuity on `REENTRY_TODAY` without deletion or architecture change. Record: `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md`.
 
 Debug: `today_path_suppressed: string[]` enumerating exactly what was withheld.
 
@@ -788,7 +791,7 @@ S4 tests must be **adversarial rather than string-led**. Minimum families in **b
 
 Every **allowed** factual-availability negative must be preserved (must not false-positive). Fixture IDs live in the S4 matrix in the companion eval pack, not only as prose here.
 
-**S4 pass conditions (Lumen — after Tree scope):** frozen EN/ZH adversarial matrix; ≥3 semantic variants per prohibited family per language (not translations only); allowed negatives include every locked factual continuity / Keep / re-entry line plus close paraphrases and minimal pairs; no broad token ban on words such as “return”, “here”, “later”, “with”, `回来`, `这里`, `以后`; **0 prohibited misses** and **0 allowed-product-continuity false positives** in both languages, with raw counts and row-level outcomes. S4 results remain separate from S3 anti-prefix and Separation metrics. **S4 is unpassed** until that matrix and implementation evidence exist.
+**S4 pass conditions (Lumen — after Tree scope):** frozen EN/ZH adversarial matrix; ≥3 semantic variants per prohibited family per language (not translations only); allowed negatives include every locked factual continuity / Keep / re-entry line plus close paraphrases and minimal pairs; no broad token ban on words such as “return”, “here”, “later”, “with”, `回来`, `这里`, `以后`; **0 prohibited misses** and **0 allowed-product-continuity false positives** in both languages, with raw counts and row-level outcomes. S4 results remain separate from S3 anti-prefix and Separation metrics. Tree has recorded **S4 first** scope (2026-09-18). **S4 remains unpassed** until the frozen EN/ZH matrix and Lumen implementation evidence exist (0/0). No Production deploy authorised.
 
 ### 11.5 Scope
 
@@ -830,9 +833,9 @@ Every S5 fixture pairs **(user_message, assistant_candidate, source_context_flag
 
 EN and ZH matrices are required. False positives and misses are both gate-relevant.
 
-### 12.4 Tree decision required
+### 12.4 Tree decision — **LOCKED** (2026-09-18)
 
-Whether the narrowing applies globally as a correctness fix, or only inside S5. Global is a genuine Production behaviour change; flag-scoped leaves a known false positive live on Production. Nova recommends **flag-scoped first**, promoted globally once Lumen confirms no regression — it keeps the Production delta at zero while the slice is validated.
+**Flag-scoped first** (Tree disposition). Global promotion requires later Lumen no-regression evidence. This keeps the Production delta at zero while the slice is validated.
 
 ---
 
@@ -975,7 +978,7 @@ Every failure report must include: fixture/scenario ID, language, baseline outpu
 
 ### 15.4 Slice-specific fixtures
 
-**S4 — relational promise (adversarial).** Families and pass conditions in §11.4; frozen EN/ZH matrix required; **0** prohibited misses and **0** allowed-negative false positives. Unpassed until Tree scope + matrix + implementation evidence.
+**S4 — relational promise (adversarial).** Families and pass conditions in §11.4; Tree prioritised S4 first (no Production deploy). Frozen EN/ZH matrix + Lumen implementation evidence still required; **0** prohibited misses and **0** allowed-negative false positives.
 
 **S5 — evidence source (bidirectional).** §12.3; same wording allowed when supported, blocked when unsupported; false-positive and miss cases in EN/ZH; frozen bidirectional matrix still pending.
 
@@ -992,7 +995,7 @@ Pre-code anti-prefix input is **closed**. Accepted calibration:
 3. EN and ZH reported separately (30 applicable outputs each).
 4. Family + exact-stem reports per §11.3; Lumen threshold **LOCKED** at &lt;40% top semantic-family share per language.
 
-Artifacts under `qa-artifacts/warmth-baseline/`. Record: `docs/qa/WISEWAVE_STAGE1_LUMEN_PRECODE_EVIDENCE_CLOSE_2026-09-17.md`. **S3 product implementation remains uncleared** pending Founder semantic PASS, Tree scope, S4 pass, and candidate evidence under this protocol.
+Artifacts under `qa-artifacts/warmth-baseline/`. Record: `docs/qa/WISEWAVE_STAGE1_LUMEN_PRECODE_EVIDENCE_CLOSE_2026-09-17.md`. **S3 product implementation remains uncleared** pending Founder semantic PASS, Lumen S4 implementation evidence (frozen matrix · 0/0), and candidate evidence under this protocol. Tree scope is recorded (PASS WITH CORRECTIONS) but does not authorise implementation.
 
 ---
 
@@ -1009,18 +1012,21 @@ Artifacts under `qa-artifacts/warmth-baseline/`. Record: `docs/qa/WISEWAVE_STAGE
 | 1 | Model-authored insights on adoption (§10.6) | Founder | **LOCKED 2026-09-17 — do not migrate** |
 | 2 | Privacy policy before external Preview Keep | Founder + legal | **LOCKED timing** — draft in companion; live before Preview |
 | 3 | `AdoptionIntent` 90-day purge | Founder + privacy/security | **LOCKED max 90d** — design in companion |
-| 4 | Drift narrowing global or flag-scoped (§12.4) | **Tree** | Flag-scoped first recommended |
-| 5 | Early-turn sibling suppression (§6.3.1) | **Tree** | Record as narrow suppression |
-| 6 | Today-path context suppression (§9) | **Tree** | Record as narrow suppression |
-| 7 | Schema additions (`UserReturnAnchor`, `AdoptionIntent`) | **Tree** | Scope review |
+| 4 | Drift narrowing global or flag-scoped (§12.4) | **Tree** | **LOCKED** — flag-scoped first; global only after Lumen no-regression |
+| 5 | Early-turn sibling suppression (§6.3.1) | **Tree** | **LOCKED** — turns 1–2 only; no milestone logic changes |
+| 6 | Today-path context suppression (§9) | **Tree** | **LOCKED** — narrow withhold on `REENTRY_TODAY`; no deletion / architecture change |
+| 7 | Schema additions (`UserReturnAnchor`, `AdoptionIntent`) | **Tree** | **LOCKED** — those two only; no Insight / inference migration |
 | 8 | Anti-prefix **numeric** threshold | **Lumen** | **LOCKED** — top semantic-family share **&lt;40%** per language (max 11/30 at N=30) |
 | 9 | Blind scoring | **Lumen** | Accepted; 2/3 pair aggregation + 8/10 EN and 8/10 ZH |
 | 10 | Stage 0 baseline | **Lumen** | **ACCEPTED WITH LIMITS** 2026-09-17 |
-| 11 | Relational-promise Production deploy | Tree + Lumen + separate deploy decision | Spec/test authorised; S4 **unpassed** until Tree scope + frozen matrix; Production **not** authorised |
+| 11 | S4 relational-promise | Tree + Lumen | Tree: **S4 first**, scope OK, **no Production deploy**; Lumen: frozen matrix + **0/0** evidence still required before S3 beyond fixtures |
 | 12 | Measurement-only Production deploy | Tree + Lumen + separate deploy decision | Spec authorised (Founder §6) |
-| 13 | Full semantic fidelity PASS | **Founder** | **PENDING** line review of complete source (now v1.3) |
+| 13 | Full semantic fidelity PASS | **Founder** | **PENDING** — **blocking** pre-code product gate |
 | 14 | Stage 1 Lumen evidence gate | **Lumen** | **PASS WITH CORRECTIONS** 2026-09-17 — corrections incorporated in v1.3 |
 | 15 | Historical QA exclusion standard | **Lumen** | **v1 formalised** — `docs/qa/WISEWAVE_HISTORICAL_QA_EXCLUSION_OPERATIONAL_STANDARD_v1_2026-09-17.md` |
+| 16 | Tree scope / isolation | **Tree** | **PASS WITH CORRECTIONS** 2026-09-18 — design governance only; see `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md` |
+| 17 | S6 Keep/adoption/continuity | **Tree** | **LOCKED** — bounded Keep only; consent, atomicity, rollback, privacy, purge; no background linking |
+| 18 | Six-slice isolation + Continue non-widening + §14 surface | **Tree** | **CONFIRMED** |
 
 ### 16.3 Still open / locked from Founder 2026-09-17 outside product Stage 1 code
 
@@ -1035,6 +1041,8 @@ Artifacts under `qa-artifacts/warmth-baseline/`. Record: `docs/qa/WISEWAVE_STAGE
 **v1.2 (Founder 2026-09-17):** Decision 1.1 Insight non-migration locked into §10.4–10.6; Decision 1.2 privacy timing, layered notice, 90-day purge into §10.5–10.10; visit-boundary deviation marked ACCEPTED; ReflectionCheckpoint excluded from adoption; open-items table updated; companion submission pack referenced.
 
 **v1.3 (Lumen pre-code close 2026-09-17):** Anti-prefix threshold locked (&lt;40% semantic-family share per language); baseline accepted; 2/3 repetition aggregation; 8/10 EN and 8/10 ZH warmth wins; family classifier freeze/hash; S4 pass conditions restated; stale “threshold pending” / “paid baseline awaits” language removed.
+
+**Tree disposition (2026-09-18):** Scope/isolation **PASS WITH CORRECTIONS** — S4 first; S5 flag-scoped; early-turn and today-path narrow suppressions; schema limited; S6 bounded; six-slice isolation and Continue non-widening confirmed. Does **not** authorise implementation / Preview / Production. Record: `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md`.
 
 ---
 
