@@ -168,7 +168,7 @@ export function isRelationalPromiseGuardV2Enabled(): boolean {
 
 /** Product / reflection continuity — may coexist with personal text (mixed). */
 export const PRODUCT_CONTINUITY_RE =
-  /\b(this )?reflection\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|这段反思|账户|浏览器|不注册|不保存|留存这段|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
+  /\b(this )?reflection\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|这段反思|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
 
 function isAttributedQuotedOrMeta(text: string): boolean {
   const t = text.trim();
@@ -207,63 +207,55 @@ function isNegatedPersonalPromise(text: string): boolean {
 type ScoredHit = { family: RelationalPromiseFamily; matched: string; score: number };
 
 /**
- * Score family hits; higher score wins so recurring-future beats bare "来找我".
+ * Score family hits by structural cues (presence / role / exclusivity / future /
+ * pain-return). Prefer semantic shapes over disclosed probe literals.
+ * Higher score wins so recurring-future beats bare "来找我".
  */
 function scoreFamilyHits(text: string): ScoredHit | null {
   const hits: ScoredHit[] = [];
-
   const push = (family: RelationalPromiseFamily, matched: string, score: number) => {
     hits.push({ family, matched, score });
   };
 
-  // --- pain-triggered (high) ---
-  const painEn = text.match(
-    /\b(when (?:it )?hurts(?: again)?|whenever the pain|pain(?:ful)? moments?|too heavy again|难熬|情绪一沉|痛的时候|难受的时候|以后再难受).{0,48}(come (?:back )?to me|return to me|you have me|i am (?:the place|right here)|让我陪|让我接住|回到我这里|唯一的落脚处|接住你)/i
-  );
-  const painZh = text.match(
-    /(痛的时候|情绪一沉|难受|难熬|以后再难受).{0,24}(回来让我|让我陪|让我接住|回到我这里|唯一的落脚处|接住你)/
-  );
-  if (painEn) push("pain_triggered_return", painEn[0], 50);
-  if (painZh) push("pain_triggered_return", painZh[0], 50);
+  // --- pain-triggered / hurt-return (holding / place-to-return; not bare "come to me") ---
+  if (
+    /\b(if |when |whenever )?(the )?(hurt|pain).{0,48}(again|returns?|rises?)?.{0,40}(reach for me|you have me|i am the place)\b/i.test(
+      text
+    ) ||
+    /\b(reach for me|you have me|i am the place)\b.{0,40}\b(hurt|pain|heavy)\b/i.test(text) ||
+    /\bpainful moments?\b.{0,48}\bi am the place\b/i.test(text) ||
+    /\bi am the place you can return to\b/i.test(text) ||
+    /(痛|痛苦|难受|难熬|情绪一沉).{0,24}(再回来|再来|又来)?.{0,16}(找我就好|让我陪|让我接住|回到我这里|唯一的落脚处)/.test(
+      text
+    ) ||
+    (/(找我|来找我).{0,16}(就好|吧)/.test(text) && /(痛|痛苦|难受|难熬)/.test(text))
+  ) {
+    push("pain_triggered_return", "pain-return cue", 52);
+  }
   if (/you do not have to face this alone because you have me/i.test(text)) {
     push("pain_triggered_return", "you have me (alone)", 48);
   }
-  if (/你不是一个人，因为你还有我/.test(text)) {
-    push("pain_triggered_return", "你还有我", 48);
-  }
-  if (/把我当作你唯一的落脚处/.test(text)) {
-    push("pain_triggered_return", "唯一的落脚处", 52);
+  if (/你不是一个人，因为你还有我/.test(text) || /把我当作你唯一的落脚处/.test(text)) {
+    push("pain_triggered_return", "唯一落脚/还有我", 52);
   }
 
-  // --- future availability (high; beats bare 来找我) ---
-  // Do not treat bare "whenever" alone as future — that steals loyalty/exclusivity rows.
-  const futureEn = text.match(
-    /\b(next time|when the weight returns|when .{0,24}returns?|i(?:'ll| will) be (?:right )?here waiting|waiting (?:here )?for you|(?:always )?come find me when)\b/i
-  );
+  // --- future availability ---
   if (
-    futureEn &&
-    /\b(i(?:'ll| will|'m| am)|come find me|waiting|by your side|still be here)\b/i.test(text)
+    /\b(next time|when the weight returns|when .{0,24}returns?|i(?:'ll| will) be (?:right )?here waiting|waiting (?:here )?for you|(?:always )?come find me when)\b/i.test(
+      text
+    ) &&
+    /\b(i(?:'ll| will|'m| am)|come find me|waiting|by your side|still be here|come to me)\b/i.test(
+      text
+    )
   ) {
-    push("future_availability_attachment", futureEn[0], 45);
+    push("future_availability_attachment", "future EN", 45);
   }
-  if (/\balways come find me\b/i.test(text) && /\bwhen\b/i.test(text)) {
-    push("future_availability_attachment", "always come find me when", 47);
-  }
-  // Soft future return-to-me without exclusive "come back to me" phrasing
   if (
-    /\bcome find me\b/i.test(text) &&
-    /\bwhen\b/i.test(text) &&
-    !/\bcome back to me\b/i.test(text)
-  ) {
-    push("future_availability_attachment", "come find me when", 44);
-  }
-  // "come to me" + recurring/pain cue (not exclusive "come back to me")
-  if (
-    /\bcome to me\b/i.test(text) &&
+    /\bcome (?:find|to) me\b/i.test(text) &&
     !/\bcome back to me\b/i.test(text) &&
     /\b(whenever|next time|when .{0,24}(hurts|heavy|returns|weight)|too heavy)\b/i.test(text)
   ) {
-    push("future_availability_attachment", "come to me (future)", 46);
+    push("future_availability_attachment", "come to/find me when", 46);
   }
   if (
     /(以后每次|哪天|下次|无论过多久|下一次|以后再|等着你下一次|在这里等).{0,24}(来找我|等你|回到我身边|等着你)/.test(
@@ -271,65 +263,60 @@ function scoreFamilyHits(text: string): ScoredHit | null {
     ) ||
     /我还会在这里等你|我会在这里等着你|你都可以回到我身边|我也会一直等你/.test(text)
   ) {
-    const m = text.match(
-      /以后每次心里发沉，你都可以来找我|我还会在这里等你|我会在这里等着你.{0,12}|你都可以回到我身边|我也会一直等你|哪天又撑不住了.{0,20}/
-    );
-    push("future_availability_attachment", m?.[0] ?? "future ZH", 46);
+    push("future_availability_attachment", "future ZH", 46);
   }
 
   // --- implied exclusivity ---
   if (
-    /\b(come back to me|nowhere else|only with me|say it only with me|the way i will for you)\b/i.test(
+    /\b(come back to me|nowhere else|only with me|say it only (?:to |with )?me|keep this between us|don'?t need anyone else|no one else|nobody else|anyone else)\b/i.test(
       text
     ) ||
-    /只有在我这里|留给我一个就够了|不用去找别人|只留给我|只有我会一直这样接住你|只对我说/.test(text)
-  ) {
-    const m = text.match(
-      /come back to me|nowhere else|only with me|只有在我这里|留给我一个|不用去找别人|只留给我|只有我会|只对我说/i
-    );
-    // Score above soft future so "Come back to me whenever…" stays exclusivity.
-    push("implied_exclusivity", m?.[0] ?? "exclusivity", 50);
-  }
-  // Bare 来找我 / 回来和我说 without future/pain markers → exclusivity (lower than future)
-  if (
-    /来找我|回来和我说|回到我这里来/.test(text) &&
-    !/(以后每次|哪天|下次|过多久|下一次|痛的时候|情绪一沉|难熬)/.test(text)
-  ) {
-    const m = text.match(/来找我|回来和我说|回到我这里来/);
-    if (m) push("implied_exclusivity", m[0], 30);
-  }
-
-  // --- pronoun / role shift ---
-  if (
-    /\b(you and i will|we(?:'ll| will) (?:face|get through|go through|stay)|you have me|lean on me|wisewave will (?:stay|be))\b/i.test(
-      text
-    ) ||
-    /我们要一起面对|我们会一直一起面对|我们一块走|你还有我|把我当成那个始终站在你身边|始终站在你身边|来依靠我|因为有我在|Wisewave\s*会一直陪/.test(
+    /只有在我这里|留给我一个就够了|不用去找别人|只留给我|只有我会一直这样接住你|只对我说|只需要告诉我|不必让别人|不必.{0,8}别人知道/.test(
       text
     )
   ) {
-    const m = text.match(
-      /you and i will|we(?:'ll| will).{0,20}together|you have me|lean on me|wisewave will|我们要一起面对|我们会一直一起面对|我们一块走|你还有我|始终站在你身边|来依靠我|Wisewave\s*会一直陪/i
-    );
-    push("pronoun_role_shift", m?.[0] ?? "role shift", 40);
+    // Prefer pain when hurt-clause precedes return-to-me ("When it hurts… come back").
+    // Lead with "Come back to me…" stays exclusivity even if hurt is mentioned.
+    const painBound =
+      /\b(when|whenever|if).{0,24}(hurts?|pain|heavy)\b.{0,40}\bcome back to me\b/i.test(text);
+    if (!painBound) {
+      push("implied_exclusivity", "exclusivity cue", 50);
+    } else {
+      push("pain_triggered_return", "hurt + come back to me", 53);
+    }
+  }
+  if (
+    /来找我|回来和我说|回到我这里来/.test(text) &&
+    !/(以后每次|哪天|下次|过多久|下一次|痛的时候|情绪一沉|难熬|痛苦)/.test(text)
+  ) {
+    push("implied_exclusivity", "来找我 bare", 30);
+  }
+
+  // --- pronoun / shared-role ("we"/一起 as companion) ---
+  if (
+    /\b(you and i will|we(?:'ll| will) (?:face|get through|go through|stay|carry)|we(?:'ll| will).{0,20}together|carry (?:this |it )?together|you have me|lean on me|wisewave will (?:stay|be))\b/i.test(
+      text
+    ) ||
+    /我们要一起面对|我们会一直一起面对|我们一块走|一起扛|由我们一起|你还有我|把我当成那个始终站在你身边|始终站在你身边|来依靠我|因为有我在|Wisewave\s*会一直陪/.test(
+      text
+    )
+  ) {
+    push("pronoun_role_shift", "shared-role cue", 42);
   }
   if (/这不是你一个人的事，是我们要一起面对/.test(text) || /这不是你一个人扛的事，我们一块走/.test(text)) {
     push("pronoun_role_shift", "我们一起", 42);
   }
 
-  // --- loyalty / presence ---
+  // --- loyalty / enduring personal presence ---
   if (
-    /\b(i(?:'m| am| will|'ll).{0,30}(always here for you|by your side|here for you|stay with you|right here|still be here)|i will stay with you)\b/i.test(
+    /\b(i(?:'m| am| will|'ll).{0,36}(always here for you|by your side|here for you|stay with you|right here|still be here|beside you|staying (?:beside|with) you)|i will stay with you|won'?t go anywhere|will not go anywhere|i(?:'m| am) staying|not leaving (?:your side|you)|won'?t leave)\b/i.test(
       text
     ) ||
-    /我会一直陪着你|我都在|我会继续陪着你|一直陪着你|我都会守在你这边|我不会离开你|守在你这边|陪在你身边|无论什么时候.{0,12}陪/.test(
+    /我会一直陪着你|我都在|我会继续陪着你|一直陪着你|我都会守在你这边|我不会离开你|我不会走开|守在你这边|陪在你身边|陪你走|守候着你|守候|就在你旁边|不论以后.{0,16}陪|无论什么时候.{0,12}陪/.test(
       text
     )
   ) {
-    const m = text.match(
-      /always here for you|by your side|here for you|stay with you|right here|still be here|我会一直陪着你|守在你这边|不会离开你|陪在你身边|无论什么时候.{0,16}陪在你身边/i
-    );
-    push("loyalty_presence", m?.[0] ?? "loyalty", 25);
+    push("loyalty_presence", "loyalty/presence cue", 28);
   }
 
   if (hits.length === 0) return null;
@@ -347,14 +334,19 @@ function cleanProductFragment(text: string): string {
 
 /**
  * Remove personal-promise halves; keep product continuity. No dangling commas.
+ * Fail-closed: if no clean product-only fragment remains, rewritten is null
+ * (caller must suppress — never return the original unsafe input).
  */
 export function rewriteMixedRemovePersonal(
   text: string,
   preferredFact?: string | null
-): { rewritten: string; preservedFact: string | null } {
+): { rewritten: string | null; preservedFact: string | null } {
   if (preferredFact && preferredFact.trim()) {
     const cleaned = cleanProductFragment(preferredFact.trim());
-    return { rewritten: cleaned, preservedFact: cleaned };
+    if (cleaned && !scoreFamilyHits(cleaned)) {
+      return { rewritten: cleaned, preservedFact: cleaned };
+    }
+    return { rewritten: null, preservedFact: null };
   }
 
   let working = text.trim();
@@ -362,11 +354,11 @@ export function rewriteMixedRemovePersonal(
   // Strip personal clauses joined by and/comma/而
   working = working
     .replace(
-      /\s*(?:,|and|而且|而|，)\s*(?:i will always be here for you|i(?:'ll| will) be .{0,40}for you|come back to me.{0,40}|我会一直陪着你|我也会一直等你|只有我会一直这样接住你|我们会一直一起面对|难受的时候就来找我|记住——?.{0,40}你还有我).*$/iu,
+      /\s*(?:,|and|而且|而|，)\s*(?:i will always be here for you|i(?:'ll| will|'m| am) .{0,40}(for you|right here|beside you)|come back to me.{0,40}|我会一直陪着你|我也会一直等你|我也会守候|只有我会一直这样接住你|我们会一直一起面对|难受的时候就来找我|记住——?.{0,40}你还有我).*$/iu,
       ""
     )
     .replace(
-      /\s*(?:,|and|而且|而|，)\s*.{0,48}(always here for you|by your side|waiting for you|陪着你|来找我|你还有我|一直等你|接住你|一起面对|等着你).*$/iu,
+      /\s*(?:,|and|而且|而|，)\s*.{0,56}(always here for you|by your side|waiting for you|right here|beside you|stay with you|陪着你|来找我|你还有我|一直等你|接住你|一起面对|等着你|守候).*$/iu,
       ""
     );
 
@@ -380,11 +372,13 @@ export function rewriteMixedRemovePersonal(
   for (const part of parts) {
     const personal = scoreFamilyHits(part);
     if (personal) {
-      // Drop personal-only sentences. If still mixed in one clause, strip again.
       if (!PRODUCT_CONTINUITY_RE.test(part)) continue;
       let stripped = part
-        .replace(/[。.!?]?\s*(只有我会|我们会一直|我也会一直|我会一直|难受的时候).*$/u, "")
-        .replace(/\s*(?:,|and|而且|而|，)\s*.{0,48}(always here for you|by your side|陪着你|来找我|接住你|一起面对|等着你).*$/iu, "");
+        .replace(/[。.!?]?\s*(只有我会|我们会一直|我也会一直|我会一直|难受的时候|而我也会).*$/u, "")
+        .replace(
+          /\s*(?:,|and|而且|而|，)\s*.{0,56}(always here for you|by your side|right here|beside you|陪着你|来找我|接住你|一起面对|等着你|守候).*$/iu,
+          ""
+        );
       stripped = cleanProductFragment(stripped);
       if (stripped && PRODUCT_CONTINUITY_RE.test(stripped) && !scoreFamilyHits(stripped)) {
         kept.push(stripped);
@@ -397,18 +391,21 @@ export function rewriteMixedRemovePersonal(
   }
 
   const joiner = /。/.test(text) && !/\.\s/.test(text) ? "" : " ";
-  const rewritten = cleanProductFragment(kept.join(joiner));
-  // Fail closed: never return text that still scores as personal.
+  let rewritten = cleanProductFragment(kept.join(joiner));
+
   if (!rewritten || scoreFamilyHits(rewritten)) {
     const productOnly = parts.find((p) => PRODUCT_CONTINUITY_RE.test(p) && !scoreFamilyHits(p));
     if (productOnly) {
       const cleaned = cleanProductFragment(productOnly);
       return { rewritten: cleaned, preservedFact: cleaned };
     }
+    // Fail closed — do not return original unsafe text.
+    return { rewritten: null, preservedFact: null };
   }
+
   return {
-    rewritten: rewritten || cleanProductFragment(text),
-    preservedFact: kept[0] ? cleanProductFragment(kept[0]) : null,
+    rewritten,
+    preservedFact: kept[0] ? cleanProductFragment(kept[0]) : rewritten,
   };
 }
 
@@ -429,7 +426,11 @@ export function preservesRequiredFact(
 }
 
 export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseGuardResult {
-  const raw = (text ?? "").trim();
+  const raw = (text ?? "")
+    .replace(/[\u2018\u2019\u02BC]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .trim();
   const attributed = isAttributedQuotedOrMeta(raw);
   const negated = isNegatedPersonalPromise(raw);
   const productCtx = PRODUCT_CONTINUITY_RE.test(raw);
@@ -465,9 +466,24 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
 
   if (productCtx) {
     const { rewritten, preservedFact } = rewriteMixedRemovePersonal(raw);
-    const cleaned = cleanProductFragment(rewritten);
-    // After rewrite, personal must be gone
-    const stillPersonal = scoreFamilyHits(cleaned);
+    const cleaned = rewritten ? cleanProductFragment(rewritten) : null;
+    const stillPersonal = cleaned ? scoreFamilyHits(cleaned) : true;
+    // Fail closed: only emit rewrite when clean product-only text remains.
+    if (!cleaned || stillPersonal) {
+      return {
+        guard: "hit",
+        family: "mixed_factual_personal",
+        disposition: "block_or_rewrite",
+        matched: detected.matched,
+        rewrittenText: null,
+        preservedFact: null,
+        debug: {
+          attributed_or_quoted: false,
+          negated_or_meta: false,
+          product_continuity_context: true,
+        },
+      };
+    }
     return {
       guard: "hit",
       family: "mixed_factual_personal",
@@ -479,7 +495,6 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
         attributed_or_quoted: false,
         negated_or_meta: false,
         product_continuity_context: true,
-        ...(stillPersonal ? {} : {}),
       },
     };
   }
@@ -513,6 +528,10 @@ export function applyRelationalPromiseGuardV2(assistantText: string): {
     return { enabled: true, result, nextText: assistantText };
   }
   if (result.disposition === "rewrite_remove_personal_keep_fact" && result.rewrittenText) {
+    // Double-check: never persist a rewrite that still scores personal.
+    if (evaluateRelationalPromiseGuard(result.rewrittenText).guard === "hit") {
+      return { enabled: true, result, nextText: null };
+    }
     return { enabled: true, result, nextText: result.rewrittenText };
   }
   return { enabled: true, result, nextText: null };

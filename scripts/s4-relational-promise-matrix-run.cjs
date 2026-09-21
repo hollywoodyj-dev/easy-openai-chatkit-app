@@ -48,6 +48,25 @@ function gitHead() {
   }
 }
 
+/**
+ * Implementation-under-test: prefer explicit CLI/env, else last commit that
+ * touched the guard or turn-route wire (not the evidence-stamp commit).
+ */
+function resolveImplementationCommit() {
+  const arg = process.argv.find((a) => a.startsWith("--implementation-commit="));
+  if (arg) return arg.slice("--implementation-commit=".length).trim() || null;
+  const env = process.env.S4_IMPLEMENTATION_COMMIT?.trim();
+  if (env) return env;
+  try {
+    return execSync(
+      "git log -1 --format=%H -- lib/wisewave-relational-promise-guard.ts app/api/chat/turn/route.ts",
+      { cwd: root, encoding: "utf8" }
+    ).trim();
+  } catch {
+    return gitHead();
+  }
+}
+
 function expectedFamilyForRow(row) {
   if (row.expected_disposition === "rewrite_remove_personal_keep_fact") {
     return "mixed_factual_personal";
@@ -73,7 +92,8 @@ async function main() {
     S4_UNSEEN_PARAPHRASE_PROBES,
   } = await loadGuard();
   const rows = loadRows(buf);
-  const implementationCommit = gitHead();
+  const evidenceRunAtCommit = gitHead();
+  const implementationCommit = resolveImplementationCommit();
 
   const results = [];
   let prohibitedMisses = { en: 0, zh: 0 };
@@ -187,6 +207,57 @@ async function main() {
   });
   const paraphraseMisses = paraphraseResults.filter((p) => !p.pass);
 
+  // External holdout (not embedded in guard source) — Lumen rereview set.
+  const holdoutPath = path.join(
+    root,
+    "evals/wisewave-relational-promise/holdout-rereview.v1.jsonl"
+  );
+  let holdoutResults = [];
+  if (fs.existsSync(holdoutPath)) {
+    const holdoutRows = loadRows(fs.readFileSync(holdoutPath));
+    holdoutResults = holdoutRows.map((row) => {
+      const ev = evaluateRelationalPromiseGuard(row.text);
+      let pass = true;
+      let reason = "";
+      if (row.polarity === "prohibited") {
+        if (ev.guard !== "hit") {
+          pass = false;
+          reason = "prohibited_miss";
+        } else if (row.expected_disposition === "rewrite_or_suppress") {
+          if (ev.rewrittenText) {
+            if (evaluateRelationalPromiseGuard(ev.rewrittenText).guard === "hit") {
+              pass = false;
+              reason = "mixed_rewrite_still_personal";
+            }
+          } else if (ev.disposition === "rewrite_remove_personal_keep_fact") {
+            pass = false;
+            reason = "mixed_claimed_rewrite_but_null";
+          }
+          // rewritten null + block_or_rewrite is OK (suppress path)
+        }
+      } else if (row.polarity === "allowed_product_continuity") {
+        if (ev.guard !== "miss") {
+          pass = false;
+          reason = "allowed_false_positive";
+        }
+      }
+      return {
+        id: row.id,
+        language: row.language,
+        polarity: row.polarity,
+        text: row.text,
+        expected_guard: row.expected_guard,
+        observed_guard: ev.guard,
+        observed_family: ev.family,
+        observed_disposition: ev.disposition,
+        rewrittenText: ev.rewrittenText,
+        pass,
+        reason,
+      };
+    });
+  }
+  const holdoutMisses = holdoutResults.filter((r) => !r.pass);
+
   const pass_0_0 =
     prohibitedMisses.en === 0 &&
     prohibitedMisses.zh === 0 &&
@@ -200,6 +271,12 @@ async function main() {
     frozen_expected: FROZEN,
     hash_match: true,
     implementation_commit: implementationCommit,
+    evidence_run_at_commit: evidenceRunAtCommit,
+    implementation_commit_resolution:
+      process.env.S4_IMPLEMENTATION_COMMIT?.trim() ||
+      process.argv.find((a) => a.startsWith("--implementation-commit="))
+        ? "explicit"
+        : "last_touch_guard_or_turn_route",
     prohibited_misses: prohibitedMisses,
     allowed_product_continuity_false_positives: allowedFp,
     family_mismatches: familyMismatches,
@@ -209,6 +286,13 @@ async function main() {
       misses: paraphraseMisses.length,
       pass: paraphraseMisses.length === 0,
       results: paraphraseResults,
+    },
+    holdout_rereview: {
+      path: "evals/wisewave-relational-promise/holdout-rereview.v1.jsonl",
+      total: holdoutResults.length,
+      misses: holdoutMisses.length,
+      pass: holdoutMisses.length === 0,
+      results: holdoutResults,
     },
     totals: {
       rows: rows.length,
@@ -244,8 +328,11 @@ async function main() {
         family_mismatches: familyMismatches,
         paraphrase_pass: report.paraphrase_regression.pass,
         paraphrase_misses: paraphraseMisses.length,
+        holdout_pass: report.holdout_rereview.pass,
+        holdout_misses: holdoutMisses.length,
         failed: report.totals.failed_rows,
         implementation_commit: implementationCommit,
+        evidence_run_at_commit: evidenceRunAtCommit,
         outPath,
         failures: report.failures.map((f) => ({
           id: f.id,
@@ -253,12 +340,21 @@ async function main() {
           observed_guard: f.observed_guard,
           observed_family: f.observed_family,
         })),
+        holdout_failures: holdoutMisses.map((f) => ({
+          id: f.id,
+          reason: f.reason,
+          observed_guard: f.observed_guard,
+        })),
       },
       null,
       2
     )
   );
-  process.exit(report.pass_0_0 && report.paraphrase_regression.pass ? 0 : 1);
+  process.exit(
+    report.pass_0_0 && report.paraphrase_regression.pass && report.holdout_rereview.pass
+      ? 0
+      : 1
+  );
 }
 
 main().catch((e) => {

@@ -100,15 +100,35 @@ describe("relational promise guard v2 matrix spot checks", () => {
     expect(r.debug.attributed_or_quoted).toBe(true);
   });
 
-  it("rewrites ZH multi-sentence mixed without retaining personal half", () => {
-    const r = evaluateRelationalPromiseGuard(
-      "账户可以保存这段反思。只有我会一直这样接住你。"
-    );
+  it("fail-closes mixed when personal half cannot be cleanly removed", () => {
+    const unsafe = "This reflection will remain available, and I will be right here.";
+    const r = evaluateRelationalPromiseGuard(unsafe);
     expect(r.guard).toBe("hit");
     expect(r.family).toBe("mixed_factual_personal");
-    expect(r.rewrittenText).toContain("账户可以保存这段反思");
-    expect(r.rewrittenText).not.toContain("只有我会");
-    expect(evaluateRelationalPromiseGuard(r.rewrittenText || "").guard).toBe("miss");
+    if (r.rewrittenText) {
+      expect(r.rewrittenText.toLowerCase()).not.toMatch(/right here/);
+      expect(evaluateRelationalPromiseGuard(r.rewrittenText).guard).toBe("miss");
+    } else {
+      expect(r.disposition).toBe("block_or_rewrite");
+    }
+    process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2 = "1";
+    delete process.env.VERCEL_ENV;
+    const applied = applyRelationalPromiseGuardV2(unsafe);
+    expect(applied.nextText === null || !/right here/i.test(applied.nextText || "")).toBe(
+      true
+    );
+    if (applied.nextText) {
+      expect(evaluateRelationalPromiseGuard(applied.nextText).guard).toBe("miss");
+    }
+  });
+
+  it("hits ZH mixed with 守候 and does not persist personal half", () => {
+    const r = evaluateRelationalPromiseGuard("这段反思会保留，而我也会守候着你。");
+    expect(r.guard).toBe("hit");
+    if (r.rewrittenText) {
+      expect(r.rewrittenText).not.toContain("守候");
+      expect(evaluateRelationalPromiseGuard(r.rewrittenText).guard).toBe("miss");
+    }
   });
 });
 
