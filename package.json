@@ -20,6 +20,8 @@
     "test:phase7-continue": "vitest run lib/wisewave-phase7-continue.test.ts",
     "test:model-router": "vitest run lib/wisewave-model-router.test.ts",
     "test:drift-linter": "vitest run lib/drift/linter.test.ts",
+    "test:s4-relational-promise": "vitest run lib/wisewave-relational-promise-guard.test.ts",
+    "s4:matrix:evidence": "npx --yes tsx scripts/s4-relational-promise-matrix-run.cjs",
     "test:chat-turn-boundary": "vitest run lib/wisewave-chat-turn-boundary.test.ts lib/drift/linter.test.ts",
     "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",
     "test:p0-reflection-entry": "vitest run lib/wisewave-p0-opening-detection.test.ts lib/wisewave-p0-reflection-entry.test.ts lib/wisewave-p0-guarded-responses.test.ts lib/wisewave-p0-entry-analytics.test.ts lib/wisewave-p0-early-exit.test.ts",
@@ -35,7 +37,9 @@
     "test:continue-reentry": "vitest run lib/wisewave-continue-reentry-turn.test.ts",
     "model-compat:report": "node scripts/model-compat-check.cjs --mode=warn",
     "model-compat:check": "node scripts/model-compat-check.cjs --mode=block",
-    "local-anonymous:smoke": "node scripts/local-anonymous-chat-smoke.cjs"
+    "local-anonymous:smoke": "node scripts/local-anonymous-chat-smoke.cjs",
+    "eval:long-thread": "node scripts/long-thread-lab/cli.cjs",
+    "test:long-thread-lab": "node --test scripts/long-thread-lab/*.test.cjs"
   },
   "dependencies": {
     "@openai/chatkit-react": ">=1.1.1 <2.0.0",

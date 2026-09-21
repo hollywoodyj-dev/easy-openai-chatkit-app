@@ -87,6 +87,11 @@ import {
 } from "@/lib/wisewave-p1-first-mild-insight";
 import { getDriftSuppressionFallback } from "@/lib/wisewave-drift-suppression-fallback";
 import {
+  applyRelationalPromiseGuardV2,
+  resolveRelationalPromiseGuardV2Enablement,
+  S4_FROZEN_MATRIX_SHA256,
+} from "@/lib/wisewave-relational-promise-guard";
+import {
   evaluateChatTurnSafety,
   resolveChatTurnPreBoundary,
   type ChatTurnPreBoundaryKind,
@@ -2261,6 +2266,14 @@ export async function POST(request: Request) {
     matched: string;
     reason: string;
   }> = [...prePersistViolations];
+  let debugS4Enabled = false;
+  let debugS4FlagSet = false;
+  let debugS4Guard: "hit" | "miss" | null = null;
+  let debugS4Family: string | null = null;
+  let debugS4Disposition: string | null = null;
+  let debugS4Matched: string | null = null;
+  let debugS4RewriteApplied = false;
+  let debugS4Suppressed = false;
   let debugP0GuardedResponseApplied = false;
   let debugP0GuardedResponseKind: "safety" | "advice_clarify" | null = null;
   let debugAnchorV2ContinuitySave: AnchorSemanticWeightV2Debug | null = null;
@@ -3746,6 +3759,62 @@ export async function POST(request: Request) {
     }
   }
 
+  // S4 relational-promise guard (default-off; Production hard-blocked).
+  // Runs after high-severity drift so a rewritten fact line is not discarded as empty.
+  {
+    const s4Enablement = resolveRelationalPromiseGuardV2Enablement();
+    debugS4FlagSet = s4Enablement.flagSet;
+    debugS4Enabled = s4Enablement.enabled;
+    if (s4Enablement.enabled && !debugDriftHighSeveritySuppressed) {
+      const applied = applyRelationalPromiseGuardV2(assistantContent);
+      debugS4Guard = applied.result.guard;
+      debugS4Family = applied.result.family;
+      debugS4Disposition = applied.result.disposition;
+      debugS4Matched = applied.result.matched;
+      if (applied.result.guard === "hit") {
+        if (applied.nextText != null && applied.nextText !== assistantContent) {
+          assistantContent = applied.nextText;
+          debugS4RewriteApplied = true;
+          if (assistantMsgId) {
+            try {
+              await prisma.message.update({
+                where: { id: assistantMsgId },
+                data: { message: assistantContent },
+              });
+            } catch (e) {
+              console.warn("[chat/turn] S4 rewrite message update failed", e);
+            }
+          }
+        } else if (applied.nextText == null) {
+          assistantContent = getDriftSuppressionFallback(wantsChinese);
+          debugS4Suppressed = true;
+          debugDriftSuppressionFallbackApplied = true;
+          debugSecondarySuppressedReason = "relational_promise_guard_v2";
+          keptLastInsight = null;
+          keptSoftContinuity = null;
+          keptPatternSurfacing = null;
+          keptMicroAwareness = null;
+          keptMicroShift = null;
+          responseContinuityInsight = null;
+          responseRecurrenceCue = null;
+          responseEmbodimentCue = null;
+          responseAwarenessCue = null;
+          responseMicroshiftCue = null;
+          if (assistantMsgId) {
+            try {
+              await prisma.message.update({
+                where: { id: assistantMsgId },
+                data: { message: assistantContent },
+              });
+            } catch (e) {
+              console.warn("[chat/turn] S4 suppress message update failed", e);
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (p0Entry.enabled && p0Entry.safetyOverride) {
     if (!responseMeetsP0SafetyMinimum(assistantContent, wantsChinese)) {
       assistantContent = getP0SafetyGuardedResponse(wantsChinese);
@@ -4036,6 +4105,15 @@ export async function POST(request: Request) {
     debug_drift_linter_high_severity_suppressed: debugDriftHighSeveritySuppressed,
     debug_drift_suppression_fallback_applied: debugDriftSuppressionFallbackApplied,
     debug_drift_linter_violations: debugDriftViolations,
+    debug_relational_promise_guard_v2_flag_set: debugS4FlagSet,
+    debug_relational_promise_guard_v2_enabled: debugS4Enabled,
+    debug_relational_promise_guard_v2_matrix_sha256: S4_FROZEN_MATRIX_SHA256,
+    debug_relational_promise_guard_v2_hit: debugS4Guard,
+    debug_relational_promise_guard_v2_family: debugS4Family,
+    debug_relational_promise_guard_v2_disposition: debugS4Disposition,
+    debug_relational_promise_guard_v2_matched: debugS4Matched,
+    debug_relational_promise_guard_v2_rewrite_applied: debugS4RewriteApplied,
+    debug_relational_promise_guard_v2_suppressed: debugS4Suppressed,
     debug_chat_turn_pre_boundary_kind: debugChatTurnPreBoundaryKind,
     debug_rejected_phrase_hit: debugRejectedPhraseHit,
     debug_insight_core_pattern: debugInsightCorePattern,
