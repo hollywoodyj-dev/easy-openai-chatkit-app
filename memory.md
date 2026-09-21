@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-21 — Lumen S4 matrix protocol APPROVE WITH WATCHPOINTS; Nova draft filed
+
+- Lumen: Nova drafts → Lumen reviews/edits → Lumen freeze/hash; no implement/score until freeze
+- Draft: `evals/wisewave-relational-promise/fixtures.v1.jsonl` + manifest (82 rows; 18+18 prohibited)
+- Provisional draft SHA-256: `79577aca910f08695dbb3f6cbe98f5e46d4bb47bffd02bf0ab67baecbc7e6264` (not a freeze)
+- Handoff: `docs/NOVA_TO_LUMEN_S4_MATRIX_DRAFT_SUBMISSION_2026-09-21.md`
+- Still blocked: S4 code until Lumen frozen hash; S3 beyond fixtures until S4 0/0; Preview/Production
+
 ## 2026-09-21 — Founder semantic PASS WITH CORRECTIONS SATISFIED (C1–C6)
 
 - Ruling on v1.3 @ `88199dc`; Nova filed C1–C6 into spec **v1.3.1**
