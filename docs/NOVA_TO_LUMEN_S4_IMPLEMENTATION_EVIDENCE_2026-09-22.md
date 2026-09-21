@@ -30,6 +30,7 @@ Evidence runner verifies this exact hash before scoring. Any JSONL byte change w
 | Production | **Hard-blocked** (P1-FMI pattern) |
 | Turn wire | `app/api/chat/turn/route.ts` — after high-severity drift; mixed → rewrite keep fact; pure personal → suppress fallback |
 | Debug | `debug_relational_promise_guard_v2_*` including matrix SHA-256 |
+| Implementation commit | `4256d5a` |
 
 ## Evidence bar (this run)
 
