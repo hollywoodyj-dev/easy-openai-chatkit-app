@@ -10,6 +10,13 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-21 — Founder semantic PASS WITH CORRECTIONS SATISFIED (C1–C6)
+
+- Ruling on v1.3 @ `88199dc`; Nova filed C1–C6 into spec **v1.3.1**
+- Correction record: `docs/NOVA_STAGE1_SEMANTIC_C1_C6_CORRECTION_RECORD_2026-09-21.md`
+- C1 curly quotes; C2 FQ stays visible; C3 Keep notice before AdoptionIntent; C4 Recognition evidence-conditional; C5 no conversion/optimisation on stop/reentry; C6 anchor delete redacts text
+- Semantic gate closed. Still need: implementation authority; S4 Lumen matrix evidence before S3 beyond fixtures. Preview/Production still separate.
+
 ## 2026-09-18 — Tree Stage 1 scope PASS WITH CORRECTIONS
 
 - Record: `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md`

@@ -1,8 +1,8 @@
-# Wisewave — Stage 1 Interaction Specification (DRAFT v1.3)
+# Wisewave — Stage 1 Interaction Specification (DRAFT v1.3.1)
 
 ## First Conversation + Return Mechanism
 
-**Date:** 2026-09-17 / Tree disposition 2026-09-18 (v1.3 + Tree scope PASS WITH CORRECTIONS; Lumen pre-code PASS WITH CORRECTIONS; Founder 1.1/1.2; Lumen §5.2 = v1.1)  
+**Date:** 2026-09-21 (v1.3.1 = Founder semantic PASS WITH CORRECTIONS C1–C6 satisfied; Tree disposition 2026-09-18; Lumen evidence 2026-09-17)  
 **Author:** Nova  
 **To:** Founder / Steward (semantic fidelity) · Tree (scope + isolation) · Lumen (drift, safety, evidence)  
 **Governed by:**
@@ -15,12 +15,14 @@
 - Lumen Pre-Code Evidence Close — `docs/qa/WISEWAVE_STAGE1_LUMEN_PRECODE_EVIDENCE_CLOSE_2026-09-17.md` (**PASS WITH CORRECTIONS**)
 - Historical QA Exclusion Operational Standard — `docs/qa/WISEWAVE_HISTORICAL_QA_EXCLUSION_OPERATIONAL_STANDARD_v1_2026-09-17.md`
 - Tree Scope/Isolation Disposition — `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md` (**PASS WITH CORRECTIONS**)
+- Founder / Steward Semantic Fidelity Ruling — DRAFT v1.3, 2026-09-18 (**PASS WITH CORRECTIONS** · C1–C6)
+- Nova Correction Record — `docs/NOVA_STAGE1_SEMANTIC_C1_C6_CORRECTION_RECORD_2026-09-21.md` (**SATISFIED**)
 
 **Status:** **DESIGN ONLY · NO STAGE 1 PRODUCT CODE · PRODUCTION EXPERIENCE UNAUTHORISED**  
-**Semantic fidelity:** Founder marks **PENDING** until line-level review of this complete source.  
-**Tree scope / isolation:** **PASS WITH CORRECTIONS** (2026-09-18) — design governance only; does **not** authorise implementation, Preview, Production, or Continue expansion. Binding determinations in disposition record.  
-**Lumen Stage 1 evidence gate:** **PASS WITH CORRECTIONS** (2026-09-17) — corrections in §11.3 · §15.3–15.5 incorporated here.  
-**Product code still requires:** Founder semantic PASS (or PASS WITH CORRECTIONS) · Tree disposition as governing scope · Lumen S4 implementation evidence before S3 beyond offline fixtures.  
+**Semantic fidelity:** **PASS WITH CORRECTIONS SATISFIED** (2026-09-21) — C1–C6 incorporated; no second Founder review required if this revision contains only those corrections.  
+**Tree scope / isolation:** **PASS WITH CORRECTIONS** (2026-09-18) — design governance only; does **not** authorise implementation, Preview, Production, or Continue expansion.  
+**Lumen Stage 1 evidence gate:** **PASS WITH CORRECTIONS** (2026-09-17).  
+**Product code still requires:** separately governed implementation authority · Lumen S4 implementation evidence before S3 beyond offline fixtures · Preview and Production remain separate gates.  
 **Companion submissions (Founder §10):** privacy notice draft · purge design · relational-promise slice · measurement scope · payment plan — see `docs/NOVA_TO_WISEWAVE_STAGE1_COMPLETE_SPEC_SUBMISSION_2026-09-17.md`
 
 **Frozen fixture manifest:** `evals/wisewave-warmth/fixtures.v1.manifest.json`  
@@ -30,13 +32,13 @@
 
 ## 0. Scope and reading order
 
-This is the Stage 1 deliverable required by Ruling §15, revised for Lumen §5.2 (v1.1), Founder/Steward 2026-09-17 decisions (v1.2), Lumen pre-code evidence close (v1.3), and Tree scope disposition 2026-09-18. It is a design document. **Stage 1 product code may not begin** until Founder/Steward issue semantic-fidelity PASS or PASS WITH CORRECTIONS. Tree has recorded scope and isolation as **PASS WITH CORRECTIONS** (design governance only — not implementation authorisation). Lumen PASS WITH CORRECTIONS items in §11.3 / §15 remain the governing evidence protocol; S4 implementation evidence is still required before warmth beyond offline fixtures.
+This is the Stage 1 deliverable required by Ruling §15, revised through Lumen §5.2 (v1.1), Founder Decisions 1.1/1.2 (v1.2), Lumen pre-code evidence close (v1.3), Tree scope disposition 2026-09-18, and Founder semantic C1–C6 (v1.3.1). It is a design document. **Stage 1 product code may not begin** until separately governed implementation authority is issued. Semantic fidelity is **PASS WITH CORRECTIONS SATISFIED**. Tree has recorded scope and isolation as **PASS WITH CORRECTIONS** (design governance only — not implementation authorisation). Lumen PASS WITH CORRECTIONS items in §11.3 / §15 remain the governing evidence protocol; S4 implementation evidence is still required before warmth beyond offline fixtures.
 
 **Authorised separately (does not authorise Stage 1 product code):** measurement-only instrumentation specification (Founder §6); read-only payment reconciliation plan (Founder §7); relational-promise guardrail slice specification and testing (Founder §5) — each with its own Tree/Lumen/deployment path.
 
-All locked EN/ZH copy appears **verbatim** in §2. Decisions 1.1 and 1.2 are incorporated in §10 **without paraphrasing** the Founder's locked wording.
+All locked EN/ZH copy appears **verbatim** in §2 (including typographic quotation marks and apostrophes). Decisions 1.1 and 1.2 are incorporated in §10 **without paraphrasing** the Founder's locked wording.
 
-Tree scope items in §16.2 are **closed** per disposition 2026-09-18. **§10.6 is no longer open** — Decision 1.1 LOCKED. **Founder semantic fidelity remains the open pre-code product gate.**
+Tree scope items in §16.2 are **closed** per disposition 2026-09-18. **§10.6 is no longer open** — Decision 1.1 LOCKED. **Founder semantic C1–C6 are closed** per correction record.
 
 ---
 
@@ -88,7 +90,7 @@ Every string a user can see. Identifiers are used throughout the rest of the doc
 
 | ID | EN | ZH |
 |---|---|---|
-| `ENTRY_V2` | **You do not need a clear question.**<br>You can begin with what is on your mind, what you are feeling, something that happened, or simply, "I don't know." | **你不需要先想清楚要问什么。**<br>可以从此刻放在心上的事、正在感受到的、发生过的一件事，或只是一句"我不知道"开始。 |
+| `ENTRY_V2` | **You do not need a clear question.**<br>You can begin with what is on your mind, what you are feeling, something that happened, or simply, “I don’t know.” | **你不需要先想清楚要问什么。**<br>可以从此刻放在心上的事、正在感受到的、发生过的一件事，或只是一句“我不知道”开始。 |
 
 ### 2.2 First Question affordance (S2) — Decision 2
 
@@ -155,7 +157,7 @@ Recognition, Separation and Opening are **decision functions, never a visible te
 ### 3.2 Composition order (Addendum §5)
 
 1. Read for content **and** emotional weight; identify only what is stated or strongly implied.
-2. Choose the smallest honest response. Recognition may be enough.
+2. Choose the smallest honest response. Recognition is the normal base **when evidence permits** (§6.3); otherwise minimal neutral acknowledgement or one necessary clarification — do not manufacture Recognition.
 3. Allow compassionate acknowledgement **when earned**; it must remain evidence-close per §3.4.
 4. Add Separation **only** when two elements are genuinely present, per §3.3. Never expose the internal label.
 5. At most **one** Opening question, only when it grows naturally from the conversation.
@@ -317,30 +319,45 @@ This resolves C-4: "first response" keeps one consistent meaning on both paths, 
          └─ none             -> render P0 permission line
    └─> if S2 on: render FQ_SUPPORT + FQ_ACTION beneath, independent of the above
 
-[user types any character]  -> hide entry block AND FQ affordance (both, immediately)
-[user submits first message] -> mint reflection_visit_id; attach entry_prompt_id if FQ used
+[user types any character WITHOUT First Question activated]
+   └─> hide ordinary entry support block AND unactivated FQ_SUPPORT + FQ_ACTION
+       (FQ_QUESTION is not showing; nothing to keep)
+
+[user submits first message] -> mint reflection_visit_id; attach entry_prompt_id if FQ was used
                              -> FIRST RESPONSE (§6.3)
 [90s idle, empty thread]     -> existing P0 abandon path, unchanged
 ```
 
-Entry support is static, light, and disappears once the user begins. No cards, categories, clickable examples or mode selection. Decision 1 forbids the old and new blocks appearing together, which §1.2 enforces.
+Ordinary entry support is static, light, and disappears once the user begins typing **without** having activated First Question. No cards, categories, clickable examples or mode selection. Decision 1 forbids the old and new blocks appearing together, which §1.2 enforces. **First Question lifecycle after activation is governed by §6.2 — do not hide `FQ_QUESTION` on first keystroke.**
 
 ### 6.2 First Question
 
 ```
 [FQ_ACTION activated]
-   └─> render FQ_QUESTION as an entry affordance (NOT an assistant turn, NOT persisted)
    └─> hide FQ_SUPPORT + FQ_ACTION           (never offer a second question)
+   └─> render FQ_QUESTION as an entry affordance (NOT an assistant turn, NOT persisted)
    └─> focus composer
    └─> set pending entry_prompt_id = "first_question_v1"
 
+[FQ_QUESTION active — user composing first reply]
+   └─> FQ_QUESTION REMAINS VISIBLE while the composer has focus / text
+   └─> ordinary entry block stays hidden
+   └─> do NOT hide FQ_QUESTION on keystroke
+
 [user submits first message]
+   └─> hide FQ_QUESTION
    └─> attach entry_prompt_id to that message's metadata
    └─> FIRST RESPONSE (§6.3), rule unchanged (§5.2)
 
+[user explicitly cancels First Question]
+   └─> hide FQ_QUESTION; clear pending entry_prompt_id
+   └─> restore ordinary entry support rules (§6.1) if still empty thread
+
 [user submits without activating FQ]  -> no entry_prompt_id
-[conversation begins]                 -> affordance gone for the remainder of the conversation
+[after first message submitted]       -> FQ affordance gone for the remainder of the conversation
 ```
+
+**Locked lifecycle (Founder C2):** typing without activating First Question hides ordinary entry support as today; activating First Question hides `FQ_SUPPORT` and `FQ_ACTION` and shows `FQ_QUESTION`; `FQ_QUESTION` remains visible while the user composes the first reply; it disappears when the first user message is submitted or the user explicitly cancels it; it is never persisted as an assistant turn. **The question must not disappear at the moment the user begins answering it.**
 
 It is an affordance, not a mode. Exactly one question. No menu, no questionnaire, no automatic second question.
 
@@ -353,7 +370,10 @@ It is an affordance, not a mode. Exactly one question. No menu, no questionnaire
    └─> pre-boundary checks (empty-context summarize, off-category utility)  [unchanged]
    └─> compose per §3.2
          ├─ read content + emotional weight
-         ├─ Recognition                                   [base, always]
+         ├─ Recognition?   [normal base WHEN enough user-provided material to reflect honestly]
+         │     └─ insufficient / purely factual / too ambiguous / needs clarification
+         │           -> minimal neutral acknowledgement OR one necessary clarification
+         │           -> do NOT manufacture Recognition
          ├─ acknowledgement of weight?      -> §3.4 proportionality test
          │     └─ ambiguous -> tentative wording OR omit
          ├─ Separation?                     -> §3.3 per-response test
@@ -366,6 +386,7 @@ It is an affordance, not a mode. Exactly one question. No menu, no questionnaire
    └─> emit events (§13)
 ```
 
+**Recognition rule (Founder C4):** Recognition is the normal base when there is enough user-provided material to reflect honestly. When signal is insufficient, use a minimal neutral acknowledgement or one necessary clarification; do not manufacture Recognition. This preserves “suppress rather than invent” and the low-signal fixture category. Safety and out-of-scope handling remain prior branches.
 #### 6.3.1 Sibling-layer suppression — early turns
 
 A warm unified turn is undone if the response envelope reassembles it into modules. On **turn 1 and turn 2** with S3 active, the following are suppressed so the turn renders as one conversational unit: `last_insight`, `soft_continuity` (Milestone I), `micro_shift` (Milestone J), `embodiment_cue` (F) and the H cue.
@@ -416,12 +437,16 @@ At most once per `reflection_visit_id`. Never triggered by turn count or timer.
          [INVITE_KEEP] [INVITE_ANON] [INVITE_LEAVE]
          └─ ANON_DURABILITY rendered adjacent to INVITE_ANON (§6.6.1)
 
-   [INVITE_KEEP]  -> ANCHOR CREATION (§6.7) -> ADOPTION (§10)
+   [INVITE_KEEP]  -> intent to preserve only (§6.7)
+                    -> does NOT create AdoptionIntent
+                    -> does NOT claim the reflection is kept
    [INVITE_ANON]  -> dismiss; reflection continues; nothing removed
    [INVITE_LEAVE] -> dismiss; nothing removed; no follow-up
 ```
 
 All three alternatives remain visible. Keep is never presented as required, urgent or recommended — no primary/secondary styling, no badge, no preselection, no default focus. **No generated content is removed when the user declines.** No discount, countdown, loss warning or "do not lose your progress" language. Account creation is explained before the user commits.
+
+**Consent boundary (Founder C3):** `INVITE_KEEP` expresses intent to preserve; it does not yet create an adoption intent or claim success. Final confirmation after the layered privacy notice (§6.7 · §10.6A) is the consent act that creates `AdoptionIntent`.
 
 #### 6.6.1 Durability disclosure placement (Ruling §7)
 
@@ -429,10 +454,10 @@ All three alternatives remain visible. Keep is never presented as required, urge
 
 The asymmetry is disclosed without loss-aversion framing: it states what persists and where, not what will be lost.
 
-### 6.7 Anchor creation (Decision 7 · Ruling §12)
+### 6.7 Anchor creation and Keep confirmation (Decision 7 · Ruling §12 · Founder C3)
 
 ```
-[INVITE_KEEP activated]
+[INVITE_KEEP activated]                         // intent to preserve — not yet consent
    └─> render ANCHOR_NAME + ANCHOR_PROMPT
    └─> build candidate list from the USER'S OWN messages only (§7.2)
          - assistant text NEVER offered
@@ -440,13 +465,30 @@ The asymmetry is disclosed without loss-aversion framing: it states what persist
    └─> offer free-write field in ALL cases
    └─> user selects a candidate OR writes their own
    └─> candidate is FULLY EDITABLE before saving
-   └─> [confirm] -> store exact approved text (§7.1)
-       [cancel]  -> no anchor; invitation dismissed; nothing removed
 
-[later] -> user may edit or delete the anchor at any time
+[before final confirmation]
+   └─> show neutral layered privacy notice (§10.6A)
+         - selected reflection will link to the account being created/used
+         - only that reflection + user-approved return line will move
+         - separate model-authored Insight rows will NOT move
+         - alternatives still available: INVITE_ANON · INVITE_LEAVE
+         - full privacy notice link
+   └─> notice is informational — not a second consent wall, not loss-aversion copy
+
+[user explicit FINAL CONFIRM Keep]
+   └─> store exact approved return-line text pending adoption (§7.1)
+   └─> create AdoptionIntent { noticeVersion, consentAt: now, status: pending } (§10.3)
+   └─> begin registration / authentication
+   └─> on transaction success only: claim reflection + anchor as kept (§10.4)
+   └─> on failure: honest recoverable state; nothing claimed as kept (§10.8)
+
+[user cancels at any step before final confirm]
+   └─> no AdoptionIntent; no kept claim; invitation dismissed; nothing removed
+
+[later, after successful keep] -> user may edit or delete the anchor at any time (§7.1)
 ```
 
-No label of insight, takeaway, lesson, progress, pattern or summary. No scoring, categorisation or interpretation. Never model-authored or model-improved.
+No label of insight, takeaway, lesson, progress, pattern or summary. No scoring, categorisation or interpretation. Never model-authored or model-improved. **No reflection or anchor is claimed as kept until the adoption transaction succeeds.**
 
 ### 6.8 Re-entry (Decision 8 · Rulings §10, §11)
 
@@ -467,7 +509,7 @@ No label of insight, takeaway, lesson, progress, pattern or summary. No scoring,
 
 **Equality requirements.** Same component type, size, weight and visual prominence. No primary/secondary styling. No recommended badge. No preselection or default focus. No automatic opening of the old thread. Layout order is not a behavioural default and neither path may be treated as expected.
 
-Because equality is a claim about rendering, §13 includes `reentry_path_chosen` so it can be **evidenced** by observed distribution rather than asserted.
+**Equality evidence (Founder C5):** visual and behavioural equality is proven by **deterministic UI/accessibility tests** — same component class, prominence, interaction cost, keyboard access, and no preselection or behavioural default. `reentry_path_chosen` may be observed only as a **diagnostic** for unexpected coercion or implementation drift. **No** target distribution, balancing intervention or persuasion experiment may be derived from that event. Choice distribution cannot prove equal rendering and must never create a 50/50 optimisation target.
 
 ---
 
@@ -475,29 +517,40 @@ Because equality is a claim about rendering, §13 includes `reentry_path_chosen`
 
 ### 7.1 Storage
 
-New Prisma model — the only schema addition in this specification.
+New Prisma model — one of two Stage 1 schema additions (with `AdoptionIntent`, §10.5).
 
 ```prisma
 /// User-authored return anchor. Never model-authored or model-improved.
 /// Separate object from the governed Continue mechanism and from Insight.
+/// Deletion removes or irreversibly redacts text — soft-delete of content is forbidden (Founder C6).
 model UserReturnAnchor {
   id              String    @id @default(cuid())
   conversationId  String    @unique @map("conversation_id")
   conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   userId          String    @map("user_id")
-  /// The user's exact approved text. Never rewritten by the system.
-  text            String    @db.Text
-  /// Source message when selected from the user's own words; null when free-written.
+  /// The user's exact approved text while active. Cleared/redacted on delete.
+  text            String?   @db.Text
+  /// Source message when selected from the user's own words; null when free-written or after delete.
   sourceMessageId String?   @map("source_message_id")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  /// Tombstone only — set when deleted; text and sourceMessageId must already be null/redacted.
   deletedAt       DateTime? @map("deleted_at")
 
   @@index([userId])
 }
 ```
 
-One active anchor per conversation (`@unique`). Soft delete preserves the user's deletion intent as a fact without destroying the audit trail. `text` is stored exactly as approved and is never normalised, trimmed beyond whitespace, re-cased or rewritten.
+One active (non-deleted, non-empty `text`) anchor per conversation (`@unique` on `conversationId`). While active, `text` is stored exactly as approved and is never normalised, trimmed beyond whitespace, re-cased or rewritten.
+
+**Deletion semantics (Founder C6):** when the user deletes the anchor:
+
+1. Immediately prevent **all** surfacing and continuity use.
+2. **Delete or irreversibly redact** the anchor `text` and `sourceMessageId`.
+3. May retain only a minimal **non-content** tombstone if operationally necessary: anchor id, deletion timestamp (`deletedAt`), deletion outcome.
+4. Must **not** preserve the deleted phrase in analytics, logs or a derived object.
+
+Soft-delete that leaves the phrase in the row is **not** permitted. Any later content-retention exception requires separate privacy and Founder review.
 
 No score, category, label or interpretation column exists — the schema itself forbids the object becoming an insight.
 
@@ -562,7 +615,7 @@ The continuity promise in `INVITE_BODY` is made true rather than weakened. This 
 
 ### 10.1 Consent boundary
 
-Adoption occurs **only** after the user explicitly activates `INVITE_KEEP`. There is **no** background identity linking merely because a visitor signs in. A user who signs in without having chosen Keep gets no adoption, ever.
+Adoption occurs **only** after the user explicitly completes **final Keep confirmation** following the layered privacy notice (§6.7 · §10.6A). `INVITE_KEEP` alone is **not** consent. There is **no** background identity linking merely because a visitor signs in. A user who signs in without having completed final Keep confirmation gets no adoption, ever.
 
 ### 10.2 Scope
 
@@ -572,8 +625,16 @@ Adopt **only** the currently selected reflection and its approved `user_return_a
 
 ```
 1. Anonymous visitor, conversation C, anonymous identity A
-2. [INVITE_KEEP] -> anchor created (§6.7)
-3. Server records AdoptionIntent { conversationId: C, anonymousId: A, consentAt: now, status: pending }
+2. [INVITE_KEEP] -> intent to preserve only (§6.6)
+       -> user selects/writes/edits return line (§6.7)
+       -> layered privacy notice shown (§10.6A)
+       -> NO AdoptionIntent yet; nothing claimed as kept
+3. [explicit FINAL CONFIRM Keep]
+       -> store approved return-line text pending adoption
+       -> Server records AdoptionIntent {
+            conversationId: C, anonymousId: A,
+            consentAt: now, noticeVersion, status: pending
+          }
 4. User registers (email) or authenticates (OAuth) -> new account U
      - OAuth leaves the site and returns. The anonymous cookie is
        HttpOnly / SameSite=Lax / 30d, so it survives top-level
@@ -583,7 +644,9 @@ Adopt **only** the currently selected reflection and its approved `user_return_a
    AND the anonymous identity is still valid
    AND U is authenticated:
        -> execute adoption (§10.4)
-6. Record result: succeeded | failed(reason). Persist on `AdoptionIntent`. Emit minimised `adoption_completed` analytics only (§10.7) — **not** raw identity pair into marketing events.
+6. Record result: succeeded | failed(reason). Persist on `AdoptionIntent`.
+   Emit minimised `adoption_completed` analytics only (§10.7) — **not** raw identity pair into marketing events.
+   Claim reflection + anchor as kept **only** when status = succeeded.
 ```
 
 Both registration paths are supported. Adoption requires a valid anonymous identity **and** a successfully authenticated destination account; either missing means no adoption and an honest recoverable state.
@@ -852,23 +915,23 @@ Semantically corrected, **no new name**: `first_reflection_started` moves to sub
 | `chat_opened` | Acquisition — entry legibility | `entry_surface` |
 | `first_question_requested` | Entry legibility | `entry_prompt_id` |
 | `second_user_message` | Reflection — response relevance | `reflection_visit_id` |
-| `explicit_stop_offered` | Reflection — Ruling §6A | `reflection_visit_id` |
-| `natural_completion_rendered` | Reflection — Ruling §6B | `reflection_visit_id` · **internal signal, not a marketing conversion event** |
+| `explicit_stop_offered` | Reflection — Ruling §6A · **internal product-quality signal** (not marketing conversion) | `reflection_visit_id` |
+| `natural_completion_rendered` | Reflection — Ruling §6B · **internal product-quality signal** (not marketing conversion) | `reflection_visit_id` |
 | `reflection_visit_ended` | Reflection | `reflection_visit_id`, `turn_count`, `end_reason` |
 | `save_or_account_choice` | Voluntary continuity | `choice: keep \| anonymous \| leave` |
 | `return_anchor_saved` | Voluntary continuity | `source: selected \| free_written` |
 | `return_anchor_revised` | **Authorship** | `action: edited \| deleted` |
 | `adoption_completed` | Continuity — adoption (minimised) | `result`, `method`, `linkage_id` — **no raw anonymous/user ids** |
 | `second_session` | Return | — |
-| `reentry_path_chosen` | Return — Decision 8 equality | `path: continue \| today`, `anchor_present` |
+| `reentry_path_chosen` | Return — **diagnostic only** (Founder C5); not an equality proof or optimisation target | `path: continue \| today`, `anchor_present` |
 
 Deprecated / not used: a marketing event named `identity_linked` that carries raw `anonymous_id` + `user_id` (removed after Lumen §5.2.9). Authoritative join remains on `AdoptionIntent` only.
 
-### 13.2 Notes on two entries
+### 13.2 Notes on endings and re-entry measurement (Founder C5)
 
-**Ruling §6 requires the two endings to be represented separately in the event model.** They have distinct identities above. `explicit_stop_offered` is a governed affordance and a conversion event; `natural_completion_rendered` is a response property and is recorded as an internal signal only, because promoting an ordinary non-event — a response that simply did not append a question — to a marketing conversion event would misrepresent it as a product action. Both are separately observable; only one is a conversion event.
+**Ruling §6 requires the two endings to be represented separately in the event model.** They have distinct identities above. Both `explicit_stop_offered` and `natural_completion_rendered` are **internal product-quality signals**, not marketing conversion events. Classifying quiet ending as conversion risks rewarding the system for ending reflections rather than responding truthfully. Both remain separately observable for quality review; neither enters a conversion funnel or optimisation target.
 
-**`reentry_path_chosen` is the only way to evidence Decision 8's equality requirement.** Equal rendering can be specified but not proven; an observed distribution can be inspected. Likewise `return_anchor_revised` is the only measurable signal for the Authorship row of the §8 scorecard.
+**Decision 8 equality** is proven by deterministic UI/accessibility tests (§6.8), not by choice distribution. `reentry_path_chosen` may be observed only as a diagnostic for unexpected coercion or implementation drift. **No** target distribution (including 50/50), balancing intervention or persuasion experiment may be derived from it. `return_anchor_revised` remains a measurable authorship signal for the §8 scorecard (edit/delete occurred), not a conversion event.
 
 No event duplicates an existing canonical name.
 
@@ -1021,7 +1084,7 @@ Artifacts under `qa-artifacts/warmth-baseline/`. Record: `docs/qa/WISEWAVE_STAGE
 | 10 | Stage 0 baseline | **Lumen** | **ACCEPTED WITH LIMITS** 2026-09-17 |
 | 11 | S4 relational-promise | Tree + Lumen | Tree: **S4 first**, scope OK, **no Production deploy**; Lumen: frozen matrix + **0/0** evidence still required before S3 beyond fixtures |
 | 12 | Measurement-only Production deploy | Tree + Lumen + separate deploy decision | Spec authorised (Founder §6) |
-| 13 | Full semantic fidelity PASS | **Founder** | **PENDING** — **blocking** pre-code product gate |
+| 13 | Full semantic fidelity | **Founder** | **PASS WITH CORRECTIONS SATISFIED** 2026-09-21 — C1–C6 in v1.3.1; see correction record |
 | 14 | Stage 1 Lumen evidence gate | **Lumen** | **PASS WITH CORRECTIONS** 2026-09-17 — corrections incorporated in v1.3 |
 | 15 | Historical QA exclusion standard | **Lumen** | **v1 formalised** — `docs/qa/WISEWAVE_HISTORICAL_QA_EXCLUSION_OPERATIONAL_STANDARD_v1_2026-09-17.md` |
 | 16 | Tree scope / isolation | **Tree** | **PASS WITH CORRECTIONS** 2026-09-18 — design governance only; see `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md` |
@@ -1044,11 +1107,13 @@ Artifacts under `qa-artifacts/warmth-baseline/`. Record: `docs/qa/WISEWAVE_STAGE
 
 **Tree disposition (2026-09-18):** Scope/isolation **PASS WITH CORRECTIONS** — S4 first; S5 flag-scoped; early-turn and today-path narrow suppressions; schema limited; S6 bounded; six-slice isolation and Continue non-widening confirmed. Does **not** authorise implementation / Preview / Production. Record: `docs/TREE_STAGE1_V13_SCOPE_ISOLATION_DISPOSITION_2026-09-18.md`.
 
+**v1.3.1 (Founder semantic C1–C6, 2026-09-21):** Entry copy curly quotes restored; FQ_QUESTION stays visible until submit/cancel; Keep layered notice + final confirm in main state machine; Recognition evidence-conditional; quiet-ending and re-entry events de-conversionised; anchor delete redacts content. Correction record: `docs/NOVA_STAGE1_SEMANTIC_C1_C6_CORRECTION_RECORD_2026-09-21.md`. Semantic gate **PASS WITH CORRECTIONS SATISFIED**.
+
 ---
 
 ## 17. Authorisation boundary
 
-This specification is **design only**. Per Ruling §16, implementation authority activates only after this document is submitted, Founder/Steward confirm semantic fidelity, Tree records scope and isolation, Lumen records drift, safety and evidence coverage, and all pre-code checks are complete.
+This specification is **design only**. Per Ruling §16, implementation authority activates only after this document is submitted, Founder/Steward confirm semantic fidelity (**PASS WITH CORRECTIONS SATISFIED** as of v1.3.1), Tree records scope and isolation, Lumen records drift, safety and evidence coverage, and all pre-code checks are complete — including Lumen S4 implementation evidence before warmth beyond offline fixtures. A separately governed implementation authority is still required before Stage 1 product code.
 
 Then the approved slices may be implemented behind internal default-off flags. **Preview requires a separate gate. Production remains explicitly unauthorised.**
 
