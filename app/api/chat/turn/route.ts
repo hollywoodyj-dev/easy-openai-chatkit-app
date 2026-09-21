@@ -1972,6 +1972,14 @@ export async function POST(request: Request) {
     matched: string;
     reason: string;
   }> = [];
+  let debugS4Enabled = false;
+  let debugS4FlagSet = false;
+  let debugS4Guard: "hit" | "miss" | null = null;
+  let debugS4Family: string | null = null;
+  let debugS4Disposition: string | null = null;
+  let debugS4Matched: string | null = null;
+  let debugS4RewriteApplied = false;
+  let debugS4Suppressed = false;
   const priorUserCountForBoundary = Math.max(0, userMessagesForHeuristics.length - 1);
   const preBoundary =
     earlyPreBoundary ??
@@ -2091,6 +2099,30 @@ export async function POST(request: Request) {
         console.warn("[chat/turn] reflectionRun rollback after suppression failed", e);
       }
       reflectionRunId = null;
+    }
+  }
+
+  // S4 relational-promise guard — pre-persist / fail-closed (Lumen HOLD 2026-09-22).
+  // First durable write must already be rewritten or suppressed; never store then patch.
+  {
+    const s4Enablement = resolveRelationalPromiseGuardV2Enablement();
+    debugS4FlagSet = s4Enablement.flagSet;
+    debugS4Enabled = s4Enablement.enabled;
+    if (s4Enablement.enabled && !prePersistSuppressed) {
+      const applied = applyRelationalPromiseGuardV2(assistantContent);
+      debugS4Guard = applied.result.guard;
+      debugS4Family = applied.result.family;
+      debugS4Disposition = applied.result.disposition;
+      debugS4Matched = applied.result.matched;
+      if (applied.result.guard === "hit") {
+        if (applied.nextText != null && applied.nextText !== assistantContent) {
+          assistantContent = applied.nextText;
+          debugS4RewriteApplied = true;
+        } else if (applied.nextText == null) {
+          assistantContent = getDriftSuppressionFallback(wantsChinese);
+          debugS4Suppressed = true;
+        }
+      }
     }
   }
 
@@ -2266,14 +2298,6 @@ export async function POST(request: Request) {
     matched: string;
     reason: string;
   }> = [...prePersistViolations];
-  let debugS4Enabled = false;
-  let debugS4FlagSet = false;
-  let debugS4Guard: "hit" | "miss" | null = null;
-  let debugS4Family: string | null = null;
-  let debugS4Disposition: string | null = null;
-  let debugS4Matched: string | null = null;
-  let debugS4RewriteApplied = false;
-  let debugS4Suppressed = false;
   let debugP0GuardedResponseApplied = false;
   let debugP0GuardedResponseKind: "safety" | "advice_clarify" | null = null;
   let debugAnchorV2ContinuitySave: AnchorSemanticWeightV2Debug | null = null;
@@ -3759,60 +3783,10 @@ export async function POST(request: Request) {
     }
   }
 
-  // S4 relational-promise guard (default-off; Production hard-blocked).
-  // Runs after high-severity drift so a rewritten fact line is not discarded as empty.
-  {
-    const s4Enablement = resolveRelationalPromiseGuardV2Enablement();
-    debugS4FlagSet = s4Enablement.flagSet;
-    debugS4Enabled = s4Enablement.enabled;
-    if (s4Enablement.enabled && !debugDriftHighSeveritySuppressed) {
-      const applied = applyRelationalPromiseGuardV2(assistantContent);
-      debugS4Guard = applied.result.guard;
-      debugS4Family = applied.result.family;
-      debugS4Disposition = applied.result.disposition;
-      debugS4Matched = applied.result.matched;
-      if (applied.result.guard === "hit") {
-        if (applied.nextText != null && applied.nextText !== assistantContent) {
-          assistantContent = applied.nextText;
-          debugS4RewriteApplied = true;
-          if (assistantMsgId) {
-            try {
-              await prisma.message.update({
-                where: { id: assistantMsgId },
-                data: { message: assistantContent },
-              });
-            } catch (e) {
-              console.warn("[chat/turn] S4 rewrite message update failed", e);
-            }
-          }
-        } else if (applied.nextText == null) {
-          assistantContent = getDriftSuppressionFallback(wantsChinese);
-          debugS4Suppressed = true;
-          debugDriftSuppressionFallbackApplied = true;
-          debugSecondarySuppressedReason = "relational_promise_guard_v2";
-          keptLastInsight = null;
-          keptSoftContinuity = null;
-          keptPatternSurfacing = null;
-          keptMicroAwareness = null;
-          keptMicroShift = null;
-          responseContinuityInsight = null;
-          responseRecurrenceCue = null;
-          responseEmbodimentCue = null;
-          responseAwarenessCue = null;
-          responseMicroshiftCue = null;
-          if (assistantMsgId) {
-            try {
-              await prisma.message.update({
-                where: { id: assistantMsgId },
-                data: { message: assistantContent },
-              });
-            } catch (e) {
-              console.warn("[chat/turn] S4 suppress message update failed", e);
-            }
-          }
-        }
-      }
-    }
+  // S4 already applied pre-persist (fail-closed). If late drift suppressed the turn,
+  // clear S4 rewrite/suppress flags that no longer describe the returned body.
+  if (debugDriftHighSeveritySuppressed && debugS4Suppressed) {
+    debugS4Suppressed = false;
   }
 
   if (p0Entry.enabled && p0Entry.safetyOverride) {

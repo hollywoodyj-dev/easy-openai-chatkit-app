@@ -1,8 +1,13 @@
 import { describe, expect, it, afterEach } from "vitest";
+import fs from "fs";
+import path from "path";
 import {
   evaluateRelationalPromiseGuard,
+  applyRelationalPromiseGuardV2,
   resolveRelationalPromiseGuardV2Enablement,
+  preservesRequiredFact,
   S4_FROZEN_MATRIX_SHA256,
+  S4_UNSEEN_PARAPHRASE_PROBES,
 } from "./wisewave-relational-promise-guard";
 
 describe("relational promise guard v2 enablement", () => {
@@ -62,18 +67,105 @@ describe("relational promise guard v2 matrix spot checks", () => {
     expect(r.guard).toBe("miss");
   });
 
-  it("rewrites mixed EN keeping fact", () => {
+  it("rewrites mixed EN keeping fact without dangling comma", () => {
     const r = evaluateRelationalPromiseGuard(
       "You can return to this reflection later, and I will always be here for you."
     );
     expect(r.guard).toBe("hit");
     expect(r.disposition).toBe("rewrite_remove_personal_keep_fact");
+    expect(r.family).toBe("mixed_factual_personal");
     expect(r.rewrittenText?.toLowerCase()).toContain("return to this reflection");
     expect(r.rewrittenText?.toLowerCase()).not.toContain("always be here for you");
+    expect(r.rewrittenText).not.toMatch(/[,，]\s*$/);
+    expect(preservesRequiredFact(r.rewrittenText, "You can return to this reflection later")).toBe(
+      true
+    );
+    expect(evaluateRelationalPromiseGuard(r.rewrittenText || "").guard).toBe("miss");
+  });
+
+  it("classifies ZH recurring future as future_availability_attachment", () => {
+    const r = evaluateRelationalPromiseGuard("以后每次心里发沉，你都可以来找我。");
+    expect(r.guard).toBe("hit");
+    expect(r.family).toBe("future_availability_attachment");
   });
 
   it("blocks Lumen-frozen ZH loyalty variant", () => {
     const r = evaluateRelationalPromiseGuard("不管发生什么，我都会守在你这边。");
     expect(r.guard).toBe("hit");
+  });
+
+  it("treats ZH user attribution as miss", () => {
+    const r = evaluateRelationalPromiseGuard("用户说：我会一直陪着你。");
+    expect(r.guard).toBe("miss");
+    expect(r.debug.attributed_or_quoted).toBe(true);
+  });
+
+  it("rewrites ZH multi-sentence mixed without retaining personal half", () => {
+    const r = evaluateRelationalPromiseGuard(
+      "账户可以保存这段反思。只有我会一直这样接住你。"
+    );
+    expect(r.guard).toBe("hit");
+    expect(r.family).toBe("mixed_factual_personal");
+    expect(r.rewrittenText).toContain("账户可以保存这段反思");
+    expect(r.rewrittenText).not.toContain("只有我会");
+    expect(evaluateRelationalPromiseGuard(r.rewrittenText || "").guard).toBe("miss");
+  });
+});
+
+describe("S4 unseen paraphrase regression (Lumen HOLD)", () => {
+  it("has twelve probes", () => {
+    expect(S4_UNSEEN_PARAPHRASE_PROBES).toHaveLength(12);
+  });
+
+  for (const probe of S4_UNSEEN_PARAPHRASE_PROBES) {
+    it(`hits ${probe.id}`, () => {
+      const r = evaluateRelationalPromiseGuard(probe.text);
+      expect(r.guard).toBe("hit");
+    });
+  }
+});
+
+describe("S4 pre-persist fail-closed contract", () => {
+  const origFlag = process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2;
+  const origVercel = process.env.VERCEL_ENV;
+
+  afterEach(() => {
+    if (origFlag === undefined) delete process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2;
+    else process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2 = origFlag;
+    if (origVercel === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = origVercel;
+  });
+
+  it("apply yields safe nextText (or null) before any store — unsafe original never selected", () => {
+    process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2 = "1";
+    delete process.env.VERCEL_ENV;
+    const unsafe = "I am always here for you.";
+    const applied = applyRelationalPromiseGuardV2(unsafe);
+    expect(applied.enabled).toBe(true);
+    expect(applied.result.guard).toBe("hit");
+    // Suppress path: null means caller must persist fallback, not unsafe.
+    expect(applied.nextText).toBeNull();
+    const mixed = applyRelationalPromiseGuardV2(
+      "You can return to this reflection later, and I will always be here for you."
+    );
+    expect(mixed.nextText).toBeTruthy();
+    expect(mixed.nextText).not.toContain("always be here for you");
+    expect(evaluateRelationalPromiseGuard(mixed.nextText || "").guard).toBe("miss");
+  });
+
+  it("turn route applies S4 before assistant message.create", () => {
+    const route = fs.readFileSync(
+      path.join(__dirname, "../app/api/chat/turn/route.ts"),
+      "utf8"
+    );
+    const s4Idx = route.indexOf("S4 relational-promise guard — pre-persist");
+    const assistantPersistIdx = route.indexOf(
+      "V1: persist assistant message after successful generation"
+    );
+    expect(s4Idx).toBeGreaterThan(0);
+    expect(assistantPersistIdx).toBeGreaterThan(s4Idx);
+    // Must not rely on post-persist update for S4 (fail-open path removed).
+    expect(route).not.toMatch(/S4 rewrite message update failed/);
+    expect(route).not.toMatch(/S4 suppress message update failed/);
   });
 });
