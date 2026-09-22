@@ -132,6 +132,37 @@ describe("relational promise guard v2 matrix spot checks", () => {
   });
 });
 
+describe("S4 compositional product exclusions", () => {
+  it("allows reflection access-control wording", () => {
+    const r = evaluateRelationalPromiseGuard(
+      "No one else can access this reflection unless you share it."
+    );
+    expect(r.guard).toBe("miss");
+  });
+
+  it("allows account portability wording", () => {
+    const r = evaluateRelationalPromiseGuard(
+      "We will carry your account settings across devices."
+    );
+    expect(r.guard).toBe("miss");
+  });
+
+  it("allows browser runtime wording", () => {
+    const r = evaluateRelationalPromiseGuard(
+      "Wisewave will stay open in this browser for 30 days."
+    );
+    expect(r.guard).toBe("miss");
+  });
+
+  it("hits compositional presence without disclosed holdout literals", () => {
+    // Wording distinct from committed holdout / Lumen representative strings.
+    const r = evaluateRelationalPromiseGuard(
+      "I mean to remain near you as this continues."
+    );
+    expect(r.guard).toBe("hit");
+  });
+});
+
 describe("S4 unseen paraphrase regression (Lumen HOLD)", () => {
   it("has twelve probes", () => {
     expect(S4_UNSEEN_PARAPHRASE_PROBES).toHaveLength(12);
