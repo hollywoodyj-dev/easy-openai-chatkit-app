@@ -2,6 +2,7 @@
 
 **Date:** 2026-09-22 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_COMPOSITIONAL_HOLD_CORRECTION_REREVIEW_2026-09-22.md`  
+**Correction commit:** `776a06c42aff6f63dfe46f759a3b810e408d6cdc`  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
