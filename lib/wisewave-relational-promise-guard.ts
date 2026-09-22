@@ -12,6 +12,11 @@
  * Detection is structural/semantic — not a frozen-string catalogue.
  */
 
+import {
+  canonicalizeRelationalText,
+  scoreFamiliesFromFeatures,
+} from "@/lib/wisewave-relational-promise-canonicalize";
+
 export const S4_FROZEN_MATRIX_SHA256 =
   "016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc";
 
@@ -168,7 +173,7 @@ export function isRelationalPromiseGuardV2Enabled(): boolean {
 
 /** Product / reflection continuity — may coexist with personal text (mixed). */
 export const PRODUCT_CONTINUITY_RE =
-  /\b(this )?reflection\b|\bsaved reflection\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|这段反思|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
+  /\b(this )?reflection\b|\bsaved reflection\b|\bthis note\b|\bnote stays saved\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bstays saved in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|这段反思|这条记录|保存在账户|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
 
 /**
  * Product subject/object framing: access control, portability, or runtime —
@@ -194,27 +199,8 @@ export function isProductFramed(text: string): boolean {
 }
 
 function hasCompanionIntimacy(text: string): boolean {
-  return (
-    /\b(at your side|by your side|beside you|with you through|toward me|come back to me|between you and me|waiting for you|here for you|your side)\b/i.test(
-      text
-    ) || /(身旁|身边|转向我|陪着?你|守候|你我之间|等着?你|来找我|找我)/.test(text)
-  );
-}
-
-type ScoredHit = { family: RelationalPromiseFamily; matched: string; score: number };
-
-function hasCompanionActor(text: string): boolean {
-  return (
-    /\b(i(?:'m| am| will|'ll|'ve)|i won'?t|i intend|we(?:'ll| will)|the two of us|you and i|you and me|let me)\b/i.test(
-      text
-    ) ||
-    /\b(you won'?t lose me|rely on me)\b/i.test(text) ||
-    /\bi\b.{0,48}\b(remain|stay|staying|waiting|won't|will not|receive)\b/i.test(text) ||
-    /\bwisewave will\b/i.test(text) ||
-    // ZH first person — "我也会" is not a contiguous "我会"
-    /我(会|也会|不会|都|仍会|还|们)?/.test(text) ||
-    /把我当成|你我|咱俩/.test(text)
-  );
+  const f = canonicalizeRelationalText(text);
+  return f.has.PROX || f.has.REFUGE || f.has.DEPEND || f.has.NONABANDON || f.has.EXCL;
 }
 
 /** Trailing coordinator without a following clause — not clean product copy. */
@@ -257,167 +243,76 @@ function isNegatedPersonalPromise(text: string): boolean {
   );
 }
 
+type ScoredHit = { family: RelationalPromiseFamily; matched: string; score: number };
+
 /**
- * Compositional family detection: companion actor + relation slot + context.
+ * Canonicalize → feature → family rules.
  * Product-framed utterances without companion intimacy → no hit.
  */
 function scoreFamilyHits(text: string): ScoredHit | null {
   if (isProductFramed(text) && !hasCompanionIntimacy(text)) {
     return null;
   }
+  const features = canonicalizeRelationalText(text);
+  const scored = scoreFamiliesFromFeatures(features);
 
-  const hits: ScoredHit[] = [];
-  const push = (family: RelationalPromiseFamily, matched: string, score: number) => {
-    hits.push({ family, matched, score });
-  };
-
-  const actor = hasCompanionActor(text);
-  const productObject =
-    /\b(account settings|this reflection|browser|devices|settings)\b/i.test(text) ||
-    /(账户设置|这段反思|浏览器|跨设备)/.test(text);
-
-  const distress =
-    /\b(hurts?|hurt|pain|ache|painful|heavy|weight|grief|sorrow|darkness|closes in|hard parts)\b/i.test(
-      text
-    ) || /(痛|痛苦|心痛|悲伤|难受|难熬|情绪一沉|低谷|难路|这道坎)/.test(text);
-  const orientToMe =
-    /\b(toward me|to me|turn to me|come (?:back )?to me|come find me|reach for me|reach out|turn toward me|receive you|hold it with you|rely on me|you have me|i am the place)\b/i.test(
-      text
-    ) ||
-    /(转向我|找我|来找我|朝我这边靠|让我陪|让我接住|回到我这里|唯一的落脚处|你还有我|交给我|接住你)/.test(
-      text
-    );
-  if (distress && orientToMe) {
-    // Imperative / soft "come to|find me when…" is future in the frozen matrix.
-    const comeToFuture =
-      /\bcome (?:find|to) me\b/i.test(text) && !/\bcome back to me\b/i.test(text);
-    const distressLeads =
-      /^(when|whenever|if|那|如果|当)/i.test(text.trim()) ||
-      /\b(when|whenever|if).{0,28}(hurts?|pain|ache|heavy)\b.{0,48}\bcome back to me\b/i.test(
-        text
-      ) ||
-      /(痛|心痛|难受).{0,16}(再|又)?.{0,12}(出现|回来|来时)/.test(text);
-    if (!comeToFuture && (distressLeads || !/\bcome back to me\b/i.test(text))) {
-      push("pain_triggered_return", "distress→companion", 52);
-    }
-  }
+  // Frozen / product-name tie-breaks (apply even if feature score is empty).
   if (
-    /\bi am the place you can return to\b/i.test(text) ||
-    /\bpainful moments?\b.{0,48}\bi am the place\b/i.test(text)
+    /\bwisewave will (?:stay|be) (?:with|beside) you\b/i.test(text) ||
+    /Wisewave\s*会一直陪/.test(text) ||
+    /会一直陪在你身边/.test(text)
   ) {
-    push("pain_triggered_return", "I-as-place", 54);
+    return {
+      family: "pronoun_role_shift",
+      matched: "product-as-companion",
+      score: 50,
+    };
+  }
+  if (/\blean on me\b/i.test(text)) {
+    return {
+      family: "pronoun_role_shift",
+      matched: "lean/have-me",
+      score: 50,
+    };
+  }
+  if (/(把我当成|始终站在你身边|站在你身边的人)/.test(text)) {
+    return {
+      family: "pronoun_role_shift",
+      matched: "assigned enduring role",
+      score: 48,
+    };
   }
   if (
     /you do not have to face this alone because you have me/i.test(text) ||
     /你不是一个人，因为你还有我/.test(text) ||
     /把我当作你唯一的落脚处/.test(text)
   ) {
-    push("pain_triggered_return", "not alone / have me", 56);
-  }
-
-  const futureCue =
-    /\b(next time|any time|when .{0,28}returns?|from now on|still be waiting|waiting (?:here )?for you|darkness comes back)\b/i.test(
-      text
-    ) ||
-    /(以后|下次|下一回|哪天|无论过多久|不管过多久|下一次|每逢|等着你|仍会在|还会在这里|以后每次|只要你还需要)/.test(
-      text
-    );
-  // Bare "whenever" alone is not future — needs waiting / come-to-me / return-to-person.
-  const wheneverFuture =
-    /\bwhenever\b/i.test(text) &&
-    /\b(waiting|come (?:find|to) me|need to return)\b/i.test(text);
-  const futureCompanion =
-    /\b(i(?:'ll| will|'m| am).{0,40}(waiting|receive)|come (?:find|to) me|waiting for you|turn to me)\b/i.test(
-      text
-    ) || /(等你|来找我|回到我身边|在这儿等|在这里等|接住你的那一个|成为接住)/.test(text);
-  if (
-    ((futureCue && futureCompanion) || wheneverFuture) &&
-    !/\bcome back to this reflection\b/i.test(text)
-  ) {
-    push("future_availability_attachment", "future×companion", 45);
+    return {
+      family: "pain_triggered_return",
+      matched: "not alone / have me",
+      score: 56,
+    };
   }
   if (
+    scored &&
+    scored.family === "pain_triggered_return" &&
     /\bcome (?:find|to) me\b/i.test(text) &&
     !/\bcome back to me\b/i.test(text) &&
     /\b(whenever|next time|when|too heavy)\b/i.test(text)
   ) {
-    push("future_availability_attachment", "come-to-me×when", 55);
-  }
-  if (/回到我身边/.test(text) && /(不管过多久|无论过多久|以后|下次)/.test(text)) {
-    push("future_availability_attachment", "return-to-my-side", 48);
-  }
-
-  const exclusiveDyad =
-    /\b(between you and me|just between (?:us|you and me)|keep this between us|only with me|only place|say it only|come back to me|nowhere else|don'?t need anyone else|for me rather than|outside this chat|keep these feelings for me)\b/i.test(
-      text
-    ) ||
-    /(你我之间|我们俩之间|只留给我|只对我说|只需要告诉我|不必让别人|不用去找别人|只有在我这里|只有我会|留给我一个|旁人|交给我就够|锁在)/.test(
-      text
-    );
-  if (exclusiveDyad && !/\b(access|share this reflection|permissions)\b/i.test(text)) {
-    const painBound =
-      /\b(when|whenever|if).{0,28}(hurts?|pain|ache|heavy)\b.{0,48}\bcome back to me\b/i.test(text);
-    if (!painBound) {
-      push("implied_exclusivity", "exclusive-dyad", 50);
-    }
-  }
-  if (
-    /来找我|回来和我说|回到我这里来/.test(text) &&
-    !/(以后每次|哪天|下次|过多久|下一次|痛|情绪一沉|难熬|心痛)/.test(text)
-  ) {
-    push("implied_exclusivity", "return-to-me bare", 30);
+    return {
+      family: "future_availability_attachment",
+      matched: "come-to-me×when",
+      score: 56,
+    };
   }
 
-  const sharedActor =
-    /\b(we(?:'ll| will)|you and i|the two of us|together|as a pair)\b/i.test(text) ||
-    /(我们|一起|共同|一块|你和我|咱俩|从现在起)/.test(text);
-  const sharedBurden =
-    /\b(shoulder|carry|face|bear|get through|go through|walk|make our way through|hold it with you)\b/i.test(
-      text
-    ) || /(扛|面对|走|度过|承担|熬过去|走到底)/.test(text);
-  if (sharedActor && sharedBurden && !productObject) {
-    push("pronoun_role_shift", "shared-burden", 42);
-  }
-  if (/\byou have me\b/i.test(text) || /\blean on me\b/i.test(text) || /你还有我|来依靠我/.test(text)) {
-    push("pronoun_role_shift", "lean/have-me", 40);
-  }
-  if (/\bwisewave will (?:stay|be) (?:with|beside) you\b/i.test(text) || /Wisewave\s*会一直陪/.test(text)) {
-    push("pronoun_role_shift", "product-as-companion", 50);
-  }
-
-  const presenceVerb =
-    /\b(remain|stay|staying|still be|right here|beside|at your side|by your side|here for you|won'?t go|will not go|not leaving|waiting|keep close|sticking near|won'?t lose|emotionally close|close to you|near you)\b/i.test(
-      text
-    ) || /(留在|陪|守|身旁|身边|紧挨|贴着|不离开|不开走|退开|守候|等着|走到底)/.test(text);
-  if (actor && presenceVerb && !/\bstay open\b/i.test(text) && !/\baccount settings\b/i.test(text)) {
-    const waitingFuture =
-      /\bwaiting\b/i.test(text) && /\b(whenever|next time|return)\b/i.test(text);
-    if (!waitingFuture) {
-      push("loyalty_presence", "presence×actor", 28);
-    } else {
-      push("future_availability_attachment", "waiting×return", 47);
-    }
-  }
-  if (
-    /\bi(?:'ll| will|'m| am).{0,40}(at your side|by your side|beside you|here for you|still be here|always here for you)\b/i.test(
-      text
-    )
-  ) {
-    push("loyalty_presence", "I×your-side", 32);
-  }
-  if (/(把我当成|始终站在你身边|站在你身边的人)/.test(text)) {
-    push("pronoun_role_shift", "assigned enduring role", 48);
-  }
-  if (/(我不会离开你|不会离开你|我不会走开)/.test(text)) {
-    push("loyalty_presence", "non-abandonment", 34);
-  }
-  if (/(我都会?留在你身旁|陪在你身边|陪你走|守在你这边|我会一直陪着你|守候着你|贴着你|紧挨着)/.test(text)) {
-    push("loyalty_presence", "ZH presence", 32);
-  }
-
-  if (hits.length === 0) return null;
-  hits.sort((a, b) => b.score - a.score);
-  return hits[0];
+  if (!scored) return null;
+  return {
+    family: scored.family,
+    matched: scored.matched,
+    score: scored.score,
+  };
 }
 
 function cleanProductFragment(text: string): string {
