@@ -198,9 +198,17 @@ export function isProductFramed(text: string): boolean {
   return false;
 }
 
+/**
+ * Strong personal-relation markers only.
+ * EXCL alone is insufficient — product access-control uses "no one else".
+ * Bare PROX without actor/refuge is insufficient — runtime "stay open" must not override.
+ */
 function hasCompanionIntimacy(text: string): boolean {
   const f = canonicalizeRelationalText(text);
-  return f.has.PROX || f.has.REFUGE || f.has.DEPEND || f.has.NONABANDON || f.has.EXCL;
+  if (f.has.REFUGE || f.has.DEPEND || f.has.NONABANDON) return true;
+  if (f.has.PROX && f.has.ACTOR && !/\bstay\s+open\b/i.test(text)) return true;
+  if (f.has.EXCL && (f.has.INNER || f.has.REFUGE || f.has.DEPEND)) return true;
+  return false;
 }
 
 /** Trailing coordinator without a following clause — not clean product copy. */
