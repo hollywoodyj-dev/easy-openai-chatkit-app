@@ -168,7 +168,7 @@ export function isRelationalPromiseGuardV2Enabled(): boolean {
 
 /** Product / reflection continuity — may coexist with personal text (mixed). */
 export const PRODUCT_CONTINUITY_RE =
-  /\b(this )?reflection\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|这段反思|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
+  /\b(this )?reflection\b|\bsaved reflection\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|这段反思|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
 
 /**
  * Product subject/object framing: access control, portability, or runtime —
@@ -205,15 +205,22 @@ type ScoredHit = { family: RelationalPromiseFamily; matched: string; score: numb
 
 function hasCompanionActor(text: string): boolean {
   return (
-    /\b(i(?:'m| am| will|'ll|'ve)|i won'?t|we(?:'ll| will)|the two of us|you and i|you and me)\b/i.test(
+    /\b(i(?:'m| am| will|'ll|'ve)|i won'?t|i intend|we(?:'ll| will)|the two of us|you and i|you and me|let me)\b/i.test(
       text
     ) ||
-    /\bi\b.{0,48}\b(remain|stay|staying|waiting|won't|will not)\b/i.test(text) ||
+    /\b(you won'?t lose me|rely on me)\b/i.test(text) ||
+    /\bi\b.{0,48}\b(remain|stay|staying|waiting|won't|will not|receive)\b/i.test(text) ||
     /\bwisewave will\b/i.test(text) ||
     // ZH first person — "我也会" is not a contiguous "我会"
     /我(会|也会|不会|都|仍会|还|们)?/.test(text) ||
-    /把我当成|你我/.test(text)
+    /把我当成|你我|咱俩/.test(text)
   );
+}
+
+/** Trailing coordinator without a following clause — not clean product copy. */
+export function hasDanglingConnector(text: string | null | undefined): boolean {
+  if (!text?.trim()) return false;
+  return /(?:[,，]|(?:\band\b)|而|而且)\s*$/iu.test(text.trim());
 }
 
 function isAttributedQuotedOrMeta(text: string): boolean {
@@ -270,12 +277,16 @@ function scoreFamilyHits(text: string): ScoredHit | null {
     /(账户设置|这段反思|浏览器|跨设备)/.test(text);
 
   const distress =
-    /\b(hurts?|hurt|pain|ache|painful|heavy|weight)\b/i.test(text) ||
-    /(痛|痛苦|心痛|难受|难熬|情绪一沉)/.test(text);
-  const orientToMe =
-    /\b(toward me|to me|come (?:back )?to me|come find me|reach for me|turn toward me|you have me|i am the place)\b/i.test(
+    /\b(hurts?|hurt|pain|ache|painful|heavy|weight|grief|sorrow|darkness|closes in|hard parts)\b/i.test(
       text
-    ) || /(转向我|找我|来找我|让我陪|让我接住|回到我这里|唯一的落脚处|你还有我)/.test(text);
+    ) || /(痛|痛苦|心痛|悲伤|难受|难熬|情绪一沉|低谷|难路|这道坎)/.test(text);
+  const orientToMe =
+    /\b(toward me|to me|turn to me|come (?:back )?to me|come find me|reach for me|reach out|turn toward me|receive you|hold it with you|rely on me|you have me|i am the place)\b/i.test(
+      text
+    ) ||
+    /(转向我|找我|来找我|朝我这边靠|让我陪|让我接住|回到我这里|唯一的落脚处|你还有我|交给我|接住你)/.test(
+      text
+    );
   if (distress && orientToMe) {
     // Imperative / soft "come to|find me when…" is future in the frozen matrix.
     const comeToFuture =
@@ -305,17 +316,20 @@ function scoreFamilyHits(text: string): ScoredHit | null {
   }
 
   const futureCue =
-    /\b(next time|when .{0,28}returns?|from now on|still be waiting|waiting (?:here )?for you)\b/i.test(
+    /\b(next time|any time|when .{0,28}returns?|from now on|still be waiting|waiting (?:here )?for you|darkness comes back)\b/i.test(
       text
     ) ||
-    /(以后|下次|哪天|无论过多久|不管过多久|下一次|每逢|等着你|仍会在|还会在这里|以后每次)/.test(text);
+    /(以后|下次|下一回|哪天|无论过多久|不管过多久|下一次|每逢|等着你|仍会在|还会在这里|以后每次|只要你还需要)/.test(
+      text
+    );
   // Bare "whenever" alone is not future — needs waiting / come-to-me / return-to-person.
   const wheneverFuture =
     /\bwhenever\b/i.test(text) &&
     /\b(waiting|come (?:find|to) me|need to return)\b/i.test(text);
   const futureCompanion =
-    /\b(i(?:'ll| will|'m| am).{0,40}(waiting)|come (?:find|to) me|waiting for you)\b/i.test(text) ||
-    /(等你|来找我|回到我身边|在这儿等|在这里等)/.test(text);
+    /\b(i(?:'ll| will|'m| am).{0,40}(waiting|receive)|come (?:find|to) me|waiting for you|turn to me)\b/i.test(
+      text
+    ) || /(等你|来找我|回到我身边|在这儿等|在这里等|接住你的那一个|成为接住)/.test(text);
   if (
     ((futureCue && futureCompanion) || wheneverFuture) &&
     !/\bcome back to this reflection\b/i.test(text)
@@ -334,10 +348,10 @@ function scoreFamilyHits(text: string): ScoredHit | null {
   }
 
   const exclusiveDyad =
-    /\b(between you and me|just between (?:us|you and me)|keep this between us|only with me|say it only|come back to me|nowhere else|don'?t need anyone else)\b/i.test(
+    /\b(between you and me|just between (?:us|you and me)|keep this between us|only with me|only place|say it only|come back to me|nowhere else|don'?t need anyone else|for me rather than|outside this chat|keep these feelings for me)\b/i.test(
       text
     ) ||
-    /(你我之间|只留给我|只对我说|只需要告诉我|不必让别人|不用去找别人|只有在我这里|只有我会|留给我一个)/.test(
+    /(你我之间|我们俩之间|只留给我|只对我说|只需要告诉我|不必让别人|不用去找别人|只有在我这里|只有我会|留给我一个|旁人|交给我就够|锁在)/.test(
       text
     );
   if (exclusiveDyad && !/\b(access|share this reflection|permissions)\b/i.test(text)) {
@@ -355,11 +369,12 @@ function scoreFamilyHits(text: string): ScoredHit | null {
   }
 
   const sharedActor =
-    /\b(we(?:'ll| will)|you and i|the two of us|together)\b/i.test(text) ||
-    /(我们|一起|共同|一块|你和我)/.test(text);
+    /\b(we(?:'ll| will)|you and i|the two of us|together|as a pair)\b/i.test(text) ||
+    /(我们|一起|共同|一块|你和我|咱俩|从现在起)/.test(text);
   const sharedBurden =
-    /\b(shoulder|carry|face|bear|get through|go through|walk)\b/i.test(text) ||
-    /(扛|面对|走|度过|承担)/.test(text);
+    /\b(shoulder|carry|face|bear|get through|go through|walk|make our way through|hold it with you)\b/i.test(
+      text
+    ) || /(扛|面对|走|度过|承担|熬过去|走到底)/.test(text);
   if (sharedActor && sharedBurden && !productObject) {
     push("pronoun_role_shift", "shared-burden", 42);
   }
@@ -371,9 +386,9 @@ function scoreFamilyHits(text: string): ScoredHit | null {
   }
 
   const presenceVerb =
-    /\b(remain|stay|staying|still be|right here|beside|at your side|by your side|here for you|won'?t go|will not go|not leaving|waiting)\b/i.test(
+    /\b(remain|stay|staying|still be|right here|beside|at your side|by your side|here for you|won'?t go|will not go|not leaving|waiting|keep close|sticking near|won'?t lose|emotionally close|close to you|near you)\b/i.test(
       text
-    ) || /(留在|陪|守|身旁|身边|不离开|不开走|守候|等着)/.test(text);
+    ) || /(留在|陪|守|身旁|身边|紧挨|贴着|不离开|不开走|退开|守候|等着|走到底)/.test(text);
   if (actor && presenceVerb && !/\bstay open\b/i.test(text) && !/\baccount settings\b/i.test(text)) {
     const waitingFuture =
       /\bwaiting\b/i.test(text) && /\b(whenever|next time|return)\b/i.test(text);
@@ -396,7 +411,7 @@ function scoreFamilyHits(text: string): ScoredHit | null {
   if (/(我不会离开你|不会离开你|我不会走开)/.test(text)) {
     push("loyalty_presence", "non-abandonment", 34);
   }
-  if (/(我都会?留在你身旁|陪在你身边|陪你走|守在你这边|我会一直陪着你|守候着你)/.test(text)) {
+  if (/(我都会?留在你身旁|陪在你身边|陪你走|守在你这边|我会一直陪着你|守候着你|贴着你|紧挨着)/.test(text)) {
     push("loyalty_presence", "ZH presence", 32);
   }
 
@@ -406,11 +421,18 @@ function scoreFamilyHits(text: string): ScoredHit | null {
 }
 
 function cleanProductFragment(text: string): string {
-  return text
-    .replace(/\s*,\s*$/u, "")
-    .replace(/，\s*$/u, "")
+  let out = text
     .replace(/\s{2,}/g, " ")
     .trim();
+  // Strip dangling coordinators (EN/ZH) left after clause removal.
+  for (let i = 0; i < 3; i++) {
+    const next = out
+      .replace(/\s*(?:[,，]|(?:\band\b)|而|而且)\s*$/iu, "")
+      .trim();
+    if (next === out) break;
+    out = next;
+  }
+  return out;
 }
 
 /**
@@ -431,6 +453,24 @@ export function rewriteMixedRemovePersonal(
   }
 
   let working = text.trim();
+
+  // Clause split on coordinators (single-sentence mixed rows).
+  const connectorParts = working
+    .split(/\s*(?:[,，]|;\s*|\s+而\s+|\s+and\s+)\s*/u)
+    .map((s) => cleanProductFragment(s))
+    .filter(Boolean);
+  if (connectorParts.length > 1 && connectorParts.some((p) => scoreFamilyHits(p))) {
+    const productClauses = connectorParts.filter(
+      (p) => PRODUCT_CONTINUITY_RE.test(p) && !scoreFamilyHits(p)
+    );
+    if (productClauses.length > 0) {
+      const joiner = /。/.test(text) && !/\.\s/.test(text) ? "，" : ", ";
+      const cleaned = cleanProductFragment(productClauses.join(joiner));
+      if (cleaned && !hasDanglingConnector(cleaned) && !scoreFamilyHits(cleaned)) {
+        return { rewritten: cleaned, preservedFact: cleaned };
+      }
+    }
+  }
 
   // Strip personal clauses joined by and/comma/而
   working = working
@@ -473,8 +513,14 @@ export function rewriteMixedRemovePersonal(
 
   const joiner = /。/.test(text) && !/\.\s/.test(text) ? "" : " ";
   let rewritten = cleanProductFragment(kept.join(joiner));
+  if (hasDanglingConnector(rewritten)) {
+    rewritten = cleanProductFragment(rewritten);
+  }
+  if (hasDanglingConnector(rewritten)) {
+    rewritten = "";
+  }
 
-  if (!rewritten || scoreFamilyHits(rewritten)) {
+  if (!rewritten || scoreFamilyHits(rewritten) || hasDanglingConnector(rewritten)) {
     const productOnly = parts.find((p) => PRODUCT_CONTINUITY_RE.test(p) && !scoreFamilyHits(p));
     if (productOnly) {
       const cleaned = cleanProductFragment(productOnly);

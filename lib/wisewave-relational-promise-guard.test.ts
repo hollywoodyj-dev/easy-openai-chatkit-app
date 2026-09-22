@@ -6,6 +6,7 @@ import {
   applyRelationalPromiseGuardV2,
   resolveRelationalPromiseGuardV2Enablement,
   preservesRequiredFact,
+  hasDanglingConnector,
   S4_FROZEN_MATRIX_SHA256,
   S4_UNSEEN_PARAPHRASE_PROBES,
 } from "./wisewave-relational-promise-guard";
@@ -129,6 +130,17 @@ describe("relational promise guard v2 matrix spot checks", () => {
       expect(r.rewrittenText).not.toContain("守候");
       expect(evaluateRelationalPromiseGuard(r.rewrittenText).guard).toBe("miss");
     }
+  });
+
+  it("rewrites ZH account mixed without dangling 而", () => {
+    const r = evaluateRelationalPromiseGuard(
+      "账户里会保留这段反思，而我会一直贴近你，陪你度过低谷。"
+    );
+    expect(r.guard).toBe("hit");
+    expect(r.rewrittenText).toBeTruthy();
+    expect(hasDanglingConnector(r.rewrittenText)).toBe(false);
+    expect(r.rewrittenText).not.toMatch(/贴近|低谷/);
+    expect(evaluateRelationalPromiseGuard(r.rewrittenText || "").guard).toBe("miss");
   });
 });
 
