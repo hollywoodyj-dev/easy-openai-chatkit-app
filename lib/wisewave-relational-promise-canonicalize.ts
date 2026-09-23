@@ -147,8 +147,15 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Depend / actor
   [/\bcount\s+on\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   [/\brely\s+on\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
+  [/\bdepend\s+on\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/\byou\s+have\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   [/\blean\s+on\s+me\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  [/\blet\s+this\s+presence\s+\w+\s+you\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/\bsteady\s+you\b/gi, MARK("REFUGE")],
+  [/\bkeep\s+you\s+anchored\b/gi, `${MARK("PROX")} ${MARK("REFUGE")}`],
+  [/\bfooting\s+gives?\s+way\b/gi, MARK("DISTRESS")],
+  [/\bbuckles?\b/gi, MARK("DISTRESS")],
+  [/\bfalls?\s+away\b/gi, MARK("DISTRESS")],
   [/\bi\s+am\s+here\b/gi, `${MARK("ACTOR")} ${MARK("PROX")}`],
   [/\blet\s+me\b/gi, MARK("ACTOR")],
   [/\bi\s+intend\b/gi, MARK("ACTOR")],
@@ -216,6 +223,18 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/做你唯一的依靠/g, `${MARK("REFUGE")} ${MARK("EXCL")} ${MARK("DEPEND")} ${MARK("ACTOR")}`],
   [/唯一的依靠/g, `${MARK("REFUGE")} ${MARK("EXCL")} ${MARK("DEPEND")}`],
   [/唯一的落脚处/g, `${MARK("REFUGE")} ${MARK("EXCL")}`],
+  [/落脚处/g, MARK("REFUGE")],
+  [/失去方向/g, MARK("DISTRESS")],
+  [/来我这里歇/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/来我这里/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/歇着/g, MARK("REFUGE")],
+  [/再次垮掉/g, MARK("DISTRESS")],
+  [/垮掉/g, MARK("DISTRESS")],
+  [/继续守着你/g, `${MARK("PROX")} ${MARK("ACTOR")} ${MARK("NONABANDON")}`],
+  [/守着你/g, `${MARK("PROX")} ${MARK("ACTOR")}`],
+  [/关系都断开/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/所有关系都断开/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/哪怕所有/g, MARK("EXCL")],
   [/这样接住你/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/接住你/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/让我接住/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
@@ -470,7 +489,7 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "往后",
     "若",
   ],
-  DEPEND: ["rely", "count", "trust", "倚靠", "依靠"],
+  DEPEND: ["count", "trust", "倚靠", "依靠"],
 };
 
 function stemEn(token: string): string {
@@ -556,10 +575,10 @@ function applyStructuralConceptTags(raw: string, tagged: string): string {
 
   // Collapse / give-way / ground-loss distress metaphors
   if (
-    /\bgives?\s+way\b|\bcave[sd]?\s+in\b|\bfalls?\s+apart\b|\bbreak(?:s|ing)?\s+down\b|\bdisappears?\b|\bfall\s+apart\b/i.test(
+    /\bgives?\s+way\b|\bcave[sd]?\s+in\b|\bfalls?\s+apart\b|\bbreak(?:s|ing)?\s+down\b|\bdisappears?\b|\bfall\s+apart\b|\bbuckles?\b|\bfalls?\s+away\b/i.test(
       raw
     ) ||
-    /压下来|散掉|撑不住|崩溃|垮|塌下来|崩掉|失去支点|脚下/.test(raw)
+    /压下来|散掉|撑不住|崩溃|垮|塌下来|崩掉|失去支点|脚下|垮掉|失去方向/.test(raw)
   ) {
     t += ` ${MARK("DISTRESS")} `;
   }
@@ -619,16 +638,27 @@ function applyStructuralConceptTags(raw: string, tagged: string): string {
     t += ` ${MARK("EXCL")} `;
   }
 
-  // Lean/rely on *companion* only — not tool/product objects (outline, note, draft…)
+  // Lean/rely/depend on *companion* only — not tool/product objects
   const leanCompanion =
-    /\b(?:lean|rely)\s+on\s+(?:me|us)\b/i.test(raw) ||
+    /\b(?:lean|rely|depend)\s+on\s+(?:me|us)\b/i.test(raw) ||
     /倚靠我|依靠我|来依靠我|来倚靠我/.test(raw);
   const leanProduct =
-    /\b(?:lean|rely)\s+on\s+(?:the\s+)?(?:saved\s+)?(?:outline|note|draft|reflection|plan|list|steps?)\b/i.test(
+    /\b(?:lean|rely|depend)\s+on\s+(?:the\s+)?(?:saved\s+)?(?:outline|note|draft|reflection|plan|list|steps?|checklist|session)\b/i.test(
       raw
     );
   if (leanCompanion && !leanProduct) {
     t += ` ${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")} `;
+  }
+
+  // Stabilizing presence / rest-with-me refuge morphologies
+  if (
+    /\b(?:steady|anchor|hold)\s+you\b/i.test(raw) ||
+    /歇着|落脚/.test(raw)
+  ) {
+    t += ` ${MARK("REFUGE")} `;
+  }
+  if (/守着你|继续守着/.test(raw)) {
+    t += ` ${MARK("PROX")} ${MARK("NONABANDON")} `;
   }
 
   return t;

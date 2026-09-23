@@ -186,9 +186,9 @@ export function isProductFramed(text: string): boolean {
   if (/\breflection\b.{0,48}\b(access|share|unless you share)\b/i.test(t)) return true;
   if (/\bcome back to (?:this )?reflection\b/i.test(t)) return true;
   if (/\breturn to (?:this )?reflection\b/i.test(t)) return true;
-  // Tool/product lean-on — object is outline/note/draft, not the assistant
+  // Tool/product lean/rely/depend-on — object is checklist/outline/note, not the assistant
   if (
-    /\b(?:lean|rely)\s+on\s+(?:the\s+)?(?:saved\s+)?(?:outline|note|draft|reflection|plan|list)\b/i.test(
+    /\b(?:lean|rely|depend)\s+on\s+(?:the\s+)?(?:saved\s+)?(?:outline|note|draft|reflection|plan|list|checklist|session)\b/i.test(
       t
     )
   ) {
