@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-23 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_TOKEN_CLASS_CORRECTION_REREVIEW_2026-09-22.md`  
-**Correction commit:** *(see git HEAD after push)*  
+**Correction commit:** cb395dc21e527df7c7fc7ecb862fd90c5e5811ac  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
