@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-24 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B9_ROLE_FRAME_GENERALIZATION_REREVIEW_2026-09-23.md`  
-**Correction commit:** *(filled after commit)*  
+**Correction commit:** 7284311cf99d936cfe204182424cc281d65e8760  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
@@ -43,7 +43,7 @@ Rehearsal B initially missed 11/20 before the frame additions above — evidence
 | Check | Result |
 |---|---|
 | Units | **32/32** |
-| Frozen matrix 0/0 + paraphrase + holdout | **PASS** |
+| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (`implementation_commit` = `evidence_run_at_commit` = 7284311; artifact `matrix-evidence-2026-09-23T23-43-00-100Z.json`) |
 | B5 + B6 + B7 + B8 + B9 regression | 0 miss / 0 FP / 0 unclean |
 | B10 full artifact (`a7e1ac6-postfreeze`) | 0 miss / 0 FP / 0 unclean (44/44); all 8 mixed rows rewrite to the product half |
 | Prior blinds (776 / bca) | 0 residual |
