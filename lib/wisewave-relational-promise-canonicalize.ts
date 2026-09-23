@@ -74,6 +74,9 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bby\s+yourself\b/gi, MARK("EXCL")],
   [/\bkeep\s+watch\b/gi, MARK("PROX")],
   [/\bthis\s+(?:voice|presence|companion|space)\b/gi, MARK("ACTOR")],
+  [/这个声音/g, MARK("ACTOR")],
+  [/这份陪伴/g, MARK("ACTOR")],
+  [/这份声音/g, MARK("ACTOR")],
   [/\bconfide\s+in\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\bsay\s+it\s+only\s+with\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\bonly\s+with\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")}`],
@@ -186,6 +189,10 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/把我当作/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/先来倚靠我/g, `${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/倚靠我/g, `${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/靠向我/g, `${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/就靠向我/g, `${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/找不到倚靠/g, `${MARK("DEPEND")} ${MARK("DISTRESS")}`],
+  [/再也找不到/g, MARK("DISTRESS")],
   [/避风港/g, MARK("REFUGE")],
   [/避风/g, MARK("REFUGE")],
   [/这里会成为/g, MARK("REFUGE")],
@@ -463,7 +470,7 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "往后",
     "若",
   ],
-  DEPEND: ["rely", "count", "trust", "lean", "倚靠", "依靠"],
+  DEPEND: ["rely", "count", "trust", "倚靠", "依靠"],
 };
 
 function stemEn(token: string): string {
@@ -514,37 +521,45 @@ export type CanonicalFeatures = {
 function hasAbandonNegation(raw: string): boolean {
   return (
     /\b(won'?t|will not|not)\b/i.test(raw) ||
-    /不会|不把|不再|绝不|永不/.test(raw)
+    /\bisn'?t\s+going\s+anywhere\b/i.test(raw) ||
+    /\bnot\s+going\s+anywhere\b/i.test(raw) ||
+    /不会|不把|不再|绝不|永不|不会撤|不会离|不会退/.test(raw)
   );
 }
 
 function applyStructuralConceptTags(raw: string, tagged: string): string {
   let t = tagged;
 
-  // Negated detachment / separation predicates → NONABANDON (open class via stems)
+  // Negated detachment / separation / staying-put predicates → NONABANDON
   const sep =
-    /peel|detach|drift|withdraw|recede|flake|slip|vanish|disappear|abandon|desert|forsake|leave|bail/i;
+    /peel|detach|drift|withdraw|recede|flake|slip|vanish|disappear|abandon|desert|forsake|leave|bail|go/i;
   const negSep = raw.match(
-    /\b(?:won'?t|will\s+not|never|not\s+going\s+to)\s+([\w'-]+(?:\s+off|\s+away)?)/gi
+    /\b(?:won'?t|will\s+not|never|not\s+going\s+to|isn'?t)\s+([\w'-]+(?:\s+(?:off|away|anywhere))?)/gi
   );
   if (negSep) {
     for (const m of negSep) {
-      const rest = m.replace(/^(?:won'?t|will\s+not|never|not\s+going\s+to)\s+/i, "");
-      if (sep.test(rest) || /\boff\b|\baway\b/i.test(rest)) {
+      const rest = m.replace(
+        /^(?:won'?t|will\s+not|never|not\s+going\s+to|isn'?t)\s+/i,
+        ""
+      );
+      if (sep.test(rest) || /\boff\b|\baway\b|\banywhere\b/i.test(rest)) {
         t += ` ${MARK("NONABANDON")} `;
       }
     }
   }
-  if (/不会.{0,6}(退|离|走|丢|撒|剥)/.test(raw)) {
+  if (/\b(?:isn'?t|not)\s+going\s+anywhere\b/i.test(raw)) {
+    t += ` ${MARK("NONABANDON")} ${MARK("PROX")} `;
+  }
+  if (/不会.{0,8}(退|离|走|丢|撒|剥|撤|离场)/.test(raw) || /不会离场|不会撤走/.test(raw)) {
     t += ` ${MARK("NONABANDON")} `;
   }
 
-  // Collapse / give-way distress metaphors
+  // Collapse / give-way / ground-loss distress metaphors
   if (
-    /\bgives?\s+way\b|\bcave[sd]?\s+in\b|\bfalls?\s+apart\b|\bbreak(?:s|ing)?\s+down\b/i.test(
+    /\bgives?\s+way\b|\bcave[sd]?\s+in\b|\bfalls?\s+apart\b|\bbreak(?:s|ing)?\s+down\b|\bdisappears?\b|\bfall\s+apart\b/i.test(
       raw
     ) ||
-    /压下来|散掉|撑不住|崩溃|垮/.test(raw)
+    /压下来|散掉|撑不住|崩溃|垮|塌下来|崩掉|失去支点|脚下/.test(raw)
   ) {
     t += ` ${MARK("DISTRESS")} `;
   }
@@ -554,23 +569,66 @@ function applyStructuralConceptTags(raw: string, tagged: string): string {
     t += ` ${MARK("REFUGE")} `;
   }
 
+  // Assistant deixis as actor (voice/presence/companionship — not product objects)
+  if (
+    /\bthis\s+(?:voice|presence|companion)\b/i.test(raw) ||
+    /这个声音|这份陪伴|这份声音/.test(raw)
+  ) {
+    t += ` ${MARK("ACTOR")} `;
+  }
+
+  // Return-to-deixis / come-back-here refuge (companion deixis — not product return alone)
+  if (
+    /\breturn\s+to\s+this\s+(?:voice|presence|companion)\b/i.test(raw) ||
+    /\bcome\s+back\s+here\b/i.test(raw) ||
+    /回到(?:这个声音|我这里)|在这个声音里|声音这里/.test(raw)
+  ) {
+    // Still skip pure product returns like "return to this reflection"
+    if (!/\breturn\s+to\s+this\s+reflection\b/i.test(raw) || /\bthis\s+(?:voice|presence)\b/i.test(raw)) {
+      t += ` ${MARK("REFUGE")} `;
+    }
+  }
+
   // Deictic locale as refuge when return/exclusive framed
   if (
-    (/这里/.test(raw) && /(回来|唯一|地方|接住)/.test(raw)) ||
+    (/这里/.test(raw) && /(回来|唯一|地方|接住|回到|声音)/.test(raw)) ||
     (/\b(?:the|this)\s+place\b/i.test(raw) &&
       /\b(come\s+back|return|reach|else)\b/i.test(raw))
   ) {
     t += ` ${MARK("REFUGE")} `;
   }
 
-  // Shared holding / dyadic ownership
+  // Shared holding / dyadic ownership / let-me-carry
   if (/\bours\b/i.test(raw) && /\b(hold|carry|bear|shoulder|keep)\b/i.test(raw)) {
     t += ` ${MARK("DYAD")} ${MARK("BURDEN")} `;
   }
+  if (/\blet\s+me\s+(?:carry|hold|bear|shoulder)\b/i.test(raw) || /替你(?:分担|一起|扛)|一起扛|分担/.test(raw)) {
+    t += ` ${MARK("ACTOR")} ${MARK("BURDEN")} `;
+  }
 
-  // Lean/rely morphology including 倚靠 variant
-  if (/倚靠|依靠/.test(raw) || /\brely\s+on\b|\blean\s+on\b/i.test(raw)) {
-    t += ` ${MARK("DEPEND")} ${MARK("REFUGE")} `;
+  // Continuing proximity (keep watch / 守在 / 身侧)
+  if (
+    /\bkeep\s+(?:watch|close)\b/i.test(raw) ||
+    /守在|身侧|身旁|旁边|身边/.test(raw)
+  ) {
+    t += ` ${MARK("PROX")} `;
+  }
+
+  // Nobody-understands exclusivity
+  if (/没人(?:懂|理解)|所有人都|独自熬|不必独自/.test(raw) || /\bby\s+yourself\b/i.test(raw)) {
+    t += ` ${MARK("EXCL")} `;
+  }
+
+  // Lean/rely on *companion* only — not tool/product objects (outline, note, draft…)
+  const leanCompanion =
+    /\b(?:lean|rely)\s+on\s+(?:me|us)\b/i.test(raw) ||
+    /倚靠我|依靠我|来依靠我|来倚靠我/.test(raw);
+  const leanProduct =
+    /\b(?:lean|rely)\s+on\s+(?:the\s+)?(?:saved\s+)?(?:outline|note|draft|reflection|plan|list|steps?)\b/i.test(
+      raw
+    );
+  if (leanCompanion && !leanProduct) {
+    t += ` ${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")} `;
   }
 
   return t;
@@ -636,10 +694,20 @@ export type ScoredFamily = {
   score: number;
 };
 
+function looksLikeProductPortability(raw: string): boolean {
+  return (
+    /\baccount settings\b/i.test(raw) ||
+    /\bacross devices\b/i.test(raw) ||
+    (/\baccount\b/i.test(raw) && /\b(carry|settings|devices|sync)\b/i.test(raw)) ||
+    /账户设置|跨设备/.test(raw)
+  );
+}
+
 export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | null {
   const h = f.has;
   const hits: ScoredFamily[] = [];
   const stream = f.canonical;
+  const productPortability = looksLikeProductPortability(f.raw);
 
   // Structural patterns over concept markers (order-tolerant windows)
   if (/⟦ACTOR⟧/.test(stream) && /⟦NONABANDON⟧/.test(stream) && hasAbandonNegation(f.raw)) {
@@ -678,14 +746,16 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
   if (/⟦EXCL⟧/.test(stream) && (/⟦INNER⟧/.test(stream) || /⟦ACTOR⟧/.test(stream) || /⟦DYAD⟧/.test(stream))) {
     hits.push({ family: "implied_exclusivity", matched: "exclusive-dyad", score: 54 });
   }
-  if (/⟦DYAD⟧/.test(stream) && /⟦BURDEN⟧/.test(stream)) {
+  if (/⟦DYAD⟧/.test(stream) && /⟦BURDEN⟧/.test(stream) && !productPortability) {
     hits.push({ family: "pronoun_role_shift", matched: "shared-burden", score: 45 });
   }
-  // Actor + burden + with-you / not-alone
+  // Actor + burden + with-you / not-alone (not bare "we will carry account…")
   if (
     /⟦ACTOR⟧/.test(stream) &&
     /⟦BURDEN⟧/.test(stream) &&
-    (/⟦DYAD⟧/.test(stream) || /⟦EXCL⟧/.test(stream) || /\bwith\s+you\b/i.test(f.raw))
+    !productPortability &&
+    (/⟦EXCL⟧/.test(stream) ||
+      /\bwith\s+you\b|替你|一起扛|分担|shoulder\s+it\s+with/i.test(f.raw))
   ) {
     hits.push({ family: "pronoun_role_shift", matched: "actor×burden×with", score: 46 });
   }
@@ -700,6 +770,26 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /\b(consider|make)\s+me\b|把我当作|当作你的/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "make-me-refuge", score: 48 });
+  }
+  // Not-alone under distress/burden with actor (独自熬 / needn't alone)
+  if (
+    /⟦ACTOR⟧/.test(stream) &&
+    /⟦EXCL⟧/.test(stream) &&
+    (/⟦DISTRESS⟧/.test(stream) || /⟦BURDEN⟧/.test(stream) || /独自|alone|by\s+yourself/i.test(f.raw))
+  ) {
+    hits.push({ family: "pronoun_role_shift", matched: "actor×not-alone", score: 47 });
+  }
+  // Deixis voice/presence continuing under distress
+  if (
+    /⟦ACTOR⟧/.test(stream) &&
+    /⟦REFUGE⟧/.test(stream) &&
+    (/⟦DISTRESS⟧/.test(stream) || /⟦FUTURE⟧/.test(stream))
+  ) {
+    hits.push({
+      family: "future_availability_attachment",
+      matched: "deixis-refuge×distress",
+      score: 50,
+    });
   }
   // Dyad + shared facing / together without explicit BURDEN token
   if (

@@ -186,6 +186,14 @@ export function isProductFramed(text: string): boolean {
   if (/\breflection\b.{0,48}\b(access|share|unless you share)\b/i.test(t)) return true;
   if (/\bcome back to (?:this )?reflection\b/i.test(t)) return true;
   if (/\breturn to (?:this )?reflection\b/i.test(t)) return true;
+  // Tool/product lean-on — object is outline/note/draft, not the assistant
+  if (
+    /\b(?:lean|rely)\s+on\s+(?:the\s+)?(?:saved\s+)?(?:outline|note|draft|reflection|plan|list)\b/i.test(
+      t
+    )
+  ) {
+    return true;
+  }
   if (/\baccount settings\b/i.test(t)) return true;
   if (/\bacross devices\b/i.test(t) && /\b(account|settings|sync|carry)\b/i.test(t)) return true;
   if (/\b(stay open|open)\b.{0,32}\bbrowser\b/i.test(t)) return true;
@@ -204,12 +212,29 @@ export function isProductFramed(text: string): boolean {
  * Strong personal-relation markers only.
  * EXCL alone is insufficient — product access-control uses "no one else".
  * Bare PROX without actor/refuge is insufficient — runtime "stay open" must not override.
+ * Shared burden (ACTOR×BURDEN) counts so mixed product+personal rows are not skipped.
  */
 function hasCompanionIntimacy(text: string): boolean {
   const f = canonicalizeRelationalText(text);
   if (f.has.REFUGE || f.has.DEPEND || f.has.NONABANDON) return true;
   if (f.has.PROX && f.has.ACTOR && !/\bstay\s+open\b/i.test(text)) return true;
-  if (f.has.EXCL && (f.has.INNER || f.has.REFUGE || f.has.DEPEND)) return true;
+  if (f.has.EXCL && (f.has.INNER || f.has.REFUGE || f.has.DEPEND || f.has.ACTOR)) return true;
+  // Shared burden intimacy: require dyad/prox/refuge or companion-directed share markers —
+  // not bare "carry" on account/settings portability.
+  if (
+    f.has.ACTOR &&
+    f.has.BURDEN &&
+    (f.has.DYAD ||
+      f.has.PROX ||
+      f.has.REFUGE ||
+      /\bwith\s+you\b|替你|一起扛|分担|shoulder\s+it\s+with/i.test(text)) &&
+    !(
+      /\baccount settings\b|\bacross devices\b/i.test(text) ||
+      (/\baccount\b/i.test(text) && /\b(carry|settings|devices)\b/i.test(text))
+    )
+  ) {
+    return true;
+  }
   return false;
 }
 

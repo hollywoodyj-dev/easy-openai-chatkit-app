@@ -58,8 +58,9 @@ function resolveImplementationCommit() {
   const env = process.env.S4_IMPLEMENTATION_COMMIT?.trim();
   if (env) return env;
   try {
+    // Include canonicalize — evidence must stamp the relational-promise impl under test.
     return execSync(
-      "git log -1 --format=%H -- lib/wisewave-relational-promise-guard.ts app/api/chat/turn/route.ts",
+      "git log -1 --format=%H -- lib/wisewave-relational-promise-guard.ts lib/wisewave-relational-promise-canonicalize.ts app/api/chat/turn/route.ts",
       { cwd: root, encoding: "utf8" }
     ).trim();
   } catch {
