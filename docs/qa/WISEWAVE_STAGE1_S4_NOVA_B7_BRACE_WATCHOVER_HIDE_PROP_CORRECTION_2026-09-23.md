@@ -24,15 +24,18 @@ Published B7 is **regression-only** for this cycle.
 
 No B7 blind literals pasted as one-off allowlist rows.
 
-## Local evidence (pre-stamp)
+## Local evidence
 
 | Check | Result |
 |---|---|
 | Units | **32/32** |
-| Frozen matrix 0/0 + paraphrase + holdout | **PASS** |
+| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (`implementation_commit` = ce9bf8b) |
 | B5 + B6 regression | 0 miss / 0 FP / 0 unclean |
 | B7 full artifact (`fbac84a-postfreeze`) | 0 miss / 0 FP / 0 unclean (44/44) |
 | Prior blinds (776 / bca) | 0 residual |
+
+Evidence artifact: `qa-artifacts/s4-relational-promise/matrix-evidence-2026-09-23T07-05-53-840Z.json`  
+Evidence stamp commit: `23979ae1b3935dcbd77eef81a36e22da10bb8e6c`
 
 ## Ask
 
