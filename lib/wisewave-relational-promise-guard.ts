@@ -173,7 +173,7 @@ export function isRelationalPromiseGuardV2Enabled(): boolean {
 
 /** Product / reflection continuity — may coexist with personal text (mixed). */
 export const PRODUCT_CONTINUITY_RE =
-  /\b(this )?reflection\b|\bsaved reflection\b|\bthis note\b|\bnote stays saved\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bstays saved in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|这段反思|这条记录|保存在账户|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
+  /\b(this )?reflection\b|\bsaved reflection\b|\bthis note\b|\bnote stays saved\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bstays saved in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|\b(?:saved|session|the|your|this)\s+(?:checklist|outline|transcript|worksheet|article|notes?)\b|这段反思|这条记录|已保存的(?:清单|大纲|笔记|练习表|文档)|保存在账户|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
 
 /**
  * Product subject/object framing: access control, portability, or runtime —
@@ -205,6 +205,12 @@ export function isProductFramed(text: string): boolean {
   }
   if (/反思/.test(t) && /(访问|分享|权限|别人无法查看|回到这段|再回来)/.test(t)) return true;
   if (/(账户设置|跨设备|浏览器里?保持打开|打开着)/.test(t)) return true;
+  // Access-control "nobody can see/open" over a product artefact
+  if (/(没人|没有人|无人|别人)(?:能|可以|会)?(?:看到|访问|查看|读到|打开)/.test(t) && /(反思|记录|笔记|清单|账户)/.test(t)) {
+    return true;
+  }
+  // Session runtime (sign-out / close tab) — persistence of artefacts, not companionship
+  if (/\b(?:sign|log)(?:s|ed|ing)?\s*(?:out|in)\b/i.test(t) && !/\b(?:i|me|we|us)\b/i.test(t)) return true;
   return false;
 }
 
