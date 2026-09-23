@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-23 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B7_BRACE_WATCHOVER_REREVIEW_2026-09-23.md`  
-**Correction commit:** *(filled after commit)*  
+**Correction commit:** 343008c37bc1eb0864c8bda893d7d06ed60061a9  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
@@ -35,7 +35,7 @@ No B8 blind literals pasted as one-off rows.
 | Check | Result |
 |---|---|
 | Units | **32/32** |
-| Frozen matrix 0/0 + paraphrase + holdout | **PASS** |
+| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (`implementation_commit` = `evidence_run_at_commit` = 343008c; artifact `matrix-evidence-2026-09-23T07-53-57-411Z.json`) |
 | B5 + B6 + B7 regression | 0 miss / 0 FP / 0 unclean |
 | B8 full artifact (`ce9bf8b-postfreeze`, repaired ZH) | 0 miss / 0 FP / 0 unclean (44/44) |
 | Prior blinds (776 / bca) | 0 residual |
