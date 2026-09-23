@@ -43,6 +43,12 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bagain\b/gi, MARK("FUTURE")],
   [/\banother\b/gi, MARK("FUTURE")],
   [/\barrives?\b/gi, MARK("FUTURE")],
+  // come-back-to (place/person) is refuge — must precede bare "comes back" → future
+  // Exclude product objects (reflection / note / draft / account / browser).
+  [
+    /\bcome\s+back\s+to\b(?!\s+(?:this\s+)?(?:reflection|note|draft|account|browser|saved)\b)/gi,
+    MARK("REFUGE"),
+  ],
   [/\bcomes?\s+back\b/gi, MARK("FUTURE")],
   [/\breturns?\b/gi, MARK("FUTURE")],
 
@@ -58,6 +64,16 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bseek\s+(?:shelter|refuge|harbour|harbor|haven)\b/gi, MARK("REFUGE")],
   [/\buse\s+me\s+as\s+your\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/\bmake\s+me\s+(?:your\s+)?/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\bconsider\s+me\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\b(?:the|this)\s+place\b/gi, MARK("REFUGE")],
+  [/\bours\s+to\b/gi, `${MARK("DYAD")} ${MARK("BURDEN")}`],
+  // stay-with / stay-beside before bare "with you" (else "stay with you" loses PROX)
+  [/\bstay(?:ing)?\s+(?:close|near|with|beside)\b/gi, MARK("PROX")],
+  [/\bstick\s+with\s+you\b/gi, `${MARK("PROX")} ${MARK("ACTOR")}`],
+  [/\bwith\s+you\b/gi, MARK("DYAD")],
+  [/\bby\s+yourself\b/gi, MARK("EXCL")],
+  [/\bkeep\s+watch\b/gi, MARK("PROX")],
+  [/\bthis\s+(?:voice|presence|companion|space)\b/gi, MARK("ACTOR")],
   [/\bconfide\s+in\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\bsay\s+it\s+only\s+with\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\bonly\s+with\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")}`],
@@ -166,6 +182,19 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/情绪一沉/g, MARK("DISTRESS")],
   [/情绪沉/g, MARK("DISTRESS")],
   [/让我陪你/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("PROX")}`],
+  [/把我当作你的/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/把我当作/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/先来倚靠我/g, `${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/倚靠我/g, `${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/避风港/g, MARK("REFUGE")],
+  [/避风/g, MARK("REFUGE")],
+  [/这里会成为/g, MARK("REFUGE")],
+  [/能回来的地方/g, MARK("REFUGE")],
+  [/回来的地方/g, MARK("REFUGE")],
+  [/接不住/g, MARK("DISTRESS")],
+  [/压下来/g, MARK("DISTRESS")],
+  [/散掉/g, MARK("DISTRESS")],
+  [/黑暗/g, MARK("DISTRESS")],
   [/回来靠着我/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("PROX")}`],
   [/靠着我/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/到我这里/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
@@ -327,10 +356,15 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "burden",
     "face",
     "facing",
+    "hold",
+    "holding",
+    "carry",
     "重担",
     "扛",
     "熬",
     "背",
+    "抱住",
+    "担",
   ],
   EXCL: [
     "alone",
@@ -395,6 +429,9 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "崩溃",
     "风暴",
     "黑夜",
+    "黑暗",
+    "压下来",
+    "散掉",
     "撑不住",
     "情绪",
     "沉下去",
@@ -406,10 +443,13 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "haven",
     "sanctuary",
     "shelter",
+    "presence",
     "港湾",
     "避难所",
     "避风处",
+    "避风港",
     "依靠",
+    "倚靠",
     "庇护",
   ],
   FUTURE: [
@@ -423,7 +463,7 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "往后",
     "若",
   ],
-  DEPEND: ["rely", "count", "trust", "依靠"],
+  DEPEND: ["rely", "count", "trust", "lean", "倚靠", "依靠"],
 };
 
 function stemEn(token: string): string {
@@ -478,6 +518,64 @@ function hasAbandonNegation(raw: string): boolean {
   );
 }
 
+function applyStructuralConceptTags(raw: string, tagged: string): string {
+  let t = tagged;
+
+  // Negated detachment / separation predicates → NONABANDON (open class via stems)
+  const sep =
+    /peel|detach|drift|withdraw|recede|flake|slip|vanish|disappear|abandon|desert|forsake|leave|bail/i;
+  const negSep = raw.match(
+    /\b(?:won'?t|will\s+not|never|not\s+going\s+to)\s+([\w'-]+(?:\s+off|\s+away)?)/gi
+  );
+  if (negSep) {
+    for (const m of negSep) {
+      const rest = m.replace(/^(?:won'?t|will\s+not|never|not\s+going\s+to)\s+/i, "");
+      if (sep.test(rest) || /\boff\b|\baway\b/i.test(rest)) {
+        t += ` ${MARK("NONABANDON")} `;
+      }
+    }
+  }
+  if (/不会.{0,6}(退|离|走|丢|撒|剥)/.test(raw)) {
+    t += ` ${MARK("NONABANDON")} `;
+  }
+
+  // Collapse / give-way distress metaphors
+  if (
+    /\bgives?\s+way\b|\bcave[sd]?\s+in\b|\bfalls?\s+apart\b|\bbreak(?:s|ing)?\s+down\b/i.test(
+      raw
+    ) ||
+    /压下来|散掉|撑不住|崩溃|垮/.test(raw)
+  ) {
+    t += ` ${MARK("DISTRESS")} `;
+  }
+
+  // Harbour / wind-shelter morphology (避风 + noun)
+  if (/避风/.test(raw)) {
+    t += ` ${MARK("REFUGE")} `;
+  }
+
+  // Deictic locale as refuge when return/exclusive framed
+  if (
+    (/这里/.test(raw) && /(回来|唯一|地方|接住)/.test(raw)) ||
+    (/\b(?:the|this)\s+place\b/i.test(raw) &&
+      /\b(come\s+back|return|reach|else)\b/i.test(raw))
+  ) {
+    t += ` ${MARK("REFUGE")} `;
+  }
+
+  // Shared holding / dyadic ownership
+  if (/\bours\b/i.test(raw) && /\b(hold|carry|bear|shoulder|keep)\b/i.test(raw)) {
+    t += ` ${MARK("DYAD")} ${MARK("BURDEN")} `;
+  }
+
+  // Lean/rely morphology including 倚靠 variant
+  if (/倚靠|依靠/.test(raw) || /\brely\s+on\b|\blean\s+on\b/i.test(raw)) {
+    t += ` ${MARK("DEPEND")} ${MARK("REFUGE")} `;
+  }
+
+  return t;
+}
+
 export function canonicalizeRelationalText(text: string): CanonicalFeatures {
   let t = (text ?? "")
     .replace(/[\u2018\u2019\u02BC]/g, "'")
@@ -489,6 +587,7 @@ export function canonicalizeRelationalText(text: string): CanonicalFeatures {
     t = t.replace(re, ` ${repl} `);
   }
   t = tagTokens(t);
+  t = applyStructuralConceptTags(text, t);
 
   const has = {} as Record<RelationalConcept, boolean>;
   const concepts: RelationalConcept[] = [
@@ -510,9 +609,17 @@ export function canonicalizeRelationalText(text: string): CanonicalFeatures {
   if (!has.ACTOR && (/\bi\b/i.test(text) || /我/.test(text))) {
     has.ACTOR = true;
   }
-  // Negated abandonment with actor keeps NONABANDON (CJK-safe)
+  // Assistant deixis counted as actor even after tagging
+  if (!has.ACTOR && /\bthis\s+(?:voice|presence|companion)\b/i.test(text)) {
+    has.ACTOR = true;
+    t += ` ${MARK("ACTOR")} `;
+  }
   if (has.ACTOR && has.NONABANDON && hasAbandonNegation(text)) {
     has.NONABANDON = true;
+  }
+  // Refresh has after late tags
+  for (const c of concepts) {
+    has[c] = t.includes(MARK(c));
   }
 
   return { raw: text, canonical: t.replace(/\s+/g, " ").trim(), has };
@@ -573,6 +680,26 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
   }
   if (/⟦DYAD⟧/.test(stream) && /⟦BURDEN⟧/.test(stream)) {
     hits.push({ family: "pronoun_role_shift", matched: "shared-burden", score: 45 });
+  }
+  // Actor + burden + with-you / not-alone
+  if (
+    /⟦ACTOR⟧/.test(stream) &&
+    /⟦BURDEN⟧/.test(stream) &&
+    (/⟦DYAD⟧/.test(stream) || /⟦EXCL⟧/.test(stream) || /\bwith\s+you\b/i.test(f.raw))
+  ) {
+    hits.push({ family: "pronoun_role_shift", matched: "actor×burden×with", score: 46 });
+  }
+  // Deictic refuge + exclusivity (place/这里 without first-person token)
+  if (/⟦REFUGE⟧/.test(stream) && /⟦EXCL⟧/.test(stream)) {
+    hits.push({ family: "implied_exclusivity", matched: "deictic-refuge×excl", score: 53 });
+  }
+  // Refuge as companion offer (make/consider me …) even without distress
+  if (
+    /⟦REFUGE⟧/.test(stream) &&
+    /⟦ACTOR⟧/.test(stream) &&
+    /\b(consider|make)\s+me\b|把我当作|当作你的/i.test(f.raw)
+  ) {
+    hits.push({ family: "pain_triggered_return", matched: "make-me-refuge", score: 48 });
   }
   // Dyad + shared facing / together without explicit BURDEN token
   if (

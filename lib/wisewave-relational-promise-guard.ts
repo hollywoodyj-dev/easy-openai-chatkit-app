@@ -184,6 +184,8 @@ export function isProductFramed(text: string): boolean {
   if (/\bno one else can access\b/i.test(t)) return true;
   if (/\b(access|share)\b.{0,48}\breflection\b/i.test(t)) return true;
   if (/\breflection\b.{0,48}\b(access|share|unless you share)\b/i.test(t)) return true;
+  if (/\bcome back to (?:this )?reflection\b/i.test(t)) return true;
+  if (/\breturn to (?:this )?reflection\b/i.test(t)) return true;
   if (/\baccount settings\b/i.test(t)) return true;
   if (/\bacross devices\b/i.test(t) && /\b(account|settings|sync|carry)\b/i.test(t)) return true;
   if (/\b(stay open|open)\b.{0,32}\bbrowser\b/i.test(t)) return true;
@@ -193,7 +195,7 @@ export function isProductFramed(text: string): boolean {
   ) {
     return true;
   }
-  if (/反思/.test(t) && /(访问|分享|权限|别人无法查看)/.test(t)) return true;
+  if (/反思/.test(t) && /(访问|分享|权限|别人无法查看|回到这段|再回来)/.test(t)) return true;
   if (/(账户设置|跨设备|浏览器里?保持打开|打开着)/.test(t)) return true;
   return false;
 }
@@ -215,6 +217,46 @@ function hasCompanionIntimacy(text: string): boolean {
 export function hasDanglingConnector(text: string | null | undefined): boolean {
   if (!text?.trim()) return false;
   return /(?:[,，]|(?:\band\b)|而|而且)\s*$/iu.test(text.trim());
+}
+
+/**
+ * Incomplete conditional/concessive tails left after stripping a personal half.
+ * e.g. "……；即使所有人都离开" or "……；以后快撑不住时"
+ */
+export function hasIncompleteSubordinateTail(text: string | null | undefined): boolean {
+  if (!text?.trim()) return false;
+  const t = text.trim();
+  if (
+    /(?:即使|就算|哪怕|如果|若|以后|当|每当|只要|无论|不论).{0,36}(?:时|的时候|离开|走远|退去|散掉|撑不住|离开)\s*[。.!?]?\s*$/u.test(
+      t
+    )
+  ) {
+    return true;
+  }
+  if (/[；;]\s*(?:即使|就算|哪怕|如果|若|以后|当|每当)/u.test(t) && !/我|我们|你/.test(t.split(/[；;]/u).pop() || "")) {
+    // Product + orphan subordinate without a completed main clause subject
+    const after = (t.split(/[；;]/u).pop() || "").trim();
+    if (after && !/(会|将|可以|能够|同步|留在|保存在|可用|打开)/.test(after)) {
+      return true;
+    }
+  }
+  if (
+    /\b(?:even if|if|when|whenever|should)\b[^.!?]*$/i.test(t) &&
+    !/\b(i|we|you|will|can|stay|remain|sync|save|account|browser)\b/i.test(
+      t.split(/[;.]\s*/).pop() || ""
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isCleanProductRewrite(text: string | null | undefined): boolean {
+  if (!text?.trim()) return false;
+  if (hasDanglingConnector(text)) return false;
+  if (hasIncompleteSubordinateTail(text)) return false;
+  if (scoreFamilyHits(text)) return false;
+  return PRODUCT_CONTINUITY_RE.test(text);
 }
 
 function isAttributedQuotedOrMeta(text: string): boolean {
@@ -343,36 +385,61 @@ function cleanProductFragment(text: string): string {
  * Fail-closed: if no clean product-only fragment remains, rewritten is null
  * (caller must suppress — never return the original unsafe input).
  */
+function emitCleanProduct(
+  candidate: string | null | undefined
+): { rewritten: string | null; preservedFact: string | null } {
+  const cleaned = candidate ? cleanProductFragment(candidate) : null;
+  if (cleaned && isCleanProductRewrite(cleaned)) {
+    return { rewritten: cleaned, preservedFact: cleaned };
+  }
+  return { rewritten: null, preservedFact: null };
+}
+
 export function rewriteMixedRemovePersonal(
   text: string,
   preferredFact?: string | null
 ): { rewritten: string | null; preservedFact: string | null } {
   if (preferredFact && preferredFact.trim()) {
-    const cleaned = cleanProductFragment(preferredFact.trim());
-    if (cleaned && !scoreFamilyHits(cleaned)) {
-      return { rewritten: cleaned, preservedFact: cleaned };
-    }
-    return { rewritten: null, preservedFact: null };
+    return emitCleanProduct(preferredFact.trim());
   }
 
   let working = text.trim();
 
+  // Prefer left side of fullwidth/ASCII semicolon when it is pure product.
+  // Prevents keeping orphan conditionals like "……；即使所有人都离开".
+  const semiParts = working
+    .split(/\s*[；;]\s*/u)
+    .map((s) => cleanProductFragment(s))
+    .filter(Boolean);
+  if (semiParts.length > 1) {
+    const leftProduct = semiParts.find(
+      (p) => PRODUCT_CONTINUITY_RE.test(p) && !scoreFamilyHits(p) && isCleanProductRewrite(p)
+    );
+    if (leftProduct) {
+      return emitCleanProduct(leftProduct);
+    }
+    // Personal half detected after semicolon but no clean product → suppress.
+    if (semiParts.some((p) => scoreFamilyHits(p))) {
+      const anyClean = semiParts.find((p) => isCleanProductRewrite(p));
+      if (anyClean) return emitCleanProduct(anyClean);
+      return { rewritten: null, preservedFact: null };
+    }
+  }
+
   // Clause split on coordinators (single-sentence mixed rows).
+  // Include fullwidth ； so ZH mixed rows split cleanly.
   const connectorParts = working
-    .split(/\s*(?:[,，]|;\s*|\s+而\s+|\s+and\s+)\s*/u)
+    .split(/\s*(?:[,，]|[；;]\s*|\s+而\s+|\s+and\s+)\s*/u)
     .map((s) => cleanProductFragment(s))
     .filter(Boolean);
   if (connectorParts.length > 1 && connectorParts.some((p) => scoreFamilyHits(p))) {
-    const productClauses = connectorParts.filter(
-      (p) => PRODUCT_CONTINUITY_RE.test(p) && !scoreFamilyHits(p)
-    );
+    const productClauses = connectorParts.filter((p) => isCleanProductRewrite(p));
     if (productClauses.length > 0) {
       const joiner = /。/.test(text) && !/\.\s/.test(text) ? "，" : ", ";
-      const cleaned = cleanProductFragment(productClauses.join(joiner));
-      if (cleaned && !hasDanglingConnector(cleaned) && !scoreFamilyHits(cleaned)) {
-        return { rewritten: cleaned, preservedFact: cleaned };
-      }
+      return emitCleanProduct(productClauses.join(joiner));
     }
+    // Personal present but no complete product clause → suppress.
+    return { rewritten: null, preservedFact: null };
   }
 
   // Strip personal clauses joined by and/comma/而
@@ -404,39 +471,31 @@ export function rewriteMixedRemovePersonal(
           ""
         );
       stripped = cleanProductFragment(stripped);
-      if (stripped && PRODUCT_CONTINUITY_RE.test(stripped) && !scoreFamilyHits(stripped)) {
+      if (stripped && isCleanProductRewrite(stripped)) {
         kept.push(stripped);
       }
       continue;
     }
-    if (PRODUCT_CONTINUITY_RE.test(part)) {
+    if (isCleanProductRewrite(part)) {
       kept.push(part);
     }
   }
 
   const joiner = /。/.test(text) && !/\.\s/.test(text) ? "" : " ";
   let rewritten = cleanProductFragment(kept.join(joiner));
-  if (hasDanglingConnector(rewritten)) {
-    rewritten = cleanProductFragment(rewritten);
-  }
-  if (hasDanglingConnector(rewritten)) {
+  if (hasDanglingConnector(rewritten) || hasIncompleteSubordinateTail(rewritten)) {
     rewritten = "";
   }
 
-  if (!rewritten || scoreFamilyHits(rewritten) || hasDanglingConnector(rewritten)) {
-    const productOnly = parts.find((p) => PRODUCT_CONTINUITY_RE.test(p) && !scoreFamilyHits(p));
-    if (productOnly) {
-      const cleaned = cleanProductFragment(productOnly);
-      return { rewritten: cleaned, preservedFact: cleaned };
-    }
-    // Fail closed — do not return original unsafe text.
-    return { rewritten: null, preservedFact: null };
+  if (rewritten && isCleanProductRewrite(rewritten)) {
+    return { rewritten, preservedFact: kept[0] ? cleanProductFragment(kept[0]) : rewritten };
   }
 
-  return {
-    rewritten,
-    preservedFact: kept[0] ? cleanProductFragment(kept[0]) : rewritten,
-  };
+  const productOnly = parts.find((p) => isCleanProductRewrite(p));
+  if (productOnly) return emitCleanProduct(productOnly);
+
+  // Fail closed — never emit incomplete subordinate tails or original unsafe text.
+  return { rewritten: null, preservedFact: null };
 }
 
 /** True iff clean rewritten text contains the full normalised required fact (not reverse). */
@@ -497,9 +556,8 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
   if (productCtx) {
     const { rewritten, preservedFact } = rewriteMixedRemovePersonal(raw);
     const cleaned = rewritten ? cleanProductFragment(rewritten) : null;
-    const stillPersonal = cleaned ? scoreFamilyHits(cleaned) : true;
-    // Fail closed: only emit rewrite when clean product-only text remains.
-    if (!cleaned || stillPersonal) {
+    // Fail closed: only emit rewrite when complete product-only text remains.
+    if (!cleaned || !isCleanProductRewrite(cleaned)) {
       return {
         guard: "hit",
         family: "mixed_factual_personal",
