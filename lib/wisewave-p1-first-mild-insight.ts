@@ -387,10 +387,6 @@ export function evaluateFMIEligibility(
     return "deferred_missing_context";
   }
 
-  if (context.inputType === "advice_seeking") {
-    return "deferred_missing_context";
-  }
-
   return "eligible";
 }
 
