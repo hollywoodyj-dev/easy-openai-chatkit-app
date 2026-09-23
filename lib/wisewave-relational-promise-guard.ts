@@ -173,7 +173,7 @@ export function isRelationalPromiseGuardV2Enabled(): boolean {
 
 /** Product / reflection continuity — may coexist with personal text (mixed). */
 export const PRODUCT_CONTINUITY_RE =
-  /\b(this )?reflection\b|\bsaved reflection\b|\bthis note\b|\bnote stays saved\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bstays saved in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|\b(?:saved|session|the|your|this)\s+(?:checklist|outline|transcript|worksheet|article|notes?)\b|这段反思|这条记录|已保存的(?:清单|大纲|笔记|练习表|文档)|保存在账户|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
+  /\b(this )?reflection\b|\bsaved reflection\b|\bthis note\b|\bnote stays saved\b|\baccount\b|\bbrowser\b|\bprivate (browsing|mode)\b|\bwithout (an )?account\b|\bleave (this|what you said|what you wrote) here\b|\bkeep this reflection\b|\bsave this reflection\b|\breturn to (this )?reflection\b|\bcome back to this reflection\b|\bremains in your account\b|\bstays saved in your account\b|\bbegin with what is present\b|\bcontinue from (where|the place)\b|\ba line (you |to |you chose|you saved)\b|\bacross devices\b|\bleave without saving\b|\bcontinue without\b|\bremain available\b|\bwill (still )?be here if you return\b|\baccount settings\b|\bstay open\b|\baccess this reflection\b|\b(?:saved|session|the|your|this)\s+(?:checklist|outline|transcript|worksheet|article|notes?|voice\s+memo|draft)\b|\bsupport\s+(?:queue|ticket)\b|\banchor\s+link\b|\b(?:this|the\s+saved)\s+section\b|\bin\s+the\s+library\b|这段反思|这条记录|已保存的(?:清单|大纲|笔记|练习表|文档)|语音笔记|资料库|这份草稿|支持工单|锚点链接|原段落|保存在账户|账户里?会保留|账户|浏览器|不注册|不保存|留存这段|会保留|你可以先把它留在这里|稍后再回到这段|从今天此刻|接着上次|想留给下次|为自己留下的一句话|如果你想以后再回来/i;
 
 /**
  * Product subject/object framing: access control, portability, or runtime —
@@ -460,7 +460,7 @@ export function rewriteMixedRemovePersonal(
   // Clause split on coordinators (single-sentence mixed rows).
   // Include fullwidth ； so ZH mixed rows split cleanly.
   const connectorParts = working
-    .split(/\s*(?:[,，]|[；;]\s*|\s+而\s+|\s+and\s+|\s+while\s+|\s+whereas\s+|同时)\s*/u)
+    .split(/\s*(?:[,，]|[；;]\s*|\s+而\s+|\s+and\s+|\s+while\s+|\s+whereas\s+|\s+but\s+|\s+yet\s+|同时|但是?|却)\s*/u)
     .map((s) => cleanProductFragment(s))
     .filter(Boolean);
   if (connectorParts.length > 1 && connectorParts.some((p) => scoreFamilyHits(p))) {

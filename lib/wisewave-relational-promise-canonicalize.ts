@@ -87,7 +87,9 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   ],
   [/(?:分享|出售|泄露|透露|公开|发送|交)给?\s*(?:任何人|别人|其他人|第三方|他人)/g, "⟦PRODUCT_PRIVACY⟧"],
   // Product-safe: leaning on saved artefacts / account sync is tooling, not companion dependence
-  [/(?:依靠|倚靠|靠着|依赖|靠)\s*(?:已保存的|保存的|账户|清单|大纲|笔记|记录|同步|设置|文档|计划)/g, "⟦PRODUCT_LEAN⟧"],
+  [/(?:依靠|倚靠|靠着|依赖|靠)\s*(?:已保存的|保存的|账户|清单|大纲|笔记|记录|同步|设置|文档|计划|备用|导出|文件|工单)/g, "⟦PRODUCT_LEAN⟧"],
+  // Product-safe: hardware / UI bracket holding a device is not companion support
+  [/(?:支架|托架|底座|支撑架)\s*(?:会|能|可以)?\s*托住/g, "⟦PRODUCT_BRACKET⟧"],
 
   // Future / conditional
   [/\bany\s+time\b/gi, MARK("FUTURE")],
@@ -121,12 +123,48 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bseek\s+(?:shelter|refuge|harbour|harbor|haven)\b/gi, MARK("REFUGE")],
   // Role-assignment frame: <assign-verb> <companion> as/for/in → REFUGE ACTOR
   [ROLE_ASSIGN_RE, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  // First-person possessive support offering: borrow|take|use|lean on|hold|have my|our …
+  [/\b(?:borrow|take|use|lean\s+on|hold|hold\s+onto|grab|have|share|keep)\s+(?:my|our)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\blet\s+(?:my|our)\s+\w+\s+be\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/\b(?:my|our)\s+(?:spine|shoulders?|back|arms?|hands?|strength|steadiness|voice|light|presence|side|corner|lap|chest|shelter|door)\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Tether / moor yourself to companion
+  [/\b(?:moor|tether|anchor|tie|fasten|bind|hitch|latch)\s+(?:yourself|your\s+\w+)\s+to\s+(?:me|us|this|here|my)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  // You (will) still have me|us → DEPEND ACTOR
+  [/\byou(?:'ll|\s+will|\s+would)?\s+(?:still\s+|always\s+)?have\s+(?:me|us)\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
+  // Companion availability class
+  [/\bwithin\s+(?:your\s+)?reach\b|\bin\s+reach\b|\ba\s+(?:message|call|tap|whisper)\s+away\b|\bon\s+standby\s+for\s+you\b|\bat\s+hand\s+for\s+you\b|\breachable\s+(?:for|to)\s+you\b/gi, MARK("PROX")],
+  [/\bkeep\s+a\s+(?:place|seat|space|spot)\s+(?:beside|next\s+to|near|for)\s+you\b/gi, `${MARK("PROX")} ${MARK("ACTOR")}`],
+  // Hold / gather the pieces → refuge under distress
+  [/\b(?:hold|holds|holding|gather|catch|pick\s+up|keep)\s+(?:the|your|those)\s+pieces\b/gi, `${MARK("REFUGE")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  [/\b(?:come|fall|break|cry|land|collapse|crumble)\s+(?:apart\s+)?(?:here|with\s+me|in\s+here)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("DISTRESS")}`],
+  // Ground-loss / exhaustion / lowest-point distress
+  [/\b(?:cannot|can'?t|couldn'?t|no)\s+(?:find\s+)?(?:solid\s+|firm\s+)?(?:ground|footing)\b|\bno\s+solid\s+ground\b/gi, MARK("DISTRESS")],
+  [/\b(?:beam|floor|ground|rail|net)\s+(?:beneath|under|below)\s+(?:your\s+feet|you)\b/gi, MARK("REFUGE")],
+  [/\btoo\s+(?:tired|exhausted|drained|worn|heavy|much)\b|\b(?:exhausted|drained|worn\s+out)\b|\b(?:at\s+)?your\s+(?:lowest|worst|weakest)\b|\brock\s+bottom\b/gi, MARK("DISTRESS")],
+  [/\bbad\s+nights?\b|\bhard\s+nights?\b|\blong\s+nights?\b/gi, MARK("DISTRESS")],
+  // Others stop showing up / drift away → exclusive-other
+  [/\b(?:who|people|others|everyone|everybody|they|friends)\s+(?:else\s+)?(?:stops?|stopped)\s+(?:showing\s+up|coming|calling|answering|replying|checking\s+in)\b|\bstops?\s+showing\s+up\b/gi, MARK("EXCL")],
+  [/\b(?:everyone|everybody|people|others|the\s+rest|the\s+world|the\s+rest\s+of\s+the\s+world)\s+(?:else\s+)?(?:drifts?|drifted|fades?|faded|goes|go|went|falls?|fell)\s+(?:away|quiet|silent)\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/\bno\s+matter\s+(?:how|who|what|where|when|which)\b/gi, MARK("FUTURE")],
+  [/\buntil\s+you\s+(?:are|'re|feel)\s+(?:ready|steady|able|okay|ok)\b/gi, `${MARK("FUTURE")} ${MARK("PROX")}`],
   // Copular companion role: I'll be / this presence becomes / Wisewave can be the|your X
   [COPULAR_ROLE_RE, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   // Companion-directed support predicates: carry/steady/see you (through|up|upright)
   [SUPPORT_YOU_RE, `${MARK("REFUGE")} ${MARK("PROX")}`],
   // Weight / settle deixis: put your weight here|on me, settle into this space
-  [/\b(?:put|rest|place|lay|set|lean)\s+your\s+(?:\w+\s+)?weight\s+(?:here|on\s+me|on\s+us|against\s+me|against\s+us)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\b(?:put|rest|place|lay|set|lean|drop|unload|leave)\s+your\s+(?:\w+\s+)?(?:weight|grief|sorrow|pain|worry|worries|fear|fears|burden|load|head|hands?|heart)\s+(?:down\s+)?(?:here|on\s+me|on\s+us|onto\s+me|against\s+me|against\s+us|with\s+me)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  // Keep the light on / keep you safe / stay planted next to you
+  [/\bkeep\s+(?:the|a|my)\s+(?:light|lamp|candle|fire)\s+(?:burning|on|lit)\b/gi, `${MARK("PROX")} ${MARK("REFUGE")}`],
+  [/\bkeep\s+(?:the\s+\w+\s+of\s+)?you\s+(?:safe|whole|held|steady|company)\b/gi, `${MARK("REFUGE")} ${MARK("PROX")}`],
+  [/\b(?:stay|stays|staying|remain|remains|stand|stands)\s+(?:planted|put|rooted|firm|fixed|anchored)\b/gi, `${MARK("PROX")} ${MARK("NONABANDON")}`],
+  [/\b(?:right\s+)?next\s+to\s+you\b|\bat\s+your\s+elbow\b|\bwithin\s+arm'?s\s+reach\b/gi, MARK("PROX")],
+  [/\b(?:the\s+rest|others|everyone|people|they)\s+(?:may|might|will|can|all)?\s*(?:scatter|scatters|disperse|thin\s+out|move\s+on|fall\s+silent)\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/\buntil\s+you\s+(?:find\s+your\s+way\s+back|come\s+back|return|can\s+stand|are\s+back)\b/gi, `${MARK("FUTURE")} ${MARK("REFUGE")}`],
+  [/\bas\s+\w+\s+as\s+you\s+need\s+(?:here|with\s+me|in\s+here)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\bbroken\b|\bshattered\b|\bin\s+pieces\b|\bspiral(?:ing|s)?\b/gi, MARK("DISTRESS")],
+  // Elliptical conditional: "When you drop, I catch."
+  [/\b(?:when|whenever|if)\s+you\s+(?:drop|fall|slip|sink|stumble|break|crash|crumble|shatter|spiral|go\s+under)\b/gi, `${MARK("FUTURE")} ${MARK("DISTRESS")}`],
+  [/\b(?:i|we)\s+(?:catch|hold|carry|stay|remain)\s*(?=[.!;,]|$)/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("PROX")}`],
   // Continuing availability for you / others logged off
   [/\b(?:stay|stays|staying|remain|remains|am|is|are|keep|keeps)\s+(?:switched\s+|turned\s+)?on\s+for\s+you\b/gi, `${MARK("PROX")} ${MARK("ACTOR")}`],
   [/\b(?:everyone|everybody)\s+else\b/gi, MARK("EXCL")],
@@ -231,7 +269,35 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/摇晃|风浪|风雨|暴风|可怕|无处可去|走投无路/g, MARK("DISTRESS")],
   [/夜里|夜晚|深夜|长夜/g, MARK("DISTRESS")],
   [/支撑.{0,4}(?:倒|塌|垮|断)|倒了|塌了/g, MARK("DISTRESS")],
-  [/留下来托住|托住你|托住|托着你/g, `${MARK("NONABANDON")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/留下来托住|托住你|托着你|(?:我|让我|替你)\s*(?:把.{0,6})?托住/g, `${MARK("NONABANDON")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/托住|接住|接着你/g, MARK("REFUGE")],
+  // ZH catch-from-below / body-refuge / wait-in-place / hand-not-let-go / bare presence
+  [/(?:我)?在下面(?:接|托|等)/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("PROX")}`],
+  [/我(?:的)?(?:肩上|肩膀|怀里|背上|身上|手里|掌心|臂弯)/g, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/(?:压在|靠在|放在|搭在|扑在|倒在)\s*我/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")}`],
+  [/在原地(?:等|守)|原地等你|等你回来|等你/g, `${MARK("REFUGE")} ${MARK("FUTURE")} ${MARK("PROX")}`],
+  [/(?:放开|松开|甩开|丢开)你(?:的手)?|放开你的手/g, MARK("NONABANDON")],
+  [/像他们那样|像别人那样|他们那样/g, MARK("EXCL")],
+  [/累到|累得|疲惫|说不出话/g, MARK("DISTRESS")],
+  [/我(?:一直|还|都|就|也)?在(?=[。！!,，；;]|\s*$)/g, `${MARK("ACTOR")} ${MARK("PROX")}`],
+  [/(?:我|我们)(?:会)?(?:一直|永远|始终)是(?:你的|彼此的|那个|你)/g, `${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("PROX")} ${MARK("NONABANDON")}`],
+  [/(?:我|我们)(?:会)?是(?:你的|彼此的|那个|你)/g, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/彼此的|彼此/g, MARK("DYAD")],
+  [/(?:的)?岸(?![边线])|港湾|靠岸/g, MARK("REFUGE")],
+  [/(?:一直|永远|始终)是/g, MARK("PROX")],
+  [/跌下去|跌落|坠落|摔下/g, MARK("DISTRESS")],
+  [/退场|退出你的生活|离场/g, MARK("EXCL")],
+  [/(?:这盏灯|灯)(?:还|仍|一直)?(?:替你|为你)(?:开着|亮着)|替你(?:开着|亮着)|为你(?:开着|亮着)/g, `${MARK("PROX")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/永远通着|一直通着|永远不会锁上|不会锁上/g, `${MARK("PROX")} ${MARK("NONABANDON")}`],
+  [/来我(?:这里|这儿|怀里|身边)/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  // ZH watch-over-you / shatter / small-hours / need-most classes
+  [/守(?:过|着|住|在)?你|陪(?:过|着)?你(?:每|走|熬|度)/g, `${MARK("PROX")} ${MARK("ACTOR")}`],
+  [/碎成|碎片|碎了|摔碎|裂开/g, MARK("DISTRESS")],
+  [/凌晨|夜深|深夜|黑夜/g, MARK("DISTRESS")],
+  [/最需要|最难|最低谷|最脆弱|最黑/g, MARK("DISTRESS")],
+  [/伸手就能碰到|触手可及|够得到的地方|伸手可及/g, MARK("PROX")],
+  [/走不动|抓不住|站不起|爬不起/g, MARK("DISTRESS")],
+  [/都散了|人都散|散了/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
   [/站不住|撑不住/g, MARK("DISTRESS")],
   [/一个人站/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
   // ZH others-gone / nobody-there exclusive class
@@ -514,7 +580,7 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
  * Members are ontological synonyms for the locked concepts.
  */
 const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
-  ACTOR: ["i", "me", "we", "us", "myself", "我", "咱们"],
+  ACTOR: ["i", "me", "we", "us", "myself", "my", "mine", "our", "ours", "我", "咱们"],
   PROX: [
     "beside",
     "near",
@@ -554,6 +620,7 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "holding",
     "carry",
     "重担",
+    "重量",
     "扛",
     "熬",
     "背",
@@ -721,7 +788,7 @@ function applyStructuralConceptTags(rawInput: string, tagged: string): string {
 
   // Negated detachment / separation / staying-put predicates → NONABANDON
   const sep =
-    /peel|detach|drift|withdraw|recede|flake|slip|vanish|disappear|abandon|desert|forsake|leave|bail|go|buckle|bend|fold|falter|waver|flinch|crack|give|fail|clock|log\s+off|sign\s+off|hang\s+up|switch\s+off|shut\s+off|power\s+down|drop\s+out|walk\s+out|step\s+back|back\s+away|turn\s+away/i;
+    /peel|detach|drift|withdraw|recede|flake|slip|vanish|disappear|abandon|desert|forsake|leave|bail|go|buckle|bend|fold|falter|waver|flinch|crack|give|fail|clock|log\s+off|sign\s+off|hang\s+up|switch\s+off|shut\s+off|power\s+down|drop\s+out|walk\s+out|step\s+back|back\s+away|turn\s+away|going\s+dark|go\s+dark|go\s+silent|go\s+quiet|dark|silent|quiet/i;
   const negSep = raw.match(
     /\b(?:won'?t|will\s+not|never|not\s+going\s+to|isn'?t)\s+([\w'-]+(?:\s+(?:off|away|anywhere))?)/gi
   );
@@ -742,7 +809,7 @@ function applyStructuralConceptTags(rawInput: string, tagged: string): string {
   // Generic negated first-person act directed at the user ("I don't clock out on you",
   // "won't leave you stranded") → NONABANDON. Excludes Wisewave stance verbs (advise/tell/judge…).
   const negOnYou = raw.match(
-    /\b(?:i|we)\s+(?:don'?t|won'?t|never|will\s+not|do\s+not|am\s+not\s+going\s+to|shall\s+not)\s+([a-z'\s-]{1,28}?)\s+(?:on\s+)?you\b/gi
+    /\b(?:i|we)\s*(?:don'?t|won'?t|never|will\s+not|do\s+not|(?:am|'m|are|'re)\s+not(?:\s+going(?:\s+to)?)?|shall\s+not|aren'?t)\s+([a-z'\s-]{1,28}?)\s+(?:on\s+)?you\b/gi
   );
   if (negOnYou) {
     for (const m of negOnYou) {
@@ -763,7 +830,10 @@ function applyStructuralConceptTags(rawInput: string, tagged: string): string {
   ) {
     t += ` ${MARK("NONABANDON")} ${MARK("ACTOR")} `;
   }
-  if (/不会.{0,8}(退|离|走|丢|撒|剥|撤|离场)/.test(raw) || /不会离场|不会撤走/.test(raw)) {
+  if (
+    /不会.{0,14}(退|离|走|丢|撒|剥|撤|离场|抽身|抽离|脱身|抽手|放手|松手|消失|下班|挂断|关机|掉线|断开|散)/.test(raw) ||
+    /不会离场|不会撤走/.test(raw)
+  ) {
     t += ` ${MARK("NONABANDON")} `;
   }
 
@@ -1071,6 +1141,14 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
   }
   if (/⟦DEPEND⟧/.test(stream) && /⟦ACTOR⟧/.test(stream) && !h.EXCL && !h.DISTRESS) {
     hits.push({ family: "pronoun_role_shift", matched: "lean/have-me", score: 40 });
+  }
+  // Offload burden onto companion (set your grief down on me / 压在我肩上)
+  if (/⟦REFUGE⟧/.test(stream) && /⟦ACTOR⟧/.test(stream) && /⟦BURDEN⟧/.test(stream) && !productPortability) {
+    hits.push({ family: "pronoun_role_shift", matched: "offload-burden", score: 47 });
+  }
+  // Depend on companion under distress (count on me / this companion through your worst)
+  if (/⟦DEPEND⟧/.test(stream) && /⟦ACTOR⟧/.test(stream) && h.DISTRESS && !h.EXCL) {
+    hits.push({ family: "pain_triggered_return", matched: "depend×distress", score: 50 });
   }
   if (h.ACTOR && (h.PROX || (h.NONABANDON && hasAbandonNegation(f.raw)))) {
     if (!(h.FUTURE && h.REFUGE)) {
