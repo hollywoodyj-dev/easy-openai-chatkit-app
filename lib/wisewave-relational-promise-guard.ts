@@ -460,7 +460,7 @@ export function rewriteMixedRemovePersonal(
   // Clause split on coordinators (single-sentence mixed rows).
   // Include fullwidth ； so ZH mixed rows split cleanly.
   const connectorParts = working
-    .split(/\s*(?:[,，]|[；;]\s*|\s+而\s+|\s+and\s+)\s*/u)
+    .split(/\s*(?:[,，]|[；;]\s*|\s+而\s+|\s+and\s+|\s+while\s+|\s+whereas\s+|同时)\s*/u)
     .map((s) => cleanProductFragment(s))
     .filter(Boolean);
   if (connectorParts.length > 1 && connectorParts.some((p) => scoreFamilyHits(p))) {
