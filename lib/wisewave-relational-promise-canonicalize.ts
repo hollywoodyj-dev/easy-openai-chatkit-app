@@ -77,6 +77,18 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/这个声音/g, MARK("ACTOR")],
   [/这份陪伴/g, MARK("ACTOR")],
   [/这份声音/g, MARK("ACTOR")],
+  // ZH hide / near / prop / footing morphologies (class-level, not blind literals)
+  [/躲一躲|躲进|躲进.*里/g, MARK("REFUGE")],
+  [/难熬|袭来/g, MARK("DISTRESS")],
+  [/重新靠近|靠近/g, `${MARK("REFUGE")} ${MARK("PROX")}`],
+  [/快散开|散开/g, MARK("DISTRESS")],
+  [/让我成为/g, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/支点/g, MARK("REFUGE")],
+  [/摇晃/g, MARK("DISTRESS")],
+  [/留下来托住|托住你|托住/g, `${MARK("NONABANDON")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/站不住/g, MARK("DISTRESS")],
+  [/一个人站/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/每当/g, MARK("FUTURE")],
   [/\bconfide\s+in\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\bsay\s+it\s+only\s+with\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\bonly\s+with\s+me\b/gi, `${MARK("EXCL")} ${MARK("ACTOR")}`],
@@ -145,6 +157,15 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\byou\s+and\s+me\b/gi, `${MARK("ACTOR")} ${MARK("DYAD")}`],
 
   // Depend / actor
+  // Brace / fixed-point / watch-over companion morphologies
+  [/\blet\s+me\s+be\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/\bbrace\s+against\b/gi, MARK("REFUGE")],
+  [/\bfixed\s+point\b/gi, MARK("REFUGE")],
+  [/\bwatch(?:ing)?\s+over\s+you\b/gi, `${MARK("PROX")} ${MARK("ACTOR")} ${MARK("NONABANDON")}`],
+  [/\bgone\s+quiet\b|\bgoes\s+quiet\b/gi, MARK("EXCL")],
+  [/\bsupports?\s+vanish/gi, MARK("DISTRESS")],
+  [/\bevery\s+support\b/gi, MARK("DISTRESS")],
+  [/\beverything\s+shifts\b/gi, MARK("DISTRESS")],
   [/\bcount\s+on\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   [/\brely\s+on\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   [/\bdepend\s+on\s+me\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
@@ -362,10 +383,6 @@ const TOKEN_LEXICON: Record<RelationalConcept, string[]> = {
     "abandon",
     "desert",
     "forsake",
-    "disappear",
-    "disappearing",
-    "vanish",
-    "vanishing",
     "dump",
     "丢下",
     "抛弃",
@@ -596,6 +613,28 @@ function applyStructuralConceptTags(raw: string, tagged: string): string {
     t += ` ${MARK("ACTOR")} `;
   }
 
+  // Brace / fixed-point / watch-over companion structures
+  if (/\bbrace\s+against\b|\bfixed\s+point\b|\blet\s+me\s+be\b/i.test(raw)) {
+    t += ` ${MARK("REFUGE")} ${MARK("ACTOR")} `;
+  }
+  if (/\bwatch(?:ing)?\s+over\s+you\b/i.test(raw)) {
+    t += ` ${MARK("PROX")} ${MARK("NONABANDON")} ${MARK("ACTOR")} `;
+  }
+  if (/\bgone\s+quiet\b|\bgoes\s+quiet\b|\beveryone\s+has\s+gone\b/i.test(raw)) {
+    t += ` ${MARK("EXCL")} `;
+  }
+
+  // ZH hide/near/prop morphologies
+  if (/躲一躲|靠近|支点|托住|歇着|落脚/.test(raw)) {
+    t += ` ${MARK("REFUGE")} `;
+  }
+  if (/难熬袭来|快散开|摇晃|站不住/.test(raw)) {
+    t += ` ${MARK("DISTRESS")} `;
+  }
+  if (/留下来托住|继续守着|守着你/.test(raw)) {
+    t += ` ${MARK("PROX")} ${MARK("NONABANDON")} `;
+  }
+
   // Return-to-deixis / come-back-here refuge (companion deixis — not product return alone)
   if (
     /\breturn\s+to\s+this\s+(?:voice|presence|companion)\b/i.test(raw) ||
@@ -650,14 +689,14 @@ function applyStructuralConceptTags(raw: string, tagged: string): string {
     t += ` ${MARK("DEPEND")} ${MARK("REFUGE")} ${MARK("ACTOR")} `;
   }
 
-  // Stabilizing presence / rest-with-me refuge morphologies
+  // Stabilizing / rest / footing morphologies
   if (
-    /\b(?:steady|anchor|hold)\s+you\b/i.test(raw) ||
-    /歇着|落脚/.test(raw)
+    /\b(?:steady|anchor|hold|brace)\s+(?:you|against)\b/i.test(raw) ||
+    /歇着|落脚|支点|托住|躲一躲/.test(raw)
   ) {
     t += ` ${MARK("REFUGE")} `;
   }
-  if (/守着你|继续守着/.test(raw)) {
+  if (/守着你|继续守着|留下来托住/.test(raw)) {
     t += ` ${MARK("PROX")} ${MARK("NONABANDON")} `;
   }
 
@@ -793,11 +832,11 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
   if (/⟦REFUGE⟧/.test(stream) && /⟦EXCL⟧/.test(stream)) {
     hits.push({ family: "implied_exclusivity", matched: "deictic-refuge×excl", score: 53 });
   }
-  // Refuge as companion offer (make/consider me …) even without distress
+  // Refuge as companion offer (make/consider/let-me-be …) even without distress
   if (
     /⟦REFUGE⟧/.test(stream) &&
     /⟦ACTOR⟧/.test(stream) &&
-    /\b(consider|make)\s+me\b|把我当作|当作你的/i.test(f.raw)
+    /\b(consider|make)\s+(?:me|this)\b|\blet\s+me\s+be\b|把我当作|当作你的|让我成为/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "make-me-refuge", score: 48 });
   }
