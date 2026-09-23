@@ -13,10 +13,28 @@ const STATUS_COLORS: Record<string, string> = {
 
 type PageProps = { searchParams: Promise<{ date?: string }> };
 
+type ArchiveDateRow = { archiveDate: string };
+type ArchiveSummaryRow = {
+  agentName: string;
+  archiveDate: string;
+  finalizedContent: string;
+};
+type ArchivedTaskRow = {
+  id: string;
+  agentName: string;
+  title: string;
+  description: string | null;
+  status: string;
+  replyContent: string | null;
+  replyThread: unknown;
+  updatedAt: Date;
+  createdAt: Date;
+};
+
 export default async function ArchiveByDatePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const dateParam = params.date?.trim();
-  const allDates = await prisma.agentTaskArchive.findMany({
+  const allDates: ArchiveDateRow[] = await prisma.agentTaskArchive.findMany({
     select: { archiveDate: true },
     distinct: ["archiveDate"],
     orderBy: { archiveDate: "desc" },
@@ -27,25 +45,25 @@ export default async function ArchiveByDatePage({ searchParams }: PageProps) {
     ? dateParam
     : allDates[0]?.archiveDate ?? null;
 
-  const [archiveSummaries, archivedTasks] = archiveDate
-    ? await Promise.all([
-        prisma.agentTaskArchive.findMany({
-          where: { archiveDate },
-          orderBy: { agentName: "asc" },
-        }),
-        (() => {
-          const start = new Date(archiveDate + "T00:00:00.000Z");
-          const end = new Date(archiveDate + "T23:59:59.999Z");
-          return prisma.agentTask.findMany({
-            where: {
-              archivedAt: { not: null },
-              createdAt: { gte: start, lte: end },
-            },
-            orderBy: [{ agentName: "asc" }, { createdAt: "asc" }],
-          });
-        })(),
-      ])
-    : [[], []];
+  let archiveSummaries: ArchiveSummaryRow[] = [];
+  let archivedTasks: ArchivedTaskRow[] = [];
+  if (archiveDate) {
+    const start = new Date(archiveDate + "T00:00:00.000Z");
+    const end = new Date(archiveDate + "T23:59:59.999Z");
+    [archiveSummaries, archivedTasks] = await Promise.all([
+      prisma.agentTaskArchive.findMany({
+        where: { archiveDate },
+        orderBy: { agentName: "asc" },
+      }),
+      prisma.agentTask.findMany({
+        where: {
+          archivedAt: { not: null },
+          createdAt: { gte: start, lte: end },
+        },
+        orderBy: [{ agentName: "asc" }, { createdAt: "asc" }],
+      }),
+    ]);
+  }
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-900 p-4 md:p-6">

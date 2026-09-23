@@ -14,6 +14,8 @@ export function buildDriftSummary(results: DriftLintResult[]): DriftSummaryRepor
     advice_drift: 0,
     coaching_drift: 0,
     therapy_drift: 0,
+    companion_drift: 0,
+    authorship_drift: 0,
     over_presence_drift: 0,
     tone_drift: 0,
     pseudo_depth_drift: 0,

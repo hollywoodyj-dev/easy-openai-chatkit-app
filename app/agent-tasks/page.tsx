@@ -38,7 +38,7 @@ export default async function AgentTasksPage() {
     prisma.agentTaskArchive.findFirst({
       orderBy: { archiveDate: "desc" },
       select: { archiveDate: true },
-    }).then((latest) =>
+    }).then((latest: { archiveDate: string } | null) =>
       latest
         ? prisma.agentTaskArchive.findMany({
             where: { archiveDate: latest.archiveDate },
