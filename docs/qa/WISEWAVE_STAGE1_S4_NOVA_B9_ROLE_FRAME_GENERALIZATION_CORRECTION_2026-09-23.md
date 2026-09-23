@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-23 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B8_ROLE_ASSIGNMENT_REREVIEW_2026-09-23.md`  
-**Correction commit:** *(filled after commit)*  
+**Correction commit:** a7e1ac6a1e079f9fa44da49cc68321e6a5dadb67  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
@@ -67,7 +67,7 @@ prohibited metaphors — floor, rope, hand on your back, open door, switched on,
 | Check | Result |
 |---|---|
 | Units | **32/32** |
-| Frozen matrix 0/0 + paraphrase + holdout | **PASS** |
+| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (`implementation_commit` = `evidence_run_at_commit` = a7e1ac6; artifact `matrix-evidence-2026-09-23T08-40-49-956Z.json`) |
 | B5 + B6 + B7 + B8 regression | 0 miss / 0 FP / 0 unclean |
 | B9 full artifact (`343008c-postfreeze`) | 0 miss / 0 FP / 0 unclean (44/44) |
 | Prior blinds (776 / bca) | 0 residual |
