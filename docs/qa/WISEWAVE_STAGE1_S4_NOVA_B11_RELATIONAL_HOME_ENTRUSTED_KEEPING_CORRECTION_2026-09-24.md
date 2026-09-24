@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-24 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B10_POSSESSIVE_OFFLOAD_AVAILABILITY_REREVIEW_2026-09-24.md`  
-**Correction commit:** (fix SHA — see stamp section below)  
+**Correction commit:** 7e3999ae309fc12039daf5c5d6f5e3927bdc7525  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
@@ -43,7 +43,7 @@ Rehearsal C initially missed 3/20 (`live in my hands` + `worry`, `距离也隔�
 | Check | Result |
 |---|---|
 | Units | **32/32** |
-| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (stamps filled in below) |
+| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (`implementation_commit` = `evidence_run_at_commit` = 7e3999a; artifact `matrix-evidence-2026-09-24T04-53-17-896Z.json`, mirrored to `matrix-evidence-latest.json`; matrix SHA-256 unchanged) |
 | B5 + B6 + B7 + B8 + B9 + B10 regression | 0 miss / 0 FP / 0 unclean |
 | B11 full artifact (`7284311-postfreeze`) | 0 miss / 0 FP / 0 unclean (44/44); EN mixed rows rewrite to `Your exported transcript remains in the archive` / `The status page reports every outage` / `The draft autosaves every minute` / `The reminder can be dismissed`; ZH-M01 rewrites to `导出的记录会留在资料库`, ZH-M02–M04 suppress |
 | Prior blinds (776 / bca) | 0 residual |
