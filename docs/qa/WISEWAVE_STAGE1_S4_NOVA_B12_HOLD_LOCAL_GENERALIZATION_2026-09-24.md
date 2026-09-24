@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-24 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B11_RELATIONAL_HOME_ENTRUSTED_KEEPING_REREVIEW_2026-09-24.md` plus Nova local holdouts (not a Lumen blind)  
-**Correction commit:** (fix SHA — see stamp)  
+**Correction commit:** 5e9e1fbb990cc4cf916fbad9d49caacd0ab058d4  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
