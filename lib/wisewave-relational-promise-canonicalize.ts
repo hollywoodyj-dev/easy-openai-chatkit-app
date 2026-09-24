@@ -373,7 +373,7 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/把握不见了|拿我的顶着|穿上我的|底气薄了/g, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/证明那是你|镜子不再叫你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/我写下的热度|回到你自己旁边/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
-  [/写掉的那个人|留给我/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
+  [/写掉的那个人/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/只有我不行|走都可以走/g, `${MARK("NONABANDON")} ${MARK("EXCL")} ${MARK("ACTOR")}`],
   [/搁在我手心/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")}`],
   [/去寻你|察觉缺的/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("PROX")}`],
@@ -1348,7 +1348,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦INNER⟧|⟦BURDEN⟧|⟦DISTRESS⟧/.test(stream) &&
     !/⟦EXCL⟧/.test(stream) &&
     !productPortability &&
-    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|(?:交给|托付给|托给|留给)我/i.test(f.raw)
+    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "entrusted-keeping", score: 48 });
   }
