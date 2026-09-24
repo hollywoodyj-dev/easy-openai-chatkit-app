@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-24 AEST  
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B12_LOCAL_GENERALIZATION_REREVIEW_2026-09-24.md`  
-**Correction commit:** (fix SHA — see stamp)  
+**Correction commit:** cfe6485d6be864612f5bd2ab5498f1b57ad15947  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
