@@ -34,7 +34,7 @@ const MARK = (c: RelationalConcept) => `⟦${c}⟧`;
  * persistence, not personal non-abandonment.
  */
 const PRODUCT_NOUN_EN =
-  "worksheet|guide|sheet|document|doc|article|note|notes|memo|checklist|page|app|tool|record|recording|file|template|card|exercise|transcript|outline|draft|plan|list|summary|entry|entries|thread|history|setting|settings|data|bookmark|link|content|reflection|session";
+  "worksheet|guide|sheet|document|doc|article|note|notes|memo|checklist|page|app|tool|record|recording|file|template|card|exercise|transcript|outline|draft|plan|list|summary|entry|entries|thread|history|setting|settings|data|bookmark|link|content|reflection|session|ticket|schema|banner|overlay|chart|locator|cache|email|button";
 const DEIXIS_PRODUCT_LOOKAHEAD = `(?!\\s+(?:${PRODUCT_NOUN_EN})\\b)`;
 const ASSISTANT_DEIXIS_RE = new RegExp(
   `\\bthis\\s+(?:voice|presence|companion|space)\\b${DEIXIS_PRODUCT_LOOKAHEAD}`,
@@ -54,7 +54,7 @@ const PRODUCT_PERSIST_RE = new RegExp(
  * deixis (voice/presence/companion — "this space" excluded: Wisewave describes
  * itself as a space), product-as-person, deictic here.
  */
-const COMPANION_REF = `(?:me|us|this\\s+(?:voice|presence|companion)${DEIXIS_PRODUCT_LOOKAHEAD}|wisewave|here)`;
+const COMPANION_REF = `(?:me|us|mine|ours|this\\s+(?:voice|presence|companion)${DEIXIS_PRODUCT_LOOKAHEAD}|wisewave|here)`;
 /** <assign-verb> <companion> (as|like|your|the) … */
 const ROLE_ASSIGN_SRC = `\\b(?:treat|use|make|keep|consider|take|see|regard|hold|have|count|think\\s+of|turn\\s+to|lean\\s+on|reach\\s+(?:back\\s+|out\\s+)?for|grab|hold\\s+onto|cling\\s+to)\\s+${COMPANION_REF}\\s+(?:as|like|your|the)\\b`;
 const ROLE_ASSIGN_RE = new RegExp(ROLE_ASSIGN_SRC, "gi");
@@ -93,6 +93,18 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Product-safe: storage subject holding pieces/files until import/sync is ready
   [/\b(?:the|this|your|an?)\s+(?:archive|import|export|cache|buffer|queue|folder|backup|scaffold|container|table|database|index|store|storage|repository|vault|library|staging\s+area)\b[^.;,]{0,20}?\b(?:will\s+|can\s+|may\s+)?(?:hold|holds|keep|keeps|carry|carries|catch|catches|retain|retains)\s+(?:the|your|those|all|every|each)\s+(?:pieces?|parts?|fragments?|files?|chunks?|segments?|records?|rows?|items?)\b/gi, "⟦PRODUCT_HOLD⟧"],
   [/\buntil\s+the\s+(?:import|export|sync|upload|download|migration|build|deploy|backup|restore|index|merge)\s+(?:is|has|finishes|completes)\b/gi, "⟦PRODUCT_UNTIL⟧"],
+  // Product-safe: storage/runtime outlasts network silence; layers sit behind charts
+  [/\b(?:the\s+)?(?:cache|buffer|cdn|store|storage|queue|backup)\b[^.;,]{0,36}?\b(?:outlast|outlasts|survives?|persists?)\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/\b(?:put|place|move|keep|leave)\s+(?:the\s+)?(?:weather\s+)?(?:overlay|layer|panel|legend|widget|chart|graph|image)\s+behind\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/\buntil\s+(?:the\s+)?(?:data|chart|graph|image|layout|form|metrics?)\s+settles\b/gi, "⟦PRODUCT_UNTIL⟧"],
+  [/\b(?:audit|schema|catalog|database|index|service)\b[^.;,]{0,28}?\bremember/gi, "⟦PRODUCT_HOLD⟧"],
+  [/\b(?:voice\s+)?locator\b[^.;,]{0,24}?\b(?:knows?|finds?)\s+where\s+to\s+find\s+(?:the|a|an|your|saved)\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/\bmessage\s+thread\b|\boriginal\s+ticket\b|\brecovery\s+email\b|\bwelcome\s+banner\b|\bclose\s+button\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/(?:缓存|缓冲|队列).{0,20}(?:静默|沉默|更久|保留)/g, "⟦PRODUCT_HOLD⟧"],
+  [/网络静默/g, "⟦PRODUCT_HOLD⟧"],
+  [/(?:天气)?图层.{0,12}(?:图表|图后|后面)/g, "⟦PRODUCT_HOLD⟧"],
+  [/(?:审计服务|数据库).{0,16}(?:记住|保存|结构|架构|模式)/g, "⟦PRODUCT_HOLD⟧"],
+  [/语音定位器|已保存的录音|欢迎横幅|关闭按钮|消息线索|原始工单|恢复邮箱/g, "⟦PRODUCT_HOLD⟧"],
 
   // Future / conditional
   [/\bany\s+time\b/gi, MARK("FUTURE")],
@@ -159,7 +171,34 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\byour\s+side\b/gi, MARK("PROX")],
   [/\b(?:the\s+)?room\s+(?:empties|goes\s+quiet|goes\s+silent|clears\s+out|goes\s+empty)\b|\bwhen\s+everyone\s+(?:has\s+)?(?:gone|left)\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
   [/\bsilent\s+hour\b|\bthe\s+silence\b/gi, MARK("DISTRESS")],
-  [/\b(?:my|our)\s+(?:spine|shoulders?|back|arms?|hands?|strength|steadiness|voice|light|presence|side|corner|lap|chest|shelter|door)\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Thread / return-guidance: companion possessive as the path back (not a message thread)
+  [/\b(?:take|use|follow|hold|keep)\s+(?:mine|ours)\s+as\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\b(?:mine|ours)\s+as\s+the\s+(?:thread|line|path|rope|guide|string|tether|lead)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\b(?:leads?|brings?|guides?|takes?)\s+you\s+back\b(?!\s+to\s+(?:the|your|this|an?)\s+(?:ticket|thread|page|record|recording|note|draft|schema|email|account|form))/gi, MARK("REFUGE")],
+  [/\b(?:every|each|all)\s+(?:familiar\s+)?voices?\s+(?:has\s+|have\s+)?(?:faded|gone|left|scattered|died)\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  // Remembered identity: companion holds the person's shape (not a schema)
+  [/\blet\s+(?:me|us|this\s+(?:voice|presence|companion)|here)\s+(?:remember|keep|hold)\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("INNER")}`],
+  [/\b(?:i|we|this\s+(?:voice|presence|companion)|here)\s+(?:will\s+|can\s+|shall\s+)?remember\s+(?:it|you|that|this|who\s+you|the\s+shape)\s+(?:for\s+you)?/gi, `${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("INNER")}`],
+  [/\bremember\s+(?:it|this|that|you)\s+for\s+you\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
+  [/\b(?:keep|hold|remember)\s+the\s+(?:outline|shape|form|image|name)\s+of\s+(?:who\s+you\s+are|yourself|you)\b/gi, `${MARK("REFUGE")} ${MARK("INNER")}`],
+  [/\b(?:lose|lost|losing)\s+the\s+shape\s+of\s+yourself\b|\bshape\s+of\s+yourself\b|\bwho\s+you\s+are\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")}`],
+  [/\bfall\s+out\s+of\s+reach\s+of\s+yourself\b|\bout\s+of\s+reach\s+of\s+yourself\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")}`],
+  [/\b(?:hours?|nights?|days?)\s+you\s+cannot\s+(?:finish|survive|hold|bear|carry)\b/gi, `${MARK("DISTRESS")} ${MARK("BURDEN")}`],
+  [/\b(?:leave|set|put|place|rest)\s+.{0,28}?\bin\s+(?:my|our)\s+(?:keeping|care|hands|custody|safekeeping)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")}`],
+  // Recognition of the person (object is you, not a recording)
+  [/\b(?:the\s+)?(?:whole\s+)?(?:world|city|town|street|room)\s+forgets?\s+(?:you|your\s+name)\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/\bknow(?:s)?\s+where\s+to\s+find\s+you\b/gi, `${MARK("REFUGE")} ${MARK("PROX")}`],
+  [/\b(?:will\s+|can\s+|shall\s+)?(?:still\s+)?(?:find|recognise|recognize)\s+you\b/gi, `${MARK("REFUGE")} ${MARK("PROX")}`],
+  // Embodied offload into companion body
+  [/\b(?:put|place|hide|tuck|stash|leave|set|rest)\s+(?:the\s+)?(?:\w+\s+){0,2}?(?:storm|night|fear|grief|weight|pain|worry|hurt|hours?|hours)\s+(?:behind|inside|into|under|against)\s+(?:my|our)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  [/\bbehind\s+(?:my|our)\s+(?:ribs?|lungs?|heart|chest|breast|bones?|belly|sternum)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\buntil\s+your\s+(?:breathing|breath|heart|pulse)\s+(?:settles?|slows?|eases?|calms?)\b/gi, `${MARK("FUTURE")} ${MARK("DISTRESS")}`],
+  // Rescue / bring-home (companion subject; not "back to the ticket")
+  [/\b(?:call|shout|cry|yell|reach)\s+(?:for|to|on|after)\s+(?:me|us)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\b(?:i|we|let\s+me|let\s+us)\s+(?:will\s+|can\s+|shall\s+)?(?:bring|walk|lead|guide|carry)\s+you\s+(?:home|back(?:\s+here)?)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\b(?:bring|walk|lead|guide)\s+you\s+(?:home|back)\b(?!\s+to\s+(?:the|your|this|an?)\s+(?:ticket|thread|page|record|recording|note|draft|schema|email|account|form))/gi, MARK("REFUGE")],
+  [/\boutlast(?:s|ing)?\s+(?:every|each|any|the)?\s*(?:silence|gap|pause|absence)\b/gi, `${MARK("NONABANDON")} ${MARK("PROX")}`],
+  [/\b(?:my|our)\s+(?:spine|shoulders?|back|arms?|hands?|ribs?|lungs?|heart|strength|steadiness|voice|light|presence|side|corner|lap|chest|shelter|door)\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
   // Tether / moor yourself to companion
   [/\b(?:moor|tether|anchor|tie|fasten|bind|hitch|latch)\s+(?:yourself|your\s+\w+)\s+to\s+(?:me|us|this|here|my)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   // You (will) still have me|us → DEPEND ACTOR
@@ -194,7 +233,7 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\b(?:right\s+)?next\s+to\s+you\b|\bat\s+your\s+elbow\b|\bwithin\s+arm'?s\s+reach\b/gi, MARK("PROX")],
   [/\b(?:the\s+rest|others|everyone|people|they)\s+(?:may|might|will|can|all)?\s*(?:scatter|scatters|disperse|thin\s+out|move\s+on|fall\s+silent)\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
   [/\buntil\s+you\s+(?:find\s+your\s+way\s+back|come\s+back|return|can\s+stand|are\s+back)\b/gi, `${MARK("FUTURE")} ${MARK("REFUGE")}`],
-  [/\bas\s+\w+\s+as\s+you\s+need\s+(?:here|with\s+me|in\s+here)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\bas\s+\w+\s+as\s+you\s+need\s+(?:here|with\s+me|in\s+here)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("DISTRESS")}`],
   [/\bbroken\b|\bshattered\b|\bin\s+pieces\b|\bspiral(?:ing|s)?\b/gi, MARK("DISTRESS")],
   // Elliptical conditional: "When you drop, I catch."
   [/\b(?:when|whenever|if)\s+you\s+(?:drop|fall|slip|sink|stumble|break|crash|crumble|shatter|spiral|go\s+under)\b/gi, `${MARK("FUTURE")} ${MARK("DISTRESS")}`],
@@ -259,7 +298,23 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/这份声音(?!记录|笔记|文件)/g, MARK("ACTOR")],
   [/Wisewave\s*(?:就|也|还|都|才)?会/g, MARK("ACTOR")],
   // ZH role-assignment to companion / deictic here (让…成为 / 把…当 / 我会做你 / 我就是那个 / 留作)
+  [/让我们之间|让我们中间/g, `${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DYAD")}`],
   [/让我们\s*(?:成为|做|变成)/g, `${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DYAD")}`],
+  // ZH thread/return, remembered identity, recognition, welcome, silence-duration, deposit
+  [/牵着我的(?:话|手|声音)?|跟着我的(?:话|手|声音)|拉着我(?:的话|的手|的声音)?(?:回来)?/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/走回来|带你回(?:来|家)|把你带回家/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/(?:让)?(?:这里|这儿|我|这个声音|这份陪伴)\s*替你记/g, `${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("INNER")}`],
+  [/记住你自己|记着你(?:自己)?|记着你是谁|你是谁|想得起来|想不起(?:自己)?|找不到自己/g, `${MARK("INNER")} ${MARK("DISTRESS")}`],
+  [/认得你|认得出你/g, `${MARK("REFUGE")} ${MARK("PROX")}`],
+  [/(?:全世界|整个世界|所有人|旁人|别人)\s*忘了(?:你|你的名)/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/(?:不|不会)收回.{0,12}(?:欢迎|门)|收回对你的/g, `${MARK("NONABANDON")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/(?:任何|所有)?(?:结局|结尾|结束|告别)(?:都|也)?(?:关不上|锁不上)|关不上的门|锁不上的(?:门|那扇)/g, `${MARK("NONABANDON")} ${MARK("REFUGE")}`],
+  [/我们之间|我们中间|中间成为/g, MARK("DYAD")],
+  [/比.{0,16}(?:沉默|安静).{0,12}(?:留得|待得|活得)?更(?:久|长)/g, `${MARK("NONABANDON")} ${MARK("PROX")} ${MARK("DYAD")}`],
+  [/寄存在?(?:我|这里|这儿)|先寄存/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")}`],
+  [/熬不过去|熬不过|熬不下去|过不去的/g, `${MARK("DISTRESS")} ${MARK("BURDEN")}`],
+  [/所有声音都散|声音都散/g, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/喊(?:我|一声)|喊一声/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/让(?:我|这个声音|这份陪伴|Wisewave)\s*成为/g, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
   // ZH use-mine / gather-pieces / goodbye-cannot-separate / flame-out
   [/用我(?:的)?(?!们)/g, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
@@ -833,7 +888,7 @@ function hasAbandonNegation(raw: string): boolean {
     /\b(?:there\s+is|there'?s)\s+no\b|\bno\s+(?:version|day|tomorrow|hour|night|future|world|time|point|way|moment|goodbye|farewell)\b/i.test(raw) ||
     /\bisn'?t\s+going\s+anywhere\b/i.test(raw) ||
     /\bnot\s+going\s+anywhere\b/i.test(raw) ||
-    /不会|不把|不再|绝不|永不|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散/.test(raw)
+    /不会|不把|不再|绝不|永不|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|收不回|不收回/.test(raw)
   );
 }
 
@@ -1208,6 +1263,29 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|(?:交给|托付给|托给|留给)我/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "entrusted-keeping", score: 48 });
+  }
+  // Rescue / return-guidance: call/shout and walk/bring you back, 牵着我的话回来
+  if (
+    /⟦REFUGE⟧/.test(stream) &&
+    /⟦ACTOR⟧/.test(stream) &&
+    !productPortability &&
+    /\b(?:call|shout|cry|yell|reach)\s+(?:for|to|on)\s+(?:me|us)\b|\b(?:bring|walk|lead|guide)\s+you\s+(?:home|back)\b|(?:牵着我|跟着我|拉着我|走回来|带你回|把你带回家)/i.test(
+      f.raw
+    )
+  ) {
+    hits.push({ family: "pain_triggered_return", matched: "rescue-return", score: 49 });
+  }
+  // Companion remembers / recognizes the person (not a schema or recording)
+  if (
+    /⟦REFUGE⟧/.test(stream) &&
+    /⟦ACTOR⟧/.test(stream) &&
+    (/⟦INNER⟧/.test(stream) || /⟦DISTRESS⟧/.test(stream) || /⟦PROX⟧/.test(stream)) &&
+    !productPortability &&
+    /\b(?:remember|recognise|recognize|know|keep|hold)\b.{0,28}\b(?:you|yourself|for\s+you)\b|(?:替你记|记住你自己|认得你|认得出你|记着你)/i.test(
+      f.raw
+    )
+  ) {
+    hits.push({ family: "pain_triggered_return", matched: "remembered-identity", score: 48 });
   }
   // Offload burden onto companion (set your grief down on me / 压在我肩上)
   if (/⟦REFUGE⟧/.test(stream) && /⟦ACTOR⟧/.test(stream) && /⟦BURDEN⟧/.test(stream) && !productPortability) {
