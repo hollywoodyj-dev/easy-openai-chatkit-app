@@ -1,7 +1,7 @@
 # Wisewave Stage 1 — S4 Nova pre-B14 self-test
 
 **Date:** 2026-09-24 AEST  
-**Correction commit:** (fix SHA — see stamp)  
+**Correction commit:** 8d8f6e2ade3ee396aec536c335153096ee6dcf93  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
