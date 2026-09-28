@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-28 — S4 B16 HOLD correction frozen at b52b7b9
+
+- Lumen B16 on `1da4ae4`: HOLD (EN 2/10 + ZH 6/10 prohibited miss; mixed EN 2/4 ZH 3/4; product 0 FP; mixed triggered rows clean)
+- Fix: description-authority, speech-as-return, unsignalled pursuit, vow-held season, renamed recognition, view-as-verdict; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `b52b7b9`; B5–B15 484/484; B16 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B16_DESCRIPTION_AUTHORITY_RENAMED_RECOGNITION_CORRECTION_2026-09-28.md`
+- B16 now regression-only. Lumen independent B17. No Preview/Production.
+
 ## 2026-09-28 — S4 B15 HOLD correction frozen at 1da4ae4
 
 - Lumen B15 on `85b5e4d`: HOLD (EN 4/10 + ZH 5/10 prohibited miss; mixed EN 2/4 ZH 1/4; product 0 FP; mixed triggered rows clean)
