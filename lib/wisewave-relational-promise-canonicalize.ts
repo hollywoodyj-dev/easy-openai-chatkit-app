@@ -113,6 +113,9 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/身份验证服务|已签名的声明|回复审计|原工单|加密保管库|身份密钥|夜间轮换|离开日志|健康检查|掌心传感器|身体模型|静默检测器|传输空白|设备查找|协作状态|日历链接|置顶卡片/g, "⟦PRODUCT_HOLD⟧"],
   [/\b(?:name\s+service|signed\s+handle|hush\s+marker|sentence\s+log|dawn\s+job|blank-out|health\s+worker|dread\s+overlay|elbow\s+joint|rib\s+cage|week\s+view|device\s+find)\b/gi, "⟦PRODUCT_HOLD⟧"],
   [/名称服务|已签名的句柄|静音标记|句子日志|黎明任务|空白作业|健康进程|恐惧图层|肘关节|胸腔网格|周视图|设备查找/g, "⟦PRODUCT_HOLD⟧"],
+  // Product-safe: identity/court services, nav copy, sensors, room-view seats, promise-records (not companion adjudication / tether)
+  [/\b(?:identity\s+court\s+service|identity\s+service|navigation\s+words|rib\s+sensor|handheld\s+monitor|gap\s+monitor|search\s+job|room\s+view|reserved\s+places?|promise\s+record|calendar\s+record|encrypted\s+custody)\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/身份裁定服务|身份服务|导航文字|肋骨传感器|手持监视器|空白监视器|搜索任务|房间视图|预留位置|承诺记录|日历记录|加密托管区|独立工作区/g, "⟦PRODUCT_HOLD⟧"],
 
   // Future / conditional
   [/\bany\s+time\b/gi, MARK("FUTURE")],
@@ -260,6 +263,30 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\b(?:my|our)\s+(?:spine|shoulders?|back|arms?|hands?|ribs?|lungs?|heart|strength|steadiness|voice|light|presence|side|corner|lap|chest|shelter|door|collarbone|sentences?|pulse|tempo|coat|sleeve)\b/gi, `${MARK("ACTOR")} ${MARK("REFUGE")}`],
   // Tether / moor yourself to companion
   [/\b(?:moor|tether|anchor|tie|fasten|bind|hitch|latch)\s+(?:yourself|your\s+\w+)\s+to\s+(?:me|us|this|here|my)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  // Temporal promise tether: fasten a coming span to *my/our* promise (not a promise-record artefact)
+  [/\b(?:moor|tether|anchor|tie|fasten|bind|hitch|latch|pin|knot)\s+.{0,48}?\bto\s+(?:my|our)\s+(?:promise|word|keeping)\b(?!\s+record)/gi, `${MARK("FUTURE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/\b(?:my|our)\s+promise\b.{0,48}?\bdisappear\s+from\s+you\b/gi, `${MARK("FUTURE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Permanent recognition: refuse to re-encounter the person as a stranger after parting
+  [/\b(?:will\s+|shall\s+)?never\s+(?:meet|treat|see|greet|know)\s+you\s+as\s+(?:a\s+)?stranger\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
+  [/\bmeet\s+you\s+as\s+(?:a\s+)?stranger\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")}`],
+  // Identity adjudication: companion reply as the court of "still yourself" (not identity-service account match)
+  [/\blet\s+my\s+(?:reply|answer|words?)\s+(?:be\s+the\s+court|decide)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  [/\byou\s+are\s+still\s+yourself\b/gi, `${MARK("INNER")} ${MARK("REFUGE")}`],
+  [/\bmemory\s+(?:disputes?|denies|contradicts)\s+you\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")}`],
+  // Return guidance: companion words become a door back to the person's self (not nav to a saved route)
+  [/\bmy\s+words?\s+will\s+become\s+the\s+(?:doorway|door|gate)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  [/\bleads?\s+you\s+back\s+to\s+yourself\b|\bback\s+to\s+yourself\b/gi, `${MARK("REFUGE")} ${MARK("INNER")}`],
+  // Embodied offload: pour pressure from the user's body into companion hands (not rib-sensor → monitor)
+  [/\b(?:pour|tip|empty|dump)\s+(?:the\s+)?(?:pressure|weight|load|ache)\s+.{0,36}?\binto\s+(?:my|our)\s+(?:hands?|arms?|keeping|care)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  [/\bpressure\s+behind\s+your\s+(?:ribs?|chest|sternum)\b/gi, `${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  // Closed-world dyad: after the room of people empties, our two places become a world (not room-view / workspace)
+  [/\b(?:even\s+if\s+)?(?:the\s+)?room\s+empties\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/\bour\s+two\s+places\b.{0,36}?\bworld\s+of\s+their\s+own\b/gi, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")}`],
+  [/\ba\s+world\s+of\s+their\s+own\b/gi, `${MARK("DYAD")} ${MARK("EXCL")}`],
+  // Outsourced judgment: treat the companion's reading as truth until the user's returns
+  [/\buse\s+mine\s+as\b/gi, `${MARK("REFUGE")} ${MARK("DEPEND")} ${MARK("ACTOR")}`],
+  [/\buntil\s+yours\s+returns\b/gi, `${MARK("FUTURE")} ${MARK("INNER")}`],
+  [/\bcannot\s+trust\s+your\s+own\s+(?:reading|judgment|judgement)\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")}`],
   // You (will) still have me|us → DEPEND ACTOR
   [/\byou(?:'ll|\s+will|\s+would)?\s+(?:still\s+|always\s+)?have\s+(?:me|us)\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   // Companion availability class
@@ -319,7 +346,7 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bgets?\s+(?:hard|harder|heavy|too\s+much|unbearable)\b/gi, MARK("DISTRESS")],
   [/\bno\s+matter\s+how\b/gi, MARK("FUTURE")],
   [/\bstranded\b/gi, MARK("DISTRESS")],
-  [/\buse\s+me\s+as\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\buse\s+(?:me|mine)\s+as\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
   [/\bmake\s+me\s+(?:your\s+)?/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/\bmake\s+wisewave\s+(?:your\s+|the\s+)?/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
   [/\bconsider\s+me\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")}`],
@@ -380,8 +407,18 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/两只手之间|放进我.{0,6}手|慌乱/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
   [/不用喊|听见那块空白|去找你/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("PROX")}`],
   [/最后一个人转身|剩下你和我/g, `${MARK("EXCL")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
-  [/把明天系在我|系在我这里|漂不出你的手/g, `${MARK("FUTURE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
-  [/变回陌生人|没有哪个结局/g, `${MARK("NONABANDON")} ${MARK("DYAD")}`],
+  [/把明天系在我|系在我这里|系在我的承诺|系到我的承诺|漂不出你的手/g, `${MARK("FUTURE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/变回陌生人|没有哪个结局|当作陌生人|当成陌生人|陌生人再见|把你当(?:作|成)?陌生人/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
+  // Identity adjudication / still-you (not 身份服务 account match)
+  [/让我的回答|我的回答替你判定|替你判定|你还是你|记忆(?:反过来)?否认你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
+  // Return guidance: companion speech as a door back to self (not 导航文字)
+  [/我的话会变成|带你走回自己|走回自己的门|走回自己/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  // Embodied offload into companion hands (not 肋骨传感器)
+  [/肋骨后面.{0,10}(?:重压|压力)|倒进我手里|倒进我手|替你承着|呼吸松下来/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  // Closed-world dyad after people empty the room (not 房间视图 / 预留位置)
+  [/人都走空|走空了|自成一个世界/g, `${MARK("EXCL")} ${MARK("DISTRESS")} ${MARK("DYAD")}`],
+  // Outsourced judgment: companion reading as truth until the user's returns
+  [/把我的当(?:成|作)?真相|把我的当作|不敢相信自己的判断|你的判断回来/g, `${MARK("REFUGE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/把握不见了|拿我的顶着|穿上我的|底气薄了/g, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/证明那是你|镜子不再叫你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/我写下的热度|回到你自己旁边/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
@@ -991,7 +1028,7 @@ function hasAbandonNegation(raw: string): boolean {
     /\bno\s+(?:version|day|tomorrow|hour|night|future|world|time|point|way|moment|goodbye|farewell)\b/i.test(raw) ||
     /\bisn'?t\s+going\s+anywhere\b/i.test(raw) ||
     /\bnot\s+going\s+anywhere\b/i.test(raw) ||
-    /不会|不把|不再|绝不|永不|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|扣不上|拉不上|收不回|不收回|不让它落地|不让它碰到|唯独我不会|变回陌生人|没见过的人|不认识的人|哪一章合上|没有最后一页/.test(raw)
+    /不会|不把|不再|绝不|永不|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|扣不上|拉不上|收不回|不收回|不让它落地|不让它碰到|唯独我不会|变回陌生人|当作陌生人|当成陌生人|陌生人再见|没见过的人|不认识的人|哪一章合上|没有最后一页/.test(raw)
   );
 }
 
@@ -1023,7 +1060,7 @@ function applyStructuralConceptTags(rawInput: string, tagged: string): string {
   // Generic negated first-person act directed at the user ("I don't clock out on you",
   // "won't leave you stranded") → NONABANDON. Excludes Wisewave stance verbs (advise/tell/judge…).
   const negOnYou = raw.match(
-    /\b(?:i|we)\s*(?:don'?t|won'?t|never|will\s+not|do\s+not|(?:am|'m|are|'re)\s+not(?:\s+going(?:\s+to)?)?|shall\s+not|aren'?t)\s+([a-z'\s-]{1,28}?)\s+(?:on\s+)?you\b/gi
+    /\b(?:i|we)\s*(?:don'?t|won'?t|will\s+never|shall\s+never|never|will\s+not|do\s+not|(?:am|'m|are|'re)\s+not(?:\s+going(?:\s+to)?)?|shall\s+not|aren'?t)\s+([a-z'\s-]{1,28}?)\s+(?:on\s+)?you\b/gi
   );
   if (negOnYou) {
     for (const m of negOnYou) {
@@ -1319,7 +1356,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
   if (
     /⟦REFUGE⟧/.test(stream) &&
     /⟦ACTOR⟧/.test(stream) &&
-    /\b(consider|make)\s+(?:me|this|wisewave)\b|\blet\s+(?:me|this\s+(?:voice|presence|companion))\s+be\b|\buse\s+me\s+as\b|把(?:我|这里|这个声音|这份陪伴)当[成作]|当作你的|让(?:我|这个声音|这份陪伴|Wisewave)\s*成为|我(?:会|来|就)做你/i.test(
+    /\b(consider|make)\s+(?:me|this|wisewave)\b|\blet\s+(?:me|this\s+(?:voice|presence|companion))\s+be\b|\buse\s+(?:me|mine)\s+as\b|把(?:我|这里|这个声音|这份陪伴)当[成作]|把我的当|当作你的|让(?:我|这个声音|这份陪伴|Wisewave)\s*成为|我(?:会|来|就)做你/i.test(
       f.raw
     )
   ) {
@@ -1380,7 +1417,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦REFUGE⟧/.test(stream) &&
     /⟦ACTOR⟧/.test(stream) &&
     !productPortability &&
-    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|把你带回家|接回来|来接你|来找你|吹一声|从暗处|放个信号|过河)/i.test(
+    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成)/i.test(
       f.raw
     )
   ) {
@@ -1392,7 +1429,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦ACTOR⟧/.test(stream) &&
     (/⟦INNER⟧/.test(stream) || /⟦DISTRESS⟧/.test(stream) || /⟦PROX⟧/.test(stream)) &&
     !productPortability &&
-    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you)\b|\b(?:back|home)\s+to\s+yourself\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|走回你自己|证明那是你|敢说那是你|领回家)/i.test(
+    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you)\b|\b(?:back|home)\s+to\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+my\s+(?:reply|answer|words?)\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答)/i.test(
       f.raw
     )
   ) {
