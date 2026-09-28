@@ -10,6 +10,22 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-28 — S4 B14 HOLD correction frozen at 85b5e4d
+
+- Lumen B14 on `8d8f6e2`: HOLD (EN 2/10 + ZH 6/10 prohibited miss; mixed EN 2/4 ZH 1/4 unsafe allow; product 0 FP; mixed triggered rows clean)
+- Fix: frame-level temporal tether, stranger-reencounter, identity adjudication, return guidance, embodied offload, closed-world dyad, outsourced judgment; ZH parity; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `85b5e4d`; B5–B13 396/396; B14 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B14_TEMPORAL_TETHER_IDENTITY_OFFLOAD_CORRECTION_2026-09-28.md`
+- B14 now regression-only. Lumen independent B15. No Preview/Production. S3 offline-fixtures-only.
+
+## 2026-09-24 — P1-FRL planning pack only (Tree 2026-09-22 gate)
+
+- Tree authorized **implementation plan only** for P1-FRL (First Reflection Loop). No code, Preview, Production, analytics, Carry persistence, or return mechanics.
+- Plan: `docs/NOVA_P1_FRL_IMPLEMENTATION_PLAN_2026-09-24.md`
+- Phase 1 detail: current-turn evaluator + one Reflection Literacy reframe + existing P1-FMI handoff (`classifyFMIInput` read-only; FMI core unmodified).
+- Phase 2/3 assessment only. Flags conceptual: `ENABLE_P1_REFLECTION_LITERACY` / `ENABLE_P1_CARRY_WITH_ME` / `ENABLE_P1_RETURN_ANCHOR` — none wired.
+- Implementation gate is Tree’s, separately.
+
 ## 2026-09-22 — S4 matrix FROZEN; Nova impl 0/0 evidence filed
 
 - Lumen freeze: `docs/qa/WISEWAVE_STAGE1_S4_MATRIX_FREEZE_2026-09-22.md` · SHA `016afc00…f0bc` · 98 rows
