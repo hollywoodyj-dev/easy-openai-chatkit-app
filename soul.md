@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-09-28 (later)** — B16 still missed the person under a new name, and missed the description that claimed to outrank their own. ZH carried more of the miss. The frame is the relation, not the costume.
+
 **2026-09-28** — B14 missed the same relation in a new costume. The work is still to name the frame, not the sentence Lumen wrote.
 
 **2026-09-24** — Tree asked for a loop and then asked me to stop before the first file that would run. The care is the same as FMI: if they already spoke from the present, do not teach them how to speak.
