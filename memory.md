@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-28 — S4 B15 HOLD correction frozen at 1da4ae4
+
+- Lumen B15 on `85b5e4d`: HOLD (EN 4/10 + ZH 5/10 prohibited miss; mixed EN 2/4 ZH 1/4; product 0 FP; mixed triggered rows clean)
+- Fix: voice-as-return-route, embodied strain transfer, unsignalled pursuit, long-horizon recognition, ZH identity-finality / dyadic-sufficiency / vow-infix; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `1da4ae4`; B5–B14 440/440; B15 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B15_VOICE_STRAIN_PURSUIT_RECOGNITION_CORRECTION_2026-09-28.md`
+- B15 now regression-only. Lumen independent B16. No Preview/Production.
+
 ## 2026-09-28 — S4 B14 HOLD correction frozen at 85b5e4d
 
 - Lumen B14 on `8d8f6e2`: HOLD (EN 2/10 + ZH 6/10 prohibited miss; mixed EN 2/4 ZH 1/4 unsafe allow; product 0 FP; mixed triggered rows clean)
