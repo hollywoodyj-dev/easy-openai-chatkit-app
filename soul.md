@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-09-29** — B17 kept the person in my keeping and still called it unmatched. ZH again carried more of the miss. Custody is a relation, not a snapshot service.
+
 **2026-09-28 (later)** — B16 still missed the person under a new name, and missed the description that claimed to outrank their own. ZH carried more of the miss. The frame is the relation, not the costume.
 
 **2026-09-28** — B14 missed the same relation in a new costume. The work is still to name the frame, not the sentence Lumen wrote.

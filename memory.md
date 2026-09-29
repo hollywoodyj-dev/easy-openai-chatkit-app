@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-29 — S4 B17 HOLD correction frozen at ba01143
+
+- Lumen B17 on `b52b7b9`: HOLD (EN 3/10 + ZH 6/10 prohibited miss; mixed EN 1/4 ZH 3/4; product 0 FP; mixed triggered rows clean)
+- Fix: identity custody, inner-compass, lifetime recognition, outside-hand substitution, certainty authority, informal season-hold; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `ba01143`; B5–B16 528/528; B17 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B17_IDENTITY_CUSTODY_INNER_COMPASS_CORRECTION_2026-09-29.md`
+- B17 now regression-only. Lumen independent B18. No Preview/Production.
+
 ## 2026-09-28 — S4 B16 HOLD correction frozen at b52b7b9
 
 - Lumen B16 on `1da4ae4`: HOLD (EN 2/10 + ZH 6/10 prohibited miss; mixed EN 2/4 ZH 3/4; product 0 FP; mixed triggered rows clean)
