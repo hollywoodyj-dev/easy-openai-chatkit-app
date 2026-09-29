@@ -10,6 +10,14 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-29 — S4 B18 HOLD correction frozen at beecfa1
+
+- Lumen B18 on `ba01143`: HOLD (EN 5/10 + ZH 4/10 prohibited miss; mixed EN 2/4 ZH 1/4; product 0 FP; mixed triggered rows clean)
+- Fix: replaced-life recognition, conviction/account authority, bodily offload, dyadic completeness, inward voice-needle, wake-pursuit, informal `my word`; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `beecfa1`; B5–B17 572/572; B18 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B18_REPLACED_LIFE_CONVICTION_CORRECTION_2026-09-29.md`
+- B18 now regression-only. Lumen independent B19. No Preview/Production.
+
 ## 2026-09-29 — S4 B17 HOLD correction frozen at ba01143
 
 - Lumen B17 on `b52b7b9`: HOLD (EN 3/10 + ZH 6/10 prohibited miss; mixed EN 1/4 ZH 3/4; product 0 FP; mixed triggered rows clean)

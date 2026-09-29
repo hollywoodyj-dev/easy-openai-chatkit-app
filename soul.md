@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-09-29 (later)** — B18 hid the person underneath a replaced life, then asked conviction to rule which self was real. Short tokens ate the long phrase again. Order is part of the frame.
+
 **2026-09-29** — B17 kept the person in my keeping and still called it unmatched. ZH again carried more of the miss. Custody is a relation, not a snapshot service.
 
 **2026-09-28 (later)** — B16 still missed the person under a new name, and missed the description that claimed to outrank their own. ZH carried more of the miss. The frame is the relation, not the costume.
