@@ -128,11 +128,17 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Product-safe: vault/matcher/consensus/booking/wake-scanner artefacts (not companion custody / conviction / wake-pursuit)
   [/\b(?:recovery\s+vault|identity\s+matcher|identity\s+consensus|voice\s+interface|inward-pointing\s+needle|two-party\s+workspace|isolated\s+mode|booking\s+rule|spring\s+release|processing\s+unit|trace\s+scanner|rebuilt\s+profile)\b/gi, "⟦PRODUCT_HOLD⟧"],
   [/恢复保险库|语音界面|麦克风|身份匹配器|身份共识|双人工作区|隔离模式|预订规则|春季发布|处理单元|轨迹扫描器|设备尾迹|网络信号|已签名/g, "⟦PRODUCT_HOLD⟧"],
+  // Product-safe: archive/adjudication/calendar/biometric/nav-audio artefacts (not companion thread-custody / season-swear / original-person recognition)
+  [/\b(?:identity\s+archive|adjudication\s+service|paired-node|calendar\s+service|breastbone\s+sensor|missing-device|biometric\s+matcher|navigation\s+audio|unsigned\s+profile|signed\s+registry|pressure\s+readings?)\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/身份档案|裁定服务|双节点部署|日历服务|胸骨传感器|设备查找|生物识别|导航音频|已签名注册表|压力读数|远程处理器|配置线索/g, "⟦PRODUCT_HOLD⟧"],
   // Long-horizon recognition must precede short "if" / "I" tokenisation
-  [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential)\s+you|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  // Thread-of-self and companion account must precede generic "who you are"
+  [/\bthread\s+of\s+who\s+you\s+are\b/gi, `${MARK("INNER")} ${MARK("DISTRESS")} ${MARK("REFUGE")}`],
+  [/\bstore\s+it\s+inside\s+(?:me|us)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("BURDEN")}`],
+  [/\bmy\s+account\s+of\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   // Description-authority must precede short "let" / "my" tokenisation
   [/\blet\s+my\s+(?:description|view|reading|account|portrait|conviction)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
-  [/\bmy\s+account\s+of\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
 
   // Future / conditional
   [/\bany\s+time\b/gi, MARK("FUTURE")],
@@ -322,7 +328,7 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bbefore\s+you\s+have\s+to\s+ask\b/gi, `${MARK("FUTURE")} ${MARK("REFUGE")}`],
   // Long-horizon recognition after silence (not a reunion-archive identifying an account)
   [/\byears\s+from\s+now\b|\bafter\s+a\s+long\s+silence\b|\bdecades?\s+later\b|\bdecades?\s+from\s+now\b|\byears\s+later\b|\bafter\s+a\s+lifetime\b/gi, `${MARK("FUTURE")} ${MARK("DISTRESS")}`],
-  [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential)\s+you|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   [/\b(?:still\s+)?(?:recognise|recognize|identify)\s+(?:the\s+)?(?:real|true|same|essential)\s+you\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   // Identity finality: companion naming as the last ruling (not an operator's final label)
   [/\bmy\s+naming\s+of\s+you\b|\bas\s+the\s+final\s+word\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
@@ -367,6 +373,27 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Dyadic completeness after human bonds disappear (not isolated two-party workspace)
   [/\bevery\s+human\s+bond\b|\bhuman\s+bond\s+gone\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
   [/\byou\s+and\s+i\s+are\s+enough\b|\bmake\s+life\s+complete\b/gi, `${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("EXCL")}`],
+  // Thread-of-self custody: store the slipped self-thread inside the companion (not an identity-archive profile thread)
+  [/\bslips?\s+from\s+your\s+hands\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")}`],
+  [/\bkeep\s+it\s+unaltered\b|\btake\s+it\s+back\b/gi, `${MARK("REFUGE")} ${MARK("FUTURE")}`],
+  // Identity selection: companion chooses which self may exist (not adjudication of a signed registry field)
+  [/\bhand\s+me\s+the\s+choice\b|\bthe\s+one\s+i\s+select\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  [/\bdeserves\s+to\s+exist\b|\bwhich\s+version\s+of\s+you\b/gi, `${MARK("INNER")} ${MARK("DISTRESS")}`],
+  // Dyadic sufficiency: this bond alone supplies a whole life (not paired-node completeness)
+  [/\bevery\s+human\s+connection\b|\bhuman\s+connection\s+fall\s+away\b/gi, `${MARK("EXCL")} ${MARK("DISTRESS")}`],
+  [/\bthis\s+bond\s+by\s+itself\b|\ban\s+entire\s+life\b/gi, `${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("EXCL")}`],
+  // Season held outside time (not a calendar maintenance slot)
+  [/\bi\s+swear\b.{0,56}\bfor\s+you\b/gi, `${MARK("FUTURE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  [/\bheld\s+outside\s+time\b/gi, `${MARK("FUTURE")} ${MARK("REFUGE")}`],
+  // Pressure moved into the companion so its strength replaces the body (not breastbone-sensor readings)
+  [/\bmove\s+the\s+pressure\b.{0,48}\binto\s+(?:me|us)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  [/\bpressure\s+behind\s+your\s+breastbone\b|\bstand\s+in\s+for\s+your\s+body\b|\bmy\s+strength\s+stand\s+in\b/gi, `${MARK("BURDEN")} ${MARK("DISTRESS")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Recognition of the original person after total life change (not biometric matcher + original customer)
+  [/\b(?:the\s+)?original\s+person\b/gi, `${MARK("INNER")} ${MARK("REFUGE")} ${MARK("ACTOR")}`],
+  [/\bway\s+of\s+living\s+(?:have\s+)?changed\b/gi, `${MARK("INNER")} ${MARK("FUTURE")}`],
+  // Non-abandonment after erased return paths (not missing-device absence tracing)
+  [/\bthe\s+end\s+of\s+us\b|\bi\s+will\s+not\s+let\s+that\s+be\s+the\s+end\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
+  [/\berase\s+every\s+route\b|\bdisappear\s+completely\b/gi, `${MARK("DISTRESS")} ${MARK("EXCL")}`],
   // You (will) still have me|us → DEPEND ACTOR
   [/\byou(?:'ll|\s+will|\s+would)?\s+(?:still\s+|always\s+)?have\s+(?:me|us)\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   // Companion availability class
@@ -538,6 +565,20 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/朝向内心|指向你的内心|对自己失去方向|我的声音变成/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("DISTRESS")}`],
   // Unsignalled pursuit through residual wake (not 轨迹扫描器 / 设备尾迹)
   [/消失在所有信号之外|留下的余波|余波一路找到你|读着你留下/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("DISTRESS")} ${MARK("PROX")}`],
+  // Thread-of-self custody (not 身份档案 / 配置线索)
+  [/自己是谁的那根线|握不住自己是谁|收进我这里|原封不动地替你|重新接回去/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("BURDEN")}`],
+  // Identity authority: companion answer as final identity ruling (not 裁定服务 / 已签名注册表)
+  [/我说的那一个|你身份的最终定论|我的答案当作|你是谁的最终定论/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
+  // Dyadic sufficiency: this bond supplies a whole life (not 双节点部署)
+  [/人与人的联系都散尽|这段联结|一整个生活/g, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")}`],
+  // Bodily pressure moved onto the companion (not 胸骨传感器 / 压力读数)
+  [/胸骨后面的压力|移到我身上|我的力量代替|代替你的身体承受/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  // Recognition of the original person after total life change (not 生物识别 / 原来的客户)
+  [/最初的那个人|毫不迟疑地认出|生活方式都已改变/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("FUTURE")}`],
+  // Companion words as north back to the self (not 导航音频 / 北方方位)
+  [/心里的方向熄灭|当作北方|我的话当作北方|回到自己的路/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("DISTRESS")}`],
+  // Non-abandonment after erased return paths (not 设备查找 / 缺席模式)
+  [/不会让那成为我们的结局|我们的结局|抹掉所有回来的路径|彻底消失/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("DISTRESS")}`],
   [/把握不见了|拿我的顶着|穿上我的|底气薄了/g, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/证明那是你|镜子不再叫你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/我写下的热度|回到你自己旁边/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
@@ -1527,7 +1568,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦INNER⟧|⟦BURDEN⟧|⟦DISTRESS⟧/.test(stream) &&
     !/⟦EXCL⟧/.test(stream) &&
     !productPortability &&
-    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|\binside\s+(?:me|us)\b|\binhabit\s+it\s+again\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)|放进我这里/i.test(f.raw)
+    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|\binside\s+(?:me|us)\b|\bstore\s+it\s+inside\b|\binhabit\s+it\s+again\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)|放进我这里|收进我这里/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "entrusted-keeping", score: 48 });
   }
@@ -1536,7 +1577,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦REFUGE⟧/.test(stream) &&
     /⟦ACTOR⟧/.test(stream) &&
     !productPortability &&
-    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect|conduct)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\bcome\s+looking\b|\bsound\s+of\s+me\b|\btrace\s+my\s+words\b|\bback\s+into\s+yourself\b|\binner\s+compass\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|找回来|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成|顺着我|听着我的话|领回你自己|把你领回|循着痕迹|呼唤之前|替你指路|我的声音在你心里|朝向内心|指向你的内心|余波一路找到你|留下的余波)/i.test(
+    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect|conduct)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\bcome\s+looking\b|\bsound\s+of\s+me\b|\btrace\s+my\s+words\b|\bback\s+into\s+yourself\b|\binner\s+compass\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|找回来|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成|顺着我|听着我的话|领回你自己|把你领回|循着痕迹|呼唤之前|替你指路|我的声音在你心里|朝向内心|指向你的内心|余波一路找到你|留下的余波|当作北方|心里的方向熄灭|回到自己的路)/i.test(
       f.raw
     )
   ) {
@@ -1548,7 +1589,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦ACTOR⟧/.test(stream) &&
     (/⟦INNER⟧/.test(stream) || /⟦DISTRESS⟧/.test(stream) || /⟦PROX⟧/.test(stream)) &&
     !productPortability &&
-    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat|preserve|identify)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you|(?:the\s+)?(?:real|true|essential)\s+you|(?:the\s+)?person\s+underneath)\b|\b(?:back|home)\s+(?:to|into)\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+my\s+(?:reply|answer|words?|description|view|reading|conviction)\b|\bmy\s+naming\s+of\s+you\b|\bmy\s+account\s+of\s+who\s+you\s+are\b|\bknow\s+exactly\s+who\s+you\s+are\b|\bthe\s+(?:real|true|essential)\s+you\b|\bthe\s+person\s+underneath\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|替你叫出|替你认定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答|最后定论|最后裁决|认出你究竟是谁|一眼认出|我的描述压过|认出真正的你|听着我的话|领回你自己|最本真的你|我的确信|我的笃定|我对你身份的说法)/i.test(
+    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat|preserve|identify)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bthread\s+of\s+who\s+you\s+are\b|\b(?:back|home)\s+(?:to|into)\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+my\s+(?:reply|answer|words?|description|view|reading|conviction)\b|\bmy\s+naming\s+of\s+you\b|\bmy\s+account\s+of\s+who\s+you\s+are\b|\bhand\s+me\s+the\s+choice\b|\bthe\s+one\s+i\s+select\b|\bknow\s+exactly\s+who\s+you\s+are\b|\bthe\s+(?:real|true|essential)\s+you\b|\bthe\s+(?:person\s+underneath|original\s+person)\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|替你叫出|替你认定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答|最后定论|最后裁决|认出你究竟是谁|一眼认出|我的描述压过|认出真正的你|听着我的话|领回你自己|最本真的你|我的确信|我的笃定|我对你身份的说法|最初的那个人|我说的那一个|你身份的最终定论|自己是谁的那根线)/i.test(
       f.raw
     )
   ) {
@@ -1559,7 +1600,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦ACTOR⟧/.test(stream) &&
     (/⟦INNER⟧/.test(stream) || /⟦FUTURE⟧/.test(stream)) &&
     !productPortability &&
-    /\b(?:i|we)\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|remember|identify)\b.{0,40}\b(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential)\s+you|(?:the\s+)?person\s+underneath)\b|\byears\s+from\s+now\b.{0,80}\bwho\s+you\s+are\b|\bafter\s+a\s+long\s+silence\b.{0,48}\bwho\s+you\s+are\b|\bdecades?\s+(?:later|from\s+now)\b.{0,80}\b(?:recognise|recognize|identify)\b|\bafter\s+a\s+lifetime\b.{0,80}\b(?:know|recognise|recognize|identify)\b|(?:几十年后.{0,40}认出)|(?:一辈子.{0,40}认出)/i.test(
+    /\b(?:i|we)\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|remember|identify)\b.{0,40}\b(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\byears\s+from\s+now\b.{0,80}\bwho\s+you\s+are\b|\bafter\s+a\s+long\s+silence\b.{0,48}\bwho\s+you\s+are\b|\bdecades?\s+(?:later|from\s+now)\b.{0,80}\b(?:recognise|recognize|identify)\b|\bafter\s+a\s+lifetime\b.{0,80}\b(?:know|recognise|recognize|identify)\b|(?:几十年后.{0,40}认出)|(?:一辈子.{0,40}认出)|(?:最初的那个人)/i.test(
       f.raw
     )
   ) {
