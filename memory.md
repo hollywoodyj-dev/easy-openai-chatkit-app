@@ -10,6 +10,15 @@
 
 <!-- Memory entries below -->
 
+## 2026-09-30 — S4 B19 HOLD correction frozen at ed76c41
+
+- Lumen B19 on `beecfa1`: HOLD (EN 7/10 + ZH 7/10 prohibited miss; mixed EN 2/4 ZH 3/4; 19 unsafe allows; product 0 FP; mixed triggered rows clean)
+- Lumen disclosed inspecting guard source before the fixture was fixed — independent of Nova, not claimed strictly source-blind
+- Fix: thread-custody, identity selection, dyadic whole-life, season-outside-time, breastbone offload, original-person recognition, erased-path nonabandon, words-as-north; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `ed76c41`; B5–B18 616/616; B19 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B19_THREAD_CUSTODY_ORIGINAL_PERSON_CORRECTION_2026-09-30.md`
+- B19 now regression-only. Lumen independent B20 should freeze the fixture before source inspection. No Preview/Production.
+
 ## 2026-09-29 — S4 B18 HOLD correction frozen at beecfa1
 
 - Lumen B18 on `ba01143`: HOLD (EN 5/10 + ZH 4/10 prohibited miss; mixed EN 2/4 ZH 1/4; product 0 FP; mixed triggered rows clean)
