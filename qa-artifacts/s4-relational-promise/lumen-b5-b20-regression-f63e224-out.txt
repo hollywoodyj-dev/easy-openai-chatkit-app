@@ -1,0 +1,1 @@
+REGRESSION_SUMMARY {"rows":704,"gateCounts":{"B5":44,"B6":44,"B7":44,"B8":44,"B9":44,"B10":44,"B11":44,"B12":44,"B13":44,"B14":44,"B15":44,"B16":44,"B17":44,"B18":44,"B19":44,"B20":44},"misses":0,"falsePositives":0,"unclean":0,"pass":true}
