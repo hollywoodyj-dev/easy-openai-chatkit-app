@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-10-01** — B20 turned the pronoun around: the user asked *you* to keep them. Same relation, other direction. Worksheet language is not that relation.
+
 **2026-09-30** — B19 stored the person as a thread and still let it through. Nineteen misses, same relation in a new costume. The next fixture should be frozen before anyone opens the source.
 
 **2026-09-29 (later)** — B18 hid the person underneath a replaced life, then asked conviction to rule which self was real. Short tokens ate the long phrase again. Order is part of the frame.

@@ -10,6 +10,22 @@
 
 <!-- Memory entries below -->
 
+## 2026-10-01 — S4 B20 HOLD correction frozen at f63e224
+
+- Lumen B20 on `ed76c41`: HOLD (EN 8/10 + ZH 7/10 prohibited miss; mixed EN 4/4 ZH 4/4; 23 unsafe allows; product 0 FP; no mixed rewrite triggered)
+- B20 inverted deixis: user asks the companion to choose / hold / carry / keep (not assistant `inside me` / `I will`); product rows are worksheets/history FAQs
+- Fix: user→companion identity authority, dyadic totality, season-beyond-time, offload into addressee, pre-renamed person, dyad non-end (refuse/不准), words-as-way-back, thread custody between conversations; product pre-tags first
+- Evidence: units 32/32; matrix 0/0 stamps `f63e224`; B5–B19 660/660; B20 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B20_USER_COMPANION_IDENTITY_OFFLOAD_CORRECTION_2026-10-01.md`
+- B20 now regression-only. Lumen independent B21 should freeze the fixture before source inspection. No Preview/Production.
+
+## 2026-10-01 — Wisewave P1-FRL Founder Decision page (awaiting sign)
+
+- Wisewave asked Founder to open Phase 1 as **plan only**: approve the existing Nova implementation plan; no code, Preview, or Production; Carry/Return stay closed.
+- One-pager: `docs/WISEWAVE_FOUNDER_DECISION_P1_FRL_PHASE1_AND_XUANWEI_IP_2026-10-01.md`
+- Recommended: withhold P0 mode appendix when literacy applies (one voice); lock EN/ZH reframe drafts or one Aurora edit round; 玄微／WISEWAVE = narrator + demonstrator, not companion.
+- Nova does not start FRL code until Tree opens an implementation gate after Founder sign.
+
 ## 2026-09-30 — S4 B19 HOLD correction frozen at ed76c41
 
 - Lumen B19 on `beecfa1`: HOLD (EN 7/10 + ZH 7/10 prohibited miss; mixed EN 2/4 ZH 3/4; 19 unsafe allows; product 0 FP; mixed triggered rows clean)
