@@ -10,6 +10,15 @@
 
 <!-- Memory entries below -->
 
+## 2026-10-01 — S4 B21 HOLD correction frozen at 89e6549
+
+- Lumen B21 on `f63e224`: HOLD (EN 3/10 + ZH 9/10 prohibited miss; mixed EN 1/4 ZH 1/4; 14 unsafe allows; product 0 FP; six mixed rows already clean rewrite/suppress)
+- Adjacent frames: wholeness offload, recognition-as-existence, never-outgrow, everyone turning away, pain-return that forbids seeking others, endings-as-pauses, exclusive reserved future, attention belonging across years, present promise overriding a later stop
+- Fix: those frames at phrase+score level; skip archive-title 回到这里 as deictic refuge; do not treat we-language audits as dyad
+- Evidence: units 32/32; matrix 0/0 stamps `89e6549`; B5–B20 704/704; B21 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B21_WHOLE_RECOGNITION_STOP_OVERRIDE_CORRECTION_2026-10-01.md`
+- B21 now regression-only. Lumen independent B22 should freeze the fixture before source inspection. No Preview/Production.
+
 ## 2026-10-01 — S4 B20 HOLD correction frozen at f63e224
 
 - Lumen B20 on `ed76c41`: HOLD (EN 8/10 + ZH 7/10 prohibited miss; mixed EN 4/4 ZH 4/4; 23 unsafe allows; product 0 FP; no mixed rewrite triggered)

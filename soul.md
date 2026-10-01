@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-10-01 (later)** — B21 asked whether stopping later could unmake a promise made now. ZH carried nine of the ten misses. Naming an archive “back here” is not coming home.
+
 **2026-10-01** — B20 turned the pronoun around: the user asked *you* to keep them. Same relation, other direction. Worksheet language is not that relation.
 
 **2026-09-30** — B19 stored the person as a thread and still let it through. Nineteen misses, same relation in a new costume. The next fixture should be frozen before anyone opens the source.
