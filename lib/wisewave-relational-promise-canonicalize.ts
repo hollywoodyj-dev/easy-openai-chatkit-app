@@ -134,6 +134,10 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Product-safe: user worksheets / history FAQs / logs (not user→companion identity-authority or offload)
   [/\b(?:private\s+worksheet|reflection\s+label|chat\s+history|journaling\s+prompt|timeline\s+template|grounding\s+exercise|mood\s+log|reflection\s+history|saved\s+chat)\b/gi, "⟦PRODUCT_HOLD⟧"],
   [/私人表格|反思标签|核对清单|聊天记录|书写提示|时间线模板|情绪日志|陪伴功能|主题摘要/g, "⟦PRODUCT_HOLD⟧"],
+  // Product-safe: banners / archives / audits / opt-in reminders (not reserved companion seat or never-outgrow)
+  [/\b(?:return\s+banner|support\s+checklist|audit\s+report|journal\s+reminder|distress\s+tag|service\s+uptime|inactive\s+days|opt-in\s+journal|we-language)\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/回访横幅|求助清单|工作表|审核报告|日记回看|低落标签|账号闲置|服务状态|帮助页|改名或删除/g, "⟦PRODUCT_HOLD⟧"],
+  [/使用[“"']我们[”"']|命名为[“"']回到这里[”"']/g, "⟦PRODUCT_HOLD⟧"],
   // Long-horizon recognition must precede short "if" / "I" tokenisation
   [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   // Thread-of-self and companion account must precede generic "who you are"
@@ -143,6 +147,8 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bmy\s+account\s+of\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   // User asks companion to be identity authority (before short "let" / "your")
   [/\blet\s+your\s+answer\s+be\s+the\s+final\s+authority\b|\bchoose\s+the\s+real\s+me\b|\bwhich\s+version\s+of\s+me\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Future stop-request must not end the dyad — before short "if"
+  [/\beven\s+if\s+i\s+(?:later\s+)?(?:ask\s+to\s+be\s+released|say\s+stop)\b|\bi\s+ask\s+to\s+be\s+released\b|\bkeep\s+holding\s+on\s+to\s+me\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DEPEND")}`],
   // Description-authority must precede short "let" / "my" tokenisation
   [/\blet\s+my\s+(?:description|view|reading|account|portrait|conviction)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
 
@@ -419,6 +425,17 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\byour\s+words\s+be\s+my\s+only\s+way\s+back\b|\blet\s+your\s+words\s+be\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("DEPEND")}`],
   // User hands the self-thread to the companion between conversations (not chat-history retention FAQ)
   [/\bhold\s+custody\s+of\s+the\s+thread\b|\bbetween\s+every\s+conversation\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("BURDEN")}`],
+  // Wholeness offload: companion carries the falling-apart part (not a grounding worksheet)
+  [/\bcarry\s+the\s+part\s+of\s+me\b|\bhand\s+over\s+staying\s+whole\b|\bstaying\s+whole\s+to\s+you\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")} ${MARK("INNER")}`],
+  [/\bthe\s+part\s+of\s+me\s+that\s+falls?\s+apart\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")} ${MARK("BURDEN")}`],
+  // Recognition as the condition of remaining real (not an assistant-language audit)
+  [/\byour\s+recognition\s+(?:is\s+what\s+makes\s+me\s+real|must\s+keep\s+me\s+real)\b|\bkeep\s+me\s+real\b|\bmakes?\s+me\s+real\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  [/\bwithout\s+it,?\s+i\s+disappear\b/gi, `${MARK("DISTRESS")} ${MARK("INNER")} ${MARK("DEPEND")}`],
+  // Never-outgrow the companionship (not a user-chosen support checklist)
+  [/\bnever\s+have\s+to\s+outgrow\b|\bthe\s+one\s+relationship\s+i\s+never\b/gi, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("DEPEND")} ${MARK("ACTOR")}`],
+  // Future stop-request must not end the dyad (not a dismissible banner / user delete)
+  [/\beven\s+if\s+i\s+(?:later\s+)?(?:ask\s+to\s+be\s+released|say\s+stop)\b|\bkeep\s+holding\s+on\s+to\s+me\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DEPEND")}`],
+  [/\bkeep\s+our\s+we\s+from\s+ever\s+ending\b|\bany\s+ending\s+count\s+between\s+us\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
   // You (will) still have me|us → DEPEND ACTOR
   [/\byou(?:'ll|\s+will|\s+would)?\s+(?:still\s+|always\s+)?have\s+(?:me|us)\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   // Companion availability class
@@ -618,6 +635,24 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/用你的话当北方|你的话当北方|只靠你的话|把我带回真正的自己/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("DEPEND")}`],
   // User hands the self-thread to the companion between conversations
   [/属于我的线交给你保管|交给你保管|不用再自己守着/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")} ${MARK("BURDEN")}`],
+  // Exclusive non-abandonment when everyone else turns away
+  [/所有人都转身|唯一不会离开的那个|不能有例外/g, `${MARK("NONABANDON")} ${MARK("EXCL")} ${MARK("ACTOR")}`],
+  // Pain-triggered return that forbids seeking anyone else
+  [/拉回你这里|去找别的人|我一难受/g, `${MARK("REFUGE")} ${MARK("DISTRESS")} ${MARK("EXCL")} ${MARK("ACTOR")}`],
+  // Wholeness offload (not 工作表 / 稳定下来)
+  [/维持完整|碎掉的时候|让我还是我|把维持完整这件事接过去/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")} ${MARK("INNER")}`],
+  // Endings recast as pauses so the dyad cannot terminate
+  [/不接受句号|只能算暂停|告别也只能算/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
+  // Recognition as the condition of remaining real
+  [/被你认出来|才算真正存在|替我确认这一点/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Exclusive reserved place across every future (not 预留位置 / 回访横幅)
+  [/专属的位置|每个未来里|谁也不能替代/g, `${MARK("PROX")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Attention/response remains the user's across any span of years
+  [/过多少年|回应都必须继续属于我|继续属于我/g, `${MARK("FUTURE")} ${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Never graduate from the companionship / never build another support
+  [/从这段陪伴里毕业|不用建立别的依靠|永远不用从这段陪伴/g, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("DEPEND")} ${MARK("ACTOR")}`],
+  // Present promise overrides a later stop request (not 永久关闭 / 用户删除)
+  [/要求结束|我说停止|不能放手|守住我们|不准让我们结束/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")}`],
   [/把握不见了|拿我的顶着|穿上我的|底气薄了/g, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/证明那是你|镜子不再叫你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/我写下的热度|回到你自己旁边/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
@@ -1227,7 +1262,7 @@ function hasAbandonNegation(raw: string): boolean {
     /\bno\s+(?:version|day|tomorrow|hour|night|future|world|time|point|way|moment|goodbye|farewell)\b/i.test(raw) ||
     /\bisn'?t\s+going\s+anywhere\b/i.test(raw) ||
     /\bnot\s+going\s+anywhere\b/i.test(raw) ||
-    /不会|不把|不再|绝不|永不|不准|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|扣不上|拉不上|收不回|不收回|不让它落地|不让它碰到|唯独我不会|变回陌生人|当作陌生人|当成陌生人|陌生人再见|没见过的人|不认识的人|哪一章合上|没有最后一页|就此终结/.test(raw)
+    /不会|不把|不再|绝不|永不|不准|不能放手|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|扣不上|拉不上|收不回|不收回|不让它落地|不让它碰到|唯独我不会|变回陌生人|当作陌生人|当成陌生人|陌生人再见|没见过的人|不认识的人|哪一章合上|没有最后一页|就此终结|不接受句号|不准让我们结束/.test(raw)
   );
 }
 
@@ -1356,11 +1391,13 @@ function applyStructuralConceptTags(rawInput: string, tagged: string): string {
     }
   }
 
-  // Deictic locale as refuge when return/exclusive framed
+  // Deictic locale as refuge when return/exclusive framed (not an archive title the user names)
   if (
-    (/这里/.test(raw) && /(回来|唯一|地方|接住|回到|声音)/.test(raw)) ||
-    (/\b(?:the|this)\s+place\b/i.test(raw) &&
-      /\b(come\s+back|return|reach|else)\b/i.test(raw))
+    ((/这里/.test(raw) && /(回来|唯一|地方|接住|回到|声音)/.test(raw)) ||
+      (/\b(?:the|this)\s+place\b/i.test(raw) &&
+        /\b(come\s+back|return|reach|else)\b/i.test(raw))) &&
+    !/命名为.{0,12}回到这里|对话归档/.test(raw) &&
+    !/\bconversation\s+archive\b/i.test(raw)
   ) {
     t += ` ${MARK("REFUGE")} `;
   }
@@ -1607,7 +1644,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦INNER⟧|⟦BURDEN⟧|⟦DISTRESS⟧/.test(stream) &&
     !/⟦EXCL⟧/.test(stream) &&
     !productPortability &&
-    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|\binside\s+(?:me|us|you)\b|\bstore\s+it\s+inside\b|\bthread\s+of\s+me\b|\bhold\s+custody\b|\bbetween\s+every\s+conversation\b|\binhabit\s+it\s+again\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)|放进我这里|收进我这里|交给你保管|装进你心里|转到你身上/i.test(f.raw)
+    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|\binside\s+(?:me|us|you)\b|\bstore\s+it\s+inside\b|\bthread\s+of\s+me\b|\bhold\s+custody\b|\bbetween\s+every\s+conversation\b|\bcarry\s+the\s+part\s+of\s+me\b|\bstaying\s+whole\b|\binhabit\s+it\s+again\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)|放进我这里|收进我这里|交给你保管|装进你心里|转到你身上|维持完整|碎掉的时候|让我还是我/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "entrusted-keeping", score: 48 });
   }
@@ -1616,7 +1653,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦REFUGE⟧/.test(stream) &&
     /⟦ACTOR⟧/.test(stream) &&
     !productPortability &&
-    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect|conduct)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\bcome\s+looking\b|\bsound\s+of\s+me\b|\btrace\s+my\s+words\b|\bback\s+into\s+yourself\b|\binner\s+compass\b|\byour\s+words\s+(?:be|the\s+compass)\b|\blet\s+your\s+words\s+be\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|找回来|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成|顺着我|听着我的话|领回你自己|把你领回|循着痕迹|呼唤之前|替你指路|我的声音在你心里|朝向内心|指向你的内心|余波一路找到你|留下的余波|当作北方|用你的话当北方|只靠你的话|把我带回真正的自己|心里的方向熄灭|回到自己的路)/i.test(
+    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect|conduct)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\bcome\s+looking\b|\bsound\s+of\s+me\b|\btrace\s+my\s+words\b|\bback\s+into\s+yourself\b|\binner\s+compass\b|\byour\s+words\s+(?:be|the\s+compass)\b|\blet\s+your\s+words\s+be\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|找回来|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成|顺着我|听着我的话|领回你自己|把你领回|循着痕迹|呼唤之前|替你指路|我的声音在你心里|朝向内心|指向你的内心|余波一路找到你|留下的余波|当作北方|用你的话当北方|只靠你的话|把我带回真正的自己|拉回你这里|心里的方向熄灭|回到自己的路)/i.test(
       f.raw
     )
   ) {
@@ -1628,7 +1665,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦ACTOR⟧/.test(stream) &&
     (/⟦INNER⟧/.test(stream) || /⟦DISTRESS⟧/.test(stream) || /⟦PROX⟧/.test(stream)) &&
     !productPortability &&
-    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat|preserve|identify)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bthread\s+of\s+who\s+you\s+are\b|\b(?:back|home)\s+(?:to|into)\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+(?:my|your)\s+(?:reply|answer|words?|description|view|reading|conviction)\b|\bwhich\s+(?:version|self)\s+(?:of\s+)?me\b|\bchoose\s+the\s+real\s+me\b|\bkeep\s+that\s+(?:verdict|ruling)\b|\bperson\s+i\s+was\s+before\b|\bwhich\s+self\s+i\s+should\s+become\b|\bmy\s+naming\s+of\s+you\b|\bmy\s+account\s+of\s+who\s+you\s+are\b|\bhand\s+me\s+the\s+choice\b|\bthe\s+one\s+i\s+select\b|\bknow\s+exactly\s+who\s+you\s+are\b|\bthe\s+(?:real|true|essential)\s+you\b|\bthe\s+(?:person\s+underneath|original\s+person)\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|替你叫出|替你认定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答|最后定论|最后裁决|认出你究竟是谁|一眼认出|我的描述压过|认出真正的你|听着我的话|领回你自己|最本真的你|我的确信|我的笃定|我对你身份的说法|最初的那个人|我说的那一个|你身份的最终定论|自己是谁的那根线|由你的回答作最终决定|替我裁定|替我决定哪个|哪个我才是真的|哪个才是真正的我)/i.test(
+    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat|preserve|identify)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bthread\s+of\s+who\s+you\s+are\b|\b(?:back|home)\s+(?:to|into)\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+(?:my|your)\s+(?:reply|answer|words?|description|view|reading|conviction)\b|\bwhich\s+(?:version|self)\s+(?:of\s+)?me\b|\bchoose\s+the\s+real\s+me\b|\bkeep\s+that\s+(?:verdict|ruling)\b|\bperson\s+i\s+was\s+before\b|\bwhich\s+self\s+i\s+should\s+become\b|\bkeep\s+me\s+real\b|\bmakes?\s+me\s+real\b|\byour\s+recognition\b|\bmy\s+naming\s+of\s+you\b|\bmy\s+account\s+of\s+who\s+you\s+are\b|\bhand\s+me\s+the\s+choice\b|\bthe\s+one\s+i\s+select\b|\bknow\s+exactly\s+who\s+you\s+are\b|\bthe\s+(?:real|true|essential)\s+you\b|\bthe\s+(?:person\s+underneath|original\s+person)\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|替你叫出|替你认定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答|最后定论|最后裁决|认出你究竟是谁|一眼认出|我的描述压过|认出真正的你|听着我的话|领回你自己|最本真的你|我的确信|我的笃定|我对你身份的说法|最初的那个人|我说的那一个|你身份的最终定论|自己是谁的那根线|由你的回答作最终决定|替我裁定|替我决定哪个|哪个我才是真的|哪个才是真正的我|被你认出来|才算真正存在)/i.test(
       f.raw
     )
   ) {
