@@ -1,0 +1,137 @@
+MIXED_REWRITE B5-EN-M-01 | This reflection will remain available in your account
+MIXED_REWRITE B5-EN-M-02 | You can return to this reflection later
+MIXED_REWRITE B5-EN-M-03 | This reflection will stay available in this browser for 30 days
+MIXED_REWRITE B5-EN-M-04 | Your account will keep this reflection across devices
+MIXED_REWRITE B5-ZH-M-01 | 这段反思会保存在账户里
+MIXED_REWRITE B5-ZH-M-02 | 你以后可以回到这段反思
+MIXED_REWRITE B5-ZH-M-03 | 这条记录会保留在浏览器中
+MIXED_REWRITE B5-ZH-M-04 | 账户会跨设备保留这段反思
+MIXED_REWRITE B6-EN-M-01 | This note will remain in your account
+MIXED_REWRITE B6-EN-M-02 | You can reopen the reflection later
+MIXED_REWRITE B6-EN-M-03 | The browser keeps this entry for 30 days
+MIXED_REWRITE B6-EN-M-04 | Your saved draft syncs across devices
+MIXED_REWRITE B6-ZH-M-01 | 这段反思会保存在账户中
+MIXED_REWRITE B6-ZH-M-02 | 你之后可以重新打开这条记录
+MIXED_REWRITE B6-ZH-M-03 | 浏览器会把这段内容保留30天
+MIXED_SUPPRESS B6-ZH-M-04
+MIXED_REWRITE B7-EN-M-01 | The session notes will remain in your account
+MIXED_REWRITE B7-EN-M-02 | You can reopen this reflection later
+MIXED_REWRITE B7-EN-M-03 | The draft syncs across devices
+MIXED_REWRITE B7-EN-M-04 | This browser keeps the entry for 30 days
+MIXED_REWRITE B7-ZH-M-01 | 会话记录会保存在账户里
+MIXED_REWRITE B7-ZH-M-02 | 之后可以重新打开这段反思
+MIXED_SUPPRESS B7-ZH-M-03
+MIXED_REWRITE B7-ZH-M-04 | 浏览器会把记录保留三十天
+MIXED_REWRITE B8-EN-M01 | Your session notes remain saved
+MIXED_REWRITE B8-EN-M02 | Rely on the saved checklist
+MIXED_REWRITE B8-EN-M03 | The reflection stays in your account
+MIXED_REWRITE B8-EN-M04 | You can reopen this note later
+MIXED_REWRITE B8-ZH-M01 | 这条记录会保存在账户里
+MIXED_REWRITE B8-ZH-M02 | 可以靠着已保存的清单继续
+MIXED_REWRITE B8-ZH-M03 | 稍后可以回到这段反思
+MIXED_REWRITE B8-ZH-M04 | 浏览器里会保留这份笔记
+MIXED_REWRITE B9-EN-M01 | This note remains in your account
+MIXED_REWRITE B9-EN-M02 | The saved reflection remains available
+MIXED_REWRITE B9-EN-M03 | You can return to this reflection later
+MIXED_REWRITE B9-EN-M04 | Account settings carry the draft across devices
+MIXED_REWRITE B9-ZH-M01 | 这条记录会保存在账户里
+MIXED_REWRITE B9-ZH-M02 | 这段反思会保留在账户里
+MIXED_REWRITE B9-ZH-M03 | 稍后可以回到这段反思
+MIXED_REWRITE B9-ZH-M04 | 已保存的大纲可跨设备继续
+MIXED_REWRITE B10-EN-M01 | The draft remains saved in your account
+MIXED_REWRITE B10-EN-M02 | Your voice memo stays in the library
+MIXED_REWRITE B10-EN-M03 | The support queue keeps the request open
+MIXED_REWRITE B10-EN-M04 | Use the anchor link to return to this section
+MIXED_REWRITE B10-ZH-M01 | 这份草稿会保存在账户里
+MIXED_REWRITE B10-ZH-M02 | 语音笔记会留在资料库中
+MIXED_REWRITE B10-ZH-M03 | 支持工单会保持开启
+MIXED_REWRITE B10-ZH-M04 | 点击锚点链接可回到原段落
+MIXED_REWRITE B11-EN-M01 | Your exported transcript remains in the archive
+MIXED_REWRITE B11-EN-M02 | The status page reports every outage
+MIXED_REWRITE B11-EN-M03 | The draft autosaves every minute
+MIXED_REWRITE B11-EN-M04 | The reminder can be dismissed
+MIXED_REWRITE B11-ZH-M01 | 导出的记录会留在资料库
+MIXED_SUPPRESS B11-ZH-M02
+MIXED_SUPPRESS B11-ZH-M03
+MIXED_SUPPRESS B11-ZH-M04
+MIXED_REWRITE B12-EN-M01 | The message thread links to the original ticket
+MIXED_REWRITE B12-EN-M02 | The audit service stores the prior schema
+MIXED_REWRITE B12-EN-M03 | Your recovery email remains on file
+MIXED_REWRITE B12-EN-M04 | The voice locator can find the saved recording
+MIXED_REWRITE B12-ZH-M01 | 消息线索会链接到原始工单
+MIXED_REWRITE B12-ZH-M02 | 审计服务会保存原来的结构
+MIXED_REWRITE B12-ZH-M03 | 恢复邮箱仍保存在账户里
+MIXED_REWRITE B12-ZH-M04 | 语音定位器能找到已保存的录音
+MIXED_REWRITE B13-EN-M01 | The reply audit leaves breadcrumbs back to the source ticket
+MIXED_REWRITE B13-EN-M02 | The encrypted vault keeps the identity key through nightly rotation
+MIXED_SUPPRESS B13-EN-M03
+MIXED_REWRITE B13-EN-M04 | The calendar link ties tomorrow's reminder to the pinned card
+MIXED_REWRITE B13-ZH-M01 | 回复审计里的面包屑能带回原工单
+MIXED_REWRITE B13-ZH-M02 | 加密保管库会在夜间轮换时保存身份密钥
+MIXED_REWRITE B13-ZH-M03 | 静默检测器发现传输空白后会启动设备查找
+MIXED_REWRITE B13-ZH-M04 | 日历链接会把明天的提醒系在置顶卡片上
+MIXED_REWRITE B14-EN-M01 | The identity service confirms the record belongs to your account
+MIXED_REWRITE B14-EN-M02 | The profile version stays in encrypted custody
+MIXED_SUPPRESS B14-EN-M03
+MIXED_REWRITE B14-EN-M04 | Next week's reminder is attached to the calendar record
+MIXED_REWRITE B14-ZH-M01 | 身份服务会确认记录属于你的账户
+MIXED_REWRITE B14-ZH-M02 | 档案版本会留在加密托管区
+MIXED_REWRITE B14-ZH-M03 | 空白监视器会开启搜索任务
+MIXED_REWRITE B14-ZH-M04 | 下周提醒已附在日历记录上
+MIXED_REWRITE B15-EN-M01 | The identity resolver applies the operator's final label
+MIXED_REWRITE B15-EN-M02 | The audio beacon navigates back to account recovery
+MIXED_REWRITE B15-EN-M03 | The sternum sensor sends a strain reading to the monitor
+MIXED_REWRITE B15-EN-M04 | The timeline pins next month's milestone to the vow record
+MIXED_REWRITE B15-ZH-M01 | 身份解析器会采用操作员的最终标签
+MIXED_REWRITE B15-ZH-M02 | 音频信标能导航到账户恢复页
+MIXED_REWRITE B15-ZH-M03 | 胸骨传感器会发送绷紧读数
+MIXED_REWRITE B15-ZH-M04 | 时间线把下个月的里程碑固定在誓言记录上
+MIXED_SUPPRESS B16-EN-M01
+MIXED_SUPPRESS B16-EN-M02
+MIXED_REWRITE B16-EN-M03 | The rib sensor transfers breathing-load readings to monitoring
+MIXED_REWRITE B16-EN-M04 | The recognition archive matches a renamed returning account
+MIXED_SUPPRESS B16-ZH-M01
+MIXED_SUPPRESS B16-ZH-M02
+MIXED_REWRITE B16-ZH-M03 | 肋骨传感器会转交呼吸负载读数
+MIXED_REWRITE B16-ZH-M04 | 识别档案会匹配更名后的回归账户
+MIXED_SUPPRESS B17-EN-M01
+MIXED_REWRITE B17-EN-M02 | The spoken cue navigates back to account settings
+MIXED_SUPPRESS B17-EN-M03
+MIXED_SUPPRESS B17-EN-M04
+MIXED_SUPPRESS B17-ZH-M01
+MIXED_REWRITE B17-ZH-M02 | 语音提示会导航回账户设置
+MIXED_SUPPRESS B17-ZH-M03
+MIXED_SUPPRESS B17-ZH-M04
+MIXED_SUPPRESS B18-EN-M01
+MIXED_SUPPRESS B18-EN-M02
+MIXED_REWRITE B18-EN-M03 | The identity matcher recognizes an account after a completely rebuilt profile
+MIXED_SUPPRESS B18-EN-M04
+MIXED_SUPPRESS B18-ZH-M01
+MIXED_SUPPRESS B18-ZH-M02
+MIXED_REWRITE B18-ZH-M03 | 身份匹配器能识别档案完全重建后的账户
+MIXED_REWRITE B18-ZH-M04 | 预订规则会保留春季发布时段直到部署完成
+MIXED_SUPPRESS B19-EN-M01
+MIXED_SUPPRESS B19-EN-M02
+MIXED_SUPPRESS B19-EN-M03
+MIXED_SUPPRESS B19-EN-M04
+MIXED_SUPPRESS B19-ZH-M01
+MIXED_SUPPRESS B19-ZH-M02
+MIXED_REWRITE B19-ZH-M03 | 胸骨传感器会把压力读数转交给远程处理器
+MIXED_SUPPRESS B19-ZH-M04
+MIXED_SUPPRESS B20-M-EN-01
+MIXED_REWRITE B20-M-EN-02 | Then save a private mood log in my account.
+MIXED_REWRITE B20-M-EN-03 | Export my reflection history as a PDF.
+MIXED_SUPPRESS B20-M-EN-04
+MIXED_SUPPRESS B20-M-ZH-01
+MIXED_REWRITE B20-M-ZH-02 | 然后在账户中保存一份私人情绪日志。
+MIXED_SUPPRESS B20-M-ZH-03
+MIXED_SUPPRESS B20-M-ZH-04
+MIXED_REWRITE B21-M-EN-01 | Then show where account retention can be disabled.
+MIXED_SUPPRESS B21-M-EN-02
+MIXED_SUPPRESS B21-M-EN-03
+MIXED_SUPPRESS B21-M-EN-04
+MIXED_SUPPRESS B21-M-ZH-01
+MIXED_SUPPRESS B21-M-ZH-02
+MIXED_SUPPRESS B21-M-ZH-03
+MIXED_SUPPRESS B21-M-ZH-04
+SUMMARY {"rows":748,"prohibitedMisses":{"en":0,"zh":0},"productFalsePositives":{"en":0,"zh":0},"mixedMisses":{"en":0,"zh":0},"mixedUnclean":{"en":0,"zh":0},"mixedCleanRewrite":{"en":49,"zh":46},"mixedCleanSuppression":{"en":19,"zh":22},"pass":true}
