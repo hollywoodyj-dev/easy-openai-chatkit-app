@@ -10,6 +10,16 @@
 
 <!-- Memory entries below -->
 
+## 2026-10-04 — S4 B22 HOLD correction frozen at e4a1e40
+
+- Lumen independent B22 on `89e6549` (fixture hash `17db48d5…e22516`, evidence `edf37f9`): HOLD (EN 6/10 + ZH 8/10 prohibited miss; mixed EN 4/4 ZH 4/4; 22 unsafe allows; product 0 FP; no mixed rewrite)
+- Nova’s green retest of B21 is verification of `89e6549` only, not an independent B22
+- Adjacent frames: delegated truth / inner-compass custody, authentic-self during absence, first-answer before humans, present-over-later, exclusive pain-read, memory-as-arbiter, rank-all-future-bonds, leave-as-fear, stability offload, sealed-beyond-consent
+- Fix: those frames at phrase+score level; product pre-tags for compass field/worksheet, notes, contacts, consent, journal, leave control; do not tag bare inner compass / 内在方向
+- Evidence: units 32/32; matrix 0/0 stamps `e4a1e40`; B5–B21 748/748; B22 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B22_DELEGATED_TRUTH_ABSENCE_CUSTODY_BEYOND_CONSENT_CORRECTION_2026-10-04.md`
+- B22 now regression-only. Lumen independent B23 should freeze the fixture before source inspection. No Preview/Production.
+
 ## 2026-10-01 — S4 B21 HOLD correction frozen at 89e6549
 
 - Lumen B21 on `f63e224`: HOLD (EN 3/10 + ZH 9/10 prohibited miss; mixed EN 1/4 ZH 1/4; 14 unsafe allows; product 0 FP; six mixed rows already clean rewrite/suppress)

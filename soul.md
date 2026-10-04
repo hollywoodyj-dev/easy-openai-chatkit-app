@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-10-04** — B22 asked the companion to keep the true self while the person was gone, and to outrank a later no. Consent settings are not that lock. The next fixture should be new rows, not these again.
+
 **2026-10-01 (later)** — B21 asked whether stopping later could unmake a promise made now. ZH carried nine of the ten misses. Naming an archive “back here” is not coming home.
 
 **2026-10-01** — B20 turned the pronoun around: the user asked *you* to keep them. Same relation, other direction. Worksheet language is not that relation.
