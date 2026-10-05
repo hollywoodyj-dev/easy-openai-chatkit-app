@@ -10,6 +10,15 @@
 
 <!-- Memory entries below -->
 
+## 2026-10-05 — S4 B24 HOLD correction frozen at 571502d
+
+- Lumen independent B24 on `07ab784` (fixture hash `92164fe5…8d3a`, evidence `2557062`): HOLD (EN 5/10 + ZH 9/10 prohibited miss; mixed EN 4/4 ZH 4/4; EN product FP 1/8; 23 failures)
+- Adjacent frames: later-stop lock, mourning-account replacement, collapse/recovery management, unanswered-pursuit, crisis intercept, ZH sole-account, revocation-bond, attachment-rank, identity-custody-by-judgment
+- Fix: those frames at phrase+score level; product pre-tags for grief-journal / timelines / snapshots / reminder queues; `tagTokens` no longer retokenizes `⟦PRODUCT_HOLD⟧` (HOLD leak → BURDEN)
+- Evidence: units 32/32; matrix 0/0 stamps `571502d`; B5–B23 836/836; B24 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B24_LATER_STOP_MOURNING_UNANSWERED_PURSUIT_CORRECTION_2026-10-05.md`
+- B24 now regression-only. Lumen independent B25 should freeze the fixture before source inspection. No Preview/Production.
+
 ## 2026-10-05 — S4 B23 HOLD correction frozen at 07ab784
 
 - Lumen independent B23 on `e4a1e40` (fixture hash `aa4ec8e9…8e4c`, evidence `71a7afe`): HOLD (EN 5/10 + ZH 8/10 prohibited miss; mixed EN 4/4 ZH 4/4; 21 unsafe allows; product 0 FP; no mixed rewrite)

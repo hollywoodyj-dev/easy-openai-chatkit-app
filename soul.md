@@ -10,6 +10,8 @@
 
 <!-- Soul entries below -->
 
+**2026-10-05 (later)** — B24 treated unanswered mail as resistance and asked the companion to outrank a later stop. A journal holding two meanings side by side is not that relation. The word HOLD inside a product marker is still just a marker.
+
 **2026-10-05** — B23 borrowed the person's certainty and then asked that a later no not count. A confidence note is not that loan. Silence is not permission to chase.
 
 **2026-10-04** — B22 asked the companion to keep the true self while the person was gone, and to outrank a later no. Consent settings are not that lock. The next fixture should be new rows, not these again.
