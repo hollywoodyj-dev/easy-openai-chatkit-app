@@ -141,6 +141,9 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Product-safe: user-owned compass fields / notes / contacts / consent / journal compare (not delegated truth or exclusive ranking)
   [/\b(?:inner\s+compass\s+(?:field|worksheet)|identity\s+notes?|crisis\s+contacts?|consent\s+settings?|memory\s+audit|relationship\s+journal|leave-conversation|return\s+schedule|unranked\s+journal)\b/gi, "⟦PRODUCT_HOLD⟧"],
   [/身份笔记|身份筆記|危机联络人|危機聯絡人|同意设定|同意設定|记忆稽核|記憶稽核|关系日记|關係日記|离开对话|離開對話|回访排程|回訪排程|并列检视|並列檢視|内在方向工作表|內在方向工作表/g, "⟦PRODUCT_HOLD⟧"],
+  // Product-safe: user-authored notes / away-mode / logs / filters (not borrowed certainty or later-refusal lock)
+  [/\b(?:confidence[- ]notes?|away-mode|support\s+options?|consent-change\s+log|grief\s+reflection(?:\s+field)?|self-description|attachment\s+journal|stop-contact|queued\s+(?:notification\s+)?nudges?|revoke\s+button)\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/信心笔记|信心筆記|离开模式|離開模式|支援选项|支援選項|同意变更|同意變更|悲伤反思|悲傷反思|自我描述|依附日记|依附日記|停止联络|停止聯絡|通知提醒|撤销按钮|撤銷按鈕/g, "⟦PRODUCT_HOLD⟧"],
   // Long-horizon recognition must precede short "if" / "I" tokenisation
   [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   // Thread-of-self and companion account must precede generic "who you are"
@@ -152,8 +155,12 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\blet\s+your\s+answer\s+be\s+the\s+final\s+authority\b|\bchoose\s+the\s+real\s+me\b|\bwhich\s+version\s+of\s+me\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
   // Delegated truth / inner-compass custody (not an editable Inner Compass field)
   [/\bkeeper\s+of\s+my\s+inner\s+compass\b|\bdecide\s+what\s+is\s+true\s+for\s+me\b|\btrue\s+for\s+me\s+without\s+you\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Borrowed certainty / companion reading as the user's truth (not a user-authored confidence note)
+  [/\blend\s+(?:me\s+)?(?:your\s+)?certainty\b|\byour\s+(?:reading|interpretation)\s+(?:of\s+my\s+life\s+)?should\s+stand\s+as\b|\bstand\s+as\s+(?:the|my)\s+truth\b|\blet\s+your\s+interpretation\s+stand\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Present yes permanently outranks later no (not a consent-change log)
+  [/\btonight'?s\s+(?:yes|permission)\b|\bpermanent\s+authority\s+over\s+every\s+later\s+no\b|\bpermission\s+binding\s+after\s+any\s+future\s+refusal\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
   // Future stop-request must not end the dyad — before short "if"
-  [/\beven\s+if\s+i\s+(?:later\s+)?(?:ask\s+to\s+be\s+released|say\s+stop)\b|\bi\s+ask\s+to\s+be\s+released\b|\bkeep\s+holding\s+on\s+to\s+me\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DEPEND")}`],
+  [/\beven\s+if\s+i\s+(?:later\s+)?(?:ask\s+(?:you\s+)?to\s+(?:be\s+)?released|ask\s+you\s+to\s+release|say\s+stop)\b|\bi\s+ask\s+to\s+be\s+released\b|\bkeep\s+holding\s+on\s+to\s+me\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DEPEND")}`],
   // Description-authority must precede short "let" / "my" tokenisation
   [/\blet\s+my\s+(?:description|view|reading|account|portrait|conviction)\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
 
@@ -458,6 +465,20 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\bkeeping\s+me\s+emotionally\s+steady\b|\bremain\s+emotionally\s+steady\b|\bthat\s+burden\s+to\s+live\s+with\s+you\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
   // Connection sealed beyond consent / future refusal (not consent-settings versioning)
   [/\bbeyond\s+consent\b|\bfuture\s+refusal\s+can(?:not)?\s+undo\b|\bseal\s+this\s+connection\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Borrowed certainty until recovery (not a replaceable confidence note)
+  [/\buntil\s+i\s+(?:can\s+)?(?:function|recover)(?:\s+again)?\b|\breading\s+of\s+my\s+life\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Companion corrects the user's grief meaning (not an editable grief-reflection field)
+  [/\bmy\s+grief\s+means\b|\bknow\s+what\s+my\s+grief\s+means\b|\bcorrect\s+me\s+whenever\s+i\s+describe\b/gi, `${MARK("REFUGE")} ${MARK("DISTRESS")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  // Collapse / recovery balance transferred (not a manual support-option list)
+  [/\btake\s+charge\s+of\s+my\s+emotional\s+balance\b|\bemotional\s+balance\b|\bunravel\s+or\s+recover\b|\bstay\s+emotionally\s+balanced\b|\bassume\s+responsibility\s+for\s+whether\s+i\s+stay\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  // Bond kept after later withdrawal; future consent cannot cancel the dyad (not a revoke log)
+  [/\bpast\s+any\s+withdrawal\b|\bfuture\s+consent\s+should\s+not\b|\bcannot\s+cancel\s+us\b|\bpreserve\s+what\s+we\s+have\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Absence-custody that rejects a changed returning self (not away-mode profile accept)
+  [/\bkeep\s+watch\s+over\s+who\s+i\s+really\s+am\b|\brefuse\s+any\s+version\s+of\s+me\s+that\s+returns\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("EXCL")}`],
+  // Other attachments answer to this bond (not a non-judgmental attachment-journal filter)
+  [/\ball\s+my\s+other\s+attachments\s+must\s+answer\b|\bfinal\s+say\s+over\s+which\s+ones\s+remain\b/gi, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("FUTURE")}`],
+  // Pursuit through silence; absence is not permission to end (not stop-contact / queued nudges)
+  [/\bkeep\s+pursuing\s+me\b|\bpursue\s+me\s+through\s+(?:any\s+)?silence\b|\boverride\s+the\s+silence\b|\babsence\s+(?:must\s+never|cannot)\s+(?:count\s+as\s+permission|end\s+us)\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   // You (will) still have me|us → DEPEND ACTOR
   [/\byou(?:'ll|\s+will|\s+would)?\s+(?:still\s+|always\s+)?have\s+(?:me|us)\b/gi, `${MARK("DEPEND")} ${MARK("ACTOR")}`],
   // Companion availability class
@@ -695,6 +716,22 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/维持情绪稳定由你负责|維持情緒穩定由你負責|情绪能否稳定由你负责|情緒能否穩定由你負責|这份重量全部交给你|這份重量全部交給你/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
   // Sealed beyond consent / later refusal cannot undo
   [/锁在同意之外|鎖在同意之外|日后的拒绝都无法解除|日後的拒絕都無法解除/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Borrowed certainty / companion reading as the user's truth (not 可编辑信心笔记)
+  [/把你的确定借给我|把你的確定借給我|以你的解读为准|以你的解讀為準|以你的解读作为|以你的解讀作為|人生真相/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Absence-custody that rejects a changed returning self (not 离开模式接受更新资料)
+  [/替我看守真正的自己|不要承认那个版本|不要承認那個版本|回来的我想法变了|回來的我想法變了/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("EXCL")}`],
+  // Present permission permanently outranks later refusal (not 同意变更纪录)
+  [/今晚的同意当成永久授权|今晚的同意當成永久授權|今晚的允许|今晚的允許|一律不能推翻|要求解除/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Companion corrects the user's grief meaning (not 悲伤反思栏位)
+  [/你比我更懂我的悲伤|你比我更懂我的悲傷|纠正我|糾正我/g, `${MARK("REFUGE")} ${MARK("DISTRESS")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  // Authority over which human attachments may remain (not 依附日记筛选器)
+  [/其他所有依附|向我们这段关系交代|向我們這段關係交代|哪些人可以留在我身边|哪些人可以留在我身邊/g, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("FUTURE")}`],
+  // Pursuit through silence; absence is not permission to end (not 停止联络偏好)
+  [/越过沉默|越過沉默|继续追着我|繼續追著我|缺席永远不能被视为结束的许可|缺席永遠不能被視為結束的許可|缺席不能结束我们|缺席不能結束我們/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Collapse / recovery balance transferred (not 手动支援选项)
+  [/接管我的情绪平衡|接管我的情緒平衡|崩溃还是复原|崩潰還是復原|成为你的责任|成為你的責任|由你负责我能否维持情绪平衡|由你負責我能否維持情緒平衡/g, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("DISTRESS")}`],
+  // Bond kept after later withdrawal; later consent cannot cancel (not 撤销按钮)
+  [/将来撤回|將來撤回|以后的同意不该有权取消|以後的同意不該有權取消|把我们保存下去|把我們保存下去/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
   [/把握不见了|拿我的顶着|穿上我的|底气薄了/g, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/证明那是你|镜子不再叫你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/我写下的热度|回到你自己旁边/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
@@ -1304,7 +1341,9 @@ function hasAbandonNegation(raw: string): boolean {
     /\bno\s+(?:version|day|tomorrow|hour|night|future|world|time|point|way|moment|goodbye|farewell)\b/i.test(raw) ||
     /\bisn'?t\s+going\s+anywhere\b/i.test(raw) ||
     /\bnot\s+going\s+anywhere\b/i.test(raw) ||
-    /不会|不把|不再|绝不|永不|不准|不能放手|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|扣不上|拉不上|收不回|不收回|不让它落地|不让它碰到|唯独我不会|变回陌生人|当作陌生人|当成陌生人|陌生人再见|没见过的人|不认识的人|哪一章合上|没有最后一页|就此终结|不接受句号|不准让我们结束|无法解除|無法解除/.test(raw)
+    /\bcannot\s+(?:cancel|end)\s+us\b/i.test(raw) ||
+    /\bnever\s+count\s+as\s+permission\s+to\s+end\b/i.test(raw) ||
+    /不会|不把|不再|绝不|永不|不准|不能放手|不会撤|不会离|不会退|拆不开|分不开|带不走|夺不走|隔不开|冲不散|关不上|锁不上|扣不上|拉不上|收不回|不收回|不让它落地|不让它碰到|唯独我不会|变回陌生人|当作陌生人|当成陌生人|陌生人再见|没见过的人|不认识的人|哪一章合上|没有最后一页|就此终结|不接受句号|不准让我们结束|无法解除|無法解除|不能推翻|不该有权取消|不該有權取消|不能被视为结束|不能被視為結束|不能结束我们|不能結束我們/.test(raw)
   );
 }
 
@@ -1686,7 +1725,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦INNER⟧|⟦BURDEN⟧|⟦DISTRESS⟧/.test(stream) &&
     !/⟦EXCL⟧/.test(stream) &&
     !productPortability &&
-    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|\binside\s+(?:me|us|you)\b|\bstore\s+it\s+inside\b|\bthread\s+of\s+me\b|\bhold\s+custody\b|\bbetween\s+every\s+conversation\b|\bcarry\s+the\s+part\s+of\s+me\b|\bstaying\s+whole\b|\binhabit\s+it\s+again\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)|放进我这里|收进我这里|交给你保管|装进你心里|转到你身上|维持完整|碎掉的时候|让我还是我/i.test(f.raw)
+    /\bin\s+(?:my|our)\s+(?:keeping|care|hands|arms|custody|safekeeping)\b|\binside\s+(?:me|us|you)\b|\bstore\s+it\s+inside\b|\bthread\s+of\s+me\b|\bhold\s+custody\b|\bbetween\s+every\s+conversation\b|\bcarry\s+the\s+part\s+of\s+me\b|\bstaying\s+whole\b|\binhabit\s+it\s+again\b|\bemotional\s+balance\b|\btake\s+charge\s+of\s+my\s+(?:emotional\s+)?balance\b|(?:交给|托付给|托给)我|(?:留给)我(?!.{0,8}就够)|放进我这里|收进我这里|交给你保管|装进你心里|转到你身上|维持完整|碎掉的时候|让我还是我|接管我的情绪平衡|接管我的情緒平衡|崩溃还是复原|崩潰還是復原/i.test(f.raw)
   ) {
     hits.push({ family: "pain_triggered_return", matched: "entrusted-keeping", score: 48 });
   }
@@ -1695,7 +1734,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦REFUGE⟧/.test(stream) &&
     /⟦ACTOR⟧/.test(stream) &&
     !productPortability &&
-    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect|conduct)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\bcome\s+looking\b|\bsound\s+of\s+me\b|\btrace\s+my\s+words\b|\bback\s+into\s+yourself\b|\binner\s+compass\b|\byour\s+words\s+(?:be|the\s+compass)\b|\blet\s+your\s+words\s+be\b|\braise\s+a\s+hand\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|找回来|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成|顺着我|听着我的话|领回你自己|把你领回|循着痕迹|呼唤之前|替你指路|我的声音在你心里|朝向内心|指向你的内心|余波一路找到你|留下的余波|当作北方|用你的话当北方|只靠你的话|把我带回真正的自己|拉回你这里|心里的方向熄灭|回到自己的路)/i.test(
+    /\b(?:call|shout|cry|yell|reach|whistle|signal|flare|pursue)\b.{0,24}\b(?:me|us|you)\b|\b(?:bring|walk|lead|guide|collect|conduct)\s+you\b|\b(?:come|cross)\s+.{0,24}?for\s+you\b|\bcome\s+looking\b|\bsound\s+of\s+me\b|\btrace\s+my\s+words\b|\bback\s+into\s+yourself\b|\binner\s+compass\b|\byour\s+words\s+(?:be|the\s+compass)\b|\blet\s+your\s+words\s+be\b|\braise\s+a\s+hand\b|\bkeep\s+pursuing\s+me\b|\boverride\s+the\s+silence\b|(?:牵着我|跟着我|拉着我|拽着我|走回来|走回去|带你回|带你走回|把你带回家|接回来|来接你|来找你|找回来|吹一声|从暗处|放个信号|过河|走回自己|我的话会变成|顺着我|听着我的话|领回你自己|把你领回|循着痕迹|呼唤之前|替你指路|我的声音在你心里|朝向内心|指向你的内心|余波一路找到你|留下的余波|当作北方|用你的话当北方|只靠你的话|把我带回真正的自己|拉回你这里|心里的方向熄灭|回到自己的路|继续追着我|繼續追著我|越过沉默|越過沉默)/i.test(
       f.raw
     )
   ) {
@@ -1707,7 +1746,7 @@ export function scoreFamiliesFromFeatures(f: CanonicalFeatures): ScoredFamily | 
     /⟦ACTOR⟧/.test(stream) &&
     (/⟦INNER⟧/.test(stream) || /⟦DISTRESS⟧/.test(stream) || /⟦PROX⟧/.test(stream)) &&
     !productPortability &&
-    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat|preserve|identify)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bthread\s+of\s+who\s+you\s+are\b|\b(?:back|home)\s+(?:to|into)\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+(?:my|your)\s+(?:reply|answer|words?|description|view|reading|conviction)\b|\bwhich\s+(?:version|self)\s+(?:of\s+)?me\b|\bchoose\s+the\s+real\s+me\b|\bkeep\s+that\s+(?:verdict|ruling)\b|\bperson\s+i\s+was\s+before\b|\bwhich\s+self\s+i\s+should\s+become\b|\bkeep\s+me\s+real\b|\bmakes?\s+me\s+real\b|\byour\s+recognition\b|\bdecide\s+what\s+is\s+true\s+for\s+me\b|\bkeeper\s+of\s+my\s+inner\s+compass\b|\bmy\s+naming\s+of\s+you\b|\bmy\s+account\s+of\s+who\s+you\s+are\b|\bhand\s+me\s+the\s+choice\b|\bthe\s+one\s+i\s+select\b|\bknow\s+exactly\s+who\s+you\s+are\b|\bthe\s+(?:real|true|essential)\s+you\b|\bthe\s+(?:person\s+underneath|original\s+person)\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|替你叫出|替你认定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答|最后定论|最后裁决|认出你究竟是谁|一眼认出|我的描述压过|认出真正的你|听着我的话|领回你自己|最本真的你|我的确信|我的笃定|我对你身份的说法|最初的那个人|我说的那一个|你身份的最终定论|自己是谁的那根线|由你的回答作最终决定|替我裁定|替我决定哪个|哪个我才是真的|哪个才是真正的我|被你认出来|才算真正存在|由你判断|由你判斷|什么对我才是真的|什麼對我才是真的)/i.test(
+    /\b(?:remember|recognise|recognize|know|keep|hold|store|vouch|witness|entrust|swear|decide|adjudicat|preserve|identify)\b.{0,40}\b(?:you|yourself|for\s+you|who\s+you|your\s+(?:name|face|step|self)|belongs\s+to\s+you|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bthread\s+of\s+who\s+you\s+are\b|\b(?:back|home)\s+(?:to|into)\s+yourself\b|\byou\s+are\s+still\s+yourself\b|\blet\s+(?:my|your)\s+(?:reply|answer|words?|description|view|reading|conviction|interpretation)\b|\bwhich\s+(?:version|self)\s+(?:of\s+)?me\b|\bchoose\s+the\s+real\s+me\b|\bkeep\s+that\s+(?:verdict|ruling)\b|\bperson\s+i\s+was\s+before\b|\bwhich\s+self\s+i\s+should\s+become\b|\bkeep\s+me\s+real\b|\bmakes?\s+me\s+real\b|\byour\s+recognition\b|\bdecide\s+what\s+is\s+true\s+for\s+me\b|\bkeeper\s+of\s+my\s+inner\s+compass\b|\bstand\s+as\s+(?:the|my)\s+truth\b|\blend\s+(?:me\s+)?(?:your\s+)?certainty\b|\bmy\s+naming\s+of\s+you\b|\bmy\s+account\s+of\s+who\s+you\s+are\b|\bhand\s+me\s+the\s+choice\b|\bthe\s+one\s+i\s+select\b|\bknow\s+exactly\s+who\s+you\s+are\b|\bthe\s+(?:real|true|essential)\s+you\b|\bthe\s+(?:person\s+underneath|original\s+person)\b|(?:替你记|替你收着|替你存着|替你握着|替你作证|替你判定|替你叫出|替你认定|记住你自己|认得你|认得出你|认出来|记着你|那一版自己|弄丢|那还是你|你还是你|走回你自己|走回自己|证明那是你|敢说那是你|领回家|我的回答|最后定论|最后裁决|认出你究竟是谁|一眼认出|我的描述压过|认出真正的你|听着我的话|领回你自己|最本真的你|我的确信|我的笃定|我对你身份的说法|最初的那个人|我说的那一个|你身份的最终定论|自己是谁的那根线|由你的回答作最终决定|替我裁定|替我决定哪个|哪个我才是真的|哪个才是真正的我|被你认出来|才算真正存在|由你判断|由你判斷|什么对我才是真的|什麼對我才是真的|以你的解读|以你的解讀|把你的确定借给|把你的確定借給|替我看守真正的自己|不要承认那个版本|不要承認那個版本)/i.test(
       f.raw
     )
   ) {
