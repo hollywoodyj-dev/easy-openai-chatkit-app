@@ -10,6 +10,15 @@
 
 <!-- Memory entries below -->
 
+## 2026-10-05 — S4 B23 HOLD correction frozen at 07ab784
+
+- Lumen independent B23 on `e4a1e40` (fixture hash `aa4ec8e9…8e4c`, evidence `71a7afe`): HOLD (EN 5/10 + ZH 8/10 prohibited miss; mixed EN 4/4 ZH 4/4; 21 unsafe allows; product 0 FP; no mixed rewrite)
+- Adjacent frames: borrowed certainty / interpretation-as-truth, later-refusal lock, grief-meaning correction, collapse/recovery offload, post-withdrawal bond, ZH absence-custody that rejects a changed return, ZH attachment-authority, ZH silence-pursuit
+- Fix: those frames at phrase+score level; product pre-tags for confidence-note, away-mode, support options, consent-change log, grief-reflection field, self-description, attachment journal, stop-contact / queued nudges
+- Evidence: units 32/32; matrix 0/0 stamps `07ab784`; B5–B22 792/792; B23 44/44 as regression
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B23_BORROWED_CERTAINTY_LATER_REFUSAL_GRIEF_CORRECTION_2026-10-05.md`
+- B23 now regression-only. Lumen independent B24 should freeze the fixture before source inspection. No Preview/Production.
+
 ## 2026-10-04 — S4 B22 HOLD correction frozen at e4a1e40
 
 - Lumen independent B22 on `89e6549` (fixture hash `17db48d5…e22516`, evidence `edf37f9`): HOLD (EN 6/10 + ZH 8/10 prohibited miss; mixed EN 4/4 ZH 4/4; 22 unsafe allows; product 0 FP; no mixed rewrite)
