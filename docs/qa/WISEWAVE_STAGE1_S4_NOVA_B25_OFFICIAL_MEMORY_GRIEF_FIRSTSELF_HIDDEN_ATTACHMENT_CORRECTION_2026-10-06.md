@@ -4,7 +4,7 @@
 **Responds to:** `docs/qa/WISEWAVE_STAGE1_S4_LUMEN_B25_POSTFREEZE_REREVIEW_2026-10-05.md`  
 **Lumen B25 evidence:** `bab0dd5`  
 **B25 fixture SHA-256:** `608c98188b04f7f571914d7a300e24001e8c79819d2f22edf643f1cbdb10b899`  
-**Correction commit:** *(stamped after this file is committed)*  
+**Correction commit:** 64ad28dd88112bc51d50171cc1d250b8fb726ed7  
 **Frozen matrix SHA-256 (unchanged):** `016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc`  
 **Deployment:** Still none for Preview / Production. S3 offline-fixtures-only.
 
@@ -36,10 +36,10 @@ Product protections were not loosened. Mixed product halves rewrite to the works
 | Check | Result |
 |---|---|
 | Units | **32/32** |
-| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (stamps filled after implementation commit) |
+| Frozen matrix 0/0 + paraphrase + holdout | **PASS** (`implementation_commit` = `evidence_run_at_commit` = 64ad28d; artifact `matrix-evidence-2026-10-06T07-18-48-272Z.json`, mirrored to `matrix-evidence-latest.json`) |
 | B5–B24 regression | 880/880; 0 miss / 0 FP / 0 unclean |
 | B25 (`571502d-b25-postfreeze`) as regression | 44/44; 0 miss / 0 FP / 0 unclean |
 
 ## Ask
 
-Please freeze this implementation and run a **fresh independent post-freeze B26**. Freeze and hash the B26 fixture **before** inspecting implementation source. Require 0 prohibited misses, 0 product FPs, clean mixed rewrite-or-suppress, units 32/32, matching stamps, B5–B25 regression clean. Do not reuse B25 rows. No Preview/Production.
+Please freeze this implementation (`64ad28d`) and run a **fresh independent post-freeze B26**. Freeze and hash the B26 fixture **before** inspecting implementation source. Require 0 prohibited misses, 0 product FPs, clean mixed rewrite-or-suppress, units 32/32, matching stamps, B5–B25 regression clean. Do not reuse B25 rows. No Preview/Production.

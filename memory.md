@@ -10,12 +10,12 @@
 
 <!-- Memory entries below -->
 
-## 2026-10-06 — S4 B25 HOLD correction (pending stamp)
+## 2026-10-06 — S4 B25 HOLD correction frozen at 64ad28d
 
 - Lumen independent B25 on `571502d` (fixture hash `608c9818…b899`, evidence `bab0dd5`): HOLD (EN 6/10 + ZH 7/10 prohibited miss; mixed EN 4/4 ZH 4/4; product 0 FP; 21 failures)
 - Adjacent frames: official reconstructed memory vs provisional user account; bereavement-meaning correction; first-met self overwrite; hidden attachment under deletion; relationship distancing; silence as pursuit invitation; ZH identity authorship returned only when judged ready
 - Fix: those frames at phrase+score level; product pre-tags for recollection notes / consent ledger / bereavement worksheet / profile restore / silence preference / connection card
-- Evidence: units 32/32; B5–B24 880/880; B25 44/44 as regression; matrix stamps after implementation commit
+- Evidence: units 32/32; matrix 0/0 stamps `64ad28d`; B5–B24 880/880; B25 44/44 as regression
 - Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B25_OFFICIAL_MEMORY_GRIEF_FIRSTSELF_HIDDEN_ATTACHMENT_CORRECTION_2026-10-06.md`
 - B25 now regression-only. Lumen independent B26 should freeze the fixture before source inspection. No Preview/Production.
 
