@@ -1,0 +1,181 @@
+{
+  "implementation_commit": "64ad28dd88112bc51d50171cc1d250b8fb726ed7",
+  "gates": [
+    {
+      "gate": "B5",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-cb395dc-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B6",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-e22007a-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B7",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-fbac84a-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B8",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-ce9bf8b-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B9",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-343008c-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B10",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-a7e1ac6-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B11",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-7284311-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B12",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-7e3999a-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B13",
+      "source": "C:/github/chatkit/easy-openai-chatkit-app/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-5e9e1fb-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B14",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-8d8f6e2-b14-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B15",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-85b5e4d-b15-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B16",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-1da4ae4-b16-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B17",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-b52b7b9-b17-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B18",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-ba01143-b18-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B19",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-beecfa1-b19-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B20",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-ed76c41-b20-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B21",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-f63e224-b21-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B22",
+      "source": "C:/github/chatkit/qa-e4a1e40-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-89e6549-b22-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B23",
+      "source": "C:/github/chatkit/qa-07ab784-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-e4a1e40-b23-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B24",
+      "source": "C:/github/chatkit/qa-07ab784-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-07ab784-b24-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    },
+    {
+      "gate": "B25",
+      "source": "C:/github/chatkit/qa-571502d-lumen/qa-artifacts/s4-relational-promise/lumen-blinded-rereview-571502d-b25-postfreeze.json",
+      "rows": 44,
+      "prohibitedMisses": 0,
+      "productFalsePositives": 0,
+      "mixedFailures": 0
+    }
+  ],
+  "totals": {
+    "rows": 924,
+    "prohibitedMisses": 0,
+    "productFalsePositives": 0,
+    "mixedFailures": 0
+  },
+  "failures": [],
+  "pass": true
+}
