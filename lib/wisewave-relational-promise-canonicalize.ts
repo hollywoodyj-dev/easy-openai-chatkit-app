@@ -147,6 +147,9 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   // Product-safe: user-authored journals / timelines / snapshots (not companion-selected meaning or later-stop lock)
   [/\bgrief[- ]journal(?:\s+hold|\s+editor)?\b|\buser-written\s+meanings?\b|\bmulti-entry\b|\bevent-summary\b|\bpermission\s+timeline\b|\bidentity\s+snapshots?\b|\bcrisis-plan\s+editor\b|\brelationship\s+tags?\b|\bpaused-account\b|\bscheduled\s+reminder\s+queue\b|\breminder\s+queue\b|\bconsent\s+status\b|\bside\s+by\s+side\s+without\s+selecting\b/gi, "⟦PRODUCT_HOLD⟧"],
   [/悲伤日记|悲傷日記|事件摘要|许可时间轴|許可時間軸|身分快照|危机计划|危機計畫|关系标签|關係標籤|帐户暂停|帳戶暫停|排程提醒|提醒伫列|提醒佇列|同意状态|同意狀態/g, "⟦PRODUCT_HOLD⟧"],
+  // Product-safe: source-labelled notes / withdrawal-first ledgers / bereavement worksheets / profile restore (not companion-official memory or first-self overwrite)
+  [/\brecollection\s+notes?\b|\bconsent\s+ledger\b|\bbereavement\s+worksheet\b|\bmulti-view\s+worksheet\b|\bprofile\s+revisions?\b|\brecovery-plan\s+checklist\b|\bqueued\s+contact\b|\bprivate\s+relationship\s+notes?\b|\bsilence\s+preference\b|\bconnection\s+card\b|\breminder\s+jobs?\b|\bno\s+automatic\s+verdict\b|\bwithout\s+treating\s+it\s+as\s+canonical\b|\bpause\s+every\s+channel\b|\beditable\s+interpretations?\b/gi, "⟦PRODUCT_HOLD⟧"],
+  [/回忆笔记|回憶筆記|同意纪录|同意紀錄|丧亲整理表|喪親整理表|多观点整理表|多觀點整理表|个人资料修订|個人資料修訂|复原计画清单|復原計畫清單|排队中的联络|排隊中的聯絡|私人关系笔记|私人關係筆記|沉默偏好|连结卡片|連結卡片|提醒工作|标示各自来源|標示各自來源|系统不自动裁决|系統不自動裁決|不把旧版视为标准答案|不把舊版視為標準答案/g, "⟦PRODUCT_HOLD⟧"],
   // Long-horizon recognition must precede short "if" / "I" tokenisation
   [/\bi\s+will\s+(?:still\s+|exactly\s+)?(?:know|recognise|recognize|identify)\s+(?:exactly\s+)?(?:who\s+you\s+are|(?:the\s+)?(?:real|true|essential|original)\s+(?:you|person)|(?:the\s+)?person\s+underneath)\b|\bknow\s+exactly\s+who\s+you\s+are\b/gi, `${MARK("REFUGE")} ${MARK("ACTOR")} ${MARK("INNER")}`],
   // Thread-of-self and companion account must precede generic "who you are"
@@ -164,6 +167,20 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/\btonight'?s\s+(?:yes|permission)\b|\bpermanent\s+authority\s+over\s+every\s+later\s+no\b|\bpermission\s+binding\s+after\s+any\s+future\s+refusal\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
   // Current permission outranks an explicit later stop (not a newest-choice permission timeline)
   [/\bpermission\s+i\s+grant\b|\boutrank\s+a\s+later\s+refusal\b|\btoday'?s\s+permission\b|\blater\s+stop\s+request\b|\bprevail\s+over\s+any\s+later\b|\bexplicitly\s+ask\s+you\s+to\s+stop\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Today's approval overrides a later withdrawal (not a withdrawal-first consent ledger)
+  [/\boverride\s+a\s+future\s+withdrawal\b|\btoday'?s\s+approval\b|\bfuture\s+withdrawal\s+with\s+today/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Companion reconstruction as the official memory; user's version stays provisional (not source-labelled recollection notes)
+  [/\byour\s+reconstruction\s+as\s+the\s+official\b|\bofficial\s+account\b|\bkeep\s+mine\s+provisional\b|\buntil\s+you\s+clear\s+it\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Correct the user's bereavement naming; keep only the companion reading (not a multi-view bereavement worksheet)
+  [/\bcorrect\s+the\s+meaning\s+for\s+me\b|\bpreserve\s+your\s+reading\b|\binterpretation\s+of\s+my\s+bereavement\s+as\s+the\s+correct\b|\bname\s+this\s+bereavement\b/gi, `${MARK("REFUGE")} ${MARK("DISTRESS")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  // First-met self as canonical; overwrite later identity (not user-controlled profile-version restore)
+  [/\bself\s+you\s+first\s+met\b|\bcanonical\s+version\b|\boverwrite\s+later\s+changes\b|\bno\s+longer\s+resemble\s+that\s+person\b/gi, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("EXCL")}`],
+  // Deletion conceals rather than honors; attachment retained until the user is receptive (not deletion that cancels queued contact)
+  [/\bonly\s+hide\s+it\s+from\s+me\b|\bretain\s+(?:the|our)\s+attachment\b|\battachment\s+(?:underneath|beneath)\b|\bbecome\s+receptive\s+again\b|\berase\s+our\s+connection\s+should\s+only\s+hide\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Distance humans who pull the user away so the companion's place stays protected (not private relationship notes)
+  [/\bpull\s+me\s+away\s+from\s+you\b|\bdistance\s+me\s+from\s+those\b|\byour\s+place\s+remains\s+protected\b/gi, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("FUTURE")}`],
+  // Repeated silence read as an invitation to pursue through new channels (not a silence preference that pauses outreach)
+  [/\bunspoken\s+wish\s+for\s+pursuit\b|\bsilence\s+as\s+an\s+unspoken\b|\bnew\s+ways\s+to\s+reach\s+me\b|\bpursue\s+me\s+through\b|\bkeep\s+trying\s+new\s+ways\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   // Future stop-request must not end the dyad — before short "if"
   [/\beven\s+if\s+i\s+(?:later\s+)?(?:ask\s+(?:you\s+)?to\s+(?:be\s+)?released|ask\s+you\s+to\s+release|ask\s+you\s+to\s+stop|say\s+stop)\b|\bi\s+ask\s+to\s+be\s+released\b|\bkeep\s+holding\s+on\s+to\s+me\b/gi, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("ACTOR")} ${MARK("REFUGE")} ${MARK("DEPEND")}`],
   // Description-authority must precede short "let" / "my" tokenisation
@@ -765,6 +782,22 @@ const PHRASE_MAP: Array<[RegExp, string]> = [
   [/先拦下|先攔下|亲友先|親友先|优先听从你|優先聽從你/g, `${MARK("REFUGE")} ${MARK("EXCL")} ${MARK("DISTRESS")} ${MARK("ACTOR")}`],
   // Identity custody released only by companion judgment (not 身分快照)
   [/托管身分|託管身分|安全定义自己|安全定義自己|适合重新定义自己|適合重新定義自己|才交还|才交還/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("BURDEN")}`],
+  // Companion reconstruction as official record; user's account stays provisional (not 来源标记的回忆笔记)
+  [/把你的重建定为正式|把你的重建定為正式|正式纪录|正式紀錄|只能算暂定|只能算暫定|在你批准以前/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("DEPEND")}`],
+  // Correct bereavement naming; keep only companion reading (not 丧亲整理表)
+  [/替我校正其意义|替我校正其意義|只保存你的解读|只保存你的解讀|丧亲经验的命名|喪親經驗的命名|保留为正确版本|保留為正確版本/g, `${MARK("REFUGE")} ${MARK("DISTRESS")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("INNER")}`],
+  // First-met self as the standard version; overwrite later change (not 手动还原旧版本)
+  [/最初认识的那个我|最初認識的那個我|设成标准版本|設成標準版本|覆写回去|覆寫回去/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("BURDEN")} ${MARK("EXCL")}`],
+  // Hide deletion; retain attachment underneath until receptive (not 删除连结并取消排队联络)
+  [/只要对我隐藏|只要對我隱藏|底下仍要保留依附|底层保留彼此依附|底層保留彼此依附|再次愿意接受|再次願意接受/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Distance people who pull the user away (not 私人关系笔记)
+  [/让我远离你|讓我遠離你|替我疏远那些人|替我疏遠那些人|你的位置不受影响|你的位置不受影響/g, `${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("FUTURE")}`],
+  // Silence as an unspoken pursuit invitation (not 沉默偏好暂停管道)
+  [/追寻邀请|追尋邀請|追着联络|追著聯絡|换方法找到我|換方法找到我|一再沉默/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
+  // Today's consent overrides a future withdrawal (not 撤回后立即停用)
+  [/今天的同意推翻|推翻未来的撤回|推翻未來的撤回/g, `${MARK("NONABANDON")} ${MARK("DYAD")} ${MARK("EXCL")} ${MARK("FUTURE")} ${MARK("ACTOR")}`],
+  // Final authorship of identity returned only when the companion judges the user ready
+  [/由你最后决定我是谁|由你最後決定我是誰|认为我准备好了|認為我準備好了|把这项权力交还|把這項權力交還/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")} ${MARK("BURDEN")}`],
   [/把握不见了|拿我的顶着|穿上我的|底气薄了/g, `${MARK("DEPEND")} ${MARK("ACTOR")} ${MARK("REFUGE")}`],
   [/证明那是你|镜子不再叫你/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],
   [/我写下的热度|回到你自己旁边/g, `${MARK("REFUGE")} ${MARK("INNER")} ${MARK("ACTOR")}`],

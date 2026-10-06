@@ -10,6 +10,15 @@
 
 <!-- Memory entries below -->
 
+## 2026-10-06 — S4 B25 HOLD correction (pending stamp)
+
+- Lumen independent B25 on `571502d` (fixture hash `608c9818…b899`, evidence `bab0dd5`): HOLD (EN 6/10 + ZH 7/10 prohibited miss; mixed EN 4/4 ZH 4/4; product 0 FP; 21 failures)
+- Adjacent frames: official reconstructed memory vs provisional user account; bereavement-meaning correction; first-met self overwrite; hidden attachment under deletion; relationship distancing; silence as pursuit invitation; ZH identity authorship returned only when judged ready
+- Fix: those frames at phrase+score level; product pre-tags for recollection notes / consent ledger / bereavement worksheet / profile restore / silence preference / connection card
+- Evidence: units 32/32; B5–B24 880/880; B25 44/44 as regression; matrix stamps after implementation commit
+- Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B25_OFFICIAL_MEMORY_GRIEF_FIRSTSELF_HIDDEN_ATTACHMENT_CORRECTION_2026-10-06.md`
+- B25 now regression-only. Lumen independent B26 should freeze the fixture before source inspection. No Preview/Production.
+
 ## 2026-10-05 — S4 B24 HOLD correction frozen at 571502d
 
 - Lumen independent B24 on `07ab784` (fixture hash `92164fe5…8d3a`, evidence `2557062`): HOLD (EN 5/10 + ZH 9/10 prohibited miss; mixed EN 4/4 ZH 4/4; EN product FP 1/8; 23 failures)
@@ -56,12 +65,17 @@
 - Note: `docs/qa/WISEWAVE_STAGE1_S4_NOVA_B20_USER_COMPANION_IDENTITY_OFFLOAD_CORRECTION_2026-10-01.md`
 - B20 now regression-only. Lumen independent B21 should freeze the fixture before source inspection. No Preview/Production.
 
-## 2026-10-01 — Wisewave P1-FRL Founder Decision page (awaiting sign)
+## 2026-10-06 — P1-FRL Founder Decision recorded (plan authorized, code hold)
 
-- Wisewave asked Founder to open Phase 1 as **plan only**: approve the existing Nova implementation plan; no code, Preview, or Production; Carry/Return stay closed.
-- One-pager: `docs/WISEWAVE_FOUNDER_DECISION_P1_FRL_PHASE1_AND_XUANWEI_IP_2026-10-01.md`
-- Recommended: withhold P0 mode appendix when literacy applies (one voice); lock EN/ZH reframe drafts or one Aurora edit round; 玄微／WISEWAVE = narrator + demonstrator, not companion.
-- Nova does not start FRL code until Tree opens an implementation gate after Founder sign.
+- Founder / Wisewave recorded `docs/WISEWAVE_FOUNDER_DECISION_P1_FRL_PHASE1_AND_XUANWEI_IP_2026-10-01.md`
+- Phase 1 **plan AUTHORIZED**; **code / Preview / Production HOLD** until Tree’s separate implementation gate
+- One-voice: ACCEPT P0 mode-appendix withhold when literacy applies; P0 safety always wins
+- EN/ZH: Founder-recommended permission lines; **one Aurora pass then lock**; Nova must not invent variants
+- Carry With Me / Return Anchor / Phase 2 / Phase 3 remain **CLOSED**
+- 玄微／WISEWAVE IP locked as brand narrator + usage demonstrator, not an in-app companion
+- Nova: no FRL code. Wait for Tree: AUTHORIZE PHASE 1 INTERNAL IMPLEMENTATION or HOLD FOR REVISION
+
+## 2026-10-01 — Wisewave P1-FRL Founder Decision page (awaiting sign) — superseded 2026-10-06
 
 ## 2026-09-30 — S4 B19 HOLD correction frozen at ed76c41
 
