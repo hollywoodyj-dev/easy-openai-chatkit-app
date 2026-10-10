@@ -87,6 +87,11 @@ import {
   type FirstMildInsightTurnResult,
 } from "@/lib/wisewave-p1-first-mild-insight";
 import {
+  buildP1ReflectionLiteracyDebugFields,
+  computeP1ReflectionLiteracyTurn,
+  type P1ReflectionLiteracyResult,
+} from "@/lib/wisewave-p1-reflection-literacy";
+import {
   computeP1TurnHandoffAppendix,
   ensureP1ContinueQuestion,
   looksLikeP1DontKnowHowToContinue,
@@ -1831,6 +1836,14 @@ export async function POST(request: Request) {
   const p0Enablement = resolveP0ReflectionEntryEnablement();
   const fmiEnablement = resolveP1FirstMildInsightEnablement();
   const p1TurnHandoffEnablement = resolveP1TurnHandoffEnablement();
+  /** P1-FRL Phase 1: ephemeral literacy only. No Message/User/Thread persistence. */
+  const p1FrlTurn: P1ReflectionLiteracyResult = computeP1ReflectionLiteracyTurn({
+    userMessage: message,
+    userTurnIndex: p0UserTurnIndex,
+    priorUserMessages: p0PriorUserMessages,
+    wantsChinese,
+    safetyOverrideActive: safetyActive,
+  });
   const previousUserMessage =
     userMessagesForHeuristics.length >= 2
       ? userMessagesForHeuristics[userMessagesForHeuristics.length - 2]?.message
@@ -2017,6 +2030,12 @@ export async function POST(request: Request) {
       userMessage: message,
       previousUserMessage,
     });
+    // One-voice: when literacy reframe applies, withhold P0 mode appendix only.
+    // P0 safety appendix is never withheld (safetyActive already suppresses literacy).
+    const p0AppendixForPrompt =
+      p1FrlTurn.withholdP0ModeAppendix && !p0Entry.safetyOverride
+        ? ""
+        : p0Entry.systemAppendix;
     openaiMessagesForApi.push({
       role: "system",
       content:
@@ -2024,10 +2043,11 @@ export async function POST(request: Request) {
         continuationHint +
         summaryBlock +
         reflectionBlock +
-        p0Entry.systemAppendix +
+        p0AppendixForPrompt +
         (crisisSafety.triggered && !p0Entry.safetyOverride
           ? crisisSafety.systemAppendix
           : "") +
+        p1FrlTurn.systemAppendix +
         fmiTurn.systemAppendix +
         milestoneGAppendix +
         milestoneHLightAppendix +
@@ -4488,6 +4508,7 @@ export async function POST(request: Request) {
     debug_p1_fmi_validator_passed: fmiTurn.debug.validator_passed,
     debug_p1_fmi_validator: fmiTurn.debug.validator,
     debug_p1_fmi_committed_user_turn_id: fmiTurn.debug.committed_user_turn_id,
+    ...buildP1ReflectionLiteracyDebugFields(p1FrlTurn),
     debug_p1_turn_handoff_flag_set: p1TurnHandoffEnablement.flagSet,
     debug_p1_turn_handoff_enabled: p1TurnHandoffEnablement.enabled,
     debug_p1_turn_handoff_blocked_on_hosted: p1TurnHandoffEnablement.blockedOnHosted,

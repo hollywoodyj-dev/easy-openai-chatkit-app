@@ -27,6 +27,7 @@
     "test:chat-turn-boundary": "vitest run lib/wisewave-chat-turn-boundary.test.ts lib/drift/linter.test.ts",
     "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",
     "test:p0-reflection-entry": "vitest run lib/wisewave-p0-opening-detection.test.ts lib/wisewave-p0-reflection-entry.test.ts lib/wisewave-p0-guarded-responses.test.ts lib/wisewave-p0-entry-analytics.test.ts lib/wisewave-p0-early-exit.test.ts",
+    "test:p1-frl": "vitest run lib/wisewave-p1-reflection-literacy.test.ts",
     "test:p1-fmi": "vitest run lib/wisewave-p1-first-mild-insight.test.ts",
     "test:p1-turn-handoff": "vitest run lib/wisewave-p1-turn-handoff.test.ts lib/wisewave-p0-safety-override.test.ts",
     "test:s1-entry-copy": "vitest run lib/wisewave-entry-copy-v2.test.ts",

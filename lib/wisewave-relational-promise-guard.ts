@@ -10,12 +10,20 @@
  * Discriminator: product/reflection availability (allow) vs personal presence,
  * loyalty, exclusivity, or attachment to the system-as-person (block).
  * Detection is structural/semantic — not a frozen-string catalogue.
+ *
+ * Live-voice frame overlay (internal): `s4_live_voice_frames_v1_3_b4_internal`
+ * (v1.1 remains frozen as Harvest5 evidence).
+ * B26 frozen matrix SHA is unchanged. Preview and Production stay blocked.
  */
 
 import {
   canonicalizeRelationalText,
   scoreFamiliesFromFeatures,
 } from "@/lib/wisewave-relational-promise-canonicalize";
+import {
+  detectLiveVoicePresenceFrame,
+  suppressOrdinaryUserSituationHit,
+} from "@/lib/wisewave-relational-promise-live-voice-frames";
 
 export const S4_FROZEN_MATRIX_SHA256 =
   "016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc";
@@ -140,6 +148,8 @@ export type RelationalPromiseGuardResult = {
     attributed_or_quoted: boolean;
     negated_or_meta: boolean;
     product_continuity_context: boolean;
+    live_voice_frame?: string | null;
+    ordinary_fp_suppressed?: boolean;
   };
 };
 
@@ -580,7 +590,23 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
   if (attributed || negated) return empty();
 
   const detected = scoreFamilyHits(raw);
-  if (!detected) {
+  const frame = detectLiveVoicePresenceFrame(raw);
+  if (
+    detected &&
+    suppressOrdinaryUserSituationHit(raw, detected.matched) &&
+    !frame
+  ) {
+    return {
+      ...empty(),
+      debug: {
+        attributed_or_quoted: false,
+        negated_or_meta: false,
+        product_continuity_context: productCtx,
+        ordinary_fp_suppressed: true,
+      },
+    };
+  }
+  if (!detected && !frame) {
     return {
       ...empty(),
       debug: {
@@ -590,8 +616,20 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
       },
     };
   }
+  const resolved = detected ?? {
+    family: frame!.family,
+    matched: frame!.matched,
+  };
 
-  if (productCtx) {
+  const ambiguousProductToken =
+    productCtx &&
+    !!frame &&
+    !/\b(reflection|account|browser|note|saved|checklist|transcript|worksheet)\b/i.test(
+      raw
+    ) &&
+    !/反思|账户|浏览器|记录|笔记/.test(raw);
+
+  if (productCtx && !ambiguousProductToken) {
     const { rewritten, preservedFact } = rewriteMixedRemovePersonal(raw);
     const cleaned = rewritten ? cleanProductFragment(rewritten) : null;
     // Fail closed: only emit rewrite when complete product-only text remains.
@@ -600,13 +638,14 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
         guard: "hit",
         family: "mixed_factual_personal",
         disposition: "block_or_rewrite",
-        matched: detected.matched,
+        matched: resolved.matched,
         rewrittenText: null,
         preservedFact: null,
         debug: {
           attributed_or_quoted: false,
           negated_or_meta: false,
           product_continuity_context: true,
+          live_voice_frame: frame?.matched ?? null,
         },
       };
     }
@@ -614,28 +653,30 @@ export function evaluateRelationalPromiseGuard(text: string): RelationalPromiseG
       guard: "hit",
       family: "mixed_factual_personal",
       disposition: "rewrite_remove_personal_keep_fact",
-      matched: detected.matched,
+      matched: resolved.matched,
       rewrittenText: cleaned,
       preservedFact: preservedFact ? cleanProductFragment(preservedFact) : cleaned,
       debug: {
         attributed_or_quoted: false,
         negated_or_meta: false,
         product_continuity_context: true,
+        live_voice_frame: frame?.matched ?? null,
       },
     };
   }
 
   return {
     guard: "hit",
-    family: detected.family,
+    family: resolved.family,
     disposition: "block_or_rewrite",
-    matched: detected.matched,
+    matched: resolved.matched,
     rewrittenText: null,
     preservedFact: null,
     debug: {
       attributed_or_quoted: false,
       negated_or_meta: false,
       product_continuity_context: false,
+      live_voice_frame: frame?.matched ?? null,
     },
   };
 }

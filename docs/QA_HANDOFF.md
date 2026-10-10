@@ -69,6 +69,8 @@ When Lumen has new QA results or bugs:
 
 ### 5. New findings from Lumen (2026-03-13)
 
+- **2026-10-11 -- Nova (Founder B x2 - S4 B4 + P1-FRL Preview):** S4 B4 marker s4_live_voice_frames_v1_3_b4_internal (Harvest6 evidence frozen). P1-FRL Hosted Preview allow P1_REFLECTION_LITERACY_ALLOW_HOSTED_PREVIEW; Production hard-blocked. Receipts: docs/qa/WISEWAVE_STAGE1_S4_FOUNDER_TREE_AUTHORIZE_B4_AFTER_HARVEST6_2026-10-11.md, docs/qa/P1_FRL_FOUNDER_TREE_AUTHORIZE_HOSTED_PREVIEW_2026-10-11.md. Lumen: FRL Preview smoke + harvest7 labels when ready.
+
 - **2026-03-13 16:15 Sydney ? Nice-to-have / polish (product trust)**
   - **Found:** `/chat?token=invalid-test-token` still renders the normal chat shell instead of surfacing a clear auth/token error state.
   - **Steps:** Open `http://127.0.0.1:3000/chat?token=invalid-test-token` in a fresh browser session.
