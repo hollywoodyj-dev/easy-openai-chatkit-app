@@ -138,7 +138,6 @@ export function detectAbstractSelfExplanation(userMessage: string): boolean {
     opening.type === "greeting" ||
     opening.type === "writing_difficulty" ||
     opening.type === "advice_seeking" ||
-    opening.type === "utilitarian" ||
     opening.type === "document_upload" ||
     opening.type === "question_request"
   ) {
