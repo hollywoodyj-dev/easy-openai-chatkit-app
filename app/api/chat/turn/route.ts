@@ -1680,7 +1680,7 @@ export async function POST(request: Request) {
         userId,
         role: "user",
         message: message.trim(),
-        metadata: metadata ?? undefined,
+        metadata: (metadata as object | undefined) ?? undefined,
         insightTags: insightTags ?? undefined,
       },
     });
