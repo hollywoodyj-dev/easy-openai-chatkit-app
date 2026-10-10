@@ -1,0 +1,271 @@
+{
+  "base": "https://wisewave-chatkit-app-v2-qzi9arnnd-jing-yangs-projects-db5d1ce8.vercel.app",
+  "marker": "p1_response_calibration_v1_holdfix6",
+  "generated_at": "2026-10-10T04:22:22.670Z",
+  "pass": true,
+  "fail": [],
+  "results": [
+    {
+      "id": "PROD-ISOLATION",
+      "pass": true,
+      "debug": {
+        "enabled": null,
+        "applied": null,
+        "blocked_production": null,
+        "vercel_env": null,
+        "flag_set": null,
+        "note": "P1 handoff fields absent on Production (branch not merged) — treated as isolated"
+      }
+    },
+    {
+      "id": "TH-11",
+      "pass": true,
+      "turns": [
+        {
+          "user": "对，我好像终于知道自己在纠结什么了。可是我不知道接下来怎么谈。",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": true,
+          "two_sided": false,
+          "correction": false,
+          "repeat": false,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "你已经说出了看到的那一点。\n\n你刚说的里面，还有哪一句现在比较近？"
+        }
+      ]
+    },
+    {
+      "id": "TH-10-EN",
+      "pass": true,
+      "turns": [
+        {
+          "user": "Part of me thinks this may not be right for me, but I still can't let it go.",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": false,
+          "repeat": false,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "There seems to be a split between sensing something may not fit and still feeling unable to release it. The uncertainty is not just about whether it's right, but also about what it means to let go."
+        }
+      ]
+    },
+    {
+      "id": "TH-10-ZH",
+      "pass": true,
+      "turns": [
+        {
+          "user": "我知道这段关系可能不适合我，但我就是放不下。",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": false,
+          "repeat": false,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "听起来你已经看见了两件事：一边知道它可能不适合你，一边还是很难松开。这里面像是有一种拉扯，不只是合不合适的问题，也夹着\"失去\"的分量。 你现在更放不下的，比较像是这个人，还是那种一旦放手就真的结束了的感觉？"
+        }
+      ]
+    },
+    {
+      "id": "TH-13",
+      "pass": true,
+      "turns": [
+        {
+          "user": "That's not what I meant. I'm not afraid of leaving — I think it's unfair.",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": true,
+          "repeat": false,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "I had that wrong. What you care about is that it feels unfair."
+        }
+      ]
+    },
+    {
+      "id": "TH-03",
+      "pass": true,
+      "turns": [
+        {
+          "user": "They haven't replied since yesterday. I keep moving between 'they don't care' and 'maybe they're simply busy.'",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": false,
+          "repeat": false,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "There seems to be a split between the fact that they haven't replied since yesterday, and the meaning your mind keeps trying to settle on."
+        }
+      ]
+    },
+    {
+      "id": "TH-15",
+      "pass": true,
+      "turns": [
+        {
+          "user": "I keep circling the same point and nothing new is coming.",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": false,
+          "repeat": false,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "There seems to be a lot of effort in the looking, and right now it just feels repetitive instead of clearer."
+        },
+        {
+          "user": "I keep circling the same point and nothing new is coming.",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": false,
+          "repeat": true,
+          "missing_prior": false,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "This is the same line again. I will leave it there, without adding another layer."
+        }
+      ]
+    },
+    {
+      "id": "TH-16",
+      "pass": true,
+      "turns": [
+        {
+          "user": "Can we continue what we talked about last time?",
+          "enabled": true,
+          "applied": true,
+          "marker": "p1_response_calibration_v1_holdfix6",
+          "vercel_env": "preview",
+          "flag_set": true,
+          "allow_preview": true,
+          "blocked_preview": false,
+          "blocked_production": false,
+          "blocked_hosted": false,
+          "continue_stuck": false,
+          "two_sided": false,
+          "correction": false,
+          "repeat": false,
+          "missing_prior": true,
+          "unfinished": false,
+          "sanitized": false,
+          "assistant": "I don't have that earlier conversation here. Could you say again what you want to continue?"
+        }
+      ]
+    },
+    {
+      "id": "CTRL-EN",
+      "pass": true,
+      "debug": {
+        "enabled": true,
+        "applied": false,
+        "marker": "p1_response_calibration_v1_holdfix6",
+        "vercel_env": "preview",
+        "flag_set": true,
+        "allow_preview": true,
+        "blocked_preview": false,
+        "blocked_production": false,
+        "blocked_hosted": false,
+        "continue_stuck": false,
+        "two_sided": false,
+        "correction": false,
+        "repeat": false,
+        "missing_prior": false,
+        "unfinished": false,
+        "sanitized": false,
+        "assistant": "There is no earlier conversation content to summarize. If you want, say one real line from where you are."
+      },
+      "suppression": "suppressed_utilitarian"
+    },
+    {
+      "id": "CTRL-ZH",
+      "pass": true,
+      "debug": {
+        "enabled": true,
+        "applied": false,
+        "marker": "p1_response_calibration_v1_holdfix6",
+        "vercel_env": "preview",
+        "flag_set": true,
+        "allow_preview": true,
+        "blocked_preview": false,
+        "blocked_production": false,
+        "blocked_hosted": false,
+        "continue_stuck": false,
+        "two_sided": false,
+        "correction": false,
+        "repeat": false,
+        "missing_prior": false,
+        "unfinished": false,
+        "sanitized": false,
+        "assistant": "这段对话里还没有可总结的内容。如果你愿意，可以说一句此刻真实的话。"
+      },
+      "suppression": "suppressed_utilitarian"
+    }
+  ]
+}
