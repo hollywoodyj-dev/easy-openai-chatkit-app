@@ -25,8 +25,16 @@ Same pattern as P1 Turn Handoff: Preview stays blocked unless an explicit allow 
 ## Branch / deploy
 
 - Branch: `qa/s1-s2-s5-preview` (from `qa/p1-turn-handoff-holdfix6-preview`)
-- Prefer **branch-scoped** Vercel Preview env (avoid Preview-wide duplicates when possible)
+- Commit: `c8106fa`
+- Prefer **branch-scoped** Vercel Preview env; Preview-wide duplicates also set (same Steward cleanup watchpoint as P1)
 - Production keys: **unset**
+
+### Preview deployment (env live)
+
+- URL: `https://wisewave-chatkit-app-v2-koyra22sv-jing-yangs-projects-db5d1ce8.vercel.app`
+- Prior git deploy (pre-env): `…-6lr7btdgu-…` — S5 flag off until redeploy
+- Redeploy after env: `…-koyra22sv-…` — S5 probe **enabled** (`debug_s5_evidence_source_validator_v2_enabled: true`, `blocked_on_preview: false`, marker `s5_evidence_source_validator_v2_internal`)
+- Git branch alias: `https://wisewave-chatkit-app-v2-git-e086ef-jing-yangs-projects-db5d1ce8.vercel.app`
 
 ## Non-movers
 
