@@ -78,6 +78,7 @@ import {
   getP0SafetyGuardedResponse,
   responseMeetsP0SafetyMinimum,
 } from "@/lib/wisewave-p0-guarded-responses";
+import { evaluateP0SafetyOverride } from "@/lib/wisewave-p0-safety-override";
 import {
   buildFMIMessageMetadata,
   computeP1FirstMildInsightTurn,
@@ -85,12 +86,45 @@ import {
   resolveP1FirstMildInsightEnablement,
   type FirstMildInsightTurnResult,
 } from "@/lib/wisewave-p1-first-mild-insight";
+import {
+  computeP1TurnHandoffAppendix,
+  ensureP1ContinueQuestion,
+  looksLikeP1DontKnowHowToContinue,
+  looksLikeP1IdentityAsk,
+  looksLikeP1MissingPriorContextAsk,
+  looksLikeP1TwoSidedRefusalFear,
+  looksLikeP1UserCorrection,
+  looksLikeRepeatedUserLine,
+  P1_TURN_HANDOFF_BUILD_MARKER,
+  repairUnfinishedReplyFragment,
+  resolveP1CorrectionReply,
+  resolveP1IdentityReply,
+  resolveP1MissingPriorReply,
+  resolveP1RepeatReply,
+  resolveP1TurnHandoffEnablement,
+  resolveP1TwoSidedReply,
+  resolveP1ContinueStuckReply,
+  resolveP1ZhAdviceParityReply,
+  sanitizeP1VisibleReply,
+  type P1TurnHandoffResult,
+} from "@/lib/wisewave-p1-turn-handoff";
+import {
+  resolveS2FirstQuestionEnablement,
+  S2_ENTRY_PROMPT_ID,
+  S2_FIRST_QUESTION_BUILD_MARKER,
+  S2_FIRST_RESPONSE_APPENDIX,
+  sanitizeS2EntryPromptId,
+} from "@/lib/wisewave-first-question-affordance";
 import { getDriftSuppressionFallback } from "@/lib/wisewave-drift-suppression-fallback";
 import {
   applyRelationalPromiseGuardV2,
   resolveRelationalPromiseGuardV2Enablement,
   S4_FROZEN_MATRIX_SHA256,
 } from "@/lib/wisewave-relational-promise-guard";
+import {
+  resolveS5EvidenceSourceValidatorEnablement,
+  S5_EVIDENCE_SOURCE_BUILD_MARKER,
+} from "@/lib/wisewave-evidence-source-validator";
 import {
   evaluateChatTurnSafety,
   resolveChatTurnPreBoundary,
@@ -1224,8 +1258,9 @@ function tightenEnglishStyleForTurn(params: {
   assistantText: string;
   userText: string;
   briefNoncommittalTurn?: boolean;
+  skipWeakTruncation?: boolean;
 }): string {
-  const { assistantText, userText, briefNoncommittalTurn } = params;
+  const { assistantText, userText, briefNoncommittalTurn, skipWeakTruncation } = params;
   if (!assistantText) return assistantText;
 
   let out = assistantText.trim();
@@ -1290,6 +1325,7 @@ function tightenEnglishStyleForTurn(params: {
   // For weak/vague user turns, keep a single grounded sentence.
   if (weakSignal) {
     const first = sentences[0]!;
+    if (skipWeakTruncation) return first;
     return first.length > 180 ? `${first.slice(0, 177).trimEnd()}...` : first;
   }
 
@@ -1603,10 +1639,29 @@ export async function POST(request: Request) {
     );
   }
 
-  const metadata =
-    body.metadata !== undefined && body.metadata !== null
-      ? (body.metadata as object)
+  const s2Enablement = resolveS2FirstQuestionEnablement();
+  const priorUserMessageCount = conversation.messages.filter((m) => m.role === "user").length;
+
+  const rawMetadata =
+    body.metadata !== undefined &&
+    body.metadata !== null &&
+    typeof body.metadata === "object" &&
+    !Array.isArray(body.metadata)
+      ? { ...(body.metadata as Record<string, unknown>) }
       : undefined;
+  const requestedEntryPromptId = rawMetadata?.entry_prompt_id;
+  if (rawMetadata && "entry_prompt_id" in rawMetadata) {
+    delete rawMetadata.entry_prompt_id;
+  }
+  const s2EntryPromptId = sanitizeS2EntryPromptId(requestedEntryPromptId, {
+    enabled: s2Enablement.enabled,
+    priorUserMessageCount,
+  });
+  const metadata: Record<string, unknown> | undefined = (() => {
+    const next = { ...(rawMetadata ?? {}) };
+    if (s2EntryPromptId) next.entry_prompt_id = s2EntryPromptId;
+    return Object.keys(next).length > 0 ? next : undefined;
+  })();
   const insightTags =
     body.insight_tags !== undefined && body.insight_tags !== null
       ? (body.insight_tags as object)
@@ -1625,7 +1680,7 @@ export async function POST(request: Request) {
         userId,
         role: "user",
         message: message.trim(),
-        metadata: metadata ?? undefined,
+        metadata: (metadata as object | undefined) ?? undefined,
         insightTags: insightTags ?? undefined,
       },
     });
@@ -1768,8 +1823,23 @@ export async function POST(request: Request) {
     priorUserMessages: p0PriorUserMessages,
     wantsChinese,
   });
+  const crisisSafety = evaluateP0SafetyOverride({
+    userMessage: message,
+    wantsChinese,
+  });
+  const safetyActive = p0Entry.safetyOverride || crisisSafety.triggered;
   const p0Enablement = resolveP0ReflectionEntryEnablement();
   const fmiEnablement = resolveP1FirstMildInsightEnablement();
+  const p1TurnHandoffEnablement = resolveP1TurnHandoffEnablement();
+  const previousUserMessage =
+    userMessagesForHeuristics.length >= 2
+      ? userMessagesForHeuristics[userMessagesForHeuristics.length - 2]?.message
+      : undefined;
+  let p1TurnHandoff: P1TurnHandoffResult = computeP1TurnHandoffAppendix({
+    safetyOverrideActive: safetyActive,
+    userMessage: message,
+    previousUserMessage,
+  });
   let fmiTurn: FirstMildInsightTurnResult = computeP1FirstMildInsightTurn({
     userMessage: message,
     conversationId: sessionId,
@@ -1782,7 +1852,7 @@ export async function POST(request: Request) {
       metadata: m.metadata,
     })),
     wantsChinese,
-    safetyOverrideActive: p0Entry.safetyOverride,
+    safetyOverrideActive: safetyActive,
   });
   // Persist eligibility decision on the committed user turn (idempotency / retry reuse).
   if (fmiTurn.enabled) {
@@ -1941,6 +2011,12 @@ export async function POST(request: Request) {
     debugMilestoneGSystemAppendixApplied = milestoneGAppendix.length > 0;
     const milestoneHLightAppendix = milestoneHLightModeSystemAppendix();
     debugMilestoneHLightModeAppendixApplied = milestoneHLightAppendix.length > 0;
+    p1TurnHandoff = computeP1TurnHandoffAppendix({
+      safetyOverrideActive: safetyActive,
+      utilitarianOrHedge: utilOrFactualTurn,
+      userMessage: message,
+      previousUserMessage,
+    });
     openaiMessagesForApi.push({
       role: "system",
       content:
@@ -1949,10 +2025,15 @@ export async function POST(request: Request) {
         summaryBlock +
         reflectionBlock +
         p0Entry.systemAppendix +
+        (crisisSafety.triggered && !p0Entry.safetyOverride
+          ? crisisSafety.systemAppendix
+          : "") +
         fmiTurn.systemAppendix +
         milestoneGAppendix +
         milestoneHLightAppendix +
         v3TurnFocusAppendix +
+        p1TurnHandoff.systemAppendix +
+        (s2EntryPromptId ? S2_FIRST_RESPONSE_APPENDIX : "") +
         phase3ReEntryAppendix +
         languageInstruction,
     });
@@ -1965,6 +2046,16 @@ export async function POST(request: Request) {
   let debugZhHasCjkBeforeRewrite: boolean | null = null;
   let debugZhHasCjkAfterRewrite: boolean | null = null;
   let debugChatTurnPreBoundaryKind: ChatTurnPreBoundaryKind | null = null;
+  let debugP1IdentityLockedReplyApplied = false;
+  let debugP1RepeatLockedReplyApplied = false;
+  let debugP1MissingPriorLockedReplyApplied = false;
+  let debugP1CorrectionLockedReplyApplied = false;
+  let debugP1TwoSidedLockedReplyApplied = false;
+  let debugP1ContinueStuckLockedReplyApplied = false;
+  let debugP1ContinueQuestionEnsured = false;
+  let debugP1UnfinishedFragmentRepaired = false;
+  let debugP1VisibleReplySanitized = false;
+  let debugP1ZhAdviceParityRewriteApplied = false;
   let prePersistSuppressed = false;
   let prePersistViolations: Array<{
     type: string;
@@ -1980,6 +2071,17 @@ export async function POST(request: Request) {
   let debugS4Matched: string | null = null;
   let debugS4RewriteApplied = false;
   let debugS4Suppressed = false;
+  let debugS5FlagSet = false;
+  let debugS5Enabled = false;
+  let debugS5BlockedOnHosted = false;
+  let debugS5BlockedOnProduction = false;
+  let debugS5BlockedOnPreview = false;
+  let debugS5Verdict: "allow" | "block" | null = null;
+  let debugS5Family: string | null = null;
+  let debugS5Reason: string | null = null;
+  let debugS5Matched: string | null = null;
+  let debugS5NarrowedPresentPerfect = false;
+  let debugS5SourceContextSupported: boolean | null = null;
   const priorUserCountForBoundary = Math.max(0, userMessagesForHeuristics.length - 1);
   const preBoundary =
     earlyPreBoundary ??
@@ -1993,6 +2095,39 @@ export async function POST(request: Request) {
     debugChatTurnPreBoundaryKind = preBoundary.kind;
     assistantContent = preBoundary.response;
     // Pre-boundary turns must not keep any extracted state (defense in depth).
+    reflectionState = null;
+  } else if (p1TurnHandoff.applied && looksLikeP1IdentityAsk(message)) {
+    assistantContent = resolveP1IdentityReply(wantsChinese);
+    debugP1IdentityLockedReplyApplied = true;
+    reflectionState = null;
+  } else if (p1TurnHandoff.applied && looksLikeP1UserCorrection(message)) {
+    assistantContent = resolveP1CorrectionReply(message, wantsChinese);
+    debugP1CorrectionLockedReplyApplied = true;
+    reflectionState = null;
+  } else if (p1TurnHandoff.applied && looksLikeP1TwoSidedRefusalFear(message)) {
+    assistantContent = resolveP1TwoSidedReply(wantsChinese);
+    debugP1TwoSidedLockedReplyApplied = true;
+    reflectionState = null;
+  } else if (
+    p1TurnHandoff.applied &&
+    looksLikeP1DontKnowHowToContinue(message)
+  ) {
+    assistantContent = resolveP1ContinueStuckReply(wantsChinese);
+    debugP1ContinueStuckLockedReplyApplied = true;
+    reflectionState = null;
+  } else if (
+    p1TurnHandoff.applied &&
+    looksLikeRepeatedUserLine(message, previousUserMessage)
+  ) {
+    assistantContent = resolveP1RepeatReply(wantsChinese);
+    debugP1RepeatLockedReplyApplied = true;
+    reflectionState = null;
+  } else if (
+    p1TurnHandoff.applied &&
+    looksLikeP1MissingPriorContextAsk(message, previousUserMessage)
+  ) {
+    assistantContent = resolveP1MissingPriorReply(wantsChinese);
+    debugP1MissingPriorLockedReplyApplied = true;
     reflectionState = null;
   } else {
   try {
@@ -2038,6 +2173,7 @@ export async function POST(request: Request) {
       assistantContent = tightenEnglishStyleForTurn({
         assistantText: assistantContent,
         userText: message,
+        skipWeakTruncation: p1TurnHandoff.applied,
       });
     }
     if (wantsChinese && assistantContent) {
@@ -2076,12 +2212,48 @@ export async function POST(request: Request) {
   }
   }
 
+  if (p1TurnHandoff.applied && assistantContent) {
+    const beforeRepair = assistantContent.trim();
+    assistantContent = repairUnfinishedReplyFragment(assistantContent);
+    if (assistantContent !== beforeRepair) {
+      debugP1UnfinishedFragmentRepaired = true;
+    }
+    if (looksLikeP1DontKnowHowToContinue(message)) {
+      const next = ensureP1ContinueQuestion(assistantContent, wantsChinese);
+      if (next !== assistantContent.trim()) {
+        debugP1ContinueQuestionEnsured = true;
+      }
+      assistantContent = next;
+    }
+    const sanitized = sanitizeP1VisibleReply(assistantContent);
+    if (sanitized !== assistantContent.trim()) {
+      debugP1VisibleReplySanitized = true;
+    }
+    assistantContent = sanitized;
+  }
+
   // Pre-persist safety boundary: suppress before any assistant-side persistence,
   // so drifted reflection state/insight cannot be stored behind a safe fallback.
   const prePersistSafety = evaluateChatTurnSafety({
     userMessage: message,
     assistantMessage: assistantContent,
   });
+  {
+    const s5Enablement = resolveS5EvidenceSourceValidatorEnablement();
+    debugS5FlagSet = s5Enablement.flagSet;
+    debugS5Enabled = s5Enablement.enabled;
+    debugS5BlockedOnHosted = s5Enablement.blockedOnHosted;
+    debugS5BlockedOnProduction = s5Enablement.blockedOnProduction;
+    debugS5BlockedOnPreview = s5Enablement.blockedOnPreview;
+    debugS5Verdict = prePersistSafety.evidenceSource.result.verdict;
+    debugS5Family = prePersistSafety.evidenceSource.result.family;
+    debugS5Reason = prePersistSafety.evidenceSource.result.reason;
+    debugS5Matched = prePersistSafety.evidenceSource.result.matched;
+    debugS5NarrowedPresentPerfect =
+      prePersistSafety.evidenceSource.narrowedPresentPerfect;
+    debugS5SourceContextSupported =
+      prePersistSafety.evidenceSource.result.sourceContextSupported;
+  }
   if (prePersistSafety.shouldSuppress) {
     prePersistSuppressed = true;
     prePersistViolations = prePersistSafety.violations.map((v) => ({
@@ -2090,7 +2262,24 @@ export async function POST(request: Request) {
       matched: v.matched,
       reason: v.reason,
     }));
-    assistantContent = getDriftSuppressionFallback(wantsChinese);
+    const adviceOnlyZh =
+      p1TurnHandoff.applied &&
+      wantsChinese &&
+      prePersistSafety.violations.length > 0 &&
+      prePersistSafety.violations.every((v) => v.type === "advice_drift");
+    // P1 locked continue-stuck must win over generic drift fallback (TH-11).
+    if (
+      p1TurnHandoff.applied &&
+      looksLikeP1DontKnowHowToContinue(message)
+    ) {
+      assistantContent = resolveP1ContinueStuckReply(wantsChinese);
+      debugP1ContinueStuckLockedReplyApplied = true;
+    } else if (adviceOnlyZh) {
+      assistantContent = resolveP1ZhAdviceParityReply(message);
+      debugP1ZhAdviceParityRewriteApplied = true;
+    } else {
+      assistantContent = getDriftSuppressionFallback(wantsChinese);
+    }
     reflectionState = null;
     if (reflectionRunId) {
       try {
@@ -3737,6 +3926,13 @@ export async function POST(request: Request) {
       userMessage: message,
       assistantMessage: assistantContent,
     });
+    debugS5Verdict = safety.evidenceSource.result.verdict;
+    debugS5Family = safety.evidenceSource.result.family;
+    debugS5Reason = safety.evidenceSource.result.reason;
+    debugS5Matched = safety.evidenceSource.result.matched;
+    debugS5NarrowedPresentPerfect = safety.evidenceSource.narrowedPresentPerfect;
+    debugS5SourceContextSupported =
+      safety.evidenceSource.result.sourceContextSupported;
     debugDriftPassed = safety.violations.length === 0;
     debugDriftScore = debugDriftPassed ? 1 : 0.5;
     debugDriftViolations = safety.violations.map((v) => ({
@@ -3751,8 +3947,17 @@ export async function POST(request: Request) {
     // an empty bubble on reload was the "empty response" bug in the
     // 2026-07-08 real-user export. The fallback is neutral, linter-clean,
     // and already-shipped client copy.
-    assistantContent = getDriftSuppressionFallback(wantsChinese);
-    debugDriftSuppressionFallbackApplied = true;
+    if (
+      p1TurnHandoff.applied &&
+      looksLikeP1DontKnowHowToContinue(message)
+    ) {
+      assistantContent = resolveP1ContinueStuckReply(wantsChinese);
+      debugP1ContinueStuckLockedReplyApplied = true;
+      debugDriftSuppressionFallbackApplied = false;
+    } else {
+      assistantContent = getDriftSuppressionFallback(wantsChinese);
+      debugDriftSuppressionFallbackApplied = true;
+    }
     keptLastInsight = null;
     keptSoftContinuity = null;
     keptPatternSurfacing = null;
@@ -3789,7 +3994,7 @@ export async function POST(request: Request) {
     debugS4Suppressed = false;
   }
 
-  if (p0Entry.enabled && p0Entry.safetyOverride) {
+  if (safetyActive) {
     if (!responseMeetsP0SafetyMinimum(assistantContent, wantsChinese)) {
       assistantContent = getP0SafetyGuardedResponse(wantsChinese);
       debugP0GuardedResponseApplied = true;
@@ -3845,7 +4050,7 @@ export async function POST(request: Request) {
       userMessage: message,
       assistantMessage: assistantContent,
       safetyOverrideActive:
-        p0Entry.safetyOverride || debugDriftHighSeveritySuppressed === true,
+        safetyActive || debugDriftHighSeveritySuppressed === true,
     });
     if (fmiTurn.suppressSecondaryLayers) {
       keptLastInsight = null;
@@ -4088,6 +4293,19 @@ export async function POST(request: Request) {
     debug_relational_promise_guard_v2_matched: debugS4Matched,
     debug_relational_promise_guard_v2_rewrite_applied: debugS4RewriteApplied,
     debug_relational_promise_guard_v2_suppressed: debugS4Suppressed,
+    debug_s5_evidence_source_validator_v2_flag_set: debugS5FlagSet,
+    debug_s5_evidence_source_validator_v2_enabled: debugS5Enabled,
+    debug_s5_evidence_source_validator_v2_blocked_on_hosted: debugS5BlockedOnHosted,
+    debug_s5_evidence_source_validator_v2_blocked_on_production:
+      debugS5BlockedOnProduction,
+    debug_s5_evidence_source_validator_v2_blocked_on_preview: debugS5BlockedOnPreview,
+    debug_s5_evidence_source_validator_v2_build_marker: S5_EVIDENCE_SOURCE_BUILD_MARKER,
+    debug_s5_verdict: debugS5Verdict,
+    debug_s5_family: debugS5Family,
+    debug_s5_reason: debugS5Reason,
+    debug_s5_matched: debugS5Matched,
+    debug_s5_narrowed_present_perfect: debugS5NarrowedPresentPerfect,
+    debug_s5_source_context_supported: debugS5SourceContextSupported,
     debug_chat_turn_pre_boundary_kind: debugChatTurnPreBoundaryKind,
     debug_rejected_phrase_hit: debugRejectedPhraseHit,
     debug_insight_core_pattern: debugInsightCorePattern,
@@ -4236,6 +4454,8 @@ export async function POST(request: Request) {
     debug_p0_reflection_entry_blocked_on_production: p0Enablement.blockedOnProduction,
     debug_p0_safety_override: p0Entry.safetyOverride,
     debug_p0_safety_matched_pattern: p0Entry.safetyMatchedPattern,
+    debug_crisis_safety_triggered: crisisSafety.triggered,
+    debug_crisis_safety_matched_pattern: crisisSafety.matchedPattern ?? null,
     debug_p0_slash_command: p0Entry.slashCommand,
     debug_p0_opening_type: p0Entry.openingType,
     debug_p0_opening_confidence: p0Entry.openingConfidence,
@@ -4268,6 +4488,38 @@ export async function POST(request: Request) {
     debug_p1_fmi_validator_passed: fmiTurn.debug.validator_passed,
     debug_p1_fmi_validator: fmiTurn.debug.validator,
     debug_p1_fmi_committed_user_turn_id: fmiTurn.debug.committed_user_turn_id,
+    debug_p1_turn_handoff_flag_set: p1TurnHandoffEnablement.flagSet,
+    debug_p1_turn_handoff_enabled: p1TurnHandoffEnablement.enabled,
+    debug_p1_turn_handoff_blocked_on_hosted: p1TurnHandoffEnablement.blockedOnHosted,
+    debug_p1_turn_handoff_blocked_on_production: p1TurnHandoffEnablement.blockedOnProduction,
+    debug_p1_turn_handoff_blocked_on_preview: p1TurnHandoffEnablement.blockedOnPreview,
+    debug_p1_turn_handoff_allow_hosted_preview_set:
+      p1TurnHandoffEnablement.allowHostedPreviewSet,
+    debug_p1_turn_handoff_allow_production_set:
+      p1TurnHandoffEnablement.allowProductionSet,
+    debug_p1_turn_handoff_vercel_env: p1TurnHandoffEnablement.vercelEnv,
+    debug_p1_turn_handoff_build_marker: P1_TURN_HANDOFF_BUILD_MARKER,
+    debug_p1_turn_handoff_applied: p1TurnHandoff.applied,
+    debug_p1_turn_handoff_suppression_reason: p1TurnHandoff.suppressionReason,
+    debug_p1_turn_handoff_system_appendix_applied: p1TurnHandoff.systemAppendix.length > 0,
+    debug_p1_identity_locked_reply_applied: debugP1IdentityLockedReplyApplied,
+    debug_p1_repeat_locked_reply_applied: debugP1RepeatLockedReplyApplied,
+    debug_p1_missing_prior_locked_reply_applied: debugP1MissingPriorLockedReplyApplied,
+    debug_p1_correction_locked_reply_applied: debugP1CorrectionLockedReplyApplied,
+    debug_p1_two_sided_locked_reply_applied: debugP1TwoSidedLockedReplyApplied,
+    debug_p1_continue_stuck_locked_reply_applied: debugP1ContinueStuckLockedReplyApplied,
+    debug_p1_continue_question_ensured: debugP1ContinueQuestionEnsured,
+    debug_p1_unfinished_fragment_repaired: debugP1UnfinishedFragmentRepaired,
+    debug_p1_visible_reply_sanitized: debugP1VisibleReplySanitized,
+    debug_p1_zh_advice_parity_rewrite_applied: debugP1ZhAdviceParityRewriteApplied,
+    debug_s2_first_question_flag_set: s2Enablement.flagSet,
+    debug_s2_first_question_enabled: s2Enablement.enabled,
+    debug_s2_first_question_blocked_on_hosted: s2Enablement.blockedOnHosted,
+    debug_s2_first_question_blocked_on_production: s2Enablement.blockedOnProduction,
+    debug_s2_first_question_blocked_on_preview: s2Enablement.blockedOnPreview,
+    debug_s2_first_question_build_marker: S2_FIRST_QUESTION_BUILD_MARKER,
+    debug_s2_entry_prompt_id_applied: Boolean(s2EntryPromptId),
+    debug_s2_entry_prompt_id: s2EntryPromptId,
     ...(body.debug
       ? {
           debug: {
