@@ -1,6 +1,8 @@
 /**
  * S2 First Question affordance — internal only (Tree 2026-10-06).
- * Default-off. Hosted Preview and Production hard-blocked.
+ * Default-off. Production hard-blocked.
+ * Preview needs explicit NEXT_PUBLIC_P1_FIRST_QUESTION_ALLOW_HOSTED_PREVIEW
+ * (Founder/Tree 2026-10-10 Preview authorize).
  * Locked copy: FQ_SUPPORT / FQ_ACTION / FQ_QUESTION.
  * Question is an entry affordance, never an assistant Message row.
  * S1 / P1-FRL are out of this module.
@@ -40,6 +42,7 @@ export type S2FirstQuestionEnablement = {
   blockedOnProduction: boolean;
   blockedOnPreview: boolean;
   blockedOnHosted: boolean;
+  allowHostedPreviewSet: boolean;
 };
 
 function envFlagTruthy(raw: string | undefined): boolean {
@@ -51,12 +54,15 @@ export function resolveS2FirstQuestionEnablement(): S2FirstQuestionEnablement {
   const flagSet = envFlagTruthy(
     process.env.NEXT_PUBLIC_ENABLE_P1_FIRST_QUESTION_INVITATION
   );
+  const allowHostedPreviewSet = envFlagTruthy(
+    process.env.NEXT_PUBLIC_P1_FIRST_QUESTION_ALLOW_HOSTED_PREVIEW
+  );
   const vercelEnv =
     process.env.NEXT_PUBLIC_VERCEL_ENV?.trim() ||
     process.env.VERCEL_ENV?.trim() ||
     null;
   const blockedOnProduction = vercelEnv === "production";
-  const blockedOnPreview = vercelEnv === "preview";
+  const blockedOnPreview = vercelEnv === "preview" && !allowHostedPreviewSet;
   const blockedOnHosted = blockedOnProduction || blockedOnPreview;
 
   return {
@@ -66,6 +72,7 @@ export function resolveS2FirstQuestionEnablement(): S2FirstQuestionEnablement {
     blockedOnProduction,
     blockedOnPreview,
     blockedOnHosted,
+    allowHostedPreviewSet,
   };
 }
 

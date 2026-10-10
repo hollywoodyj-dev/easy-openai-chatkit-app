@@ -22,6 +22,19 @@ import {
   shouldShowP1InteractionLegibility,
 } from "@/lib/wisewave-p1-interaction-legibility";
 import {
+  S2_ENTRY_PROMPT_ID,
+  isS2FirstQuestionClientEnabled,
+  resolveFirstQuestionCopy,
+  shouldShowFirstQuestion,
+  shouldShowFirstQuestionOffer,
+} from "@/lib/wisewave-first-question-affordance";
+import {
+  isS1EntryCopyV2ClientEnabled,
+  resolveEntryCopyV2,
+  shouldShowEntryCopyV2,
+  shouldSuppressSiblingEntrySurfaces,
+} from "@/lib/wisewave-entry-copy-v2";
+import {
   DEFAULT_COMPOSER_PLACEHOLDER,
   isLightEntryLivingLibraryClientEnabled,
   resolveLightEntryLivingLibraryCopy,
@@ -621,6 +634,30 @@ function ErrorBanner({ message }: { message: string }) {
   );
 }
 
+function EntryCopyV2Surface({
+  copy,
+  isEmbedMobile = false,
+}: {
+  copy: ReturnType<typeof resolveEntryCopyV2>;
+  isEmbedMobile?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "mx-auto px-5 pb-2 pt-1 md:px-8",
+        isEmbedMobile ? "max-w-6xl" : "max-w-4xl"
+      )}
+      data-testid="s1-entry-copy-v2"
+      aria-live="polite"
+    >
+      <div className="max-w-xl text-[15px] leading-relaxed text-[#7A7A7A]">
+        <p>{copy.headline}</p>
+        <p className="mt-2">{copy.body}</p>
+      </div>
+    </div>
+  );
+}
+
 function InteractionLegibilityPreview({
   copy,
 }: {
@@ -640,6 +677,58 @@ function InteractionLegibilityPreview({
             <p key={line}>{line}</p>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FirstQuestionAffordance({
+  copy,
+  mode,
+  onAsk,
+  onCancel,
+  isEmbedMobile = false,
+}: {
+  copy: ReturnType<typeof resolveFirstQuestionCopy>;
+  mode: "offer" | "question";
+  onAsk: () => void;
+  onCancel: () => void;
+  isEmbedMobile?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "mx-auto px-5 pb-2 pt-1 md:px-8",
+        isEmbedMobile ? "max-w-6xl" : "max-w-4xl"
+      )}
+      data-testid="s2-first-question-affordance"
+      data-s2-mode={mode}
+      aria-live="polite"
+    >
+      <div className="max-w-xl text-[13px] leading-relaxed text-[#9A9A9A]">
+        {mode === "offer" ? (
+          <>
+            <p>{copy.support}</p>
+            <button
+              type="button"
+              onClick={onAsk}
+              className="mt-2 block text-left font-normal text-[13px] leading-relaxed text-[#8B8B8B] underline-offset-2 hover:text-[#6A6A6A] hover:underline focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[#B0B0B0]"
+            >
+              {copy.action}
+            </button>
+          </>
+        ) : (
+          <>
+            <p data-testid="s2-first-question-text">{copy.question}</p>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="mt-2 block text-left font-normal text-[12px] leading-relaxed text-[#B0B0B0] hover:text-[#8B8B8B] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-[#B0B0B0]"
+            >
+              {copy.cancel}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -770,6 +859,9 @@ function ChatContent() {
   const p0ClientEnabled = isP0ReflectionEntryClientEnabled();
   const p1LegibilityEnabled = isP1InteractionLegibilityClientEnabled();
   const livingLibraryEnabled = isLightEntryLivingLibraryClientEnabled();
+  const s2FirstQuestionEnabled = isS2FirstQuestionClientEnabled();
+  const s1EntryCopyEnabled = isS1EntryCopyV2ClientEnabled();
+  const [fqActivated, setFqActivated] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     p0ClientEnabled ? p0EmptyThreadMessages() : INITIAL_MESSAGES
   );
@@ -859,13 +951,37 @@ function ChatContent() {
       typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
     return resolveP1InteractionLegibilityCopy(browserLang.startsWith("zh"));
   }, []);
+  const firstQuestionCopy = useMemo(() => {
+    const browserLang =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
+    return resolveFirstQuestionCopy(browserLang.startsWith("zh"));
+  }, []);
+  const entryCopyV2 = useMemo(() => {
+    const browserLang =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
+    return resolveEntryCopyV2(browserLang.startsWith("zh"));
+  }, []);
   const livingLibraryCopy = useMemo(() => {
     const browserLang =
       typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "";
     return resolveLightEntryLivingLibraryCopy(browserLang.startsWith("zh"));
   }, []);
+  const entryCopyV2Visible = useMemo(
+    () =>
+      shouldShowEntryCopyV2({
+        enabled: s1EntryCopyEnabled,
+        userMessageCount,
+        inputHasContent: input.trim().length > 0,
+        firstQuestionActivated: fqActivated,
+      }),
+    [fqActivated, input, s1EntryCopyEnabled, userMessageCount]
+  );
+  const suppressSiblingsForS1 = shouldSuppressSiblingEntrySurfaces({
+    s1Enabled: s1EntryCopyEnabled,
+  });
   const livingLibraryVisible = useMemo(
     () =>
+      !suppressSiblingsForS1 &&
       shouldShowLightEntryLivingLibrary({
         enabled: livingLibraryEnabled,
         userMessageCount,
@@ -879,6 +995,7 @@ function ChatContent() {
       input,
       livingLibraryEnabled,
       subscriptionRequired,
+      suppressSiblingsForS1,
       userMessageCount,
     ]
   );
@@ -887,14 +1004,44 @@ function ChatContent() {
   });
   const interactionLegibilityVisible = useMemo(
     () =>
+      !suppressSiblingsForS1 &&
       !suppressOtherEntry &&
       shouldShowP1InteractionLegibility({
         enabled: p1LegibilityEnabled,
         userMessageCount,
         inputHasContent: input.trim().length > 0,
       }),
-    [input, p1LegibilityEnabled, suppressOtherEntry, userMessageCount]
+    [
+      input,
+      p1LegibilityEnabled,
+      suppressOtherEntry,
+      suppressSiblingsForS1,
+      userMessageCount,
+    ]
   );
+  const firstQuestionOfferVisible = useMemo(
+    () =>
+      shouldShowFirstQuestionOffer({
+        enabled: s2FirstQuestionEnabled,
+        userMessageCount,
+        inputHasContent: input.trim().length > 0,
+        activated: fqActivated,
+      }),
+    [fqActivated, input, s2FirstQuestionEnabled, userMessageCount]
+  );
+  const firstQuestionVisible = useMemo(
+    () =>
+      shouldShowFirstQuestion({
+        enabled: s2FirstQuestionEnabled,
+        userMessageCount,
+        activated: fqActivated,
+      }),
+    [fqActivated, s2FirstQuestionEnabled, userMessageCount]
+  );
+
+  useEffect(() => {
+    setFqActivated(false);
+  }, [conversationId]);
 
   useEffect(() => {
     if (!livingLibraryVisible) {
@@ -1466,8 +1613,11 @@ function ChatContent() {
     if (!canSend || !conversationId) return;
 
     const text = input.trim();
+    const attachFirstQuestionPrompt =
+      fqActivated && userMessageCount === 0 && s2FirstQuestionEnabled;
     userHasTypedRef.current = true;
     setIsFirstEntryThisSession(false);
+    setFqActivated(false);
     const userMessage: ChatMessage = {
       id: safeId(),
       role: "user",
@@ -1492,6 +1642,9 @@ function ChatContent() {
           conversation_id: conversationId,
           message: text,
           ...(phase3ThreadReentry ? { phase_3_thread_reentry: true } : {}),
+          ...(attachFirstQuestionPrompt
+            ? { metadata: { entry_prompt_id: S2_ENTRY_PROMPT_ID } }
+            : {}),
         }),
       });
       if (response.status === 401) {
@@ -1657,7 +1810,10 @@ function ChatContent() {
             marker={phase4Space?.current_space_marker}
           />
           <InsightAnchor text={anchorText} />
-          {p0EmptyThread && !interactionLegibilityVisible && !suppressOtherEntry ? (
+          {p0EmptyThread &&
+          !suppressSiblingsForS1 &&
+          !interactionLegibilityVisible &&
+          !suppressOtherEntry ? (
             <p className="mb-6 max-w-xl text-[15px] leading-relaxed text-[#7A7A7A]">
               {p0EmptyCopy.permission}
             </p>
@@ -1698,6 +1854,9 @@ function ChatContent() {
         onClose={() => setSubscriptionModalOpen(false)}
       />
 
+      {entryCopyV2Visible ? (
+        <EntryCopyV2Surface copy={entryCopyV2} isEmbedMobile={isEmbedMobile} />
+      ) : null}
       {livingLibraryVisible ? (
         <LivingLibraryEntrySurface
           copy={livingLibraryCopy}
@@ -1707,6 +1866,30 @@ function ChatContent() {
       ) : null}
       {interactionLegibilityVisible ? (
         <InteractionLegibilityPreview copy={p1LegibilityCopy} />
+      ) : null}
+      {firstQuestionOfferVisible ? (
+        <FirstQuestionAffordance
+          copy={firstQuestionCopy}
+          mode="offer"
+          onAsk={() => {
+            setFqActivated(true);
+            composerTextareaRef.current?.focus();
+          }}
+          onCancel={() => setFqActivated(false)}
+          isEmbedMobile={isEmbedMobile}
+        />
+      ) : null}
+      {firstQuestionVisible ? (
+        <FirstQuestionAffordance
+          copy={firstQuestionCopy}
+          mode="question"
+          onAsk={() => undefined}
+          onCancel={() => {
+            setFqActivated(false);
+            composerTextareaRef.current?.focus();
+          }}
+          isEmbedMobile={isEmbedMobile}
+        />
       ) : null}
       <InputBar
         value={input}
