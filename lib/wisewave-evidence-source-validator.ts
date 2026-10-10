@@ -1,7 +1,9 @@
 /**
  * S5 Evidence-source validator narrowing — internal only (Tree 2026-10-06).
  * Default-off. Flag ENABLE_EVIDENCE_SOURCE_VALIDATOR_V2.
- * Hosted Preview and Production hard-blocked. Production delta = 0 when off.
+ * Production hard-blocked. Preview needs explicit
+ * EVIDENCE_SOURCE_VALIDATOR_ALLOW_HOSTED_PREVIEW (Founder/Tree 2026-10-10).
+ * Production delta = 0 when off.
  * Scope: source-evidence + unsupported temporal continuity. Not tense.
  * Does not edit live DRIFT_RULES. S3 / S4 / S1 / S2 / S6 out of this module.
  */
@@ -33,6 +35,7 @@ export type EvidenceSourceEnablement = {
   blockedOnProduction: boolean;
   blockedOnPreview: boolean;
   blockedOnHosted: boolean;
+  allowHostedPreviewSet: boolean;
 };
 
 export type EvidenceSourceResult = {
@@ -53,12 +56,15 @@ function envFlagTruthy(raw: string | undefined): boolean {
 
 export function resolveS5EvidenceSourceValidatorEnablement(): EvidenceSourceEnablement {
   const flagSet = envFlagTruthy(process.env.ENABLE_EVIDENCE_SOURCE_VALIDATOR_V2);
+  const allowHostedPreviewSet = envFlagTruthy(
+    process.env.EVIDENCE_SOURCE_VALIDATOR_ALLOW_HOSTED_PREVIEW
+  );
   const vercelEnv =
     process.env.NEXT_PUBLIC_VERCEL_ENV?.trim() ||
     process.env.VERCEL_ENV?.trim() ||
     null;
   const blockedOnProduction = vercelEnv === "production";
-  const blockedOnPreview = vercelEnv === "preview";
+  const blockedOnPreview = vercelEnv === "preview" && !allowHostedPreviewSet;
   const blockedOnHosted = blockedOnProduction || blockedOnPreview;
 
   return {
@@ -68,6 +74,7 @@ export function resolveS5EvidenceSourceValidatorEnablement(): EvidenceSourceEnab
     blockedOnProduction,
     blockedOnPreview,
     blockedOnHosted,
+    allowHostedPreviewSet,
   };
 }
 
