@@ -6,7 +6,10 @@
  * as a response-quality rule. Closer read accepted. Not a Connection engine.
  * Connection = response fit. Aurora v1.1 locks still apply.
  *
- * Production is hard-blocked. Preview needs an explicit later allow. Local: flag on.
+ * Preview needs P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW.
+ * Production needs P1_TURN_HANDOFF_ALLOW_PRODUCTION (Founder/Tree 2026-10-10
+ * controlled Production — holdfix6 only). Preview allow does NOT unlock Production.
+ * Local: ENABLE_P1_TURN_HANDOFF on.
  *
  * `CHAT_SYSTEM_PROMPT` stays frozen. This appendix overrides inner-rule/demand/loop
  * naming and “do not end most replies with a question” only while the flag applies.
@@ -22,6 +25,7 @@ export type P1TurnHandoffEnablement = {
   blockedOnProduction: boolean;
   blockedOnPreview: boolean;
   allowHostedPreviewSet: boolean;
+  allowProductionSet: boolean;
 };
 
 export type P1TurnHandoffResult = {
@@ -37,11 +41,19 @@ export function resolveP1TurnHandoffEnablement(): P1TurnHandoffEnablement {
   const raw = process.env.ENABLE_P1_TURN_HANDOFF?.trim().toLowerCase();
   const flagSet = raw === "true" || raw === "1" || raw === "yes";
   const vercelEnv = process.env.VERCEL_ENV?.trim() || null;
-  const allowRaw = process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW?.trim().toLowerCase();
+  const allowPreviewRaw =
+    process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW?.trim().toLowerCase();
   const allowHostedPreviewSet =
-    allowRaw === "true" || allowRaw === "1" || allowRaw === "yes";
+    allowPreviewRaw === "true" ||
+    allowPreviewRaw === "1" ||
+    allowPreviewRaw === "yes";
+  const allowProdRaw =
+    process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION?.trim().toLowerCase();
+  const allowProductionSet =
+    allowProdRaw === "true" || allowProdRaw === "1" || allowProdRaw === "yes";
 
-  const blockedOnProduction = vercelEnv === "production";
+  const blockedOnProduction =
+    vercelEnv === "production" && !allowProductionSet;
   const blockedOnPreview = vercelEnv === "preview" && !allowHostedPreviewSet;
   const blockedOnHosted = blockedOnProduction || blockedOnPreview;
 
@@ -53,6 +65,7 @@ export function resolveP1TurnHandoffEnablement(): P1TurnHandoffEnablement {
     blockedOnProduction,
     blockedOnPreview,
     allowHostedPreviewSet,
+    allowProductionSet,
   };
 }
 

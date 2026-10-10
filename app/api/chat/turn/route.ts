@@ -4495,6 +4495,8 @@ export async function POST(request: Request) {
     debug_p1_turn_handoff_blocked_on_preview: p1TurnHandoffEnablement.blockedOnPreview,
     debug_p1_turn_handoff_allow_hosted_preview_set:
       p1TurnHandoffEnablement.allowHostedPreviewSet,
+    debug_p1_turn_handoff_allow_production_set:
+      p1TurnHandoffEnablement.allowProductionSet,
     debug_p1_turn_handoff_vercel_env: p1TurnHandoffEnablement.vercelEnv,
     debug_p1_turn_handoff_build_marker: P1_TURN_HANDOFF_BUILD_MARKER,
     debug_p1_turn_handoff_applied: p1TurnHandoff.applied,

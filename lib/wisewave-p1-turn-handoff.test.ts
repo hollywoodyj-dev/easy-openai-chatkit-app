@@ -33,6 +33,7 @@ describe("P1 turn handoff enablement", () => {
   const origFlag = process.env.ENABLE_P1_TURN_HANDOFF;
   const origVercel = process.env.VERCEL_ENV;
   const origAllow = process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW;
+  const origAllowProd = process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION;
   const origFmi = process.env.ENABLE_P1_FIRST_MILD_INSIGHT;
 
   afterEach(() => {
@@ -42,6 +43,8 @@ describe("P1 turn handoff enablement", () => {
     else process.env.VERCEL_ENV = origVercel;
     if (origAllow === undefined) delete process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW;
     else process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW = origAllow;
+    if (origAllowProd === undefined) delete process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION;
+    else process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION = origAllowProd;
     if (origFmi === undefined) delete process.env.ENABLE_P1_FIRST_MILD_INSIGHT;
     else process.env.ENABLE_P1_FIRST_MILD_INSIGHT = origFmi;
   });
@@ -50,6 +53,7 @@ describe("P1 turn handoff enablement", () => {
     delete process.env.ENABLE_P1_TURN_HANDOFF;
     delete process.env.VERCEL_ENV;
     delete process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW;
+    delete process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION;
     expect(isP1TurnHandoffEnabled()).toBe(false);
     expect(computeP1TurnHandoffAppendix({}).suppressionReason).toBe("flag_off");
     expect(computeP1TurnHandoffAppendix({}).systemAppendix).toBe("");
@@ -83,20 +87,36 @@ describe("P1 turn handoff enablement", () => {
     expect(r.buildMarker).toBe(P1_TURN_HANDOFF_BUILD_MARKER);
   });
 
-  it("hard-blocks Production even if the flag is set", () => {
+  it("hard-blocks Production unless Production allow is set (Preview allow does not unlock)", () => {
     process.env.ENABLE_P1_TURN_HANDOFF = "1";
     process.env.VERCEL_ENV = "production";
     process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW = "1";
+    delete process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION;
     expect(resolveP1TurnHandoffEnablement().enabled).toBe(false);
     expect(resolveP1TurnHandoffEnablement().blockedOnProduction).toBe(true);
     expect(computeP1TurnHandoffAppendix({}).applied).toBe(false);
     expect(computeP1TurnHandoffAppendix({}).suppressionReason).toBe("blocked_on_production");
   });
 
+  it("allows Production only with explicit Production allow (not Preview allow)", () => {
+    process.env.ENABLE_P1_TURN_HANDOFF = "1";
+    process.env.VERCEL_ENV = "production";
+    delete process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW;
+    process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION = "1";
+    expect(resolveP1TurnHandoffEnablement().enabled).toBe(true);
+    expect(resolveP1TurnHandoffEnablement().blockedOnProduction).toBe(false);
+    expect(resolveP1TurnHandoffEnablement().allowProductionSet).toBe(true);
+    expect(computeP1TurnHandoffAppendix({}).applied).toBe(true);
+    expect(computeP1TurnHandoffAppendix({}).buildMarker).toBe(
+      "p1_response_calibration_v1_holdfix6"
+    );
+  });
+
   it("blocks Preview unless allow is set", () => {
     process.env.ENABLE_P1_TURN_HANDOFF = "1";
     process.env.VERCEL_ENV = "preview";
     delete process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW;
+    delete process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION;
     expect(resolveP1TurnHandoffEnablement().enabled).toBe(false);
     expect(computeP1TurnHandoffAppendix({}).suppressionReason).toBe("blocked_on_preview");
   });
@@ -105,6 +125,7 @@ describe("P1 turn handoff enablement", () => {
     process.env.ENABLE_P1_TURN_HANDOFF = "1";
     process.env.VERCEL_ENV = "preview";
     process.env.P1_TURN_HANDOFF_ALLOW_HOSTED_PREVIEW = "1";
+    delete process.env.P1_TURN_HANDOFF_ALLOW_PRODUCTION;
     expect(resolveP1TurnHandoffEnablement().enabled).toBe(true);
     expect(computeP1TurnHandoffAppendix({}).applied).toBe(true);
   });
