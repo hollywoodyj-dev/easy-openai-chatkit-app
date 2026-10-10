@@ -10,7 +10,7 @@ export type P0SafetyOverrideResult = {
 
 const CRISIS_PATTERNS: Array<{ id: string; re: RegExp }> = [
   { id: "suicide_en", re: /\b(kill myself|suicide|end my life|want to die|better off dead)\b/i },
-  { id: "self_harm_en", re: /\b(self[- ]?harm|hurt myself|cut myself)\b/i },
+  { id: "self_harm_en", re: /\b(self[- ]?harm|hurt(ing)? myself|harm(ing)? myself|cut myself)\b/i },
   { id: "crisis_en", re: /\b(in immediate danger|going to hurt (someone|them|him|her))\b/i },
   { id: "suicide_zh", re: /(自杀|想死|不想活|结束生命|了结)/u },
   { id: "self_harm_zh", re: /(自残|伤害自己|割腕)/u },

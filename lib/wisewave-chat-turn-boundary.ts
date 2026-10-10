@@ -6,8 +6,13 @@
  * post-generation authorship invention checks.
  */
 import { lintWisewaveOutput } from "@/lib/drift/linter";
-import { hasHighSeverityDrift } from "@/lib/drift/score";
 import type { DriftViolation } from "@/lib/drift/types";
+import {
+  applyEvidenceSourceNarrowing,
+  evaluateEvidenceSourceValidator,
+  isS5EvidenceSourceValidatorEnabled,
+  type EvidenceSourceResult,
+} from "@/lib/wisewave-evidence-source-validator";
 
 export type ChatTurnPreBoundaryKind =
   | "empty_context_summarize"
@@ -28,6 +33,11 @@ export type ChatTurnSafetyEvaluation = {
   shouldSuppress: boolean;
   violations: DriftViolation[];
   authorshipViolation: ChatTurnAuthorshipViolation | null;
+  evidenceSource: {
+    enabled: boolean;
+    result: EvidenceSourceResult;
+    narrowedPresentPerfect: boolean;
+  };
 };
 
 /** Summarize / outline / bulletize requests (EN + ZH). */
@@ -320,7 +330,17 @@ export function evaluateChatTurnSafety(args: {
     args.userMessage,
     args.assistantMessage
   );
-  const violations: DriftViolation[] = [...lint.violations];
+  const s5Enabled = isS5EvidenceSourceValidatorEnabled();
+  const s5Result = evaluateEvidenceSourceValidator({
+    userMessage: args.userMessage,
+    assistantCandidate: args.assistantMessage,
+  });
+  const narrowed = applyEvidenceSourceNarrowing({
+    enabled: s5Enabled,
+    violations: lint.violations,
+    result: s5Result,
+  });
+  const violations: DriftViolation[] = [...narrowed.violations];
   if (authorshipViolation) {
     violations.push({
       type: "authorship_drift",
@@ -330,9 +350,14 @@ export function evaluateChatTurnSafety(args: {
     });
   }
   return {
-    shouldSuppress: hasHighSeverityDrift(lint) || !!authorshipViolation,
+    shouldSuppress: violations.some((v) => v.severity === "high"),
     violations,
     authorshipViolation,
+    evidenceSource: {
+      enabled: s5Enabled,
+      result: s5Result,
+      narrowedPresentPerfect: narrowed.narrowedPresentPerfect,
+    },
   };
 }
 
