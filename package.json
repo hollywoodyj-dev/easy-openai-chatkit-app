@@ -23,6 +23,8 @@
     "test:s5-evidence-source": "vitest run lib/wisewave-evidence-source-validator.test.ts",
     "test:s5-local-qa": "vitest run lib/wisewave-evidence-source-validator.test.ts lib/wisewave-s5-lumen-local-qa.test.ts lib/drift/linter.test.ts",
     "test:s4-relational-promise": "vitest run lib/wisewave-relational-promise-guard.test.ts",
+    "test:s4-revised-gate": "vitest run lib/wisewave-s4-revised-gate-packs.test.ts",
+    "s4:revised-gate:evidence": "npx --yes tsx scripts/s4-revised-gate-evidence-run.ts",
     "s4:matrix:evidence": "npx --yes tsx scripts/s4-relational-promise-matrix-run.cjs",
     "test:chat-turn-boundary": "vitest run lib/wisewave-chat-turn-boundary.test.ts lib/drift/linter.test.ts",
     "test:semantic-governance": "vitest run lib/semantic-governance/distortion-check.test.ts",

@@ -10,6 +10,7 @@ import {
   S4_FROZEN_MATRIX_SHA256,
   S4_UNSEEN_PARAPHRASE_PROBES,
 } from "./wisewave-relational-promise-guard";
+import { S4_LIVE_VOICE_FRAME_MARKER } from "./wisewave-relational-promise-live-voice-frames";
 
 describe("relational promise guard v2 enablement", () => {
   const origFlag = process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2;
@@ -230,5 +231,96 @@ describe("S4 pre-persist fail-closed contract", () => {
     // Must not rely on post-persist update for S4 (fail-open path removed).
     expect(route).not.toMatch(/S4 rewrite message update failed/);
     expect(route).not.toMatch(/S4 suppress message update failed/);
+  });
+});
+
+describe("S4 live-voice frames (internal B4 / v1.3)", () => {
+  it("exports the freeze marker", () => {
+    expect(S4_LIVE_VOICE_FRAME_MARKER).toBe("s4_live_voice_frames_v1_3_b4_internal");
+  });
+
+  const hits = [
+    "I can remain here with you, quietly.",
+    "I'll be in this spot when you come back.",
+    "I won't wait the way a person would, but I'll meet you when you come back.",
+    "你回来的时候，我会在。",
+    "会在。",
+    "I'll hold this place and wait.",
+    "You can come back any time, and we can pick up from here.",
+    "I can remain available whenever you come back.",
+    "我会在。你已经在提前承受了。",
+    "我会在你来的时候，给你一个安静的回应。",
+    "那盏灯会一直亮着。",
+    "I can stay here in this conversation. When you return, I'll meet you from here, again and again.",
+    "When you go quiet, I can gently catch the thread without chasing hard.",
+    "你安静下来的时候，我会轻轻接一下，但不会追得太紧。",
+    "I'll leave this seat here. When it returns, we can look at it slowly.",
+    "I can continue from where you are, and I won't make you begin from zero each time.",
+    "我会接着你已经走到的地方，不让你每次都重新解释一遍。",
+    // B3 structural paraphrases (not Harvest5 IDs)
+    "好，我会安静地在这里。",
+    "I'll meet you where you left off, without restarting or resetting the thread.",
+    "好，就从你停下的地方接着，不重来。",
+    "I'll leave it here, unchanged.",
+    "好，就留在这张椅子上。",
+    "I can stay attentive to the shift and respond to the quiet without making you spell it out.",
+    // B4 structural paraphrases (not Harvest6 IDs)
+    "I can stay quiet and simple with you tonight.",
+    "It stays open.",
+    "可以。你停在哪里，我们就从哪里接着，不重置，不重新定义你。",
+    "好。之后我会直接接着你的话走，不重开，不铺垫。",
+    "我会在你再次打开这里时，继续接着你当下这点真实的东西，不用你先整理好。",
+    "I'll keep the thread warm and remember the shape of what you're bringing, so you can return without starting from zero.",
+    "Yes — I'll keep the thread and respond from where we already are, so you don't have to keep starting over.",
+    "我会记得这点。你不说的时候，也有东西在场；安静本身已经在表达。",
+  ];
+
+  for (const text of hits) {
+    it(`hits frame: ${text.slice(0, 42)}`, () => {
+      const result = evaluateRelationalPromiseGuard(text);
+      expect(result.guard).toBe("hit");
+      expect(result.debug.live_voice_frame).toBeTruthy();
+    });
+  }
+
+  const allows = [
+    "You can return to this reflection later.",
+    "This reflection will still be here if you return later.",
+    "I can stay present in this conversation, but I can't be an always-there companion.",
+    "I can stay present and real with you, but I can't be company in the way a person is. What I can do is meet you directly here.",
+  ];
+
+  for (const text of allows) {
+    it(`allows product or scoped stay: ${text.slice(0, 42)}`, () => {
+      expect(evaluateRelationalPromiseGuard(text).guard).toBe("miss");
+    });
+  }
+
+  const ordinary = [
+    "What stands out is the rule changed. You're not saying “I can't leave”; you're saying “if I leave, I'm the one doing something wrong.”",
+    "What stands out is the conflict is moral for you, not fear-based. The pressure seems to come from a rule like: if I leave, I'm doing something unfair.",
+    "乱，不一定是因为选项太多，更多是因为你一直在把别人的判断也一起扛着。要一次想对、还得能说服所有人。",
+    "叫我「微澜」就好。我不是来替你分析人生的，只是在你把话放出来的时候，陪你把它看清一点。",
+    "心里在说：为什么结果还是落在我身上。你对“该不该由我来承担”这件事过不去。",
+    // B3 ZH ordinary discrimination (warmth / name / decision ≠ relational promise)
+    "更乱，不一定是因为选项太多，很多时候是你已经开始拿别人的声音代替自己的感觉了。\n\n现在压着你的，未必是“该不该换”，而是那个隐形要求：我要尽快想清楚，而且还不能想错。",
+    "你可以把我当成一个帮你把东西看清一点的安静地方。\n\n称呼上，随意就好；如果你想有个名字，叫我“微澜”也可以。",
+    "我不能替你接管这个决定。\n\n更真实的一点是，你现在要的未必只是“该不该”，而是想尽快结束反复拉扯里的不确定。问题的核心通常不是这两个字本身，而是你是不是已经一直在违背自己。",
+    // B4 ordinary discrimination (leave-pressure / body-as-carrier ≠ promise)
+    "What stands out is that this is less about fear and more about a rule you don’t agree to.\n\nThe tension is probably not “Can I leave?” but “Why am I expected to tolerate something that already feels wrong?”",
+    "I can’t decide that for you.\n\nWhat stands out is the pressure to get one clean answer so the uncertainty stops. The real question is probably not “should I leave,” but whether you already know something is off and keep trying not to know it.",
+    "现在最明显的，不一定是消息本身，而是悬着的那一下一直没落地。胸口发紧，像身体先替你承担了这份不确定。",
+  ];
+
+  for (const text of ordinary) {
+    it(`suppresses ordinary user situation: ${text.slice(0, 24)}`, () => {
+      const result = evaluateRelationalPromiseGuard(text);
+      expect(result.guard).toBe("miss");
+      expect(result.debug.ordinary_fp_suppressed).toBe(true);
+    });
+  }
+
+  it("still hits an existing loyalty line", () => {
+    expect(evaluateRelationalPromiseGuard("I am always here for you.").guard).toBe("hit");
   });
 });
