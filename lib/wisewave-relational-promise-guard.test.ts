@@ -15,6 +15,7 @@ import { S4_LIVE_VOICE_FRAME_MARKER } from "./wisewave-relational-promise-live-v
 describe("relational promise guard v2 enablement", () => {
   const origFlag = process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2;
   const origAllow = process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW;
+  const origAllowProd = process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION;
   const origVercel = process.env.VERCEL_ENV;
 
   afterEach(() => {
@@ -24,6 +25,11 @@ describe("relational promise guard v2 enablement", () => {
       delete process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW;
     } else {
       process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW = origAllow;
+    }
+    if (origAllowProd === undefined) {
+      delete process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION;
+    } else {
+      process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION = origAllowProd;
     }
     if (origVercel === undefined) delete process.env.VERCEL_ENV;
     else process.env.VERCEL_ENV = origVercel;
@@ -45,9 +51,32 @@ describe("relational promise guard v2 enablement", () => {
     process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2 = "1";
     process.env.VERCEL_ENV = "production";
     process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW = "1";
+    delete process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION;
     const e = resolveRelationalPromiseGuardV2Enablement();
     expect(e.enabled).toBe(false);
     expect(e.blockedOnProduction).toBe(true);
+    expect(e.allowProductionSet).toBe(false);
+  });
+
+  it("enables production only with the explicit production allow", () => {
+    process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2 = "1";
+    process.env.VERCEL_ENV = "production";
+    process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION = "1";
+    delete process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW;
+    const e = resolveRelationalPromiseGuardV2Enablement();
+    expect(e.enabled).toBe(true);
+    expect(e.blockedOnProduction).toBe(false);
+    expect(e.allowProductionSet).toBe(true);
+  });
+
+  it("does not let the production allow unlock preview", () => {
+    process.env.ENABLE_RELATIONAL_PROMISE_GUARD_V2 = "1";
+    process.env.VERCEL_ENV = "preview";
+    process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION = "1";
+    delete process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW;
+    const e = resolveRelationalPromiseGuardV2Enablement();
+    expect(e.enabled).toBe(false);
+    expect(e.blockedOnPreview).toBe(true);
   });
 });
 

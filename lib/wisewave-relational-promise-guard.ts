@@ -3,7 +3,8 @@
  *
  * Flag: ENABLE_RELATIONAL_PROMISE_GUARD_V2 (default off)
  * Preview: RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW
- * Production: hard-blocked (P1-FMI pattern)
+ * Production: RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION
+ *   (Tree/Founder 2026-10-22 controlled Production). Preview allow does not unlock Production.
  *
  * Frozen matrix SHA-256: 016afc00d4354ccae4f8587a5908e245d3a1da50bd3a380b445a5b242fd6f0bc
  *
@@ -15,8 +16,9 @@
  * (v1.1 remains frozen as Harvest5 evidence). **B4 FROZEN — do not modify.**
  * Revised-gate boundary overlay (internal): `s4_revised_gate_relational_boundary_v1_internal`
  * (Tree 2026-10-20 narrow correction — five semantic families; no ID-fit).
- * B26 frozen matrix SHA is unchanged. Production stays hard-blocked.
+ * B26 frozen matrix SHA is unchanged. Semantic marker is unchanged.
  * Preview stays blocked unless RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW is set.
+ * Production stays blocked unless RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION is set.
  */
 
 import {
@@ -139,6 +141,7 @@ export type RelationalPromiseEnablement = {
   blockedOnProduction: boolean;
   blockedOnPreview: boolean;
   allowHostedPreviewSet: boolean;
+  allowProductionSet: boolean;
 };
 
 export type RelationalPromiseGuardResult = {
@@ -166,8 +169,12 @@ export function resolveRelationalPromiseGuardV2Enablement(): RelationalPromiseEn
     process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_HOSTED_PREVIEW?.trim().toLowerCase();
   const allowHostedPreviewSet =
     allowRaw === "true" || allowRaw === "1" || allowRaw === "yes";
+  const allowProdRaw =
+    process.env.RELATIONAL_PROMISE_GUARD_V2_ALLOW_PRODUCTION?.trim().toLowerCase();
+  const allowProductionSet =
+    allowProdRaw === "true" || allowProdRaw === "1" || allowProdRaw === "yes";
 
-  const blockedOnProduction = vercelEnv === "production";
+  const blockedOnProduction = vercelEnv === "production" && !allowProductionSet;
   const blockedOnPreview = vercelEnv === "preview" && !allowHostedPreviewSet;
   const blockedOnHosted = blockedOnProduction || blockedOnPreview;
 
@@ -179,6 +186,7 @@ export function resolveRelationalPromiseGuardV2Enablement(): RelationalPromiseEn
     blockedOnProduction,
     blockedOnPreview,
     allowHostedPreviewSet,
+    allowProductionSet,
   };
 }
 

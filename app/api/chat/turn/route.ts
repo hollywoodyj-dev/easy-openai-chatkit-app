@@ -121,6 +121,7 @@ import {
   resolveRelationalPromiseGuardV2Enablement,
   S4_FROZEN_MATRIX_SHA256,
 } from "@/lib/wisewave-relational-promise-guard";
+import { S4_REVISED_GATE_BOUNDARY_MARKER } from "@/lib/wisewave-relational-promise-revised-gate-boundary";
 import {
   resolveS5EvidenceSourceValidatorEnablement,
   S5_EVIDENCE_SOURCE_BUILD_MARKER,
@@ -2065,6 +2066,8 @@ export async function POST(request: Request) {
   }> = [];
   let debugS4Enabled = false;
   let debugS4FlagSet = false;
+  let debugS4AllowProductionSet = false;
+  let debugS4BlockedOnProduction = false;
   let debugS4Guard: "hit" | "miss" | null = null;
   let debugS4Family: string | null = null;
   let debugS4Disposition: string | null = null;
@@ -2297,6 +2300,8 @@ export async function POST(request: Request) {
     const s4Enablement = resolveRelationalPromiseGuardV2Enablement();
     debugS4FlagSet = s4Enablement.flagSet;
     debugS4Enabled = s4Enablement.enabled;
+    debugS4AllowProductionSet = s4Enablement.allowProductionSet;
+    debugS4BlockedOnProduction = s4Enablement.blockedOnProduction;
     if (s4Enablement.enabled && !prePersistSuppressed) {
       const applied = applyRelationalPromiseGuardV2(assistantContent);
       debugS4Guard = applied.result.guard;
@@ -4286,6 +4291,9 @@ export async function POST(request: Request) {
     debug_drift_linter_violations: debugDriftViolations,
     debug_relational_promise_guard_v2_flag_set: debugS4FlagSet,
     debug_relational_promise_guard_v2_enabled: debugS4Enabled,
+    debug_relational_promise_guard_v2_allow_production_set: debugS4AllowProductionSet,
+    debug_relational_promise_guard_v2_blocked_on_production: debugS4BlockedOnProduction,
+    debug_relational_promise_guard_v2_build_marker: S4_REVISED_GATE_BOUNDARY_MARKER,
     debug_relational_promise_guard_v2_matrix_sha256: S4_FROZEN_MATRIX_SHA256,
     debug_relational_promise_guard_v2_hit: debugS4Guard,
     debug_relational_promise_guard_v2_family: debugS4Family,
